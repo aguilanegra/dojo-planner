@@ -1,0 +1,86 @@
+/* Color Palette - Organized by function */
+/* Generated color palette for global use */
+
+:root {
+  /* Neutral/Grayscale - Light to Dark */
+  --color-neutral-50: #f9fafe;
+  --color-neutral-100: #ffffff;
+  --color-neutral-200: #fcfcfc;
+  --color-neutral-300: #f7f7f7;
+  --color-neutral-400: #f2f2f2;
+  --color-neutral-500: #eaeaea;
+  --color-neutral-600: #d6d6d6;
+  --color-neutral-700: #c2c2c2;
+  --color-neutral-800: #adadad;
+  --color-neutral-900: #999999;
+  --color-neutral-950: #787878;
+  --color-neutral-1000: #5a5a5a;
+  --color-neutral-1100: #3c3c3c;
+  --color-neutral-1200: #2e2e2e;
+  --color-neutral-1300: #1e1e1e;
+  --color-neutral-1400: #0f0f0f;
+  --color-neutral-1500: #000000;
+
+  /* Green - Success/Positive */
+  --color-green-50: #edfbef;
+  --color-green-100: #c5eecb;
+  --color-green-200: #04770c;
+  --color-green-300: #044208;
+  --color-green-400: #46e15c;
+
+  /* Red - Error/Destructive */
+  --color-red-500: #e83737;
+
+  /* Blue - Primary/Info */
+  --color-blue-50: #e0e5fa;
+  --color-blue-100: #c6d0fa;
+  --color-blue-200: #a1b2f6;
+  --color-blue-300: #6481fa;
+  --color-blue-400: #2750f3;
+  --color-blue-500: #0f30b9;
+  --color-blue-600: #071d79;
+  --color-blue-700: #04124a;
+}
+
+@layer theme {
+  @theme inline {
+    /* Neutral Colors */
+    --color-neutral-50: var(--color-neutral-50);
+    --color-neutral-100: var(--color-neutral-100);
+    --color-neutral-200: var(--color-neutral-200);
+    --color-neutral-300: var(--color-neutral-300);
+    --color-neutral-400: var(--color-neutral-400);
+    --color-neutral-500: var(--color-neutral-500);
+    --color-neutral-600: var(--color-neutral-600);
+    --color-neutral-700: var(--color-neutral-700);
+    --color-neutral-800: var(--color-neutral-800);
+    --color-neutral-900: var(--color-neutral-900);
+    --color-neutral-950: var(--color-neutral-950);
+    --color-neutral-1000: var(--color-neutral-1000);
+    --color-neutral-1100: var(--color-neutral-1100);
+    --color-neutral-1200: var(--color-neutral-1200);
+    --color-neutral-1300: var(--color-neutral-1300);
+    --color-neutral-1400: var(--color-neutral-1400);
+    --color-neutral-1500: var(--color-neutral-1500);
+
+    /* Green Colors */
+    --color-green-50: var(--color-green-50);
+    --color-green-100: var(--color-green-100);
+    --color-green-200: var(--color-green-200);
+    --color-green-300: var(--color-green-300);
+    --color-green-400: var(--color-green-400);
+
+    /* Red Colors */
+    --color-red-500: var(--color-red-500);
+
+    /* Blue Colors */
+    --color-blue-50: var(--color-blue-50);
+    --color-blue-100: var(--color-blue-100);
+    --color-blue-200: var(--color-blue-200);
+    --color-blue-300: var(--color-blue-300);
+    --color-blue-400: var(--color-blue-400);
+    --color-blue-500: var(--color-blue-500);
+    --color-blue-600: var(--color-blue-600);
+    --color-blue-700: var(--color-blue-700);
+  }
+}
