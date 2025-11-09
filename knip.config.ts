@@ -16,6 +16,7 @@ const config: KnipConfig = {
   ignoreDependencies: [
     '@commitlint/types',
     '@clerk/types',
+    '@semantic-release/npm',
     'conventional-changelog-conventionalcommits',
     'vite',
   ],
