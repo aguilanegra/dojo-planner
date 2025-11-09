@@ -1,7 +1,7 @@
 import { Protect } from '@clerk/nextjs';
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
-import { buttonVariants } from '@/components/ui/buttonVariants';
+import { buttonVariants } from '@/components/ui/button';
 import { ProtectFallback } from '@/features/auth/ProtectFallback';
 import { BillingOptions } from '@/features/billing/BillingOptions';
 import { CurrentPlanDetails } from '@/features/billing/CurrentPlanDetails';

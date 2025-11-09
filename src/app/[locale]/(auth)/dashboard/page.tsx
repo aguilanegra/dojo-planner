@@ -1,7 +1,6 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { buttonVariants } from '@/components/ui/buttonVariants';
+import { buttonVariants } from '@/components/ui/button';
 import { MessageState } from '@/features/dashboard/MessageState';
-import { SponsorLogos } from '@/features/sponsors/SponsorLogos';
 
 export default async function DashboardIndexPage(props: {
   params: Promise<{ locale: string }>;
@@ -39,13 +38,13 @@ export default async function DashboardIndexPage(props: {
         <>
           <a
             className={buttonVariants({ size: 'lg' })}
-            href="https://nextjs-boilerplate.com/pro-saas-starter-kit"
+            href="https://www.dojoplanner.com"
           >
             {t('message_state_button')}
           </a>
 
           <div className="mt-7">
-            <SponsorLogos />
+
           </div>
         </>
       )}
