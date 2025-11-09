@@ -4,7 +4,8 @@ const config: KnipConfig = {
   // Files to exclude from Knip analysis
   ignore: [
     'checkly.config.ts',
-    'src/components/ui/*',
+    'src/components/ui/**',
+    'src/features/landing/LogoCloud.tsx',
     'src/libs/I18n.ts',
     'src/types/Auth.ts',
     'src/types/I18n.ts',

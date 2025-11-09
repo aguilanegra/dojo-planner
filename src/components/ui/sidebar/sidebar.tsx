@@ -1,7 +1,7 @@
 'use client';
 
 import type { VariantProps } from 'class-variance-authority';
-import type { SidebarContextProps } from './useSidebar';
+import type { SidebarContextProps } from '../hooks/useSidebar';
 import { Slot } from '@radix-ui/react-slot';
 import { cva } from 'class-variance-authority';
 import { PanelLeftIcon } from 'lucide-react';
@@ -13,8 +13,8 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/utils/Helpers';
-import { useIsMobile } from './useMobile';
-import { SidebarContext, useSidebar } from './useSidebar';
+import { useIsMobile } from '../hooks/useMobile';
+import { SidebarContext, useSidebar } from '../hooks/useSidebar';
 
 const SIDEBAR_COOKIE_NAME = 'sidebar_state';
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;

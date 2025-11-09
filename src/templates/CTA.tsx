@@ -1,6 +1,6 @@
 import { ArrowRightIcon } from '@radix-ui/react-icons';
 import { useTranslations } from 'next-intl';
-import { buttonVariants } from '@/components/ui/buttonVariants';
+import { buttonVariants } from '@/components/ui/button';
 import { CTABanner } from '@/features/landing/CTABanner';
 import { Section } from '@/features/landing/Section';
 
@@ -15,7 +15,7 @@ export const CTA = () => {
         buttons={(
           <a
             className={buttonVariants({ variant: 'secondary', size: 'lg', className: 'whitespace-pre-line' })}
-            href="https://nextjs-boilerplate.com/pro-saas-starter-kit"
+            href="https://www.dojoplanner.com"
           >
             {t('button_text')}
 

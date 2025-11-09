@@ -3,7 +3,7 @@
 import type { ColumnDef } from '@tanstack/react-table';
 import type { Todo } from '@/types/Todo';
 import { useFormatter, useTranslations } from 'next-intl';
-import { DataTable } from '@/components/ui/data-table';
+import { DataTable } from '@/components/ui/table';
 import { ActionCell } from './ActionTodoTable';
 
 export const TodoTableColumns = (props: {

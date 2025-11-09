@@ -1,8 +1,8 @@
 import { ArrowRightIcon, TwitterLogoIcon } from '@radix-ui/react-icons';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import { badgeVariants } from '@/components/ui/badgeVariants';
-import { buttonVariants } from '@/components/ui/buttonVariants';
+import { badgeVariants } from '@/components/ui/badge';
+import { buttonVariants } from '@/components/ui/button';
 import { CenteredHero } from '@/features/landing/CenteredHero';
 import { Section } from '@/features/landing/Section';
 
@@ -40,7 +40,7 @@ export const Hero = () => {
 
             <a
               className={buttonVariants({ variant: 'outline', size: 'lg' })}
-              href="https://nextjs-boilerplate.com/pro-saas-starter-kit"
+              href="https://www.dojoplanner.com"
             >
               {t('secondary_button')}
 

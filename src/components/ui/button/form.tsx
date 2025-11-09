@@ -7,7 +7,7 @@ import React from 'react';
 import { Controller, FormProvider } from 'react-hook-form';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/utils/Helpers';
-import { FormFieldContext, FormItemContext, useFormField } from './useFormField';
+import { FormFieldContext, FormItemContext, useFormField } from '../hooks/useFormField';
 
 const Form = FormProvider;
 
