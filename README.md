@@ -50,7 +50,7 @@ Developer experience first, extremely flexible code structure and only keep what
 - 📦 Type-safe ORM with DrizzleORM, compatible with PostgreSQL, SQLite, and MySQL
 - 💽 Offline and local development database with PGlite
 - ☁️ Remote and production database with [Prisma Postgres](https://www.prisma.io/?via=nextjs-boilerplate)
-- 🌐 Multi-language (i18n) with next-intl and [Crowdin](https://l.crowdin.com/next-js)
+- 🌐 Multi-language (i18n) with next-intl
 - ♻️ Type-safe environment variables with T3 Env
 - ⌨️ Form handling with React Hook Form
 - 🔴 Validation library with Zod
@@ -136,11 +136,12 @@ The project uses DrizzleORM, a type-safe ORM that is compatible with PostgreSQL,
 
 ### Translation (i18n) setup
 
-For translation, the project uses `next-intl` combined with [Crowdin](https://l.crowdin.com/next-js). As a developer, you only need to take care of the English (or another default language) version. Translations for other languages are automatically generated and handled by Crowdin. You can use Crowdin to collaborate with your translation team or translate the messages yourself with the help of machine translation.
+The project uses `next-intl` for internationalization (i18n) support. As a developer, you can maintain the English (or another default language) version in the `src/locales/` directory. Additional language translations can be added by creating new locale JSON files.
 
-To set up translation (i18n), create an account at [Crowdin.com](https://l.crowdin.com/next-js) and create a new project. In the newly created project, you will be able to find the project ID. You will also need to create a new Personal Access Token by going to Account Settings > API. Then, in your GitHub Actions, you need to define the following environment variables: `CROWDIN_PROJECT_ID` and `CROWDIN_PERSONAL_TOKEN`.
-
-After defining the environment variables in your GitHub Actions, your localization files will be synchronized with Crowdin every time you push a new commit to the `main` branch.
+To add a new language:
+1. Create a new locale file in `src/locales/` (e.g., `es.json` for Spanish)
+2. Add translations for all keys from the base locale
+3. Update the language configuration in `src/libs/I18n.ts` to include the new locale
 
 ### Project structure
 
