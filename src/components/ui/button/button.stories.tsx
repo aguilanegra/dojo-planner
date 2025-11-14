@@ -89,6 +89,20 @@ export const Icon: Story = {
   },
 };
 
+export const IconWithText: Story = {
+  args: {
+    children: '+ Button',
+    size: 'default',
+  },
+};
+
+export const TextWithIcon: Story = {
+  args: {
+    children: 'Button →',
+    size: 'default',
+  },
+};
+
 export const Disabled: Story = {
   args: {
     children: 'Disabled',
