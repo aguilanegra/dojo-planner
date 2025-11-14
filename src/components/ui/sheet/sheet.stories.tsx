@@ -166,3 +166,44 @@ export const RightSide: Story = {
     );
   },
 };
+
+export const DarkMode: Story = {
+  args: {},
+  render: () => {
+    const [open, setOpen] = useState(false);
+
+    return (
+      <div className="dark bg-background p-8">
+        <Sheet open={open} onOpenChange={setOpen}>
+          <SheetTrigger asChild>
+            <Button>Open Sheet</Button>
+          </SheetTrigger>
+          <SheetContent>
+            <SheetHeader>
+              <SheetTitle>Edit Profile</SheetTitle>
+              <SheetDescription>
+                Update your profile information here.
+              </SheetDescription>
+            </SheetHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Name</Label>
+                <Input id="name" placeholder="Your name" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" type="email" placeholder="your@email.com" />
+              </div>
+            </div>
+            <SheetFooter>
+              <Button variant="outline" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={() => setOpen(false)}>Save</Button>
+            </SheetFooter>
+          </SheetContent>
+        </Sheet>
+      </div>
+    );
+  },
+};

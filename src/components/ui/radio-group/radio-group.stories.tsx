@@ -85,3 +85,25 @@ export const Disabled: Story = {
     </RadioGroup>
   ),
 };
+
+export const DarkMode: Story = {
+  args: {},
+  render: () => (
+    <div className="dark bg-background p-8">
+      <RadioGroup defaultValue="option-1">
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="option-1" id="dark-option-1" />
+          <Label htmlFor="dark-option-1">Option 1</Label>
+        </div>
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="option-2" id="dark-option-2" />
+          <Label htmlFor="dark-option-2">Option 2</Label>
+        </div>
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="option-3" id="dark-option-3" />
+          <Label htmlFor="dark-option-3">Option 3</Label>
+        </div>
+      </RadioGroup>
+    </div>
+  ),
+};

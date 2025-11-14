@@ -84,3 +84,32 @@ export const Different: Story = {
     </div>
   ),
 };
+
+export const DarkMode: Story = {
+  args: {},
+  render: () => (
+    <div className="dark bg-background p-8">
+      <TooltipProvider>
+        <div className="flex gap-4">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline">Hover me</Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>This is a helpful tooltip!</p>
+            </TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline">Information</Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>This is a longer tooltip with more detailed information.</p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      </TooltipProvider>
+    </div>
+  ),
+};

@@ -82,3 +82,21 @@ export const LargeList: Story = {
     </Select>
   ),
 };
+
+export const DarkMode: Story = {
+  args: {},
+  render: () => (
+    <div className="dark bg-background p-8">
+      <Select>
+        <SelectTrigger className="w-[180px]">
+          <SelectValue placeholder="Select an option" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="apple">Apple</SelectItem>
+          <SelectItem value="banana">Banana</SelectItem>
+          <SelectItem value="orange">Orange</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  ),
+};

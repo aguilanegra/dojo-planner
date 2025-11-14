@@ -165,3 +165,50 @@ export const Minimal: Story = {
     </SidebarProvider>
   ),
 };
+
+export const DarkMode: Story = {
+  args: {},
+  render: () => (
+    <div className="dark bg-background p-8">
+      <SidebarProvider>
+        <Sidebar>
+          <SidebarHeader>
+            <div className="flex items-center gap-2 px-4">
+              <div className="h-8 w-8 rounded-lg bg-blue-600" />
+              <span className="font-semibold">App</span>
+            </div>
+          </SidebarHeader>
+          <SidebarContent>
+            <SidebarGroup>
+              <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton>Dashboard</SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton>Projects</SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton>Settings</SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </SidebarContent>
+          <SidebarFooter>
+            <div className="px-4 text-xs text-muted-foreground">© 2024</div>
+          </SidebarFooter>
+          <SidebarRail />
+        </Sidebar>
+        <main className="flex flex-1 flex-col gap-4 p-4">
+          <SidebarTrigger />
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold">Dashboard</h1>
+            <p className="text-muted-foreground">Welcome to your dashboard</p>
+          </div>
+        </main>
+      </SidebarProvider>
+    </div>
+  ),
+};

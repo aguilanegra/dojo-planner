@@ -46,3 +46,16 @@ export const FormLabel: Story = {
     </div>
   ),
 };
+
+export const DarkMode: Story = {
+  args: {},
+  render: () => (
+    <div className="dark bg-background p-8">
+      <div className="flex flex-col gap-4">
+        <Label>Default Label</Label>
+        <Label htmlFor="email-dark">Email Address</Label>
+        <Label className="text-lg font-bold">Custom Styled Label</Label>
+      </div>
+    </div>
+  ),
+};

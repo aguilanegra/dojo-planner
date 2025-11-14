@@ -75,3 +75,22 @@ export const WithText: Story = {
     </div>
   ),
 };
+
+export const DarkMode: Story = {
+  args: {},
+  render: () => (
+    <div className="dark bg-background p-8">
+      <div className="w-[300px] space-y-4">
+        <div>
+          <h3 className="text-lg font-semibold">Section 1</h3>
+          <p className="text-sm text-muted-foreground">Content goes here</p>
+        </div>
+        <Separator />
+        <div>
+          <h3 className="text-lg font-semibold">Section 2</h3>
+          <p className="text-sm text-muted-foreground">More content here</p>
+        </div>
+      </div>
+    </div>
+  ),
+};

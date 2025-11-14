@@ -89,3 +89,29 @@ export const Group: Story = {
     </div>
   ),
 };
+
+export const DarkMode: Story = {
+  args: {},
+  render: () => (
+    <div className="dark bg-background p-8">
+      <div className="flex gap-4">
+        <Avatar>
+          <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
+          <AvatarFallback>SC</AvatarFallback>
+        </Avatar>
+        <Avatar>
+          <AvatarImage src="" alt="@user1" />
+          <AvatarFallback>AB</AvatarFallback>
+        </Avatar>
+        <Avatar>
+          <AvatarImage src="" alt="@user2" />
+          <AvatarFallback>CD</AvatarFallback>
+        </Avatar>
+        <Avatar>
+          <AvatarImage src="" alt="@user3" />
+          <AvatarFallback>EF</AvatarFallback>
+        </Avatar>
+      </div>
+    </div>
+  ),
+};

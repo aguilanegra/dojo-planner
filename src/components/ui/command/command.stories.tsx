@@ -101,3 +101,40 @@ export const Searchable: Story = {
     </Command>
   ),
 };
+
+export const DarkMode: Story = {
+  args: {},
+  render: () => (
+    <div className="dark bg-background p-8">
+      <Command className="w-[300px] rounded-lg border">
+        <CommandInput placeholder="Type a command or search..." />
+        <CommandList>
+          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandGroup heading="File">
+            <CommandItem>
+              <span>New File</span>
+            </CommandItem>
+            <CommandItem>
+              <span>Open File</span>
+            </CommandItem>
+            <CommandItem>
+              <span>Save</span>
+            </CommandItem>
+          </CommandGroup>
+          <CommandSeparator />
+          <CommandGroup heading="Edit">
+            <CommandItem>
+              <span>Cut</span>
+            </CommandItem>
+            <CommandItem>
+              <span>Copy</span>
+            </CommandItem>
+            <CommandItem>
+              <span>Paste</span>
+            </CommandItem>
+          </CommandGroup>
+        </CommandList>
+      </Command>
+    </div>
+  ),
+};

@@ -78,3 +78,20 @@ export const AllTypes: Story = {
     </div>
   ),
 };
+
+export const DarkMode: Story = {
+  args: {},
+  render: () => (
+    <div className="dark bg-background p-8">
+      <div className="flex w-full max-w-sm flex-col gap-4">
+        <Input type="text" placeholder="Text input" />
+        <Input type="email" placeholder="Email input" />
+        <Input type="password" placeholder="Password input" />
+        <Input type="number" placeholder="Number input" />
+        <Input type="date" />
+        <Input type="tel" placeholder="Phone input" />
+        <Input type="url" placeholder="URL input" />
+      </div>
+    </div>
+  ),
+};

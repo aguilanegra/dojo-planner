@@ -99,3 +99,39 @@ export const Multiple: Story = {
     </div>
   ),
 };
+
+export const DarkMode: Story = {
+  args: {},
+  render: () => (
+    <div className="dark bg-background p-8">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <Card className="w-[350px]">
+          <CardHeader>
+            <CardTitle>Card Title</CardTitle>
+            <CardDescription>Card description goes here</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p>Card content goes here.</p>
+          </CardContent>
+        </Card>
+        <Card className="w-[350px]">
+          <CardHeader>
+            <CardTitle>Product Name</CardTitle>
+            <CardDescription>Premium Edition</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <p className="text-2xl font-bold">$99.99</p>
+              <p className="text-sm text-muted-foreground">
+                High-quality product with excellent features.
+              </p>
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button className="w-full">Add to Cart</Button>
+          </CardFooter>
+        </Card>
+      </div>
+    </div>
+  ),
+};

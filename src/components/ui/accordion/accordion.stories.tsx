@@ -113,3 +113,39 @@ export const FAQ: Story = {
     </Accordion>
   ),
 };
+
+export const DarkMode: Story = {
+  args: {
+    type: 'single',
+  },
+  render: () => (
+    <div className="dark bg-background p-8">
+      <Accordion type="single" collapsible className="w-[400px]">
+        <AccordionItem value="faq-1">
+          <AccordionTrigger>What is this product?</AccordionTrigger>
+          <AccordionContent>
+            This is a component library for building beautiful user interfaces.
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="faq-2">
+          <AccordionTrigger>How do I use it?</AccordionTrigger>
+          <AccordionContent>
+            Simply import the components you need and use them in your React application.
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="faq-3">
+          <AccordionTrigger>Is it customizable?</AccordionTrigger>
+          <AccordionContent>
+            Yes! All components can be customized using Tailwind CSS classes.
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="faq-4">
+          <AccordionTrigger>What about accessibility?</AccordionTrigger>
+          <AccordionContent>
+            All components are built with accessibility in mind and follow WAI-ARIA standards.
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+    </div>
+  ),
+};

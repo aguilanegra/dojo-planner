@@ -95,3 +95,29 @@ export const States: Story = {
     </div>
   ),
 };
+
+export const DarkMode: Story = {
+  args: {},
+  render: () => (
+    <div className="dark bg-background p-8">
+      <div className="flex items-center gap-8">
+        <div className="flex flex-col gap-2">
+          <p className="text-sm font-medium">Default</p>
+          <Checkbox />
+        </div>
+        <div className="flex flex-col gap-2">
+          <p className="text-sm font-medium">Checked</p>
+          <Checkbox checked />
+        </div>
+        <div className="flex flex-col gap-2">
+          <p className="text-sm font-medium">Disabled</p>
+          <Checkbox disabled />
+        </div>
+        <div className="flex flex-col gap-2">
+          <p className="text-sm font-medium">Disabled Checked</p>
+          <Checkbox disabled checked />
+        </div>
+      </div>
+    </div>
+  ),
+};
