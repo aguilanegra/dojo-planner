@@ -11,7 +11,7 @@ const meta = {
   argTypes: {
     variant: {
       control: 'select',
-      options: ['default', 'destructive', 'outline', 'secondary', 'ghost', 'link'],
+      options: ['default', 'secondary', 'destructive', 'outline', 'ghost', 'link'],
     },
     size: {
       control: 'select',
@@ -35,7 +35,7 @@ export const Default: Story = {
 
 export const Destructive: Story = {
   args: {
-    children: 'Delete',
+    children: 'Destructive',
     variant: 'destructive',
   },
 };
@@ -108,6 +108,16 @@ export const Disabled: Story = {
     children: 'Disabled',
     disabled: true,
   },
+};
+
+export const DisabledVariants: Story = {
+  render: () => (
+    <div className="flex flex-wrap gap-2">
+      <Button variant="default" disabled>Default Disabled</Button>
+      <Button variant="secondary" disabled>Secondary Disabled</Button>
+      <Button variant="destructive" disabled>Destructive Disabled</Button>
+    </div>
+  ),
 };
 
 export const AllVariants: Story = {
