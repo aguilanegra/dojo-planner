@@ -27,7 +27,7 @@ export const Pricing = () => {
               {t('button_text')}
             </Link>
           ),
-          [PLAN_ID.PREMIUM]: (
+          [PLAN_ID.FREE_TRIAL]: (
             <Link
               className={buttonVariants({
                 size: 'sm',
@@ -38,7 +38,18 @@ export const Pricing = () => {
               {t('button_text')}
             </Link>
           ),
-          [PLAN_ID.ENTERPRISE]: (
+          [PLAN_ID.MONTHLY]: (
+            <Link
+              className={buttonVariants({
+                size: 'sm',
+                className: 'w-full',
+              })}
+              href="/sign-up"
+            >
+              {t('button_text')}
+            </Link>
+          ),
+          [PLAN_ID.ANNUAL]: (
             <Link
               className={buttonVariants({
                 size: 'sm',

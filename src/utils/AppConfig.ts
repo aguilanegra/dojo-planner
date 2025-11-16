@@ -21,7 +21,7 @@ const locales = [
 
 // FIXME: Update this configuration file based on your project information
 export const AppConfig = {
-  name: 'SaaS Template',
+  name: 'Dojo Planner',
   sidebarCookieName: 'sidebar:state',
   locales,
   defaultLocale: 'en',
@@ -41,9 +41,10 @@ export const ClerkLocalizations = {
 export const AllLocales = AppConfig.locales.map(locale => locale.id);
 
 export const PLAN_ID = {
-  FREE: 'free',
-  PREMIUM: 'premium',
-  ENTERPRISE: 'enterprise',
+  FREE: 'free_user',
+  FREE_TRIAL: 'free_trial',
+  MONTHLY: 'monthly',
+  ANNUAL: 'annual',
 } as const;
 
 export const PricingPlanList: Record<string, PricingPlan> = {
@@ -61,12 +62,25 @@ export const PricingPlanList: Record<string, PricingPlan> = {
       transfer: 2,
     },
   },
-  [PLAN_ID.PREMIUM]: {
-    id: PLAN_ID.PREMIUM,
+  [PLAN_ID.FREE_TRIAL]: {
+    id: PLAN_ID.FREE_TRIAL,
+    price: 0,
+    interval: BILLING_INTERVAL.MONTH,
+    testPriceId: '',
+    devPriceId: '',
+    prodPriceId: '',
+    features: {
+      teamMember: 5,
+      website: 5,
+      storage: 5,
+      transfer: 5,
+    },
+  },
+  [PLAN_ID.MONTHLY]: {
+    id: PLAN_ID.MONTHLY,
     price: 79,
     interval: BILLING_INTERVAL.MONTH,
-    testPriceId: 'price_premium_test', // Use for testing
-    // FIXME: Update the price ID, you can create it after running `npm run stripe:setup-price`
+    testPriceId: 'price_monthly_test',
     devPriceId: 'price_1PNksvKOp3DEwzQlGOXO7YBK',
     prodPriceId: '',
     features: {
@@ -76,19 +90,18 @@ export const PricingPlanList: Record<string, PricingPlan> = {
       transfer: 5,
     },
   },
-  [PLAN_ID.ENTERPRISE]: {
-    id: PLAN_ID.ENTERPRISE,
-    price: 199,
-    interval: BILLING_INTERVAL.MONTH,
-    testPriceId: 'price_enterprise_test', // Use for testing
-    // FIXME: Update the price ID, you can create it after running `npm run stripe:setup-price`
+  [PLAN_ID.ANNUAL]: {
+    id: PLAN_ID.ANNUAL,
+    price: 790,
+    interval: BILLING_INTERVAL.YEAR,
+    testPriceId: 'price_annual_test',
     devPriceId: 'price_1PNksvKOp3DEwzQli9IvXzgb',
-    prodPriceId: 'price_123',
+    prodPriceId: '',
     features: {
-      teamMember: 100,
-      website: 100,
-      storage: 100,
-      transfer: 100,
+      teamMember: 5,
+      website: 5,
+      storage: 5,
+      transfer: 5,
     },
   },
 };

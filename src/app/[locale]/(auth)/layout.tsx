@@ -27,13 +27,28 @@ export default function AuthLayout(props: {
 
   const { resolvedTheme } = useTheme();
 
+  const isDark = resolvedTheme === 'dark';
+
   return (
     <ClerkProvider
       appearance={{
-        baseTheme: resolvedTheme === 'dark' ? dark : undefined,
+        baseTheme: isDark ? dark : undefined,
         cssLayerName: 'clerk', // Ensure Clerk is compatible with Tailwind CSS v4
+        elements: {
+          scrollBox: isDark ? 'bg-transparent' : 'light-scrollbox-class',
+        },
       }}
-      localization={clerkLocale}
+      localization={{
+        ...clerkLocale,
+        organizationProfile: {
+          ...clerkLocale.organizationProfile,
+          navbar: {
+            ...clerkLocale.organizationProfile?.navbar,
+            title: 'Academy',
+            description: 'Manage your academy',
+          },
+        },
+      }}
       signInUrl={signInUrl}
       signUpUrl={signUpUrl}
       signInFallbackRedirectUrl={dashboardUrl}

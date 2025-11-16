@@ -1,7 +1,7 @@
 'use client';
 
 import { OrganizationSwitcher } from '@clerk/nextjs';
-import { CirclePlus, CreditCard, Home, LifeBuoy, Send, Settings, Users } from 'lucide-react';
+import { BookMarked, CalendarDays, CreditCard, Home, Landmark, LifeBuoy, Mail, Send, Settings, Users } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Sidebar, SidebarContent, SidebarHeader, SidebarRail } from '@/components/ui/sidebar';
 import { AppSidebarNav } from '@/features/dashboard/AppSidebarNav';
@@ -46,25 +46,55 @@ export const AppSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
               url: '/dashboard',
               icon: Home,
             },
-            {
-              title: t('todos'),
-              url: '/dashboard/todos',
-              icon: CirclePlus,
-            },
           ]}
         />
         <AppSidebarNav
           label={t('organization_section_label')}
           items={[
             {
-              title: t('billing'),
-              url: '/dashboard/billing',
-              icon: CreditCard,
+              title: t('members'),
+              url: '/dashboard/organization-profile/organization-members',
+              icon: Users,
             },
+            {
+              title: t('messaging'),
+              url: '/dashboard/academy/messaging',
+              icon: Mail,
+            },
+            {
+              title: t('classes'),
+              url: '/dashboard/academy/billing',
+              icon: BookMarked,
+            },
+            {
+              title: t('schedule'),
+              url: '/dashboard/academy/schedule',
+              icon: CalendarDays,
+            },
+            {
+              title: t('finances'),
+              url: '/dashboard/academy/finances',
+              icon: Landmark,
+            },
+          ]}
+        />
+        <AppSidebarNav
+          label={t('account_section_label')}
+          items={[
             {
               title: t('members'),
               url: '/dashboard/organization-profile/organization-members',
               icon: Users,
+            },
+            {
+              title: t('messaging'),
+              url: '/dashboard/messaging',
+              icon: Mail,
+            },
+            {
+              title: t('billing'),
+              url: '/dashboard/billing',
+              icon: CreditCard,
             },
             {
               title: t('settings'),
@@ -74,15 +104,16 @@ export const AppSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
           ]}
         />
         <AppSidebarNav
+          label={t('settings_section_label')}
           items={[
             {
               title: t('support'),
-              url: 'mailto:contact@creativedesignsguru.com',
+              url: 'mailto:help@dojoplanner.com',
               icon: LifeBuoy,
             },
             {
               title: t('feedback'),
-              url: 'mailto:contact@creativedesignsguru.com',
+              url: 'mailto:feedback@dojoplanner.com',
               icon: Send,
             },
           ]}

@@ -2,7 +2,7 @@ export const MessageState = (props: {
   icon: React.ReactNode;
   title: React.ReactNode;
   description: React.ReactNode;
-  button: React.ReactNode;
+  button?: React.ReactNode;
 }) => (
   <div className="flex h-full flex-col items-center justify-center rounded-md">
     <div className="size-16 rounded-full bg-muted p-3 [&_svg]:stroke-muted-foreground [&_svg]:stroke-2">
@@ -14,8 +14,7 @@ export const MessageState = (props: {
       <div className="mt-1 text-sm font-medium text-muted-foreground">
         {props.description}
       </div>
-
-      <div className="mt-5">{props.button}</div>
+      {props.button && <div className="mt-4">{props.button}</div>}
     </div>
   </div>
 );

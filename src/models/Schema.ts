@@ -1,4 +1,4 @@
-import { bigint, pgTable, serial, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
+import { bigint, boolean, pgTable, primaryKey, serial, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 
 // This file defines the structure of your database tables using the Drizzle ORM.
 
@@ -36,6 +36,63 @@ export const organizationSchema = pgTable(
     uniqueIndex('stripe_customer_id_idx').on(table.stripeCustomerId),
   ],
 );
+
+export const memberSchema = pgTable('member', {
+  id: text('id').primaryKey(), // Clerk user ID
+  organizationId: text('organization_id').notNull(),
+  // Note: email, firstName, lastName come from Clerk API via useOrganization
+  phone: text('phone'),
+  dateOfBirth: timestamp('date_of_birth', { mode: 'date' }),
+  photoUrl: text('photo_url'),
+  lastAccessedAt: timestamp('last_accessed_at', { mode: 'date' }),
+  status: text('status').notNull().default('active'),
+  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' })
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
+export const addressSchema = pgTable('address', {
+  id: text('id').primaryKey(),
+  memberId: text('member_id').references(() => memberSchema.id).notNull(),
+  type: text('type').notNull(), // home, billing, mailing
+  street: text('street').notNull(),
+  city: text('city').notNull(),
+  state: text('state').notNull(),
+  zipCode: text('zip_code').notNull(),
+  country: text('country').notNull().default('US'),
+  isDefault: boolean('is_default').default(false),
+});
+
+export const noteSchema = pgTable('note', {
+  id: text('id').primaryKey(),
+  memberId: text('member_id').references(() => memberSchema.id).notNull(),
+  content: text('content').notNull(),
+  status: text('status').notNull().default('active'), // active, archived
+  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' })
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
+export const paymentMethodSchema = pgTable('payment_method', {
+  id: text('id').primaryKey(),
+  memberId: text('member_id').references(() => memberSchema.id).notNull(),
+  stripePaymentMethodId: text('stripe_payment_method_id'),
+  type: text('type').notNull(),
+  last4: text('last4'),
+  isDefault: boolean('is_default').default(false),
+});
+
+export const familyMemberSchema = pgTable('family_member', {
+  memberId: text('member_id').references(() => memberSchema.id).notNull(),
+  relatedMemberId: text('related_member_id').references(() => memberSchema.id).notNull(),
+  relationship: text('relationship').notNull(),
+}, table => [
+  primaryKey({ columns: [table.memberId, table.relatedMemberId] }),
+]);
 
 export const todoSchema = pgTable('todo', {
   id: serial('id').primaryKey(),
