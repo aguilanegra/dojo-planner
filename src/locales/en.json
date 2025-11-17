@@ -95,8 +95,13 @@
     "classes": "Classes",
     "schedule": "Schdule",
     "finances": "Finances",
+    "my_information": "My Information",
+    "security": "Security",
+    "subscription": "Subscription",
+    "user_permissions": "User Permissions",
     "members": "Members",
     "billing": "Billing",
+    "preferences": "Preferences",
     "settings": "Settings",
     "support": "Support",
     "feedback": "Feedback"

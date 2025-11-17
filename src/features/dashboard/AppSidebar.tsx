@@ -1,7 +1,7 @@
 'use client';
 
 import { OrganizationSwitcher } from '@clerk/nextjs';
-import { BookMarked, CalendarDays, CreditCard, Home, Landmark, LifeBuoy, Mail, Send, Settings, Users } from 'lucide-react';
+import { BookMarked, CalendarDays, CircleUser, Contact, Home, Landmark, LifeBuoy, Mail, Send, Settings, ShieldCheck, Users, Wallet } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Sidebar, SidebarContent, SidebarHeader, SidebarRail } from '@/components/ui/sidebar';
 import { AppSidebarNav } from '@/features/dashboard/AppSidebarNav';
@@ -23,7 +23,6 @@ export const AppSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
           organizationProfileMode="navigation"
           organizationProfileUrl={getI18nPath('/dashboard/organization-profile', locale)}
           afterCreateOrganizationUrl="/onboarding/organization-selection"
-          hideSlug
           hidePersonal
           skipInvitationScreen
           appearance={{
@@ -53,7 +52,8 @@ export const AppSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
           items={[
             {
               title: t('members'),
-              url: '/dashboard/organization-profile/organization-members',
+              // url: '/dashboard/organization-profile/organization-members',
+              url: '/dashboard/members',
               icon: Users,
             },
             {
@@ -82,30 +82,36 @@ export const AppSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
           label={t('account_section_label')}
           items={[
             {
-              title: t('members'),
-              url: '/dashboard/organization-profile/organization-members',
-              icon: Users,
+              title: t('my_information'),
+              // url: '/dashboard/organization-profile/organization-members',
+              url: '/dashboard/organization-profile/members',
+              icon: CircleUser,
             },
             {
-              title: t('messaging'),
+              title: t('security'),
               url: '/dashboard/messaging',
-              icon: Mail,
+              icon: ShieldCheck,
             },
             {
-              title: t('billing'),
+              title: t('subscription'),
               url: '/dashboard/billing',
-              icon: CreditCard,
+              icon: Wallet,
             },
             {
-              title: t('settings'),
+              title: t('user_permissions'),
               url: '/dashboard/organization-profile',
-              icon: Settings,
+              icon: Contact,
             },
           ]}
         />
         <AppSidebarNav
           label={t('settings_section_label')}
           items={[
+            {
+              title: t('preferences'),
+              url: '/dashboard/preferences',
+              icon: Settings,
+            },
             {
               title: t('support'),
               url: 'mailto:help@dojoplanner.com',
