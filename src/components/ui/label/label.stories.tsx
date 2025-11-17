@@ -19,6 +19,13 @@ export const Default: Story = {
   },
 };
 
+export const Required: Story = {
+  args: {
+    children: 'Label',
+    required: true,
+  },
+};
+
 export const WithFor: Story = {
   args: {
     htmlFor: 'input-id',
@@ -36,7 +43,7 @@ export const WithCustomClass: Story = {
 export const FormLabel: Story = {
   render: () => (
     <div className="flex flex-col gap-2">
-      <Label htmlFor="name">Name</Label>
+      <Label htmlFor="name" required>Name</Label>
       <input
         id="name"
         type="text"

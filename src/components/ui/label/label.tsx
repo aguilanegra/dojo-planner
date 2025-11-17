@@ -3,19 +3,33 @@
 import * as LabelPrimitive from '@radix-ui/react-label';
 import { cn } from '@/utils/Helpers';
 
+export type LabelProps = React.ComponentProps<typeof LabelPrimitive.Root> & {
+  required?: boolean;
+};
+
 function Label({
   className,
+  required,
+  children,
   ...props
-}: React.ComponentProps<typeof LabelPrimitive.Root>) {
+}: LabelProps) {
   return (
     <LabelPrimitive.Root
       data-slot="label"
       className={cn(
-        'flex items-center gap-2 text-caption leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50',
+        'flex items-center gap-1 text-caption leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50',
+        'text-neutral-1500',
         className,
       )}
       {...props}
-    />
+    >
+      {children}
+      {required && (
+        <span className="ml-1 text-red-500" aria-label="required">
+          *
+        </span>
+      )}
+    </LabelPrimitive.Root>
   );
 }
 
