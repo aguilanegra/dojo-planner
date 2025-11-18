@@ -1,5 +1,6 @@
 import { OrganizationProfile } from '@clerk/nextjs';
 import { setRequestLocale } from 'next-intl/server';
+import { CustomMembersPage } from '@/features/members/CustomMembersPage';
 import { getI18nPath } from '@/utils/Helpers';
 
 export default async function OrganizationProfilePage(props: {
@@ -20,7 +21,15 @@ export default async function OrganizationProfilePage(props: {
             cardBox: 'w-full flex', // `flex` is needed when the component has a large width
           },
         }}
-      />
+      >
+        <OrganizationProfile.Page
+          label="members"
+          labelIcon={<span>👥</span>}
+          url="members"
+        >
+          <CustomMembersPage />
+        </OrganizationProfile.Page>
+      </OrganizationProfile>
     </div>
   );
 };

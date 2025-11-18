@@ -15,6 +15,7 @@ const config: KnipConfig = {
   ],
   // Dependencies to ignore during analysis
   ignoreDependencies: [
+    '@clerk/testing',
     '@commitlint/types',
     '@clerk/types',
     '@semantic-release/npm',

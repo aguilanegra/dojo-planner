@@ -65,4 +65,11 @@ export default antfu(
       'test/prefer-lowercase-title': 'off', // Allow using uppercase titles in test titles
     },
   },
+  // --- Test Fixture Rules ---
+  {
+    files: ['**/tests/fixtures.ts'],
+    rules: {
+      'react-hooks/rules-of-hooks': 'off', // Playwright fixtures use use() which is not a React Hook
+    },
+  },
 );

@@ -1,7 +1,7 @@
 'use client';
 
 import { OrganizationSwitcher } from '@clerk/nextjs';
-import { CirclePlus, CreditCard, Home, LifeBuoy, Send, Settings, Users } from 'lucide-react';
+import { BookMarked, CalendarDays, CheckCircle2, CircleUser, Contact, Home, Landmark, LifeBuoy, Mail, Send, Settings, ShieldCheck, Users, Wallet } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Sidebar, SidebarContent, SidebarHeader, SidebarRail } from '@/components/ui/sidebar';
 import { AppSidebarNav } from '@/features/dashboard/AppSidebarNav';
@@ -23,7 +23,6 @@ export const AppSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
           organizationProfileMode="navigation"
           organizationProfileUrl={getI18nPath('/dashboard/organization-profile', locale)}
           afterCreateOrganizationUrl="/onboarding/organization-selection"
-          hideSlug
           hidePersonal
           skipInvitationScreen
           appearance={{
@@ -49,7 +48,7 @@ export const AppSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
             {
               title: t('todos'),
               url: '/dashboard/todos',
-              icon: CirclePlus,
+              icon: CheckCircle2,
             },
           ]}
         />
@@ -57,32 +56,75 @@ export const AppSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
           label={t('organization_section_label')}
           items={[
             {
-              title: t('billing'),
-              url: '/dashboard/billing',
-              icon: CreditCard,
-            },
-            {
               title: t('members'),
-              url: '/dashboard/organization-profile/organization-members',
+              // url: '/dashboard/organization-profile/organization-members',
+              url: '/dashboard/members',
               icon: Users,
             },
             {
-              title: t('settings'),
-              url: '/dashboard/organization-profile',
-              icon: Settings,
+              title: t('messaging'),
+              url: '/dashboard/academy/messaging',
+              icon: Mail,
+            },
+            {
+              title: t('classes'),
+              url: '/dashboard/academy/billing',
+              icon: BookMarked,
+            },
+            {
+              title: t('schedule'),
+              url: '/dashboard/academy/schedule',
+              icon: CalendarDays,
+            },
+            {
+              title: t('finances'),
+              url: '/dashboard/academy/finances',
+              icon: Landmark,
             },
           ]}
         />
         <AppSidebarNav
+          label={t('account_section_label')}
           items={[
             {
+              title: t('my_information'),
+              // url: '/dashboard/organization-profile/organization-members',
+              url: '/dashboard/organization-profile/members',
+              icon: CircleUser,
+            },
+            {
+              title: t('security'),
+              url: '/dashboard/messaging',
+              icon: ShieldCheck,
+            },
+            {
+              title: t('subscription'),
+              url: '/dashboard/billing',
+              icon: Wallet,
+            },
+            {
+              title: t('user_permissions'),
+              url: '/dashboard/organization-profile',
+              icon: Contact,
+            },
+          ]}
+        />
+        <AppSidebarNav
+          label={t('settings_section_label')}
+          items={[
+            {
+              title: t('preferences'),
+              url: '/dashboard/preferences',
+              icon: Settings,
+            },
+            {
               title: t('support'),
-              url: 'mailto:contact@creativedesignsguru.com',
+              url: 'mailto:help@dojoplanner.com',
               icon: LifeBuoy,
             },
             {
               title: t('feedback'),
-              url: 'mailto:contact@creativedesignsguru.com',
+              url: 'mailto:feedback@dojoplanner.com',
               icon: Send,
             },
           ]}

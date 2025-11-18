@@ -51,13 +51,13 @@ describe('BillingService', () => {
     it('should return the correct plan if the organization has an active subscription', () => {
       const result = determineSubscriptionPlan({
         stripeSubscriptionId: 'RANDOM_ID',
-        stripeSubscriptionPriceId: 'price_enterprise_test',
+        stripeSubscriptionPriceId: 'price_annual_test',
         stripeSubscriptionStatus: SUBSCRIPTION_STATUS.ACTIVE,
         stripeSubscriptionCurrentPeriodEnd: Date.now(),
       });
 
       expect(result.isPaid).toBeTruthy();
-      expect(result.plan.id).toBe(PLAN_ID.ENTERPRISE);
+      expect(result.plan.id).toBe(PLAN_ID.ANNUAL);
     });
   });
 });

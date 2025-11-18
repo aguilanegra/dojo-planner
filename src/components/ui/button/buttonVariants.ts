@@ -6,16 +6,16 @@ export const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          'bg-neutral-1500 text-neutral-100',
+          'bg-neutral-1500 text-neutral-100 enabled:hover:bg-neutral-1200 dark:bg-foreground dark:text-background enabled:dark:hover:bg-foreground/80',
         destructive:
-          'bg-red-500 text-neutral-100',
+          'bg-red-500 text-neutral-100 enabled:hover:bg-red-600',
         outline:
-          'border text-neutral-1500 outline',
+          'border border-border bg-background text-foreground shadow-xs enabled:hover:bg-accent enabled:hover:text-accent-foreground dark:border-input dark:bg-background dark:text-foreground enabled:dark:hover:bg-accent enabled:dark:hover:text-accent-foreground',
         secondary:
-          'bg-neutral-100 text-neutral-1500',
+          'bg-neutral-100 text-neutral-1500 enabled:hover:bg-neutral-200 enabled:dark:hover:bg-neutral-200/80',
         ghost:
-          'text-neutral-1500',
-        link: 'text-primary underline-offset-4 hover:underline',
+          'enabled:hover:bg-accent enabled:hover:text-accent-foreground enabled:dark:hover:bg-accent/20',
+        link: 'text-primary underline-offset-4 enabled:hover:underline',
       },
       size: {
         default: 'h-9 px-4 py-2 has-[>svg]:px-3',

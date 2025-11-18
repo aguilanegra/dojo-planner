@@ -1,3 +1,4 @@
+import { list as listMembers } from './Members';
 import { create, edit, remove } from './Todo';
 
 export const router = {
@@ -5,5 +6,8 @@ export const router = {
     create,
     edit,
     remove,
+  },
+  members: {
+    list: listMembers,
   },
 };

@@ -19,7 +19,7 @@ export default defineConfig<ChromaticConfig>({
   // Fail the build on CI if you accidentally left test.only in the source code.
   forbidOnly: !!process.env.CI,
   // Reporter to use. See https://playwright.dev/docs/test-reporters
-  reporter: process.env.CI ? 'github' : 'list',
+  reporter: process.env.CI ? [['github']] : 'list',
 
   expect: {
     // Set timeout for async expect matchers
@@ -59,14 +59,21 @@ export default defineConfig<ChromaticConfig>({
     { name: 'teardown', testMatch: /.*\.teardown\.ts/ },
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        // Load authenticated session from setup
+        storageState: '.playwright/auth.json',
+      },
       dependencies: ['setup'],
     },
     ...(process.env.CI
       ? [
           {
             name: 'firefox',
-            use: { ...devices['Desktop Firefox'] },
+            use: {
+              ...devices['Desktop Firefox'],
+              storageState: '.playwright/auth.json',
+            },
             dependencies: ['setup'],
           },
         ]
