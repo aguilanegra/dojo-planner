@@ -11,13 +11,33 @@ const meta = {
   argTypes: {
     type: {
       control: 'select',
-      options: ['text', 'email', 'password', 'number', 'date', 'tel', 'url'],
+      options: ['text', 'email', 'password', 'number'],
+      description: 'Input field type',
+    },
+    variant: {
+      control: 'select',
+      options: ['default', 'highlight'],
+      description: 'Input field visual style variant',
+      table: {
+        type: { summary: 'default | highlight' },
+        defaultValue: { summary: 'default' },
+      },
+    },
+    error: {
+      control: 'boolean',
+      description: 'Input field error state',
+      table: {
+        type: { summary: 'boolean' },
+        defaultValue: { summary: 'false' },
+      },
     },
     disabled: {
       control: 'boolean',
+      description: 'Input disabled state',
     },
     placeholder: {
       control: 'text',
+      description: 'Input field placeholder',
     },
   },
 } satisfies Meta<typeof Input>;
@@ -25,7 +45,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
+export const Text: Story = {
   args: {
     placeholder: 'Enter text...',
   },
@@ -54,8 +74,22 @@ export const Number: Story = {
 
 export const Disabled: Story = {
   args: {
-    placeholder: 'Disabled input',
+    placeholder: 'Disabled',
     disabled: true,
+  },
+};
+
+export const Error: Story = {
+  args: {
+    placeholder: 'Placeholder',
+    error: true,
+  },
+};
+
+export const Highlight: Story = {
+  args: {
+    placeholder: 'Placeholder',
+    variant: 'highlight',
   },
 };
 
@@ -63,18 +97,4 @@ export const WithDefaultValue: Story = {
   args: {
     defaultValue: 'Default value',
   },
-};
-
-export const AllTypes: Story = {
-  render: () => (
-    <div className="flex w-full max-w-sm flex-col gap-4">
-      <Input type="text" placeholder="Text input" />
-      <Input type="email" placeholder="Email input" />
-      <Input type="password" placeholder="Password input" />
-      <Input type="number" placeholder="Number input" />
-      <Input type="date" />
-      <Input type="tel" placeholder="Phone input" />
-      <Input type="url" placeholder="URL input" />
-    </div>
-  ),
 };
