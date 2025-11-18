@@ -19,7 +19,7 @@ export default defineConfig<ChromaticConfig>({
   // Fail the build on CI if you accidentally left test.only in the source code.
   forbidOnly: !!process.env.CI,
   // Reporter to use. See https://playwright.dev/docs/test-reporters
-  reporter: process.env.CI ? [['github'], ['@chromatic-com/playwright']] : 'list',
+  reporter: process.env.CI ? [['github']] : 'list',
 
   expect: {
     // Set timeout for async expect matchers
