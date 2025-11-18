@@ -12,30 +12,6 @@ Whether you're building a new SaaS app or looking for a flexible, **production-r
 
 Clone this project and use it to create your own SaaS. You can check the live demo at [SaaS Boilerplate](https://pro-demo.nextjs-boilerplate.com), which is a demo with a working authentication and multi-tenancy system.
 
-### Demo
-
-**Live demo: [SaaS Boilerplate](https://pro-demo.nextjs-boilerplate.com)**
-
-| Landing Page | User Dashboard |
-| --- | --- |
-| [![Next.js Boilerplate SaaS Landing Page](public/assets/images/nextjs-boilerplate-saas-landing-page.png)](https://pro-demo.nextjs-boilerplate.com) | [![Next.js Boilerplate SaaS User Dashboard](public/assets/images/nextjs-boilerplate-saas-user-dashboard.png)](https://pro-demo.nextjs-boilerplate.com/dashboard) |
-
-| Team Management | User Profile |
-| --- | --- |
-| [![Next.js Boilerplate SaaS Team Management](public/assets/images/nextjs-boilerplate-saas-multi-tenancy.png)](https://pro-demo.nextjs-boilerplate.com/dashboard/organization-profile/organization-members) | [![Next.js Boilerplate SaaS User Profile](public/assets/images/nextjs-boilerplate-saas-user-profile.png)](https://pro-demo.nextjs-boilerplate.com/dashboard/user-profile) |
-
-| Sign Up | Sign In |
-| --- | --- |
-| [![Next.js Boilerplate SaaS Sign Up](public/assets/images/nextjs-boilerplate-saas-sign-up.png)](https://pro-demo.nextjs-boilerplate.com/sign-up) | [![Next.js Boilerplate SaaS Sign In](public/assets/images/nextjs-boilerplate-saas-sign-in.png)](https://pro-demo.nextjs-boilerplate.com/sign-in) |
-
-| Landing Page with Dark Mode (Pro Version) | User Dashboard with Dark Mode (Pro Version) |
-| --- | --- |
-| [![Next.js Boilerplate SaaS Landing Page Dark Mode](public/assets/images/nextjs-boilerplate-saas-landing-page-dark-mode.png)](https://pro-demo.nextjs-boilerplate.com) | [![Next.js Boilerplate SaaS User Dashboard Dark Mode](public/assets/images/nextjs-boilerplate-saas-user-dashboard-sidebar-dark-mode.png)](https://pro-demo.nextjs-boilerplate.com/dashboard) |
-
-| User Dashboard with Sidebar (Pro Version) |
-| --- |
-| [![Next.js Boilerplate SaaS User Dashboard Sidebar](public/assets/images/nextjs-boilerplate-saas-user-dashboard-sidebar.png)](https://pro-demo.nextjs-boilerplate.com) |
-
 ### Features
 
 Developer experience first, extremely flexible code structure and only keep what you need:
