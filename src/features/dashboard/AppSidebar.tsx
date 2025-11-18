@@ -1,7 +1,7 @@
 'use client';
 
 import { OrganizationSwitcher } from '@clerk/nextjs';
-import { BookMarked, CalendarDays, CircleUser, Contact, Home, Landmark, LifeBuoy, Mail, Send, Settings, ShieldCheck, Users, Wallet } from 'lucide-react';
+import { BookMarked, CalendarDays, CheckCircle2, CircleUser, Contact, Home, Landmark, LifeBuoy, Mail, Send, Settings, ShieldCheck, Users, Wallet } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Sidebar, SidebarContent, SidebarHeader, SidebarRail } from '@/components/ui/sidebar';
 import { AppSidebarNav } from '@/features/dashboard/AppSidebarNav';
@@ -44,6 +44,11 @@ export const AppSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
               title: t('home'),
               url: '/dashboard',
               icon: Home,
+            },
+            {
+              title: t('todos'),
+              url: '/dashboard/todos',
+              icon: CheckCircle2,
             },
           ]}
         />

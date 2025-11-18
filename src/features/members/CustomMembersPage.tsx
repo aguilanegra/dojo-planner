@@ -84,15 +84,13 @@ export function CustomMembersPage() {
     console.warn('View details for member:', memberId);
   };
 
-  if (!isLoaded) {
-    return <div className="p-8 text-center text-gray-500">Loading organization...</div>;
-  }
-
+  // Render the table even while loading - it will show loading state internally
+  // This ensures the page structure is visible immediately for tests and prevents timeouts
   return (
     <MembersTable
       members={members}
       onViewDetailsAction={handleViewDetails}
-      loading={loading}
+      loading={loading || !isLoaded}
     />
   );
 }

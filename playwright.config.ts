@@ -59,14 +59,21 @@ export default defineConfig<ChromaticConfig>({
     { name: 'teardown', testMatch: /.*\.teardown\.ts/ },
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        // Load authenticated session from setup
+        storageState: '.playwright/auth.json',
+      },
       dependencies: ['setup'],
     },
     ...(process.env.CI
       ? [
           {
             name: 'firefox',
-            use: { ...devices['Desktop Firefox'] },
+            use: {
+              ...devices['Desktop Firefox'],
+              storageState: '.playwright/auth.json',
+            },
             dependencies: ['setup'],
           },
         ]
