@@ -1,5 +1,6 @@
 'use client';
 
+import { ArrowDown01, ArrowDownAZ, ArrowUp10, ArrowUpZA } from 'lucide-react';
 import { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -198,8 +199,8 @@ export function MembersTable({
           ))}
         </div>
 
-        {/* Members Table */}
-        <div className="overflow-hidden rounded-lg border border-border bg-background">
+        {/* Members Table - Desktop View */}
+        <div className="hidden rounded-lg border border-border bg-background lg:block">
           {loading
             ? (
                 <div className="p-8 text-center text-muted-foreground">Loading members...</div>
@@ -223,9 +224,9 @@ export function MembersTable({
                             >
                               Member name
                               {sortField === 'firstName' && (
-                                <span className="text-xs">
-                                  {sortDirection === 'asc' ? '↑' : '↓'}
-                                </span>
+                                sortDirection === 'asc'
+                                  ? <ArrowDownAZ className="h-4 w-4" />
+                                  : <ArrowUpZA className="h-4 w-4" />
                               )}
                             </button>
                           </th>
@@ -237,9 +238,9 @@ export function MembersTable({
                             >
                               Membership type
                               {sortField === 'membershipType' && (
-                                <span className="text-xs">
-                                  {sortDirection === 'asc' ? '↑' : '↓'}
-                                </span>
+                                sortDirection === 'asc'
+                                  ? <ArrowDownAZ className="h-4 w-4" />
+                                  : <ArrowUpZA className="h-4 w-4" />
                               )}
                             </button>
                           </th>
@@ -251,9 +252,9 @@ export function MembersTable({
                             >
                               Amount due
                               {sortField === 'amountDue' && (
-                                <span className="text-xs">
-                                  {sortDirection === 'asc' ? '↑' : '↓'}
-                                </span>
+                                sortDirection === 'asc'
+                                  ? <ArrowDown01 className="h-4 w-4" />
+                                  : <ArrowUp10 className="h-4 w-4" />
                               )}
                             </button>
                           </th>
@@ -265,9 +266,9 @@ export function MembersTable({
                             >
                               Next payment
                               {sortField === 'nextPayment' && (
-                                <span className="text-xs">
-                                  {sortDirection === 'asc' ? '↑' : '↓'}
-                                </span>
+                                sortDirection === 'asc'
+                                  ? <ArrowDownAZ className="h-4 w-4" />
+                                  : <ArrowUpZA className="h-4 w-4" />
                               )}
                             </button>
                           </th>
@@ -279,9 +280,9 @@ export function MembersTable({
                             >
                               Status
                               {sortField === 'status' && (
-                                <span className="text-xs">
-                                  {sortDirection === 'asc' ? '↑' : '↓'}
-                                </span>
+                                sortDirection === 'asc'
+                                  ? <ArrowDownAZ className="h-4 w-4" />
+                                  : <ArrowUpZA className="h-4 w-4" />
                               )}
                             </button>
                           </th>
@@ -293,9 +294,9 @@ export function MembersTable({
                             >
                               Last visited
                               {sortField === 'lastAccessedAt' && (
-                                <span className="text-xs">
-                                  {sortDirection === 'asc' ? '↑' : '↓'}
-                                </span>
+                                sortDirection === 'asc'
+                                  ? <ArrowDownAZ className="h-4 w-4" />
+                                  : <ArrowUpZA className="h-4 w-4" />
                               )}
                             </button>
                           </th>
@@ -365,6 +366,101 @@ export function MembersTable({
                       </tbody>
                     </table>
                   </div>
+                )}
+        </div>
+
+        {/* Members Cards - Mobile View */}
+        <div className="space-y-4 lg:hidden">
+          {loading
+            ? (
+                <div className="p-8 text-center text-muted-foreground">Loading members...</div>
+              )
+            : filteredMembers.length === 0
+              ? (
+                  <div className="p-8 text-center text-muted-foreground">
+                    No members found
+                  </div>
+                )
+              : (
+                  paginatedMembers.map(member => (
+                    <Card key={member.id} className="p-4">
+                      <div className="space-y-4">
+                        {/* Member Name */}
+                        <div className="flex items-center gap-3 border-b border-border pb-4">
+                          <Avatar className="h-10 w-10 shrink-0">
+                            {member.photoUrl && (
+                              <AvatarImage src={member.photoUrl} />
+                            )}
+                            <AvatarFallback>
+                              {getInitials(member.firstName, member.lastName)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <div className="font-medium text-foreground">
+                              {member.firstName}
+                              {' '}
+                              {member.lastName}
+                            </div>
+                            <div className="text-xs text-muted-foreground">{member.email}</div>
+                          </div>
+                        </div>
+
+                        {/* Member Details Grid */}
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <div className="text-xs font-semibold text-muted-foreground">Membership</div>
+                            <div className="mt-1 text-sm text-foreground">
+                              {member.membershipType === 'monthly'
+                                ? 'Month to month'
+                                : member.membershipType === 'annual'
+                                  ? 'Annual'
+                                  : member.membershipType === 'free'
+                                    ? 'Free'
+                                    : member.membershipType === 'free_trial'
+                                      ? 'Free Trial'
+                                      : '-'}
+                            </div>
+                          </div>
+
+                          <div>
+                            <div className="text-xs font-semibold text-muted-foreground">Amount Due</div>
+                            <div className="mt-1 text-sm text-foreground">
+                              {formatCurrency(member.amountDue)}
+                            </div>
+                          </div>
+
+                          <div>
+                            <div className="text-xs font-semibold text-muted-foreground">Next Payment</div>
+                            <div className="mt-1 text-sm text-foreground">
+                              {formatDate(member.nextPayment)}
+                            </div>
+                          </div>
+
+                          <div>
+                            <div className="text-xs font-semibold text-muted-foreground">Last Visited</div>
+                            <div className="mt-1 text-sm text-foreground">
+                              {formatDate(member.lastAccessedAt)}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Status and Action */}
+                        <div className="flex items-center justify-between border-t border-border pt-4">
+                          <Badge variant={getStatusColor(member.status)}>
+                            {member.status.charAt(0).toUpperCase()
+                              + member.status.slice(1)}
+                          </Badge>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => onViewDetailsAction(member.id)}
+                          >
+                            View details
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ))
                 )}
         </div>
 

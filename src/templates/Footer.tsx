@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { CenteredFooter } from '@/features/landing/CenteredFooter';
 import { Section } from '@/features/landing/Section';
 import { AppConfig } from '@/utils/AppConfig';
-import { Logo } from './Logo';
 
 export const Footer = () => {
   const t = useTranslations('Footer');
@@ -11,7 +10,6 @@ export const Footer = () => {
   return (
     <Section className="pt-0 pb-16">
       <CenteredFooter
-        logo={<Logo />}
         name={AppConfig.name}
         iconList={(
           <>
