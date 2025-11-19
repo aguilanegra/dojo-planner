@@ -19,6 +19,7 @@ const config: KnipConfig = {
     '@commitlint/types',
     '@clerk/types',
     '@semantic-release/npm',
+    '@swc/helpers',
     'conventional-changelog-conventionalcommits',
     'vite',
   ],
