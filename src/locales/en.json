@@ -13,11 +13,8 @@
     "company": "Company"
   },
   "Hero": {
-    "follow_twitter": "Follow @Ixartz on Twitter",
-    "title": "The perfect <important>SaaS template</important> to build and scale your business with ease.",
-    "description": "A free and open-source landing page template for your SaaS business, built with Next.js, TypeScript, Shadcn UI, and Tailwind CSS.",
-    "primary_button": "Get Started",
-    "secondary_button": "Buy Next.js SaaS Boilerplate"
+    "title": "Dojo Planner allows you to track and scale your academies with ease.",
+    "primary_button": "Get Started"
   },
   "Features": {
   },

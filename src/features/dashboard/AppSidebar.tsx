@@ -63,22 +63,22 @@ export const AppSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
             },
             {
               title: t('messaging'),
-              url: '/dashboard/academy/messaging',
+              url: '/dashboard/messaging',
               icon: Mail,
             },
             {
               title: t('classes'),
-              url: '/dashboard/academy/billing',
+              url: '/dashboard/billing',
               icon: BookMarked,
             },
             {
               title: t('schedule'),
-              url: '/dashboard/academy/schedule',
+              url: '/dashboard/schedule',
               icon: CalendarDays,
             },
             {
               title: t('finances'),
-              url: '/dashboard/academy/finances',
+              url: '/dashboard/finances',
               icon: Landmark,
             },
           ]}
@@ -88,23 +88,22 @@ export const AppSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
           items={[
             {
               title: t('my_information'),
-              // url: '/dashboard/organization-profile/organization-members',
-              url: '/dashboard/organization-profile/members',
+              url: '/dashboard/account/my-info',
               icon: CircleUser,
             },
             {
               title: t('security'),
-              url: '/dashboard/messaging',
+              url: '/dashboard/account/security',
               icon: ShieldCheck,
             },
             {
               title: t('subscription'),
-              url: '/dashboard/billing',
+              url: '/dashboard/account/subscription',
               icon: Wallet,
             },
             {
               title: t('user_permissions'),
-              url: '/dashboard/organization-profile',
+              url: '/dashboard/account/user-permissions',
               icon: Contact,
             },
           ]}

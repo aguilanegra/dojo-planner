@@ -13,11 +13,8 @@
     "company": "Entreprise"
   },
   "Hero": {
-    "follow_twitter": "Suivez @Ixartz sur Twitter",
-    "title": "Le parfait <important>SaaS template</important> pour construire et mettre à l'échelle votre entreprise en toute simplicité.",
-    "description": "Un template gratuit et open-source de landing page pour votre entreprise SaaS, construit avec Next.js, TypeScript, Shadcn UI et Tailwind CSS.",
-    "primary_button": "Démarrer",
-    "secondary_button": "Acheter Next.js SaaS Boilerplate"
+    "title": "Le parfait pour construire et mettre à l'échelle votre entreprise en toute simplicité.",
+    "primary_button": "Démarrer"
   },
   "Features": {
     "section_subtitle": "Fonctionnalités",
