@@ -41,9 +41,11 @@ export const memberSchema = pgTable('member', {
   id: text('id').primaryKey(), // Clerk user ID
   organizationId: text('organization_id').notNull(),
   // Note: email, firstName, lastName come from Clerk API via useOrganization
+  memberType: text('member_type'), // individual, family-member, head-of-household
   phone: text('phone'),
   dateOfBirth: timestamp('date_of_birth', { mode: 'date' }),
   photoUrl: text('photo_url'),
+  subscriptionPlan: text('subscription_plan'), // free-trial, monthly, annual, custom
   lastAccessedAt: timestamp('last_accessed_at', { mode: 'date' }),
   status: text('status').notNull().default('active'),
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),

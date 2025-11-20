@@ -1,9 +1,13 @@
 'use client';
 
 import { useOrganization } from '@clerk/nextjs';
+import { Download, Plus } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
 import { MembersTable } from './MembersTable';
+import { AddMemberModal } from './wizard/AddMemberModal';
 
 type Member = {
   id: string;
@@ -25,6 +29,7 @@ type Member = {
 export function CustomMembersPage() {
   const params = useParams();
   const locale = (params?.locale as string) || 'en';
+  const t = useTranslations('Members');
 
   const { memberships, organization, isLoaded } = useOrganization({
     memberships: {
@@ -34,6 +39,7 @@ export function CustomMembersPage() {
 
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
 
   useEffect(() => {
     if (!isLoaded || !organization) {
@@ -87,10 +93,29 @@ export function CustomMembersPage() {
   // Render the table even while loading - it will show loading state internally
   // This ensures the page structure is visible immediately for tests and prevents timeouts
   return (
-    <MembersTable
-      members={members}
-      onViewDetailsAction={handleViewDetails}
-      loading={loading || !isLoaded}
-    />
+    <>
+      <MembersTable
+        members={members}
+        onViewDetailsAction={handleViewDetails}
+        loading={loading || !isLoaded}
+        headerActions={(
+          <div className="flex items-center gap-2">
+            <Button variant="outline">
+              <Download className="mr-1 h-4 w-4" />
+              {t('import_members_button')}
+            </Button>
+            <Button onClick={() => setIsAddMemberModalOpen(true)}>
+              <Plus className="mr-1 h-4 w-4" />
+              {t('add_member_button')}
+            </Button>
+          </div>
+        )}
+      />
+
+      <AddMemberModal
+        isOpen={isAddMemberModalOpen}
+        onCloseAction={() => setIsAddMemberModalOpen(false)}
+      />
+    </>
   );
 }

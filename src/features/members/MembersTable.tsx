@@ -30,6 +30,7 @@ type MembersTableProps = {
   members: Member[];
   onViewDetailsAction: (memberId: string) => void;
   loading?: boolean;
+  headerActions?: React.ReactNode;
 };
 
 type SortField = 'firstName' | 'membershipType' | 'amountDue' | 'nextPayment' | 'status' | 'lastAccessedAt';
@@ -39,6 +40,7 @@ export function MembersTable({
   members,
   onViewDetailsAction,
   loading = false,
+  headerActions,
 }: MembersTableProps) {
   const [activeFilter, setActiveFilter] = useState<
     'all' | 'active' | 'cancelled'
@@ -180,7 +182,10 @@ export function MembersTable({
 
       {/* Filter Tabs */}
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-foreground">All Members</h2>
+        <div className="flex items-end justify-between gap-4">
+          <h2 className="text-lg font-semibold text-foreground">All Members</h2>
+          {headerActions}
+        </div>
 
         <div className="flex gap-4 border-b border-border">
           {(['all', 'active', 'cancelled'] as const).map(tab => (
@@ -354,7 +359,6 @@ export function MembersTable({
                             <td className="px-6 py-4">
                               <Button
                                 variant="outline"
-                                size="sm"
                                 onClick={() => onViewDetailsAction(member.id)}
                                 className="whitespace-nowrap"
                               >
@@ -452,7 +456,6 @@ export function MembersTable({
                           </Badge>
                           <Button
                             variant="outline"
-                            size="sm"
                             onClick={() => onViewDetailsAction(member.id)}
                           >
                             View details
