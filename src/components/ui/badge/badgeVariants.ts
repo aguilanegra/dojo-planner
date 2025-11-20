@@ -6,13 +6,13 @@ export const badgeVariants = cva(
     variants: {
       variant: {
         default:
-          'border-transparent bg-primary text-primary-foreground [a&]:hover:bg-primary/90',
+          'border-transparent bg-neutral-500 text-neutral-1500 [a&]:hover:bg-neutral-600',
         secondary:
-          'border-transparent bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90',
+          'border-transparent bg-neutral-1400 text-neutral-100 [a&]:hover:bg-neutral-1300',
         destructive:
-          'border-transparent bg-destructive text-white focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40 [a&]:hover:bg-destructive/90',
+          'border-transparent bg-red-500 text-neutral-100 focus-visible:ring-red-500/20 [a&]:hover:bg-red-500/90',
         outline:
-          'text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground',
+          'border-neutral-600 bg-transparent text-neutral-1500 dark:border-neutral-950 dark:text-neutral-100 [a&]:hover:bg-neutral-500 [a&]:hover:text-neutral-1500 [a&]:dark:hover:bg-neutral-1400 [a&]:dark:hover:text-neutral-100',
       },
     },
     defaultVariants: {

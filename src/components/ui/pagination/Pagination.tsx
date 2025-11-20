@@ -1,7 +1,8 @@
 'use client';
 
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/utils/Helpers';
 
 type PaginationProps = {
   currentPage: number;
@@ -78,19 +79,19 @@ export function Pagination({
   const shouldShowControls = totalPages > 1;
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-4">
-      <div className="text-sm text-muted-foreground">
+    <div className="flex w-full items-center justify-between gap-4">
+      <div className="shrink-0 text-left text-sm text-neutral-1000">
         Showing
         {' '}
-        {startItem}
-        {' '}
-        to
-        {' '}
-        {endItem}
+        <span className="font-semibold">
+          {startItem}
+          -
+          {endItem}
+        </span>
         {' '}
         of
         {' '}
-        {totalItems}
+        <span className="font-semibold">{totalItems}</span>
         {' '}
         entries
       </div>
@@ -98,13 +99,13 @@ export function Pagination({
       {shouldShowControls && (
         <div className="flex shrink-0 items-center gap-2">
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={() => onPageChangeAction(Math.max(0, currentPage - 1))}
             disabled={currentPage === 0}
-            className="gap-2"
+            className="h-10 gap-2 border border-neutral-400 bg-neutral-100 text-neutral-1000 shadow-none disabled:text-neutral-600"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4" />
             Previous
           </Button>
 
@@ -114,7 +115,7 @@ export function Pagination({
                 return (
                   <span
                     key={`ellipsis-${page.id}`}
-                    className="flex items-center justify-center px-2 py-2 text-sm text-muted-foreground"
+                    className="flex items-center justify-center px-3 py-2 text-sm text-neutral-1000"
                   >
                     ...
                   </span>
@@ -127,10 +128,15 @@ export function Pagination({
               return (
                 <Button
                   key={`page-${pageNum}`}
-                  variant={isActive ? 'default' : 'outline'}
+                  variant="ghost"
                   size="sm"
                   onClick={() => onPageChangeAction(pageNum)}
-                  className="min-w-10"
+                  className={cn(
+                    'min-w-10 h-10 border shadow-none',
+                    isActive
+                      ? 'border-neutral-1500 bg-neutral-1500 text-neutral-100 hover:bg-neutral-1500'
+                      : 'border-neutral-400 bg-neutral-100 text-neutral-1000 hover:bg-neutral-200',
+                  )}
                 >
                   {pageNum + 1}
                 </Button>
@@ -139,14 +145,14 @@ export function Pagination({
           </div>
 
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={() => onPageChangeAction(Math.min(totalPages - 1, currentPage + 1))}
             disabled={currentPage === totalPages - 1}
-            className="gap-2"
+            className="h-10 gap-2 border border-neutral-400 bg-neutral-100 text-neutral-1000 shadow-none disabled:text-neutral-600"
           >
             Next
-            <ChevronRight className="h-4 w-4" />
+            <ArrowRight className="h-4 w-4" />
           </Button>
         </div>
       )}

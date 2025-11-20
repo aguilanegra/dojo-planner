@@ -109,17 +109,3 @@ export const ManyPages = {
     />
   ),
 };
-
-export const DarkMode = {
-  render: () => (
-    <PaginationDemo
-      initialPage={4}
-      totalPages={12}
-      totalItems={240}
-      itemsPerPage={10}
-    />
-  ),
-  parameters: {
-    backgrounds: { default: 'dark' },
-  },
-};
