@@ -6,14 +6,12 @@ import { expect, test } from '@playwright/test';
  */
 test.describe('Add Member Wizard - Sanity Checks', () => {
   test('should display homepage', async ({ page }) => {
-    // Sanity check - verify the app is running
+    // Sanity check - verify the app is running and homepage loads
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
 
-    // Verify we can see content
-    const heading = page.getByText(/dojo planner/i);
-
-    await expect(heading).toBeVisible();
+    // Verify page loaded successfully by checking title
+    await expect(page).toHaveTitle(/Dojo Planner/);
   });
 
   test('Add Member Modal - Component Structure Verification', async ({ page }) => {

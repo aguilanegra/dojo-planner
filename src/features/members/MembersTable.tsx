@@ -133,11 +133,18 @@ export function MembersTable({
     if (!date) {
       return '-';
     }
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
+    const d = new Date(date);
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const year = d.getFullYear();
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+
+    const timeZone = new Intl.DateTimeFormat('en-US', {
+      timeZoneName: 'short',
+    }).formatToParts(d).find(part => part.type === 'timeZoneName')?.value || '';
+
+    return `${month}/${day}/${year} ${hours}${minutes} ${timeZone}`;
   };
 
   const formatCurrency = (amount: string | undefined) => {

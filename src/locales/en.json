@@ -64,28 +64,32 @@
     "meta_description": "Effortlessly create an account through our intuitive sign-up process."
   },
   "DashboardLayout": {
-    "main_section_label": "Main navigation",
-    "organization_section_label": "Academy",
-    "account_section_label": "Account",
+    "academy_section_label": "Academy",
+    "business_section_label": "Business",
     "settings_section_label": "Settings",
-    "home": "Dashboard",
-    "todos": "Todos",
-    "messaging": "Messaging",
+    "dashboard": "Dashboard",
     "classes": "Classes",
-    "schedule": "Schdule",
-    "finances": "Finances",
-    "my_information": "My Information",
-    "security": "Security",
-    "subscription": "Subscription",
-    "user_permissions": "User Permissions",
+    "schedule": "Schedule",
     "members": "Members",
+    "staff": "Staff",
+    "messaging": "Messaging",
+    "finances": "Finances",
+    "memberships": "Memberships",
+    "subscription": "Subscription",
+    "marketing": "Marketing",
+    "my_profile": "My Profile",
+    "account_settings": "Account Settings",
+    "location_settings": "Location Settings",
     "preferences": "Preferences",
-    "support": "Support",
-    "feedback": "Feedback"
+    "user_permissions": "User Permissions",
+    "security": "Security",
+    "dark_mode": "Dark Mode",
+    "help": "Help",
+    "log_out": "Log Out"
   },
   "Dashboard": {
-    "meta_title": "SaaS Template Dashboard",
-    "meta_description": "A free and open-source landing page template for your SaaS business, built with Next.js, TypeScript, Shadcn UI, and Tailwind CSS."
+    "meta_title": "Dojo Planner",
+    "meta_description": "An easy way to manage your academy."
   },
   "DashboardIndex": {
     "message_state_title": "Let's get started",
@@ -143,10 +147,10 @@
     "submit_button": "Submit"
   },
   "Members": {
-    "title_bar": "Members",
-    "title_bar_description": "View and manage your academy members",
     "add_member_button": "Add Member",
-    "import_members_button": "Import Members"
+    "import_members_button": "Import Members",
+    "access_denied_title": "Access Denied",
+    "access_denied_message": "You do not have permission to view the members list. Only organization administrators can access this page."
   },
   "AddMemberWizard": {
     "MemberTypeStep": {
@@ -185,8 +189,7 @@
       "country_placeholder": "United States",
       "back_button": "Back",
       "cancel_button": "Cancel",
-      "next_button": "Next",
-      "error_message": "Please fill out all required fields"
+      "next_button": "Next"
     },
     "MemberPhotoStep": {
       "title": "Add Member Photo",

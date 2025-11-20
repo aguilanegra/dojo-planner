@@ -46,7 +46,8 @@ export const memberSchema = pgTable('member', {
   dateOfBirth: timestamp('date_of_birth', { mode: 'date' }),
   photoUrl: text('photo_url'),
   subscriptionPlan: text('subscription_plan'), // free-trial, monthly, annual, custom
-  lastAccessedAt: timestamp('last_accessed_at', { mode: 'date' }),
+  lastAccessedAt: timestamp('last_accessed_at', { mode: 'date' })
+    .$onUpdate(() => new Date()),
   status: text('status').notNull().default('active'),
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' })

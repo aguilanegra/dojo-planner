@@ -20,7 +20,7 @@ type MemberWithCustomData = {
   updatedAt: Date;
 };
 
-export type CreateMemberInput = {
+type CreateMemberInput = {
   id: string;
   firstName: string;
   lastName: string;
@@ -39,7 +39,7 @@ export type CreateMemberInput = {
   };
 };
 
-export type UpdateMemberInput = {
+type UpdateMemberInput = {
   id: string;
   firstName?: string;
   lastName?: string;
@@ -49,6 +49,7 @@ export type UpdateMemberInput = {
   memberType?: string;
   subscriptionPlan?: string;
   dateOfBirth?: Date;
+  lastAccessedAt?: Date;
   status: string;
 };
 

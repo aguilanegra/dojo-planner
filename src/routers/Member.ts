@@ -1,4 +1,4 @@
-import { clerkClient } from '@clerk/nextjs/server';
+import { auth, clerkClient } from '@clerk/nextjs/server';
 import { ORPCError, os } from '@orpc/server';
 import { logger } from '@/libs/Logger';
 import { createMember, deleteMember, updateMember } from '@/services/MembersService';
@@ -106,4 +106,68 @@ export const remove = os
     logger.info('A member has been deleted');
 
     return {};
+  });
+
+export const updateLastAccessed = os
+  .handler(async () => {
+    const { userId, orgId } = await auth();
+
+    if (!userId || !orgId) {
+      throw new ORPCError('Unauthorized', { status: 401 });
+    }
+
+    try {
+      // Try to update existing member
+      const result = await updateMember(
+        {
+          id: userId,
+          status: 'active',
+          lastAccessedAt: new Date(),
+        },
+        orgId,
+      );
+
+      if (result.length > 0) {
+        logger.info(`Updated lastAccessedAt for member: ${userId}`);
+        return {};
+      }
+    } catch (error) {
+      logger.error(`Error updating member: ${error}`);
+    }
+
+    // If member doesn't exist, create a new record with basic info from Clerk
+    try {
+      const clerk = await clerkClient();
+      const clerkUser = await clerk.users.getUser(userId);
+
+      const memberResult = await createMember(
+        {
+          id: userId,
+          firstName: clerkUser.firstName || '',
+          lastName: clerkUser.lastName || '',
+          email: clerkUser.emailAddresses?.[0]?.emailAddress || '',
+          phone: clerkUser.phoneNumbers?.[0]?.phoneNumber || undefined,
+          status: 'active',
+        },
+        orgId,
+      );
+
+      // Now update the lastAccessedAt on the newly created member
+      if (memberResult.length > 0) {
+        await updateMember(
+          {
+            id: userId,
+            status: 'active',
+            lastAccessedAt: new Date(),
+          },
+          orgId,
+        );
+      }
+
+      logger.info(`Created new member record and set lastAccessedAt for: ${userId}`);
+      return {};
+    } catch (error) {
+      logger.error(`Failed to create member record: ${error}`);
+      throw new ORPCError('Failed to update member access time', { status: 500 });
+    }
   });
