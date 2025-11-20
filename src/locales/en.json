@@ -64,28 +64,32 @@
     "meta_description": "Effortlessly create an account through our intuitive sign-up process."
   },
   "DashboardLayout": {
-    "main_section_label": "Main navigation",
-    "organization_section_label": "Academy",
-    "account_section_label": "Account",
+    "academy_section_label": "Academy",
+    "business_section_label": "Business",
     "settings_section_label": "Settings",
-    "home": "Dashboard",
-    "todos": "Todos",
-    "messaging": "Messaging",
+    "dashboard": "Dashboard",
     "classes": "Classes",
-    "schedule": "Schdule",
-    "finances": "Finances",
-    "my_information": "My Information",
-    "security": "Security",
-    "subscription": "Subscription",
-    "user_permissions": "User Permissions",
+    "schedule": "Schedule",
     "members": "Members",
+    "staff": "Staff",
+    "messaging": "Messaging",
+    "finances": "Finances",
+    "memberships": "Memberships",
+    "subscription": "Subscription",
+    "marketing": "Marketing",
+    "my_profile": "My Profile",
+    "account_settings": "Account Settings",
+    "location_settings": "Location Settings",
     "preferences": "Preferences",
-    "support": "Support",
-    "feedback": "Feedback"
+    "user_permissions": "User Permissions",
+    "security": "Security",
+    "dark_mode": "Dark Mode",
+    "help": "Help",
+    "log_out": "Log Out"
   },
   "Dashboard": {
-    "meta_title": "SaaS Template Dashboard",
-    "meta_description": "A free and open-source landing page template for your SaaS business, built with Next.js, TypeScript, Shadcn UI, and Tailwind CSS."
+    "meta_title": "Dojo Planner",
+    "meta_description": "An easy way to manage your academy."
   },
   "DashboardIndex": {
     "message_state_title": "Let's get started",
@@ -141,5 +145,86 @@
     "message_description": "Enter a detailed message for your todo.",
     "message_error_message": "Message is required and cannot be empty",
     "submit_button": "Submit"
+  },
+  "Members": {
+    "add_member_button": "Add Member",
+    "import_members_button": "Import Members",
+    "access_denied_title": "Access Denied",
+    "access_denied_message": "You do not have permission to view the members list. Only organization administrators can access this page."
+  },
+  "AddMemberWizard": {
+    "MemberTypeStep": {
+      "title": "Choose Member Type",
+      "subtitle": "Select the type of member you want to add",
+      "individual_label": "Individual",
+      "individual_description": "You are signing up one individual member. They can add family members later.",
+      "family_member_label": "Family Member",
+      "family_member_description": "This member has a head of household pay for them.",
+      "head_of_household_label": "Head of Household",
+      "head_of_household_description": "This member pays for family members to train.",
+      "cancel_button": "Cancel",
+      "next_button": "Next"
+    },
+    "MemberDetailsStep": {
+      "title": "Add Member Details",
+      "subtitle": "Enter the member's basic information",
+      "first_name_label": "First Name",
+      "first_name_placeholder": "Enter first name",
+      "last_name_label": "Last Name",
+      "last_name_placeholder": "Enter last name",
+      "email_label": "Email",
+      "email_placeholder": "you@example.com",
+      "phone_label": "Phone Number",
+      "phone_placeholder": "(555) 123-4567",
+      "address_label": "Address (Optional)",
+      "street_label": "Street Address",
+      "street_placeholder": "123 Main St",
+      "apartment_label": "Apartment / Line 2",
+      "apartment_placeholder": "#201",
+      "city_label": "City",
+      "city_placeholder": "San Francisco",
+      "state_label": "State",
+      "state_placeholder": "California",
+      "country_label": "Country / Region",
+      "country_placeholder": "United States",
+      "back_button": "Back",
+      "cancel_button": "Cancel",
+      "next_button": "Next"
+    },
+    "MemberPhotoStep": {
+      "title": "Add Member Photo",
+      "subtitle": "Upload a profile photo (optional)",
+      "drop_text": "Drop your image here to upload",
+      "file_types": "Works with any .JPG, .PNG, or .GIF file",
+      "choose_file_button": "Choose File",
+      "remove_photo_button": "Remove Photo",
+      "invalid_file_type": "Invalid file type. Please use JPG, PNG, or GIF.",
+      "back_button": "Back",
+      "cancel_button": "Cancel",
+      "next_button": "Next"
+    },
+    "MemberSubscriptionStep": {
+      "title": "Choose Membership Plan",
+      "subtitle": "Select a subscription plan for this member",
+      "free_trial_label": "Free Trial",
+      "free_trial_description": "7 day free trial with full gym access, no payment required.",
+      "monthly_label": "Monthly",
+      "monthly_description": "One individual has unlimited access to classes for {price}/month. Billing occurs every month on the day the member signs up.",
+      "monthly_price": "$160/month",
+      "annual_label": "Annual",
+      "annual_description": "The member saves $320 per year by signing up for an annual membership. They have unlimited access to classes.",
+      "annual_price": "$1600/year",
+      "custom_label": "Custom",
+      "custom_description": "Create a custom membership for this user.",
+      "back_button": "Back",
+      "cancel_button": "Cancel",
+      "next_button": "Next"
+    },
+    "MemberSuccessStep": {
+      "title": "Success",
+      "description": "{name} has successfully been added as a member. They will receive an email at the email address provided confirming their membership.",
+      "email_confirmation": "A confirmation email will be sent to {email}",
+      "done_button": "Done"
+    }
   }
 }

@@ -1,9 +1,7 @@
 import type { Metadata } from 'next';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { cookies } from 'next/headers';
-import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
-import { AppSidebar } from '@/features/dashboard/AppSidebar';
-import { AppSidebarHeader } from '@/features/dashboard/AppSidebarHeader';
+import { DashboardLayoutClient } from '@/features/dashboard/DashboardLayoutClient';
 import { AppConfig } from '@/utils/AppConfig';
 
 type ILayoutProps = {
@@ -34,15 +32,8 @@ export default async function DashboardLayout(props: ILayoutProps) {
   const defaultOpen = cookieStore.get(AppConfig.sidebarCookieName)?.value !== 'false';
 
   return (
-    <SidebarProvider defaultOpen={defaultOpen}>
-      <AppSidebar />
-      <SidebarInset>
-        <AppSidebarHeader />
-
-        <div className="@container flex-1 px-6 py-4">
-          {props.children}
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+    <DashboardLayoutClient defaultOpen={defaultOpen}>
+      {props.children}
+    </DashboardLayoutClient>
   );
 }

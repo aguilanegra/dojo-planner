@@ -1,8 +1,10 @@
 'use client';
 
-import { OrganizationSwitcher } from '@clerk/nextjs';
-import { BookMarked, CalendarDays, CheckCircle2, CircleUser, Contact, Home, Landmark, LifeBuoy, Mail, Send, Settings, ShieldCheck, Users, Wallet } from 'lucide-react';
+import { OrganizationSwitcher, useClerk } from '@clerk/nextjs';
+import { BookMarked, Briefcase, CalendarDays, CircleUser, CreditCard, HelpCircle, Home, LogOut, Mail, Map, Megaphone, Moon, Settings, ShieldCheck, Users, Users2 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
+import { useState } from 'react';
+import { Badge } from '@/components/ui/badge';
 import { Sidebar, SidebarContent, SidebarHeader, SidebarRail } from '@/components/ui/sidebar';
 import { AppSidebarNav } from '@/features/dashboard/AppSidebarNav';
 import { Logo } from '@/templates/Logo';
@@ -11,6 +13,8 @@ import { getI18nPath } from '@/utils/Helpers';
 export const AppSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
   const locale = useLocale();
   const t = useTranslations('DashboardLayout');
+  const [, setIsDarkMode] = useState(false);
+  const { signOut } = useClerk();
 
   return (
     <Sidebar {...props}>
@@ -38,37 +42,16 @@ export const AppSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
       </SidebarHeader>
       <SidebarContent>
         <AppSidebarNav
-          label={t('main_section_label')}
+          label={t('academy_section_label')}
           items={[
             {
-              title: t('home'),
+              title: t('dashboard'),
               url: '/dashboard',
               icon: Home,
             },
             {
-              title: t('todos'),
-              url: '/dashboard/todos',
-              icon: CheckCircle2,
-            },
-          ]}
-        />
-        <AppSidebarNav
-          label={t('organization_section_label')}
-          items={[
-            {
-              title: t('members'),
-              // url: '/dashboard/organization-profile/organization-members',
-              url: '/dashboard/members',
-              icon: Users,
-            },
-            {
-              title: t('messaging'),
-              url: '/dashboard/messaging',
-              icon: Mail,
-            },
-            {
               title: t('classes'),
-              url: '/dashboard/billing',
+              url: '/dashboard/classes',
               icon: BookMarked,
             },
             {
@@ -77,34 +60,45 @@ export const AppSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
               icon: CalendarDays,
             },
             {
-              title: t('finances'),
-              url: '/dashboard/finances',
-              icon: Landmark,
+              title: t('members'),
+              url: '/dashboard/members',
+              icon: Users,
+            },
+            {
+              title: t('staff'),
+              url: '/dashboard/staff',
+              icon: Users2,
+            },
+            {
+              title: t('messaging'),
+              url: '/dashboard/messaging',
+              icon: Mail,
+              badge: <Badge variant="default">40</Badge>,
             },
           ]}
         />
         <AppSidebarNav
-          label={t('account_section_label')}
+          label={t('business_section_label')}
           items={[
             {
-              title: t('my_information'),
-              url: '/dashboard/account/my-info',
-              icon: CircleUser,
+              title: t('finances'),
+              url: '/dashboard/finances',
+              icon: Briefcase,
             },
             {
-              title: t('security'),
-              url: '/dashboard/account/security',
-              icon: ShieldCheck,
+              title: t('memberships'),
+              url: '/dashboard/memberships',
+              icon: Users2,
             },
             {
               title: t('subscription'),
-              url: '/dashboard/account/subscription',
-              icon: Wallet,
+              url: '/dashboard/subscription',
+              icon: CreditCard,
             },
             {
-              title: t('user_permissions'),
-              url: '/dashboard/account/user-permissions',
-              icon: Contact,
+              title: t('marketing'),
+              url: '/dashboard/marketing',
+              icon: Megaphone,
             },
           ]}
         />
@@ -112,19 +106,57 @@ export const AppSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
           label={t('settings_section_label')}
           items={[
             {
+              title: t('my_profile'),
+              url: '/dashboard/my-profile',
+              icon: CircleUser,
+            },
+            {
+              title: t('account_settings'),
+              url: '/dashboard/account-settings',
+              icon: Settings,
+            },
+            {
+              title: t('location_settings'),
+              url: '/dashboard/location-settings',
+              icon: Map,
+            },
+            {
               title: t('preferences'),
               url: '/dashboard/preferences',
               icon: Settings,
             },
             {
-              title: t('support'),
-              url: 'mailto:help@dojoplanner.com',
-              icon: LifeBuoy,
+              title: t('user_permissions'),
+              url: '/dashboard/user-permissions',
+              icon: CircleUser,
             },
             {
-              title: t('feedback'),
-              url: 'mailto:feedback@dojoplanner.com',
-              icon: Send,
+              title: t('security'),
+              url: '/dashboard/security',
+              icon: ShieldCheck,
+            },
+            {
+              title: t('dark_mode'),
+              url: '/dashboard/dark-mode',
+              icon: Moon,
+              isSwitchItem: true,
+              onSwitchChange: setIsDarkMode,
+            },
+            {
+              title: t('help'),
+              url: '/dashboard/help',
+              icon: HelpCircle,
+            },
+          ]}
+        />
+        <AppSidebarNav
+          label=""
+          items={[
+            {
+              title: t('log_out'),
+              url: '/dashboard/logout',
+              icon: LogOut,
+              onClick: () => signOut({ redirectUrl: '/' }),
             },
           ]}
           className="mt-auto"

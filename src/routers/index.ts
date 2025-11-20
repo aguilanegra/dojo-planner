@@ -1,3 +1,4 @@
+import { create as createMember, remove as removeMember, updateLastAccessed, update as updateMember } from './Member';
 import { list as listMembers } from './Members';
 import { create, edit, remove } from './Todo';
 
@@ -9,5 +10,11 @@ export const router = {
   },
   members: {
     list: listMembers,
+  },
+  member: {
+    create: createMember,
+    update: updateMember,
+    remove: removeMember,
+    updateLastAccessed,
   },
 };
