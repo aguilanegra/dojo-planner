@@ -246,5 +246,24 @@
       "email_confirmation": "Un email de confirmation sera envoyé à {email}",
       "done_button": "Terminé"
     }
+  },
+  "ClassesPage": {
+    "title": "Cours",
+    "description": "Gérer et afficher tous les cours",
+    "search_placeholder": "Rechercher des cours...",
+    "location_label": "Siège du centre-ville",
+    "arrange_label": "Organiser",
+    "filter_label": "Filtrer",
+    "list_view_label": "Liste",
+    "grid_view_label": "Grille",
+    "add_new_class_button": "Ajouter un nouveau cours"
+  },
+  "SchedulePage": {
+    "title": "Emploi du temps",
+    "import_calendar_button": "Importer le calendrier",
+    "add_event_button": "Ajouter un événement",
+    "month_tab": "Mois",
+    "week_tab": "Semaine",
+    "day_tab": "Jour"
   }
 }
