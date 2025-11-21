@@ -130,7 +130,8 @@ export function CustomMembersPage() {
   }, [isLoaded, locale, organization, memberships?.data]);
 
   const handleViewDetails = (memberId: string) => {
-    console.warn('View details for member:', memberId);
+    // Navigate to member detail page
+    window.location.href = `/${locale}/dashboard/members/${memberId}`;
   };
 
   // Show permission error if user is not an organization admin
