@@ -92,8 +92,6 @@
     "meta_description": "An easy way to manage your academy."
   },
   "DashboardIndex": {
-    "message_state_title": "Let's get started",
-    "message_state_description": "You can customize this page by editing the file at <code>dashboard/page.tsx</code>"
   },
   "Billing": {
     "title_bar": "Billing",
@@ -267,5 +265,24 @@
       "email_confirmation": "A confirmation email will be sent to {email}",
       "done_button": "Done"
     }
+  },
+  "ClassesPage": {
+    "title": "Classes",
+    "description": "Manage and view all classes",
+    "search_placeholder": "Search classes...",
+    "location_label": "Downtown HQ",
+    "arrange_label": "Arrange",
+    "filter_label": "Filter",
+    "list_view_label": "List",
+    "grid_view_label": "Grid",
+    "add_new_class_button": "Add New Class"
+  },
+  "SchedulePage": {
+    "title": "Schedule",
+    "import_calendar_button": "Import Calendar",
+    "add_event_button": "Add Event",
+    "month_tab": "Month",
+    "week_tab": "Week",
+    "day_tab": "Day"
   }
 }

@@ -6,6 +6,9 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   plugins: [react(), tsconfigPaths()],
+  optimizeDeps: {
+    include: ['next-intl', '@radix-ui/react-tabs', 'recharts'],
+  },
   test: {
     coverage: {
       include: ['src/**/*'],
