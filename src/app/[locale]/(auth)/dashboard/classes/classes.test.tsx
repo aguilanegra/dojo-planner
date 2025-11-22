@@ -21,14 +21,6 @@ describe('Classes Page', () => {
     expect(addButton).toBeInTheDocument();
   });
 
-  it('renders utility bar with search', () => {
-    render(<I18nWrapper><ClassesPage /></I18nWrapper>);
-
-    const searchInput = page.getByPlaceholder(/Search anything/i);
-
-    expect(searchInput).toBeInTheDocument();
-  });
-
   it('displays class cards', () => {
     render(<I18nWrapper><ClassesPage /></I18nWrapper>);
 

@@ -72,12 +72,4 @@ describe('Schedule Page', () => {
 
     expect(event).toBeInTheDocument();
   });
-
-  it('renders utility bar with search', () => {
-    render(<I18nWrapper><SchedulePage /></I18nWrapper>);
-
-    const searchInput = page.getByPlaceholder(/Search anything/i);
-
-    expect(searchInput).toBeInTheDocument();
-  });
 });

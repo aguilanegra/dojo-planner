@@ -1,7 +1,6 @@
 'use client';
 
 import { Card } from '@/components/ui/card';
-import { UtilityBar } from '@/components/ui/utility-bar';
 import DashboardCharts from './DashboardCharts';
 
 const memberAverageData = [
@@ -61,11 +60,8 @@ const financialsData = [
 export function DashboardPage() {
   return (
     <div className="space-y-6">
-      {/* Header with Utility Bar */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-        <UtilityBar />
-      </div>
+      {/* Header */}
+      <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
 
       {/* Main Content Grid */}
       <div className="grid gap-6 lg:grid-cols-3">
