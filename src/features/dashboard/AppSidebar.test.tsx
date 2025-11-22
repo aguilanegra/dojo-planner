@@ -44,7 +44,6 @@ describe('AppSidebar', () => {
       expect(dashboardLayout.preferences).toBe('Preferences');
       expect(dashboardLayout.user_permissions).toBe('User Permissions');
       expect(dashboardLayout.security).toBe('Security');
-      expect(dashboardLayout.dark_mode).toBe('Dark Mode');
       expect(dashboardLayout.help).toBe('Help');
     });
 
@@ -77,7 +76,6 @@ describe('AppSidebar', () => {
         'preferences',
         'user_permissions',
         'security',
-        'dark_mode',
         'help',
         'log_out',
       ];

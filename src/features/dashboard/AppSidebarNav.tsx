@@ -1,6 +1,10 @@
+'use client';
+
 import type { LucideIcon } from 'lucide-react';
 import type { ComponentPropsWithoutRef, ReactNode } from 'react';
+import { useLocale } from 'next-intl';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';
 import { Switch } from '@/components/ui/switch';
 
@@ -14,9 +18,17 @@ export const AppSidebarNav = (props: {
     isSwitchItem?: boolean;
     onSwitchChange?: (checked: boolean) => void;
     onClick?: () => void | Promise<void>;
+    disabled?: boolean;
   }[];
 } & ComponentPropsWithoutRef<typeof SidebarGroup>) => {
   const { toggleSidebar, isMobile } = useSidebar();
+  const pathname = usePathname();
+  const locale = useLocale();
+
+  const isActive = (url: string) => {
+    const pathWithoutLocale = pathname.startsWith(`/${locale}`) ? pathname.slice(`/${locale}`.length) : pathname;
+    return pathWithoutLocale === url;
+  };
 
   return (
     <SidebarGroup {...props}>
@@ -43,8 +55,11 @@ export const AppSidebarNav = (props: {
                     item.onClick
                       ? (
                           <SidebarMenuButton
-                            className={item.badge ? 'flex items-center justify-between' : undefined}
+                            className={`${item.disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} ${isActive(item.url) ? 'bg-slate-200 dark:bg-slate-700' : ''} ${item.badge ? 'flex items-center justify-between' : ''}`}
                             onClick={async () => {
+                              if (item.disabled) {
+                                return;
+                              }
                               await item.onClick?.();
                               if (isMobile) {
                                 toggleSidebar();
@@ -65,14 +80,14 @@ export const AppSidebarNav = (props: {
                       : (
                           <SidebarMenuButton
                             asChild
-                            className={item.badge ? 'flex items-center justify-between' : undefined}
+                            className={`${item.disabled ? 'pointer-events-none cursor-not-allowed opacity-50' : 'cursor-pointer'} ${isActive(item.url) ? 'bg-slate-200 dark:bg-slate-700' : ''} ${item.badge ? 'flex items-center justify-between' : ''}`}
                             onClick={() => {
                               if (isMobile) {
                                 toggleSidebar();
                               }
                             }}
                           >
-                            <Link href={item.url} className="flex w-full items-center justify-between">
+                            <Link href={item.disabled ? '#' : item.url} className="flex w-full items-center justify-between">
                               <div className="flex items-center gap-2">
                                 <item.icon size={16} />
                                 <span>{item.title}</span>
