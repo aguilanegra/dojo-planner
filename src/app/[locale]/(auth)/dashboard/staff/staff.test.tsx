@@ -20,14 +20,6 @@ describe('Staff Page', () => {
     expect(inviteButton).toBeInTheDocument();
   });
 
-  it('renders utility bar with search', () => {
-    render(<StaffPage />);
-
-    const searchInput = page.getByPlaceholder(/Search anything/i);
-
-    expect(searchInput).toBeInTheDocument();
-  });
-
   it('renders staff table', () => {
     render(<StaffPage />);
 

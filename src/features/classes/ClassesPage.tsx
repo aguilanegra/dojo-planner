@@ -1,14 +1,13 @@
 'use client';
 
-import { ChevronDown, Grid3x3, List, Plus, Search } from 'lucide-react';
+import { ChevronDown, Grid3x3, List, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ButtonGroupItem, ButtonGroupRoot } from '@/components/ui/button-group';
 import { Card } from '@/components/ui/card';
-import { UtilityBar } from '@/components/ui/utility-bar';
 
 const mockClasses = [
   {
@@ -20,7 +19,10 @@ const mockClasses = [
     style: 'Gi',
     schedule: 'M/W/F • 6-7 PM',
     location: 'Downtown HQ',
-    instructors: ['Coach Alex', 'Professor Jessica'],
+    instructors: [
+      { name: 'Coach Alex', photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex' },
+      { name: 'Professor Jessica', photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jessica' },
+    ],
   },
   {
     id: '2',
@@ -31,7 +33,7 @@ const mockClasses = [
     style: 'Gi',
     schedule: 'T/Th • 6-7:30 PM',
     location: 'Downtown HQ',
-    instructors: ['Professor Ivan'],
+    instructors: [{ name: 'Professor Ivan', photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ivan' }],
   },
   {
     id: '3',
@@ -42,7 +44,7 @@ const mockClasses = [
     style: 'Gi',
     schedule: 'M/W • 7-8 PM',
     location: 'Downtown HQ',
-    instructors: ['Professor Joao'],
+    instructors: [{ name: 'Professor Joao', photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Joao' }],
   },
   {
     id: '4',
@@ -53,7 +55,7 @@ const mockClasses = [
     style: 'No Gi',
     schedule: 'W/F • 7-8 PM',
     location: 'Downtown HQ',
-    instructors: ['Coach Alex'],
+    instructors: [{ name: 'Coach Alex', photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex' }],
   },
   {
     id: '5',
@@ -64,7 +66,7 @@ const mockClasses = [
     style: 'Gi',
     schedule: 'T/Th • 7-8 PM',
     location: 'Downtown HQ',
-    instructors: ['Coach Liza'],
+    instructors: [{ name: 'Coach Liza', photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Liza' }],
   },
   {
     id: '6',
@@ -75,7 +77,7 @@ const mockClasses = [
     style: 'No Gi',
     schedule: 'Sa/Su • 12-1 PM',
     location: 'Downtown HQ',
-    instructors: ['Professor Joao'],
+    instructors: [{ name: 'Professor Joao', photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Joao' }],
   },
   {
     id: '7',
@@ -86,7 +88,7 @@ const mockClasses = [
     style: 'No Gi',
     schedule: 'M/W/F • 12-1 PM',
     location: 'Downtown HQ',
-    instructors: ['Coach Liza'],
+    instructors: [{ name: 'Coach Liza', photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Liza' }],
   },
   {
     id: '8',
@@ -97,7 +99,7 @@ const mockClasses = [
     style: 'Gi',
     schedule: 'M/W/F • 5-6 PM',
     location: 'Downtown HQ',
-    instructors: ['Professor Jessica'],
+    instructors: [{ name: 'Professor Jessica', photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jessica' }],
   },
   {
     id: '9',
@@ -108,7 +110,7 @@ const mockClasses = [
     style: 'Judo Gi',
     schedule: 'T/Th • 5-6 PM',
     location: 'Downtown HQ',
-    instructors: ['Sensei Nakayama'],
+    instructors: [{ name: 'Sensei Nakayama', photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Nakayama' }],
   },
 ];
 
@@ -127,6 +129,11 @@ function getLevelColor(level: string): 'default' | 'secondary' | 'destructive' |
   }
 }
 
+function getInitials(name: string) {
+  const parts = name.split(' ');
+  return parts.map(part => part[0]).join('').toUpperCase();
+}
+
 export function ClassesPage() {
   const t = useTranslations('ClassesPage');
   const [viewType, setViewType] = useState('grid');
@@ -134,26 +141,13 @@ export function ClassesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">{t('title')}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{t('description')}</p>
-        </div>
-        <UtilityBar />
+      <div>
+        <h1 className="text-3xl font-bold text-foreground">{t('title')}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">{t('description')}</p>
       </div>
 
-      {/* Search and Controls */}
+      {/* Controls */}
       <div className="space-y-4">
-        {/* Search */}
-        <div className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2">
-          <Search className="h-4 w-4 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder={t('search_placeholder')}
-            className="flex-1 bg-transparent text-foreground outline-none placeholder:text-muted-foreground"
-          />
-        </div>
-
         {/* Controls Row */}
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
@@ -239,13 +233,12 @@ export function ClassesPage() {
                   <p className="text-muted-foreground">Instructors</p>
                   <div className="mt-2 flex flex-col gap-2">
                     {classItem.instructors.map(instructor => (
-                      <div key={instructor} className="flex items-center gap-2">
+                      <div key={instructor.name} className="flex items-center gap-2">
                         <Avatar className="h-6 w-6">
-                          <AvatarFallback className="bg-amber-700 text-xs font-semibold text-white">
-                            {instructor.charAt(0)}
-                          </AvatarFallback>
+                          <AvatarImage src={instructor.photoUrl} alt={instructor.name} />
+                          <AvatarFallback>{getInitials(instructor.name)}</AvatarFallback>
                         </Avatar>
-                        <span className="text-sm text-foreground">{instructor}</span>
+                        <span className="text-sm text-foreground">{instructor.name}</span>
                       </div>
                     ))}
                   </div>

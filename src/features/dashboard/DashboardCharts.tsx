@@ -1,7 +1,7 @@
 'use client';
 
 import { ArrowRight, ChevronDown } from 'lucide-react';
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
@@ -23,10 +23,9 @@ export default function DashboardCharts({ memberAverageData, earningsData }: Das
           </Button>
         </div>
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={memberAverageData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.2} />
-            <XAxis dataKey="month" />
-            <YAxis />
+          <BarChart data={memberAverageData} margin={{ left: 0, right: 0, top: 0, bottom: 0 }}>
+            <XAxis dataKey="month" axisLine={false} tickLine={false} />
+            <YAxis axisLine={false} tickLine={false} />
             <Tooltip
               contentStyle={{
                 backgroundColor: 'var(--background)',
@@ -34,7 +33,7 @@ export default function DashboardCharts({ memberAverageData, earningsData }: Das
                 borderRadius: '0.5rem',
               }}
             />
-            <Bar dataKey="average" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="average" fill="hsl(var(--primary))" radius={[12, 12, 10, 10]} maxBarSize={40} />
           </BarChart>
         </ResponsiveContainer>
         <div className="mt-4 flex items-center justify-end">
@@ -55,10 +54,9 @@ export default function DashboardCharts({ memberAverageData, earningsData }: Das
           </Button>
         </div>
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={earningsData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.2} />
-            <XAxis dataKey="month" />
-            <YAxis />
+          <BarChart data={earningsData} margin={{ left: 0, right: 0, top: 0, bottom: 0 }}>
+            <XAxis dataKey="month" axisLine={false} tickLine={false} />
+            <YAxis axisLine={false} tickLine={false} />
             <Tooltip
               contentStyle={{
                 backgroundColor: 'var(--background)',
@@ -66,7 +64,7 @@ export default function DashboardCharts({ memberAverageData, earningsData }: Das
                 borderRadius: '0.5rem',
               }}
             />
-            <Bar dataKey="earnings" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="earnings" fill="hsl(var(--accent))" radius={[12, 12, 10, 10]} maxBarSize={40} />
           </BarChart>
         </ResponsiveContainer>
         <div className="mt-4 flex items-center justify-end">

@@ -53,12 +53,4 @@ describe('Dashboard Page', () => {
     expect(memberAverageChart).toBeInTheDocument();
     expect(earningsChart).toBeInTheDocument();
   });
-
-  it('renders utility bar with search', () => {
-    render(<DashboardPage />);
-
-    const searchInput = page.getByPlaceholder(/Search anything/i);
-
-    expect(searchInput).toBeInTheDocument();
-  });
 });

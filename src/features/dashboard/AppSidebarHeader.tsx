@@ -1,6 +1,7 @@
 import { UserButton } from '@clerk/nextjs';
 import { DarkModeToggle } from '@/components/DarkModeToggle';
 import { LocaleSwitcher } from '@/components/LocaleSwitcher';
+import { NotificationButton } from '@/components/NotificationButton';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 
 export const AppSidebarHeader = () => (
@@ -10,6 +11,10 @@ export const AppSidebarHeader = () => (
     </div>
 
     <ul className="flex items-center gap-x-1.5">
+      <li>
+        <NotificationButton />
+      </li>
+
       <li>
         <DarkModeToggle />
       </li>

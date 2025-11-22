@@ -1,12 +1,10 @@
 'use client';
 
-import { ArrowDownAZ, ArrowUpZA, Plus, Search } from 'lucide-react';
+import { ArrowDownAZ, ArrowUpZA, Plus } from 'lucide-react';
 import { useState } from 'react';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { UtilityBar } from '@/components/ui/utility-bar';
 
 const mockStaff = [
   {
@@ -14,35 +12,35 @@ const mockStaff = [
     name: 'Charlie Baptista',
     email: 'charlie@dojo.com',
     status: 'Active',
-    avatar: 'CB',
+    photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Charlie',
   },
   {
     id: '2',
     name: 'Professor Jessica',
     email: 'jessica@dojo.com',
     status: 'Active',
-    avatar: 'PJ',
+    photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jessica',
   },
   {
     id: '3',
     name: 'Coach Alex',
     email: 'alex@dojo.com',
     status: 'Active',
-    avatar: 'CA',
+    photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex',
   },
   {
     id: '4',
     name: 'Sarah Martinez',
     email: 'sarah@dojo.com',
     status: 'Active',
-    avatar: 'SM',
+    photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah',
   },
   {
     id: '5',
     name: 'Mike Johnson',
     email: 'mike@dojo.com',
     status: 'Invitation sent',
-    avatar: 'MJ',
+    photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mike',
   },
 ];
 
@@ -57,6 +55,11 @@ function getStatusVariant(status: string): 'default' | 'secondary' | 'destructiv
     return 'secondary';
   }
   return 'outline';
+}
+
+function getInitials(name: string) {
+  const parts = name.split(' ');
+  return parts.map(part => part[0]).join('').toUpperCase();
 }
 
 export function StaffPage() {
@@ -98,27 +101,14 @@ export function StaffPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header with Utility Bar */}
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Staff</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Manage your team members</p>
-        </div>
-        <UtilityBar />
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-foreground">Staff</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Manage your team members</p>
       </div>
 
-      {/* Search and Controls Row */}
+      {/* Controls Row */}
       <div className="flex items-center justify-end gap-4">
-        {/* Search */}
-        <div className="flex w-64 items-center gap-2 rounded-lg border border-border bg-background px-3 py-2">
-          <Search className="h-4 w-4 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Search staff..."
-            className="flex-1 bg-transparent text-foreground outline-none placeholder:text-muted-foreground"
-          />
-        </div>
-
         {/* Invite Staff Member Button */}
         <Button>
           <Plus className="mr-2 h-4 w-4" />
@@ -127,11 +117,11 @@ export function StaffPage() {
       </div>
 
       {/* Staff Table */}
-      <Card className="overflow-hidden">
+      <div className="rounded-lg border border-border bg-background">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-border bg-secondary/50">
+              <tr className="border-b border-border bg-secondary">
                 <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
                   <button
                     type="button"
@@ -169,7 +159,8 @@ export function StaffPage() {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-8 w-8">
-                        <AvatarFallback className="text-xs">{staff.avatar}</AvatarFallback>
+                        <AvatarImage src={staff.photoUrl} alt={staff.name} />
+                        <AvatarFallback>{getInitials(staff.name)}</AvatarFallback>
                       </Avatar>
                       <div className="flex flex-col">
                         <span className="text-sm font-medium text-foreground">{staff.name}</span>
@@ -195,7 +186,7 @@ export function StaffPage() {
             </tbody>
           </table>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }
