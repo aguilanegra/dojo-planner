@@ -1,12 +1,29 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { BookMarked, CalendarDays, CreditCard, Home, Mail, Settings, Users, Users2 } from 'lucide-react';
+import { vi } from 'vitest';
 import { Badge } from '@/components/ui/badge';
+import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebarNav } from './AppSidebarNav';
+
+vi.mock('next-intl', async () => {
+  const actual = await vi.importActual('next-intl');
+  return {
+    ...actual,
+    useLocale: () => 'en',
+  };
+});
 
 const meta = {
   title: 'Features/Dashboard/AppSidebarNav',
   component: AppSidebarNav,
   tags: ['autodocs'],
+  decorators: [
+    Story => (
+      <SidebarProvider>
+        <Story />
+      </SidebarProvider>
+    ),
+  ],
 } satisfies Meta<typeof AppSidebarNav>;
 
 export default meta;
