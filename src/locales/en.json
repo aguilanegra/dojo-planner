@@ -378,6 +378,7 @@
     "status_column": "Status",
     "actions_column": "Actions",
     "view_action_button": "View"
+  },
   "FinancesPage": {
     "title": "Finances",
     "transactions_heading": "Transactions",

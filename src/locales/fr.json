@@ -420,6 +420,7 @@
     "status_column": "Statut",
     "actions_column": "Actions",
     "view_action_button": "Afficher"
+  },
   "FinancesPage": {
     "title": "Finances",
     "transactions_heading": "Transactions",
