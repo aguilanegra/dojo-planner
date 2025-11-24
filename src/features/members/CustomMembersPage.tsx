@@ -44,11 +44,13 @@ export function CustomMembersPage() {
   const [hasPermission, setHasPermission] = useState(true);
 
   useEffect(() => {
-    if (!isLoaded) {
+    if (!isLoaded || !organization) {
       return;
     }
 
-    if (!organization) {
+    // Don't proceed if memberships are not available yet
+    // This prevents the race condition where isLoaded is true but memberships haven't been fetched yet
+    if (!memberships?.data) {
       return;
     }
 
