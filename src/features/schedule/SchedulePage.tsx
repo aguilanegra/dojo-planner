@@ -5,7 +5,6 @@ import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { UtilityBar } from '@/components/ui/utility-bar';
 
 const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -42,10 +41,7 @@ export function SchedulePage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-3xl font-bold text-foreground">{t('title')}</h1>
-        <UtilityBar />
-      </div>
+      <h1 className="text-3xl font-bold text-foreground">{t('title')}</h1>
 
       {/* Event Calendar Card */}
       <Card className="p-6">
