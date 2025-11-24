@@ -1,9 +1,8 @@
 'use client';
 
 import { OrganizationSwitcher, useClerk } from '@clerk/nextjs';
-import { BookMarked, Briefcase, CalendarDays, CircleUser, CreditCard, HelpCircle, Home, LogOut, Mail, Map, Megaphone, Moon, Settings, ShieldCheck, Users, Users2 } from 'lucide-react';
+import { BookMarked, Briefcase, CalendarDays, CircleUser, CreditCard, HelpCircle, Home, LogOut, Mail, Map, Megaphone, Settings, ShieldCheck, Users, Users2 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Sidebar, SidebarContent, SidebarHeader, SidebarRail } from '@/components/ui/sidebar';
 import { AppSidebarNav } from '@/features/dashboard/AppSidebarNav';
@@ -13,7 +12,6 @@ import { getI18nPath } from '@/utils/Helpers';
 export const AppSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
   const locale = useLocale();
   const t = useTranslations('DashboardLayout');
-  const [, setIsDarkMode] = useState(false);
   const { signOut } = useClerk();
 
   return (
@@ -74,6 +72,7 @@ export const AppSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
               url: '/dashboard/messaging',
               icon: Mail,
               badge: <Badge variant="default">40</Badge>,
+              disabled: true,
             },
           ]}
         />
@@ -119,6 +118,7 @@ export const AppSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
               title: t('location_settings'),
               url: '/dashboard/location-settings',
               icon: Map,
+              disabled: true,
             },
             {
               title: t('preferences'),
@@ -134,13 +134,6 @@ export const AppSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
               title: t('security'),
               url: '/dashboard/security',
               icon: ShieldCheck,
-            },
-            {
-              title: t('dark_mode'),
-              url: '/dashboard/dark-mode',
-              icon: Moon,
-              isSwitchItem: true,
-              onSwitchChange: setIsDarkMode,
             },
             {
               title: t('help'),
