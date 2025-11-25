@@ -101,8 +101,7 @@ export const Default: Story = {
               {' '}
               {activeItem}
               {' '}
-              page. Click the sidebar items to see the
-              selection state changes.
+              page. Click the sidebar items to see the selection state changes.
             </p>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="rounded-lg bg-neutral-200 p-4">
