@@ -43,7 +43,7 @@ export const AppSidebarNav = (props: {
                     item.onClick
                       ? (
                           <SidebarMenuButton
-                            className={item.badge ? 'flex items-center justify-between' : undefined}
+                            icon={<item.icon size={16} />}
                             onClick={async () => {
                               await item.onClick?.();
                               if (isMobile) {
@@ -51,10 +51,7 @@ export const AppSidebarNav = (props: {
                               }
                             }}
                           >
-                            <div className="flex items-center gap-2">
-                              <item.icon size={16} />
-                              <span>{item.title}</span>
-                            </div>
+                            <span className="flex-1">{item.title}</span>
                             {item.badge && (
                               <span className="pointer-events-none">
                                 {item.badge}
@@ -64,24 +61,17 @@ export const AppSidebarNav = (props: {
                         )
                       : (
                           <SidebarMenuButton
-                            asChild
-                            className={item.badge ? 'flex items-center justify-between' : undefined}
                             onClick={() => {
                               if (isMobile) {
                                 toggleSidebar();
                               }
                             }}
+                            asChild
                           >
-                            <Link href={item.url} className="flex w-full items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <item.icon size={16} />
-                                <span>{item.title}</span>
-                              </div>
-                              {item.badge && (
-                                <span className="pointer-events-none">
-                                  {item.badge}
-                                </span>
-                              )}
+                            <Link href={item.url} className="flex w-full items-center gap-2">
+                              <item.icon size={16} />
+                              <span className="flex-1">{item.title}</span>
+                              {item.badge}
                             </Link>
                           </SidebarMenuButton>
                         )

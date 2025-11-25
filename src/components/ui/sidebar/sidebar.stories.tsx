@@ -1,5 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import {
+  Calendar,
+  Home,
+  Inbox,
+  Search,
+  Settings,
+} from 'lucide-react';
+import { useState } from 'react';
+import { Logo } from '@/templates/Logo';
+import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -20,6 +29,11 @@ const meta = {
   component: Sidebar,
   parameters: {
     layout: 'fullscreen',
+    docs: {
+      description: {
+        component: 'A flexible sidebar component that supports collapsing, different variants, and positioning. Features interactive navigation with icons and theming.',
+      },
+    },
   },
   tags: ['autodocs'],
 } satisfies Meta<typeof Sidebar>;
@@ -28,140 +42,85 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  render: () => (
-    <SidebarProvider>
-      <Sidebar>
-        <SidebarHeader>
-          <div className="flex items-center gap-2 px-4">
-            <div className="h-8 w-8 rounded-lg bg-blue-600" />
-            <span className="font-semibold">App</span>
+  render: () => {
+    const [activeItem, setActiveItem] = useState('dashboard');
+
+    const menuItems = [
+      { id: 'dashboard', label: 'Dashboard', icon: <Home /> },
+      { id: 'inbox', label: 'Inbox', icon: <Inbox /> },
+      { id: 'calendar', label: 'Calendar', icon: <Calendar /> },
+      { id: 'search', label: 'Search', icon: <Search /> },
+      { id: 'settings', label: 'Settings', icon: <Settings /> },
+    ];
+
+    return (
+      <SidebarProvider>
+        <Sidebar>
+          <SidebarHeader>
+            <div className="flex justify-center pt-3 pb-0">
+              <Logo />
+            </div>
+          </SidebarHeader>
+          <SidebarContent>
+            <SidebarGroup>
+              <SidebarGroupLabel>Academy</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {menuItems.map(item => (
+                    <SidebarMenuItem key={item.id}>
+                      <SidebarMenuButton
+                        icon={item.icon}
+                        isActive={activeItem === item.id}
+                        onClick={() => setActiveItem(item.id)}
+                      >
+                        {item.label}
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </SidebarContent>
+          <SidebarFooter>
+            <div className="px-2 text-xs text-neutral-800">
+              © 2024 Dojo Planner
+            </div>
+          </SidebarFooter>
+          <SidebarRail />
+        </Sidebar>
+        <main className="flex-1 p-4">
+          <div className="mb-6 flex items-center gap-4">
+            <SidebarTrigger />
+            <h1 className="text-2xl font-bold text-neutral-1200">
+              {menuItems.find(item => item.id === activeItem)?.label}
+            </h1>
           </div>
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton>Dashboard</SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton>Projects</SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton>Settings</SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
-        <SidebarFooter>
-          <div className="px-4 text-xs text-muted-foreground">© 2024</div>
-        </SidebarFooter>
-        <SidebarRail />
-      </Sidebar>
-      <main className="flex flex-1 flex-col gap-4 p-4">
-        <SidebarTrigger />
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome to your dashboard</p>
-        </div>
-      </main>
-    </SidebarProvider>
-  ),
-};
-
-export const WithGroups: Story = {
-  render: () => (
-    <SidebarProvider>
-      <Sidebar>
-        <SidebarHeader>
-          <div className="flex items-center gap-2 px-4">
-            <div className="h-8 w-8 rounded-lg bg-purple-600" />
-            <span className="font-semibold">Workspace</span>
+          <div className="space-y-4">
+            <p className="text-neutral-900">
+              Welcome to your
+              {' '}
+              {activeItem}
+              {' '}
+              page. Click the sidebar items to see the
+              selection state changes.
+            </p>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="rounded-lg bg-neutral-200 p-4">
+                <h3 className="mb-2 font-medium text-neutral-1200">Selected State</h3>
+                <p className="text-sm text-neutral-900">
+                  Selected items have a dark background (neutral-1200) with light text and icons.
+                </p>
+              </div>
+              <div className="rounded-lg bg-neutral-200 p-4">
+                <h3 className="mb-2 font-medium text-neutral-1200">Unselected State</h3>
+                <p className="text-sm text-neutral-900">
+                  Unselected items have a light background (neutral-100) with dark text and icons.
+                </p>
+              </div>
+            </div>
           </div>
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupLabel>Main</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton>Home</SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton>Search</SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-
-          <SidebarGroup>
-            <SidebarGroupLabel>Tools</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton>Analytics</SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton>Reports</SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-
-          <SidebarGroup>
-            <SidebarGroupLabel>Account</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton>Profile</SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton>Settings</SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
-        <SidebarFooter>
-          <div className="px-4 text-xs text-muted-foreground">v1.0.0</div>
-        </SidebarFooter>
-        <SidebarRail />
-      </Sidebar>
-      <main className="flex-1 p-4">
-        <SidebarTrigger />
-      </main>
-    </SidebarProvider>
-  ),
-};
-
-export const Minimal: Story = {
-  render: () => (
-    <SidebarProvider defaultOpen={false}>
-      <Sidebar>
-        <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton tooltip="Home">H</SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton tooltip="Projects">P</SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton tooltip="Settings">S</SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
-        <SidebarRail />
-      </Sidebar>
-      <main className="flex-1 p-4">
-        <SidebarTrigger />
-      </main>
-    </SidebarProvider>
-  ),
+        </main>
+      </SidebarProvider>
+    );
+  },
 };
