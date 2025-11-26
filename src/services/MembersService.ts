@@ -18,6 +18,7 @@ type MemberWithCustomData = {
   status: string;
   createdAt: Date;
   updatedAt: Date;
+  create_organization_enabled?: boolean;
 };
 
 type CreateMemberInput = {
@@ -92,6 +93,8 @@ export async function getOrganizationMembers(
   return members.map((clerkMember) => {
     const userId = clerkMember.publicUserData?.userId;
     const customData = userId ? customDataMap.get(userId) : null;
+    // Check if user is an organization admin via the 'org:admin' role from Clerk
+    const isAdmin = clerkMember.role === 'org:admin';
 
     return {
       id: userId || '',
@@ -100,13 +103,14 @@ export async function getOrganizationMembers(
       email: clerkMember.publicUserData?.identifier || '',
       phone: customData?.phone || null,
       dateOfBirth: customData?.dateOfBirth || null,
-      photoUrl: customData?.photoUrl || null,
+      photoUrl: clerkMember.publicUserData?.imageUrl || null,
       memberType: customData?.memberType || null,
       subscriptionPlan: customData?.subscriptionPlan || null,
       lastAccessedAt: customData?.lastAccessedAt || null,
       status: customData?.status || 'active',
       createdAt: customData?.createdAt || new Date(),
       updatedAt: customData?.updatedAt || new Date(),
+      create_organization_enabled: isAdmin,
     };
   });
 }

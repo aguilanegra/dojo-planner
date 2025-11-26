@@ -147,7 +147,7 @@ export default function MemberDetailPage() {
   const memberData = generateMockMemberData(memberId);
 
   const handleEditDetails = () => {
-    console.warn('Edit details for member:', memberId);
+    router.push(`/${params?.locale}/dashboard/members/${memberId}/edit`);
   };
 
   const handleAddFamilyMember = () => {

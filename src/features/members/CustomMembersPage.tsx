@@ -4,9 +4,9 @@ import { useOrganization } from '@clerk/nextjs';
 import { Download, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { client } from '@/libs/Orpc';
+import { invalidateMembersCache, useMembersCache } from '@/hooks/useMembersCache';
 import { MembersTable } from './MembersTable';
 import { AddMemberModal } from './wizard/AddMemberModal';
 
@@ -22,6 +22,7 @@ type Member = {
   status: string;
   createdAt: Date;
   updatedAt: Date;
+  create_organization_enabled?: boolean;
   membershipType?: 'free' | 'free_trial' | 'monthly' | 'annual';
   amountDue?: string;
   nextPayment?: Date;
@@ -32,30 +33,30 @@ export function CustomMembersPage() {
   const locale = (params?.locale as string) || 'en';
   const t = useTranslations('Members');
 
-  const { memberships, organization, isLoaded } = useOrganization({
+  const { organization, isLoaded } = useOrganization({
     memberships: {
       keepPreviousData: true,
     },
   });
+
+  // Use intelligent caching hook
+  const { members: cachedMembers, loading: cacheLoading } = useMembersCache(organization?.id);
 
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
   const [hasPermission, setHasPermission] = useState(true);
 
+  // Handle enriching members with subscription type
   useEffect(() => {
-    if (!isLoaded || !organization) {
-      return;
-    }
-
-    // Don't proceed if memberships are not available yet
-    // This prevents the race condition where isLoaded is true but memberships haven't been fetched yet
-    if (!memberships?.data) {
-      return;
-    }
-
-    const fetchMembersWithDetails = async () => {
+    const enrichMembersWithSubscription = async () => {
       try {
+        if (!cachedMembers || cachedMembers.length === 0 || !organization) {
+          setMembers(cachedMembers);
+          setLoading(cacheLoading);
+          return;
+        }
+
         // Fetch organization subscription data
         const subscriptionResponse = await fetch(
           `/${locale}/api/organization/${organization.id}/subscription`,
@@ -67,74 +68,48 @@ export function CustomMembersPage() {
 
         const { subscriptionType } = await subscriptionResponse.json();
 
-        // Try to fetch detailed member data from the server
-        let detailedMembers: Array<{
-          id: string;
-          phone: string | null;
-          dateOfBirth: Date | null;
-          lastAccessedAt: Date | null;
-          status: string;
-          createdAt: Date;
-          updatedAt: Date;
-        }> = [];
+        // Filter out admins (create_organization_enabled === true) and enrich remaining members with subscription type
+        const nonAdminMembers = cachedMembers.filter(member => member.create_organization_enabled !== true);
+        const enrichedMembers: Member[] = nonAdminMembers.map(member => ({
+          ...member,
+          membershipType: subscriptionType as 'free' | 'free_trial' | 'monthly' | 'annual',
+        }));
 
-        try {
-          const membersData = await client.members.list();
-          // members.list returns { members: [...] }
-          detailedMembers = (membersData.members || []) as typeof detailedMembers;
-        } catch (error) {
-          // Check if this is a permission error (403 Forbidden)
-          if (error instanceof Error && error.message.includes('403')) {
-            setHasPermission(false);
-            setLoading(false);
-            return;
-          }
-          // If detailed fetch fails for other reasons, just continue with empty detailedMembers
-          // This ensures members still display even if the detailed data fetch fails
-          console.warn('Failed to fetch detailed member data, displaying basic info');
-        }
-
-        // Create a map of detailed member data by ID
-        const detailedMemberMap = new Map(
-          detailedMembers.map(m => [m.id, m]),
-        );
-
-        // Map Clerk memberships with detailed member data and subscription type
-        const mappedMembers: Member[] = (memberships?.data || []).map((m) => {
-          const userId = m.publicUserData?.userId || '';
-          const detailedData = detailedMemberMap.get(userId);
-
-          return {
-            id: userId,
-            firstName: m.publicUserData?.firstName || null,
-            lastName: m.publicUserData?.lastName || null,
-            email: m.publicUserData?.identifier || '',
-            phone: detailedData?.phone || null,
-            dateOfBirth: detailedData?.dateOfBirth || null,
-            photoUrl: m.publicUserData?.imageUrl || null,
-            lastAccessedAt: detailedData?.lastAccessedAt || null,
-            status: detailedData?.status || 'active',
-            createdAt: detailedData?.createdAt || new Date(),
-            updatedAt: detailedData?.updatedAt || new Date(),
-            membershipType: subscriptionType as 'free' | 'free_trial' | 'monthly' | 'annual',
-          };
-        });
-
-        setMembers(mappedMembers);
+        setMembers(enrichedMembers);
+        setLoading(cacheLoading);
       } catch (error) {
-        console.warn('CustomMembersPage - Failed to fetch members with subscription:', error);
-      } finally {
-        setLoading(false);
+        // Check if this is a permission error (403 Forbidden)
+        if (error instanceof Error && error.message.includes('403')) {
+          setHasPermission(false);
+          setLoading(false);
+          return;
+        }
+        // If subscription fetch fails, filter out admins and use cached members without subscription type
+        console.warn('CustomMembersPage - Failed to fetch subscription:', error);
+        const nonAdminMembers = cachedMembers.filter(member => member.create_organization_enabled !== true);
+        setMembers(nonAdminMembers);
+        setLoading(cacheLoading);
       }
     };
 
-    fetchMembersWithDetails();
-  }, [isLoaded, locale, organization, memberships?.data]);
+    enrichMembersWithSubscription();
+  }, [cachedMembers, cacheLoading, organization, locale]);
 
-  const handleViewDetails = (memberId: string) => {
-    // Navigate to member detail page
-    window.location.href = `/${locale}/dashboard/members/${memberId}`;
-  };
+  const handleEditMember = useCallback((memberId: string) => {
+    // Navigate to member edit page
+    window.location.href = `/${locale}/dashboard/members/${memberId}/edit`;
+  }, [locale]);
+
+  const handleRemoveMember = useCallback((memberId: string) => {
+    // TODO: Implement member removal logic
+    console.warn('[Members] Remove member action triggered for member ID:', memberId);
+  }, []);
+
+  const handleAddMemberModalClose = useCallback(() => {
+    setIsAddMemberModalOpen(false);
+    // Invalidate cache when modal closes (member was likely added)
+    invalidateMembersCache();
+  }, []);
 
   // Show permission error if user is not an organization admin
   if (!hasPermission) {
@@ -148,14 +123,15 @@ export function CustomMembersPage() {
     );
   }
 
-  // Render the table even while loading - it will show loading state internally
-  // This ensures the page structure is visible immediately for tests and prevents timeouts
+  // Render the table with intelligent caching
+  // Shows loading state while data is being fetched from cache
   return (
     <>
       <MembersTable
         members={members}
-        onViewDetailsAction={handleViewDetails}
-        loading={loading || !isLoaded}
+        onEditAction={handleEditMember}
+        onRemoveAction={handleRemoveMember}
+        loading={loading || !isLoaded || cacheLoading}
         headerActions={(
           <div className="flex items-center gap-2">
             <Button variant="outline">
@@ -172,7 +148,7 @@ export function CustomMembersPage() {
 
       <AddMemberModal
         isOpen={isAddMemberModalOpen}
-        onCloseAction={() => setIsAddMemberModalOpen(false)}
+        onCloseAction={handleAddMemberModalClose}
       />
     </>
   );

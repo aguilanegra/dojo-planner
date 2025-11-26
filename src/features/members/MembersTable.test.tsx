@@ -25,12 +25,14 @@ describe('MembersTable', () => {
         },
       ];
 
-      const mockOnViewDetailsAction = vi.fn();
+      const mockOnEditAction = vi.fn();
+      const mockOnRemoveAction = vi.fn();
 
       render(
         <MembersTable
           members={mockMembers}
-          onViewDetailsAction={mockOnViewDetailsAction}
+          onEditAction={mockOnEditAction}
+          onRemoveAction={mockOnRemoveAction}
         />,
       );
 
@@ -40,12 +42,14 @@ describe('MembersTable', () => {
     });
 
     it('should render empty state when no members', () => {
-      const mockOnViewDetailsAction = vi.fn();
+      const mockOnEditAction = vi.fn();
+      const mockOnRemoveAction = vi.fn();
 
       render(
         <MembersTable
           members={[]}
-          onViewDetailsAction={mockOnViewDetailsAction}
+          onEditAction={mockOnEditAction}
+          onRemoveAction={mockOnRemoveAction}
         />,
       );
 
@@ -55,12 +59,14 @@ describe('MembersTable', () => {
     });
 
     it('should render loading state when loading prop is true', () => {
-      const mockOnViewDetailsAction = vi.fn();
+      const mockOnEditAction = vi.fn();
+      const mockOnRemoveAction = vi.fn();
 
       render(
         <MembersTable
           members={[]}
-          onViewDetailsAction={mockOnViewDetailsAction}
+          onEditAction={mockOnEditAction}
+          onRemoveAction={mockOnRemoveAction}
           loading
         />,
       );

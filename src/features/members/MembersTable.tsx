@@ -1,12 +1,13 @@
 'use client';
 
-import { ArrowDown01, ArrowDownAZ, ArrowUp10, ArrowUpZA } from 'lucide-react';
+import { ArrowDown01, ArrowDownAZ, ArrowUp10, ArrowUpZA, Edit, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Pagination } from '@/components/ui/pagination/Pagination';
+import { Spinner } from '@/components/ui/spinner';
 
 type Member = {
   id: string;
@@ -20,6 +21,7 @@ type Member = {
   status: string;
   createdAt: Date;
   updatedAt: Date;
+  create_organization_enabled?: boolean;
   // Extended fields from Clerk Billing API (to be added)
   membershipType?: 'free' | 'free_trial' | 'monthly' | 'annual';
   amountDue?: string;
@@ -28,7 +30,8 @@ type Member = {
 
 type MembersTableProps = {
   members: Member[];
-  onViewDetailsAction: (memberId: string) => void;
+  onEditAction: (memberId: string) => void;
+  onRemoveAction: (memberId: string) => void;
   loading?: boolean;
   headerActions?: React.ReactNode;
 };
@@ -38,7 +41,8 @@ type SortDirection = 'asc' | 'desc';
 
 export function MembersTable({
   members,
-  onViewDetailsAction,
+  onEditAction,
+  onRemoveAction,
   loading = false,
   headerActions,
 }: MembersTableProps) {
@@ -200,7 +204,7 @@ export function MembersTable({
               key={tab}
               type="button"
               onClick={() => setActiveFilter(tab)}
-              className={`px-1 pb-3 text-sm font-medium transition-colors ${
+              className={`cursor-pointer px-1 pb-3 text-sm font-medium transition-colors ${
                 activeFilter === tab
                   ? 'border-b-2 border-foreground text-foreground'
                   : 'text-muted-foreground hover:text-foreground'
@@ -215,7 +219,10 @@ export function MembersTable({
         <div className="hidden rounded-lg border border-border bg-background lg:block">
           {loading
             ? (
-                <div className="p-8 text-center text-muted-foreground">Loading members...</div>
+                <div className="flex flex-col items-center justify-center gap-3 p-8">
+                  <Spinner size="lg" />
+                  <p className="text-sm text-muted-foreground">Loading members...</p>
+                </div>
               )
             : filteredMembers.length === 0
               ? (
@@ -364,13 +371,26 @@ export function MembersTable({
                               {formatDate(member.lastAccessedAt)}
                             </td>
                             <td className="px-6 py-4">
-                              <Button
-                                variant="outline"
-                                onClick={() => onViewDetailsAction(member.id)}
-                                className="whitespace-nowrap"
-                              >
-                                View details
-                              </Button>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => onEditAction(member.id)}
+                                  aria-label={`Edit ${member.firstName} ${member.lastName}`}
+                                  title={`Edit ${member.firstName} ${member.lastName}`}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => onRemoveAction(member.id)}
+                                  aria-label={`Remove ${member.firstName} ${member.lastName}`}
+                                  title={`Remove ${member.firstName} ${member.lastName}`}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -384,7 +404,10 @@ export function MembersTable({
         <div className="space-y-4 lg:hidden">
           {loading
             ? (
-                <div className="p-8 text-center text-muted-foreground">Loading members...</div>
+                <div className="flex flex-col items-center justify-center gap-3 p-8">
+                  <Spinner size="lg" />
+                  <p className="text-sm text-muted-foreground">Loading members...</p>
+                </div>
               )
             : filteredMembers.length === 0
               ? (
@@ -461,12 +484,26 @@ export function MembersTable({
                             {member.status.charAt(0).toUpperCase()
                               + member.status.slice(1)}
                           </Badge>
-                          <Button
-                            variant="outline"
-                            onClick={() => onViewDetailsAction(member.id)}
-                          >
-                            View details
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => onEditAction(member.id)}
+                              aria-label={`Edit ${member.firstName} ${member.lastName}`}
+                              title={`Edit ${member.firstName} ${member.lastName}`}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => onRemoveAction(member.id)}
+                              aria-label={`Remove ${member.firstName} ${member.lastName}`}
+                              title={`Remove ${member.firstName} ${member.lastName}`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </Card>

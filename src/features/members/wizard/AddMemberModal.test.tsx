@@ -1,24 +1,36 @@
+import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { page, userEvent } from 'vitest/browser';
-import { AddMemberModal } from './AddMemberModal';
+import { AddMemberModal } from '@/features/members/wizard/AddMemberModal';
+
+// Mock Clerk
+vi.mock('@clerk/nextjs', () => ({
+  ClerkProvider: ({ children }: { children: React.ReactNode }) => children,
+  useUser: () => ({
+    user: {
+      id: 'user-1',
+      primaryEmailAddress: { emailAddress: 'test@example.com' },
+    },
+    isLoaded: true,
+  }),
+  useOrganization: () => ({
+    organization: {
+      id: 'org-1',
+      name: 'Test Organization',
+    },
+    isLoaded: true,
+  }),
+}));
 
 // Mock next-intl
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
 }));
 
-// Mock next/image to avoid process reference error
-vi.mock('next/image', () => ({
-  __esModule: true,
-  default: ({
-    src,
-    alt,
-    ...props
-  }: any) => {
-    // eslint-disable-next-line next/no-img-element
-    return <img src={src} alt={alt} {...props} />;
-  },
+// Mock MemberPhotoStep to avoid next/image import issues
+vi.mock('@/features/members/wizard/MemberPhotoStep', () => ({
+  MemberPhotoStep: () => <div>Mock Photo Step</div>,
 }));
 
 // Mock the ORPC client

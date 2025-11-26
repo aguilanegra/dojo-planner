@@ -45,7 +45,15 @@ export const useAddMemberWizard = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const updateData = (updates: Partial<AddMemberWizardData>) => {
-    setData(prev => ({ ...prev, ...updates }));
+    setData((prev) => {
+      const newData = { ...prev, ...updates };
+      console.error('[Add Member Wizard] Data Updated:', {
+        timestamp: new Date().toISOString(),
+        updates,
+        currentData: newData,
+      });
+      return newData;
+    });
     setError(null);
   };
 
@@ -55,6 +63,12 @@ export const useAddMemberWizard = () => {
     if (currentIndex < steps.length - 1 && currentIndex !== -1) {
       const nextStepValue = steps[currentIndex + 1];
       if (nextStepValue) {
+        console.error('[Add Member Wizard] Step Changed:', {
+          timestamp: new Date().toISOString(),
+          from: step,
+          to: nextStepValue,
+          data,
+        });
         setStep(nextStepValue);
         setError(null);
       }
@@ -67,6 +81,11 @@ export const useAddMemberWizard = () => {
     if (currentIndex > 0) {
       const prevStepValue = steps[currentIndex - 1];
       if (prevStepValue) {
+        console.error('[Add Member Wizard] Step Changed (Back):', {
+          timestamp: new Date().toISOString(),
+          from: step,
+          to: prevStepValue,
+        });
         setStep(prevStepValue);
         setError(null);
       }
@@ -82,6 +101,9 @@ export const useAddMemberWizard = () => {
   };
 
   const reset = () => {
+    console.error('[Add Member Wizard] Wizard Reset:', {
+      timestamp: new Date().toISOString(),
+    });
     setStep('member-type');
     setData({
       memberType: null,

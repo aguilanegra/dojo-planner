@@ -52,6 +52,7 @@ type MemberDetailFinancialProps = {
   paymentMethod: PaymentMethod;
   agreement: Agreement;
   billingHistory: BillingHistoryItem[];
+  hideHeader?: boolean;
   onChangeMembership?: () => void;
   onSendSecureLink?: () => void;
   onDownloadAgreement?: () => void;
@@ -68,6 +69,7 @@ export function MemberDetailFinancial({
   paymentMethod,
   agreement,
   billingHistory,
+  hideHeader,
   onChangeMembership,
   onSendSecureLink,
   onDownloadAgreement,
@@ -116,21 +118,25 @@ export function MemberDetailFinancial({
 
   return (
     <div className="space-y-6">
-      {/* Member Header */}
-      <div className="flex items-center gap-4">
-        <Avatar className="h-16 w-16">
-          {photoUrl && <AvatarImage src={photoUrl} alt={memberName} />}
-          <AvatarFallback>{getInitials(memberName)}</AvatarFallback>
-        </Avatar>
-        <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-bold text-foreground">{memberName}</h1>
-          <div className="flex flex-wrap gap-2">
-            <Badge variant="secondary">{billingContactRole}</Badge>
-            <Badge variant="default">{membershipBadge}</Badge>
-            <Badge variant="destructive">{amountOverdue}</Badge>
+      {!hideHeader && (
+        <>
+          {/* Member Header */}
+          <div className="flex items-center gap-4">
+            <Avatar className="h-16 w-16">
+              {photoUrl && <AvatarImage src={photoUrl} alt={memberName} />}
+              <AvatarFallback>{getInitials(memberName)}</AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col gap-2">
+              <h1 className="text-2xl font-bold text-foreground">{memberName}</h1>
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="secondary">{billingContactRole}</Badge>
+                <Badge variant="default">{membershipBadge}</Badge>
+                <Badge variant="destructive">{amountOverdue}</Badge>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        </>
+      )}
 
       {/* Main Content Grid */}
       <div className="grid gap-6 lg:grid-cols-2">
@@ -148,22 +154,30 @@ export function MemberDetailFinancial({
             </div>
             <div className="flex items-start justify-between">
               <p className="text-sm text-muted-foreground">{t('program_label')}</p>
-              <p className="text-right text-sm text-foreground">{membershipDetails.program}</p>
-            </div>
-            <div className="flex items-start justify-between">
-              <p className="text-sm text-muted-foreground">{t('membership_type_label')}</p>
-              <p className="text-right text-sm text-foreground">{membershipDetails.membershipType}</p>
-            </div>
-            <div className="flex items-start justify-between">
-              <p className="text-sm text-muted-foreground">{t('membership_fee_label')}</p>
-              <p className="text-right text-sm font-semibold text-foreground">
-                {formatCurrency(membershipDetails.membershipFee)}
+              <p className={`text-right text-sm ${membershipDetails.program === 'N/A' ? 'text-muted-foreground' : 'text-foreground'}`}>
+                {membershipDetails.program}
               </p>
             </div>
             <div className="flex items-start justify-between">
-              <p className="text-sm text-muted-foreground">{t('payment_frequency_label')}</p>
-              <p className="text-right text-sm text-foreground">{membershipDetails.paymentFrequency}</p>
+              <p className="text-sm text-muted-foreground">{t('membership_type_label')}</p>
+              <p className={`text-right text-sm ${membershipDetails.membershipType === 'N/A' ? 'text-muted-foreground' : 'text-foreground'}`}>
+                {membershipDetails.membershipType}
+              </p>
             </div>
+            {membershipDetails.membershipFee > 0 && (
+              <div className="flex items-start justify-between">
+                <p className="text-sm text-muted-foreground">{t('membership_fee_label')}</p>
+                <p className="text-right text-sm font-semibold text-foreground">
+                  {formatCurrency(membershipDetails.membershipFee)}
+                </p>
+              </div>
+            )}
+            {membershipDetails.paymentFrequency !== 'N/A' && (
+              <div className="flex items-start justify-between">
+                <p className="text-sm text-muted-foreground">{t('payment_frequency_label')}</p>
+                <p className="text-right text-sm text-foreground">{membershipDetails.paymentFrequency}</p>
+              </div>
+            )}
             <div className="flex items-start justify-between border-t border-border pt-4">
               <p className="text-sm text-muted-foreground">{t('registration_date_label')}</p>
               <p className="text-right text-sm text-foreground">{membershipDetails.registrationDate}</p>
@@ -172,16 +186,20 @@ export function MemberDetailFinancial({
               <p className="text-sm text-muted-foreground">{t('start_date_label')}</p>
               <p className="text-right text-sm text-foreground">{membershipDetails.startDate}</p>
             </div>
-            <div className="flex items-start justify-between">
-              <p className="text-sm text-muted-foreground">{t('next_payment_date_label')}</p>
-              <p className="text-right text-sm text-foreground">{membershipDetails.nextPaymentDate}</p>
-            </div>
-            <div className="flex items-start justify-between">
-              <p className="text-sm text-muted-foreground">{t('next_payment_amount_label')}</p>
-              <p className="text-right text-sm font-semibold text-foreground">
-                {formatCurrency(membershipDetails.nextPaymentAmount)}
-              </p>
-            </div>
+            {membershipDetails.nextPaymentDate !== 'N/A' && (
+              <div className="flex items-start justify-between">
+                <p className="text-sm text-muted-foreground">{t('next_payment_date_label')}</p>
+                <p className="text-right text-sm text-foreground">{membershipDetails.nextPaymentDate}</p>
+              </div>
+            )}
+            {membershipDetails.nextPaymentAmount > 0 && (
+              <div className="flex items-start justify-between">
+                <p className="text-sm text-muted-foreground">{t('next_payment_amount_label')}</p>
+                <p className="text-right text-sm font-semibold text-foreground">
+                  {formatCurrency(membershipDetails.nextPaymentAmount)}
+                </p>
+              </div>
+            )}
           </div>
           <Button
             variant="default"
@@ -247,91 +265,99 @@ export function MemberDetailFinancial({
       {/* Billing History */}
       <Card className="p-6">
         <h2 className="mb-6 text-lg font-semibold text-foreground">{t('billing_history')}</h2>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('member_column')}</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('date_column')}</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('amount_column')}</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('purpose_column')}</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('method_column')}</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('actions_column')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {billingHistory.flatMap((item) => {
-                if (item.groupType === 'family' && item.children && item.children.length > 0) {
-                  return [
-                    // Parent Family Membership Row
-                    <tr key={item.id} className="border-b border-border hover:bg-secondary/30">
-                      <td className="px-4 py-4">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold text-foreground">{item.member}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 text-sm text-muted-foreground">{item.date}</td>
-                      <td className="px-4 py-4 text-sm font-semibold text-primary">
-                        {formatCurrency(item.amount)}
-                      </td>
-                      <td className="px-4 py-4 text-sm text-muted-foreground">{item.purpose}</td>
-                      <td className="px-4 py-4 text-sm text-muted-foreground">{item.method}</td>
-                      <td className="px-4 py-4">
-                        <Button
-                          variant="default"
-                          size="sm"
-                          onClick={() => onRefund?.(item.id)}
-                        >
-                          {t('refund_button')}
-                        </Button>
-                      </td>
-                    </tr>,
-                    // Child Membership Rows
-                    ...item.children.map(child => (
-                      <tr key={child.id} className="border-b border-border bg-secondary/20">
-                        <td className="px-4 py-4 pl-8 text-sm text-muted-foreground">
-                          {child.member}
-                        </td>
-                        <td className="px-4 py-4 text-sm text-muted-foreground" />
-                        <td className="px-4 py-4 text-sm text-muted-foreground">
-                          {formatCurrency(child.amount)}
-                        </td>
-                        <td className="px-4 py-4 text-sm text-muted-foreground">{child.purpose}</td>
-                        <td className="px-4 py-4 text-sm text-muted-foreground" />
-                        <td className="px-4 py-4" />
-                      </tr>
-                    )),
-                  ];
-                }
+        {billingHistory.length === 0
+          ? (
+              <div className="flex items-center justify-center py-12">
+                <p className="text-muted-foreground">No billing history</p>
+              </div>
+            )
+          : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('member_column')}</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('date_column')}</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('amount_column')}</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('purpose_column')}</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('method_column')}</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('actions_column')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {billingHistory.flatMap((item) => {
+                      if (item.groupType === 'family' && item.children && item.children.length > 0) {
+                        return [
+                          // Parent Family Membership Row
+                          <tr key={item.id} className="border-b border-border hover:bg-secondary/30">
+                            <td className="px-4 py-4">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-semibold text-foreground">{item.member}</span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-4 text-sm text-muted-foreground">{item.date}</td>
+                            <td className="px-4 py-4 text-sm font-semibold text-primary">
+                              {formatCurrency(item.amount)}
+                            </td>
+                            <td className="px-4 py-4 text-sm text-muted-foreground">{item.purpose}</td>
+                            <td className="px-4 py-4 text-sm text-muted-foreground">{item.method}</td>
+                            <td className="px-4 py-4">
+                              <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => onRefund?.(item.id)}
+                              >
+                                {t('refund_button')}
+                              </Button>
+                            </td>
+                          </tr>,
+                          // Child Membership Rows
+                          ...item.children.map(child => (
+                            <tr key={child.id} className="border-b border-border bg-secondary/20">
+                              <td className="px-4 py-4 pl-8 text-sm text-muted-foreground">
+                                {child.member}
+                              </td>
+                              <td className="px-4 py-4 text-sm text-muted-foreground" />
+                              <td className="px-4 py-4 text-sm text-muted-foreground">
+                                {formatCurrency(child.amount)}
+                              </td>
+                              <td className="px-4 py-4 text-sm text-muted-foreground">{child.purpose}</td>
+                              <td className="px-4 py-4 text-sm text-muted-foreground" />
+                              <td className="px-4 py-4" />
+                            </tr>
+                          )),
+                        ];
+                      }
 
-                return [
-                  <tr key={item.id} className="border-b border-border hover:bg-secondary/30">
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-foreground">{item.member}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 text-sm text-muted-foreground">{item.date}</td>
-                    <td className="px-4 py-4 text-sm font-semibold text-primary">
-                      {formatCurrency(item.amount)}
-                    </td>
-                    <td className="px-4 py-4 text-sm text-muted-foreground">{item.purpose}</td>
-                    <td className="px-4 py-4 text-sm text-muted-foreground">{item.method}</td>
-                    <td className="px-4 py-4">
-                      <Button
-                        variant="default"
-                        size="sm"
-                        onClick={() => onRefund?.(item.id)}
-                      >
-                        {t('refund_button')}
-                      </Button>
-                    </td>
-                  </tr>,
-                ];
-              })}
-            </tbody>
-          </table>
-        </div>
+                      return [
+                        <tr key={item.id} className="border-b border-border hover:bg-secondary/30">
+                          <td className="px-4 py-4">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-semibold text-foreground">{item.member}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 text-sm text-muted-foreground">{item.date}</td>
+                          <td className="px-4 py-4 text-sm font-semibold text-primary">
+                            {formatCurrency(item.amount)}
+                          </td>
+                          <td className="px-4 py-4 text-sm text-muted-foreground">{item.purpose}</td>
+                          <td className="px-4 py-4 text-sm text-muted-foreground">{item.method}</td>
+                          <td className="px-4 py-4">
+                            <Button
+                              variant="default"
+                              size="sm"
+                              onClick={() => onRefund?.(item.id)}
+                            >
+                              {t('refund_button')}
+                            </Button>
+                          </td>
+                        </tr>,
+                      ];
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
       </Card>
     </div>
   );
