@@ -309,27 +309,106 @@ Notes:
 
 ### Deploy to production
 
-During the build process, database migrations are automatically executed, so there's no need to run them manually. However, you must define `DATABASE_URL` in your environment variables.
+#### Local Development Workflow (Unchanged)
 
-Then, you can generate a production build with:
-
-```shell
-$ npm run build
-```
-
-It generates an optimized production build of the boilerplate. To test the generated build, run:
+When running locally, the project uses **PGLite** with automatic database migrations:
 
 ```shell
-$ npm run start
+npm run dev
 ```
 
-You also need to defined the environment variables `CLERK_SECRET_KEY` using your own key.
+This command:
+- Starts the PGLite database server on a socket connection
+- Automatically applies all pending database migrations
+- Runs the Next.js development server
+- Continues exactly as before with no changes needed
+
+Similarly, for local production builds:
+
+```shell
+npm run build-local
+```
+
+This creates a production build with an in-memory PGLite database and automatic migrations.
+
+#### Vercel Deployment Workflow
+
+The project is optimized for **Vercel deployments** with **Neon PostgreSQL**. The build process has been updated to skip migrations during the build phase (since Vercel build servers don't have database access). Instead, migrations run automatically on first application startup.
+
+**Setup Steps:**
+
+1. **Configure Neon Database:**
+   - Create a PostgreSQL database on [Neon.tech](https://neon.tech)
+   - Copy your connection string (use the pooler endpoint for connection pooling)
+
+2. **Add DATABASE_URL to Vercel:**
+   - In your Vercel project settings → Environment Variables
+   - Add `DATABASE_URL` with your Neon connection string
+
+3. **Deploy:**
+   ```shell
+   npm run build
+   ```
+   This now only builds Next.js (no migrations in build).
+
+4. **Automatic Migration on Startup:**
+   - When the app starts on Vercel, migrations run automatically on first request
+   - This happens in `src/libs/RunMigrations.ts` called from the root layout
+   - Migrations only run once per server instance using a global flag
+   - If migrations fail (e.g., database unavailable), the app continues gracefully
+
+#### Testing Locally with Neon
+
+To test the Vercel workflow locally with Neon:
+
+1. Add your Neon `DATABASE_URL` to `.env.local`:
+   ```shell
+   DATABASE_URL=postgresql://user:password@ep-your-endpoint-pooler.region.postgres.vercel-storage.com/dbname?sslmode=require
+   ```
+
+2. Run the build (migrations will run automatically on startup):
+   ```shell
+   npm run build
+   ```
+
+3. Start the production server:
+   ```shell
+   npm run start
+   ```
+
+4. Migrations will run automatically on first request.
+
+#### Summary: Two Database Strategies
+
+| Workflow | Database | Migrations | Command |
+|----------|----------|-----------|---------|
+| **Local Dev** | PGLite (file-based) | Auto (via db-server) | `npm run dev` |
+| **Local Build** | PGLite (in-memory) | Auto (via db-server) | `npm run build-local` |
+| **Vercel** | Neon PostgreSQL | Auto (runtime) | `npm run build` + `npm run start` |
+
+**Key Insight:** Local development never changes. Only production (Vercel) uses the new runtime migration handler.
+
+#### Production Build & Deployment
+
+To generate a production build:
+
+```shell
+npm run build
+```
+
+It generates an optimized production build of the boilerplate. To test the generated build locally (with Neon), run:
+
+```shell
+npm run start
+```
+
+You also need to define the environment variables `CLERK_SECRET_KEY` using your own key.
 
 This command starts a local server using the production build. You can now open http://localhost:3000 in your preferred browser to see the result.
 
 Here are some popular hosting options without Docker for deploying your Next.js application:
 
-- Vercel - Tested and works great with the project
+- **Vercel** - Tested and works great with the project (recommended for this setup)
 - Netlify
 - AWS Amplify
 

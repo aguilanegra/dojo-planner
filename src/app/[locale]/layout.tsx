@@ -4,6 +4,7 @@ import { setRequestLocale } from 'next-intl/server';
 import { ThemeProvider } from 'next-themes';
 import { notFound } from 'next/navigation';
 import { routing } from '@/libs/I18nRouting';
+import { runMigrations } from '@/libs/RunMigrations';
 import '@/styles/global.css';
 
 export const metadata: Metadata = {
@@ -63,6 +64,10 @@ export default async function RootLayout(props: {
   }
 
   setRequestLocale(locale);
+
+  // Run database migrations on app startup (production deployments only)
+  // Local development uses PGLite with automatic migrations via db-server
+  await runMigrations();
 
   return (
     <html lang={locale} suppressHydrationWarning>
