@@ -7,6 +7,7 @@ import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { invalidateMembersCache, useMembersCache } from '@/hooks/useMembersCache';
+import { client } from '@/libs/Orpc';
 import { MembersTable } from './MembersTable';
 import { AddMemberModal } from './wizard/AddMemberModal';
 
@@ -32,77 +33,60 @@ export function CustomMembersPage() {
   const params = useParams();
   const locale = (params?.locale as string) || 'en';
   const t = useTranslations('Members');
+  const { organization } = useOrganization();
 
-  const { organization, isLoaded } = useOrganization({
-    memberships: {
-      keepPreviousData: true,
-    },
-  });
-
-  // Use intelligent caching hook
+  // Use intelligent caching hook with organization ID for proper cache invalidation
   const { members: cachedMembers, loading: cacheLoading } = useMembersCache(organization?.id);
 
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
-  const [hasPermission, setHasPermission] = useState(true);
 
   // Handle enriching members with subscription type
   useEffect(() => {
     const enrichMembersWithSubscription = async () => {
       try {
-        if (!cachedMembers || cachedMembers.length === 0 || !organization) {
+        if (!cachedMembers || cachedMembers.length === 0) {
           setMembers(cachedMembers);
           setLoading(cacheLoading);
           return;
         }
 
-        // Fetch organization subscription data
-        const subscriptionResponse = await fetch(
-          `/${locale}/api/organization/${organization.id}/subscription`,
-        );
-
-        if (!subscriptionResponse.ok) {
-          throw new Error('Failed to fetch subscription data');
-        }
-
-        const { subscriptionType } = await subscriptionResponse.json();
-
-        // Filter out admins (create_organization_enabled === true) and enrich remaining members with subscription type
-        const nonAdminMembers = cachedMembers.filter(member => member.create_organization_enabled !== true);
-        const enrichedMembers: Member[] = nonAdminMembers.map(member => ({
-          ...member,
-          membershipType: subscriptionType as 'free' | 'free_trial' | 'monthly' | 'annual',
-        }));
-
-        setMembers(enrichedMembers);
+        // Get organization ID from the member data or from auth context
+        // For now, we'll skip subscription enrichment since members don't have org admin info
+        setMembers(cachedMembers);
         setLoading(cacheLoading);
       } catch (error) {
-        // Check if this is a permission error (403 Forbidden)
-        if (error instanceof Error && error.message.includes('403')) {
-          setHasPermission(false);
-          setLoading(false);
-          return;
-        }
-        // If subscription fetch fails, filter out admins and use cached members without subscription type
-        console.warn('CustomMembersPage - Failed to fetch subscription:', error);
-        const nonAdminMembers = cachedMembers.filter(member => member.create_organization_enabled !== true);
-        setMembers(nonAdminMembers);
+        console.warn('CustomMembersPage - Error processing members:', error);
+        setMembers(cachedMembers);
         setLoading(cacheLoading);
       }
     };
 
     enrichMembersWithSubscription();
-  }, [cachedMembers, cacheLoading, organization, locale]);
+  }, [cachedMembers, cacheLoading]);
 
   const handleEditMember = useCallback((memberId: string) => {
     // Navigate to member edit page
     window.location.href = `/${locale}/dashboard/members/${memberId}/edit`;
   }, [locale]);
 
-  const handleRemoveMember = useCallback((memberId: string) => {
-    // TODO: Implement member removal logic
-    console.warn('[Members] Remove member action triggered for member ID:', memberId);
+  const handleRemoveMember = useCallback(async (memberId: string) => {
+    try {
+      await client.member.remove({ id: memberId });
+      invalidateMembersCache();
+    } catch (error) {
+      console.error('[Members] Failed to flag member for deletion:', error);
+    }
+  }, []);
+
+  const handleRestoreMember = useCallback(async (memberId: string) => {
+    try {
+      await client.member.restore({ id: memberId });
+      invalidateMembersCache();
+    } catch (error) {
+      console.error('[Members] Failed to restore member:', error);
+    }
   }, []);
 
   const handleAddMemberModalClose = useCallback(() => {
@@ -110,18 +94,6 @@ export function CustomMembersPage() {
     // Invalidate cache when modal closes (member was likely added)
     invalidateMembersCache();
   }, []);
-
-  // Show permission error if user is not an organization admin
-  if (!hasPermission) {
-    return (
-      <div className="rounded-lg border border-border bg-background p-8 text-center">
-        <h2 className="text-xl font-semibold text-foreground">{t('access_denied_title')}</h2>
-        <p className="mt-2 text-muted-foreground">
-          {t('access_denied_message')}
-        </p>
-      </div>
-    );
-  }
 
   // Render the table with intelligent caching
   // Shows loading state while data is being fetched from cache
@@ -131,7 +103,8 @@ export function CustomMembersPage() {
         members={members}
         onEditAction={handleEditMember}
         onRemoveAction={handleRemoveMember}
-        loading={loading || !isLoaded || cacheLoading}
+        onRestoreAction={handleRestoreMember}
+        loading={loading || cacheLoading}
         headerActions={(
           <div className="flex items-center gap-2">
             <Button variant="outline">

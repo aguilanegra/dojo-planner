@@ -70,6 +70,7 @@ describe('useAddMemberWizard types and exports', () => {
         street: '123 Main St',
         city: 'San Francisco',
         state: 'CA',
+        zipCode: '94102',
         country: 'USA',
       },
     };

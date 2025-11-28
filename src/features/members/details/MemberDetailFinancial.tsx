@@ -141,123 +141,133 @@ export function MemberDetailFinancial({
       {/* Main Content Grid */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Membership Details */}
-        <Card className="p-6">
-          <h2 className="mb-6 text-lg font-semibold text-foreground">{t('membership_details')}</h2>
-          <div className="space-y-4">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">{t('status_label')}</p>
-              </div>
-              <Badge variant={getStatusColor(membershipDetails.status)}>
-                {getStatusLabel(membershipDetails.status)}
-              </Badge>
-            </div>
-            <div className="flex items-start justify-between">
-              <p className="text-sm text-muted-foreground">{t('program_label')}</p>
-              <p className={`text-right text-sm ${membershipDetails.program === 'N/A' ? 'text-muted-foreground' : 'text-foreground'}`}>
-                {membershipDetails.program}
-              </p>
-            </div>
-            <div className="flex items-start justify-between">
-              <p className="text-sm text-muted-foreground">{t('membership_type_label')}</p>
-              <p className={`text-right text-sm ${membershipDetails.membershipType === 'N/A' ? 'text-muted-foreground' : 'text-foreground'}`}>
-                {membershipDetails.membershipType}
-              </p>
-            </div>
-            {membershipDetails.membershipFee > 0 && (
+        <Card className="flex flex-col p-6">
+          <div>
+            <h2 className="mb-6 text-lg font-semibold text-foreground">{t('membership_details')}</h2>
+            <div className="space-y-4">
               <div className="flex items-start justify-between">
-                <p className="text-sm text-muted-foreground">{t('membership_fee_label')}</p>
-                <p className="text-right text-sm font-semibold text-foreground">
-                  {formatCurrency(membershipDetails.membershipFee)}
+                <div>
+                  <p className="text-sm text-muted-foreground">{t('status_label')}</p>
+                </div>
+                <Badge variant={getStatusColor(membershipDetails.status)}>
+                  {getStatusLabel(membershipDetails.status)}
+                </Badge>
+              </div>
+              <div className="flex items-start justify-between">
+                <p className="text-sm text-muted-foreground">{t('program_label')}</p>
+                <p className={`text-right text-sm ${membershipDetails.program === 'N/A' ? 'text-muted-foreground' : 'text-foreground'}`}>
+                  {membershipDetails.program}
                 </p>
               </div>
-            )}
-            {membershipDetails.paymentFrequency !== 'N/A' && (
               <div className="flex items-start justify-between">
-                <p className="text-sm text-muted-foreground">{t('payment_frequency_label')}</p>
-                <p className="text-right text-sm text-foreground">{membershipDetails.paymentFrequency}</p>
-              </div>
-            )}
-            <div className="flex items-start justify-between border-t border-border pt-4">
-              <p className="text-sm text-muted-foreground">{t('registration_date_label')}</p>
-              <p className="text-right text-sm text-foreground">{membershipDetails.registrationDate}</p>
-            </div>
-            <div className="flex items-start justify-between">
-              <p className="text-sm text-muted-foreground">{t('start_date_label')}</p>
-              <p className="text-right text-sm text-foreground">{membershipDetails.startDate}</p>
-            </div>
-            {membershipDetails.nextPaymentDate !== 'N/A' && (
-              <div className="flex items-start justify-between">
-                <p className="text-sm text-muted-foreground">{t('next_payment_date_label')}</p>
-                <p className="text-right text-sm text-foreground">{membershipDetails.nextPaymentDate}</p>
-              </div>
-            )}
-            {membershipDetails.nextPaymentAmount > 0 && (
-              <div className="flex items-start justify-between">
-                <p className="text-sm text-muted-foreground">{t('next_payment_amount_label')}</p>
-                <p className="text-right text-sm font-semibold text-foreground">
-                  {formatCurrency(membershipDetails.nextPaymentAmount)}
+                <p className="text-sm text-muted-foreground">{t('membership_type_label')}</p>
+                <p className={`text-right text-sm ${membershipDetails.membershipType === 'N/A' ? 'text-muted-foreground' : 'text-foreground'}`}>
+                  {membershipDetails.membershipType}
                 </p>
               </div>
-            )}
+              {membershipDetails.membershipFee > 0 && (
+                <div className="flex items-start justify-between">
+                  <p className="text-sm text-muted-foreground">{t('membership_fee_label')}</p>
+                  <p className="text-right text-sm font-semibold text-foreground">
+                    {formatCurrency(membershipDetails.membershipFee)}
+                  </p>
+                </div>
+              )}
+              {membershipDetails.paymentFrequency !== 'N/A' && (
+                <div className="flex items-start justify-between">
+                  <p className="text-sm text-muted-foreground">{t('payment_frequency_label')}</p>
+                  <p className="text-right text-sm text-foreground">{membershipDetails.paymentFrequency}</p>
+                </div>
+              )}
+              <div className="flex items-start justify-between border-t border-border pt-4">
+                <p className="text-sm text-muted-foreground">{t('registration_date_label')}</p>
+                <p className="text-right text-sm text-foreground">{membershipDetails.registrationDate}</p>
+              </div>
+              <div className="flex items-start justify-between">
+                <p className="text-sm text-muted-foreground">{t('start_date_label')}</p>
+                <p className="text-right text-sm text-foreground">{membershipDetails.startDate}</p>
+              </div>
+              {membershipDetails.nextPaymentDate !== 'N/A' && (
+                <div className="flex items-start justify-between">
+                  <p className="text-sm text-muted-foreground">{t('next_payment_date_label')}</p>
+                  <p className="text-right text-sm text-foreground">{membershipDetails.nextPaymentDate}</p>
+                </div>
+              )}
+              {membershipDetails.nextPaymentAmount > 0 && (
+                <div className="flex items-start justify-between">
+                  <p className="text-sm text-muted-foreground">{t('next_payment_amount_label')}</p>
+                  <p className="text-right text-sm font-semibold text-foreground">
+                    {formatCurrency(membershipDetails.nextPaymentAmount)}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
-          <Button
-            variant="default"
-            onClick={onChangeMembership}
-            className="mt-6 w-full"
-          >
-            {t('change_membership_button')}
-          </Button>
+          <div className="mt-auto flex justify-end pt-6">
+            <Button
+              onClick={onChangeMembership}
+              className="w-fit bg-foreground text-background hover:bg-foreground/90"
+            >
+              {t('change_membership_button')}
+            </Button>
+          </div>
         </Card>
 
         {/* Payment Method & Agreement */}
         <div className="space-y-6">
           {/* Payment Method */}
-          <Card className="p-6">
-            <h2 className="mb-6 text-lg font-semibold text-foreground">{t('payment_method')}</h2>
-            <div className="flex items-start gap-4">
-              <div className="rounded-lg bg-blue-600 p-3">
-                <span className="text-2xl">{getBrandIcon(paymentMethod.brand)}</span>
-              </div>
-              <div className="flex-1">
-                <p className="font-medium text-foreground">
-                  {paymentMethod.brand.toUpperCase()}
-                  {' '}
-                  •••• •••• ••••
-                  {paymentMethod.last4}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {paymentMethod.isDefault ? t('default_payment_method') : ''}
-                </p>
+          <Card className="flex flex-col p-6">
+            <div>
+              <h2 className="mb-6 text-lg font-semibold text-foreground">{t('payment_method')}</h2>
+              <div className="flex items-start gap-4">
+                <div className="rounded-lg bg-blue-600 p-3">
+                  <span className="text-2xl">{getBrandIcon(paymentMethod.brand)}</span>
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-foreground">
+                    {paymentMethod.brand.toUpperCase()}
+                    {' '}
+                    •••• •••• ••••
+                    {paymentMethod.last4}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {paymentMethod.isDefault ? t('default_payment_method') : ''}
+                  </p>
+                </div>
               </div>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onSendSecureLink}
-              className="mt-4 w-full text-blue-600"
-            >
-              {t('send_secure_link_button')}
-            </Button>
+            <div className="mt-auto flex justify-end pt-6">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onSendSecureLink}
+                className="h-auto w-fit p-0 text-blue-600 hover:bg-transparent hover:text-blue-700"
+              >
+                {t('send_secure_link_button')}
+              </Button>
+            </div>
           </Card>
 
           {/* Agreement & Waiver */}
-          <Card className="border-green-200 bg-green-50 p-6 dark:border-green-900 dark:bg-green-950">
-            <h2 className="mb-4 text-lg font-semibold text-foreground">{t('agreement_waiver')}</h2>
-            <p className="text-sm text-muted-foreground">
-              {t('signed_on')}
-              {' '}
-              {agreement.signedDate}
-            </p>
-            <Button
-              variant="default"
-              size="sm"
-              onClick={onDownloadAgreement}
-              className="mt-4 w-full gap-2 bg-foreground text-background hover:bg-foreground/90"
-            >
-              <Download className="h-4 w-4" />
-              {t('download_button')}
-            </Button>
+          <Card className="flex flex-col border-green-200 bg-green-50 p-6 dark:border-green-900 dark:bg-green-950">
+            <div>
+              <h2 className="mb-2 text-lg font-semibold text-foreground">{t('agreement_waiver')}</h2>
+              <p className="text-sm text-muted-foreground">
+                {t('signed_on')}
+                {' '}
+                {agreement.signedDate}
+              </p>
+            </div>
+            <div className="mt-auto flex justify-end pt-6">
+              <Button
+                size="sm"
+                onClick={onDownloadAgreement}
+                className="w-fit gap-2 bg-foreground text-background hover:bg-foreground/90"
+              >
+                <Download className="h-4 w-4" />
+                {t('download_button')}
+              </Button>
+            </div>
           </Card>
         </div>
       </div>
@@ -303,9 +313,9 @@ export function MemberDetailFinancial({
                             <td className="px-4 py-4 text-sm text-muted-foreground">{item.method}</td>
                             <td className="px-4 py-4">
                               <Button
-                                variant="default"
                                 size="sm"
                                 onClick={() => onRefund?.(item.id)}
+                                className="w-fit bg-foreground text-background hover:bg-foreground/90"
                               >
                                 {t('refund_button')}
                               </Button>
@@ -344,9 +354,9 @@ export function MemberDetailFinancial({
                           <td className="px-4 py-4 text-sm text-muted-foreground">{item.method}</td>
                           <td className="px-4 py-4">
                             <Button
-                              variant="default"
                               size="sm"
                               onClick={() => onRefund?.(item.id)}
+                              className="w-fit bg-foreground text-background hover:bg-foreground/90"
                             >
                               {t('refund_button')}
                             </Button>

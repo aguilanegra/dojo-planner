@@ -68,35 +68,69 @@ export const AddMemberModal = ({ isOpen, onCloseAction }: AddMemberModalProps) =
       }
 
       // Create the member with all collected data
+      // Build address object with only the fields needed
+      const addressPayload = wizard.data.address
+        ? {
+            street: wizard.data.address.street,
+            apartment: wizard.data.address.apartment,
+            city: wizard.data.address.city,
+            state: wizard.data.address.state,
+            zipCode: wizard.data.address.zipCode,
+            country: wizard.data.address.country,
+          }
+        : undefined;
+
+      // Convert photo file to base64 data URL if present
+      let photoUrl: string | undefined;
+      if (wizard.data.photoFile) {
+        photoUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(wizard.data.photoFile!);
+        });
+      }
+
       const createPayload = {
         email: wizard.data.email,
         firstName: wizard.data.firstName,
         lastName: wizard.data.lastName,
         phone: wizard.data.phone,
-        memberType: wizard.data.memberType || undefined,
-        subscriptionPlan: wizard.data.subscriptionPlan || undefined,
-        address: wizard.data.address,
+        ...(wizard.data.memberType && { memberType: wizard.data.memberType }),
+        ...(wizard.data.subscriptionPlan && { subscriptionPlan: wizard.data.subscriptionPlan }),
+        ...(addressPayload && { address: addressPayload }),
+        ...(photoUrl && { photoUrl }),
       };
 
       console.info('[Add Member Wizard] Member creation payload:', {
         timestamp: new Date().toISOString(),
         payload: createPayload,
+        addressPayload,
+        hasPhoto: !!photoUrl,
       });
 
-      await client.member.create(createPayload);
+      const result = await client.member.create(createPayload);
+      console.info('[Add Member Wizard] Member created successfully:', {
+        timestamp: new Date().toISOString(),
+        result,
+      });
 
       // Move to success step
       wizard.nextStep();
     } catch (error) {
       console.error('[Add Member Wizard] Failed to create member:', {
         timestamp: new Date().toISOString(),
+        errorType: typeof error,
         error: error instanceof Error ? error.message : String(error),
-        fullError: error,
+        errorObj: error,
+        errorKeys: error && typeof error === 'object' ? Object.keys(error) : [],
       });
       let errorMessage = 'Failed to create member. Please try again.';
 
       if (error instanceof Error) {
         errorMessage = error.message;
+      } else if (error && typeof error === 'object' && 'message' in error) {
+        errorMessage = String((error as any).message);
       }
 
       wizard.setError(errorMessage);

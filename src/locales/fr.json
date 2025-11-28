@@ -126,9 +126,12 @@
   },
   "Members": {
     "add_member_button": "Ajouter un membre",
-    "import_members_button": "Importer des membres",
+    "import_members_button": "Importer des membres"
+  },
+  "Staff": {
+    "invite_staff_button": "Inviter un membre du personnel",
     "access_denied_title": "Accès refusé",
-    "access_denied_message": "Vous n'avez pas la permission de consulter la liste des membres. Seuls les administrateurs de l'organisation peuvent accéder à cette page."
+    "access_denied_message": "Vous n'avez pas la permission de consulter la liste du personnel. Seuls les administrateurs de l'organisation peuvent accéder à cette page."
   },
   "MemberDetailOverview": {
     "contact_information": "Informations de contact",
@@ -204,6 +207,8 @@
       "city_placeholder": "San Francisco",
       "state_label": "État",
       "state_placeholder": "Californie",
+      "zip_code_label": "Code postal",
+      "zip_code_placeholder": "94102",
       "country_label": "Pays / Région",
       "country_placeholder": "États-Unis",
       "back_button": "Retour",

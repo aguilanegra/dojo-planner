@@ -63,7 +63,7 @@ function cacheReducer(state: CacheState, action: CacheAction): CacheState {
  * Custom hook for intelligent members caching with automatic invalidation.
  * Caches members data and revalidates when organization changes or data mutations occur.
  */
-export const useMembersCache = (organizationId: string | undefined) => {
+export const useMembersCache = (organizationId?: string | undefined) => {
   const [state, dispatch] = useReducer(cacheReducer, {
     members: [],
     loading: true,
@@ -71,11 +71,11 @@ export const useMembersCache = (organizationId: string | undefined) => {
   });
 
   const isCacheValid = useCallback((cache: CacheEntry | null): boolean => {
-    if (!cache || !organizationId) {
+    if (!cache) {
       return false;
     }
-    // Cache is invalid if organization changed or if duration exceeded
-    if (cache.organizationId !== organizationId) {
+    // Cache is invalid if organization changed (when organizationId is provided) or if duration exceeded
+    if (organizationId && cache.organizationId !== organizationId) {
       return false;
     }
     const now = Date.now();
@@ -138,6 +138,17 @@ export const useMembersCache = (organizationId: string | undefined) => {
     cacheStore = null; // Clear cache to force fresh fetch
     await fetchMembers();
   }, [fetchMembers]);
+
+  // Register revalidate callback for global cache invalidation
+  useEffect(() => {
+    revalidateCallbacks.push(revalidate);
+    return () => {
+      const index = revalidateCallbacks.indexOf(revalidate);
+      if (index > -1) {
+        revalidateCallbacks.splice(index, 1);
+      }
+    };
+  }, [revalidate]);
 
   // Reset state when organization is cleared, or fetch members when it changes
   useEffect(() => {

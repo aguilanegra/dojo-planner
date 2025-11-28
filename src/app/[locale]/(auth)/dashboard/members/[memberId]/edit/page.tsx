@@ -9,17 +9,19 @@ import { Badge } from '@/components/ui/badge';
 import { MemberBreadcrumb } from '@/components/ui/breadcrumb/MemberBreadcrumb';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { MemberDetailFinancial } from '@/features/members/details/MemberDetailFinancial';
-import { invalidateMembersCache, useMembersCache } from '@/hooks/useMembersCache';
-import { client } from '@/libs/Orpc';
+import { useMembersCache } from '@/hooks/useMembersCache';
 
 type Tab = 'overview' | 'financial';
 
 type ContactInfo = {
-  address?: string;
   phone?: string;
   email?: string;
+  street?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  country?: string;
 };
 
 type SubscriptionDetails = {
@@ -76,6 +78,8 @@ type BillingHistoryItem = {
 
 type MemberData = {
   memberName: string;
+  firstName: string;
+  lastName: string;
   photoUrl?: string;
   billingContactRole: string;
   membershipBadge: string;
@@ -116,6 +120,13 @@ type MemberType = {
   status?: string;
   program?: string;
   amountDue?: string;
+  address?: {
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    country: string;
+  };
   [key: string]: unknown;
 };
 
@@ -228,14 +239,20 @@ function buildMemberDataFromAPI(apiMember: MemberType): MemberData {
 
   return {
     memberName,
+    firstName: apiMember.firstName || '',
+    lastName: apiMember.lastName || '',
     photoUrl: apiMember.photoUrl || undefined,
     billingContactRole: 'Billing Contact',
     membershipBadge: getMembershipBadgeText(apiMember.membershipType),
     amountOverdue: '$0',
     contactInfo: {
-      address: '',
       phone: apiMember.phone || '',
       email: apiMember.email || '',
+      street: apiMember.address?.street || '',
+      city: apiMember.address?.city || '',
+      state: apiMember.address?.state || '',
+      zipCode: apiMember.address?.zipCode || '',
+      country: apiMember.address?.country || 'US',
     },
     subscriptionDetails: {
       membershipType: getSubscriptionMembershipType(apiMember.membershipType),
@@ -270,6 +287,7 @@ type PageAction
     | { type: 'SET_LOADING'; payload: boolean }
     | { type: 'SET_LOADING_MEMBER'; payload: boolean }
     | { type: 'UPDATE_CONTACT_INFO'; payload: { field: keyof ContactInfo; value: string } }
+    | { type: 'UPDATE_NAME'; payload: { firstName: string; lastName: string } }
     | { type: 'REMOVE_FAMILY_MEMBER'; payload: string };
 
 function pageReducer(state: PageState, action: PageAction): PageState {
@@ -298,6 +316,23 @@ function pageReducer(state: PageState, action: PageAction): PageState {
             ...state.currentData.contactInfo,
             [action.payload.field]: action.payload.value,
           },
+        },
+        error: null,
+      };
+    }
+    case 'UPDATE_NAME': {
+      if (!state.currentData) {
+        return state;
+      }
+      const { firstName, lastName } = action.payload;
+      const memberName = `${firstName} ${lastName}`.trim() || 'Member';
+      return {
+        ...state,
+        currentData: {
+          ...state.currentData,
+          firstName,
+          lastName,
+          memberName,
         },
         error: null,
       };
@@ -407,9 +442,6 @@ export default function EditMemberPage() {
     loadMemberData();
   }, [loadMemberData]);
 
-  // Check if data has changed
-  const hasChanges = JSON.stringify(state.currentData) !== JSON.stringify(state.originalData);
-
   const getInitials = (name: string) => {
     const parts = name.split(' ');
     return parts.map(part => part[0]).join('').toUpperCase();
@@ -432,74 +464,9 @@ export default function EditMemberPage() {
     return status.charAt(0).toUpperCase() + status.slice(1);
   };
 
-  const handleContactInfoChange = useCallback((field: keyof ContactInfo, value: string) => {
-    dispatch({ type: 'UPDATE_CONTACT_INFO', payload: { field, value } });
-  }, []);
-
   const handleRemoveFamilyMember = useCallback((familyMemberId: string) => {
     dispatch({ type: 'REMOVE_FAMILY_MEMBER', payload: familyMemberId });
   }, []);
-
-  const handleSave = async () => {
-    try {
-      dispatch({ type: 'SET_LOADING', payload: true });
-      dispatch({ type: 'SET_ERROR', payload: null });
-
-      // Guard against null data
-      if (!state.currentData || !state.originalData) {
-        dispatch({ type: 'SET_ERROR', payload: 'Member data not loaded' });
-        return;
-      }
-
-      // Validate required fields
-      if (!state.currentData.contactInfo.email) {
-        dispatch({ type: 'SET_ERROR', payload: 'Email is required' });
-        return;
-      }
-
-      console.info('[Edit Member] Saving member changes for member ID:', {
-        timestamp: new Date().toISOString(),
-        memberId,
-        changes: state.currentData,
-      });
-
-      // Extract first and last name from memberName
-      const nameParts = state.currentData.memberName.split(' ');
-      const firstName = nameParts[0] || '';
-      const lastName = nameParts.slice(1).join(' ') || '';
-
-      // Call API to update member
-      await client.member.update({
-        id: memberId,
-        email: state.currentData.contactInfo.email,
-        firstName,
-        lastName,
-        phone: state.currentData.contactInfo.phone || null,
-      });
-
-      console.info('[Edit Member] Member updated successfully:', {
-        timestamp: new Date().toISOString(),
-        memberId,
-      });
-
-      // Invalidate cache to refresh member list
-      invalidateMembersCache();
-
-      // Navigate back to members list page
-      router.push(`/${locale}/dashboard/members`);
-    } catch (err) {
-      console.error('[Edit Member] Failed to update member:', {
-        timestamp: new Date().toISOString(),
-        error: err instanceof Error ? err.message : String(err),
-        memberId,
-      });
-
-      const errorMessage = err instanceof Error ? err.message : 'Failed to save member changes';
-      dispatch({ type: 'SET_ERROR', payload: errorMessage });
-    } finally {
-      dispatch({ type: 'SET_LOADING', payload: false });
-    }
-  };
 
   const handleTabChange = useCallback((tab: Tab) => {
     dispatch({ type: 'SET_ACTIVE_TAB', payload: tab });
@@ -596,84 +563,86 @@ export default function EditMemberPage() {
             <div className="space-y-6">
               {/* Main Content Grid */}
               <div className="grid gap-6 lg:grid-cols-2">
-                {/* Contact Information - Editable */}
-                <Card className="p-6">
-                  <h2 className="mb-6 text-lg font-semibold text-foreground">Contact Information</h2>
-                  <div className="space-y-4">
-                    <div className="space-y-1.5">
-                      <label htmlFor="address" className="text-sm font-medium text-muted-foreground">Address</label>
-                      <Input
-                        id="address"
-                        placeholder="Address"
-                        value={state.currentData.contactInfo.address || ''}
-                        onChange={e => handleContactInfoChange('address', e.target.value)}
-                        disabled={state.isLoading}
-                      />
+                {/* Contact Information - Read Only Display */}
+                <Card className="flex flex-col p-6">
+                  <div>
+                    <h2 className="mb-6 text-lg font-semibold text-foreground">Contact Information</h2>
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground">Address:</p>
+                        <p className="text-sm text-foreground">
+                          {state.currentData.contactInfo.street && `${state.currentData.contactInfo.street}, `}
+                          {state.currentData.contactInfo.city && `${state.currentData.contactInfo.city} `}
+                          {state.currentData.contactInfo.state && `${state.currentData.contactInfo.state} `}
+                          {state.currentData.contactInfo.zipCode}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground">Phone:</p>
+                        <p className="text-sm text-foreground">{state.currentData.contactInfo.phone || '—'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground">Email:</p>
+                        <p className="text-sm text-foreground">{state.currentData.contactInfo.email || '—'}</p>
+                      </div>
                     </div>
-                    <div className="space-y-1.5">
-                      <label htmlFor="phone" className="text-sm font-medium text-muted-foreground">Phone</label>
-                      <Input
-                        id="phone"
-                        type="tel"
-                        placeholder="Phone number"
-                        value={state.currentData.contactInfo.phone || ''}
-                        onChange={e => handleContactInfoChange('phone', e.target.value)}
-                        disabled={state.isLoading}
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label htmlFor="email" className="text-sm font-medium text-muted-foreground">Email</label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="Email address"
-                        value={state.currentData.contactInfo.email || ''}
-                        onChange={e => handleContactInfoChange('email', e.target.value)}
-                        disabled={state.isLoading}
-                      />
-                    </div>
+                  </div>
+                  <div className="mt-auto flex justify-end pt-6">
+                    <Button className="w-fit bg-foreground text-background hover:bg-foreground/90">
+                      Edit Details
+                    </Button>
                   </div>
                 </Card>
 
                 {/* Subscription Details - Read Only */}
-                <Card className="p-6">
-                  <h2 className="mb-6 text-lg font-semibold text-foreground">Subscription Details</h2>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-semibold text-foreground">{state.currentData.subscriptionDetails.membershipType}</h3>
-                        <Badge variant={getStatusColor(state.currentData.subscriptionDetails.status)} className="mt-2">
-                          {getStatusLabel(state.currentData.subscriptionDetails.status)}
-                        </Badge>
+                <Card className="flex flex-col p-6">
+                  <div>
+                    <h2 className="mb-6 text-lg font-semibold text-foreground">Subscription Details</h2>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="font-semibold text-foreground">{state.currentData.subscriptionDetails.membershipType}</h3>
+                          <Badge variant={getStatusColor(state.currentData.subscriptionDetails.status)} className="mt-2">
+                            {getStatusLabel(state.currentData.subscriptionDetails.status)}
+                          </Badge>
+                        </div>
+                        {state.currentData.subscriptionDetails.amount > 0 && (
+                          <div className="text-right">
+                            <p className="text-2xl font-bold text-primary">
+                              $
+                              {state.currentData.subscriptionDetails.amount}
+                            </p>
+                          </div>
+                        )}
                       </div>
-                      {state.currentData.subscriptionDetails.amount > 0 && (
-                        <div className="text-right">
-                          <p className="text-2xl font-bold text-primary">
-                            $
-                            {state.currentData.subscriptionDetails.amount}
-                          </p>
+                      {state.currentData.subscriptionDetails.pastDuePayments > 0 && (
+                        <div className="border-t border-border pt-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h3 className="font-semibold text-foreground">Past Due Payments</h3>
+                              <p className="mt-1 text-sm text-muted-foreground">{state.currentData.subscriptionDetails.lastPayment}</p>
+                            </div>
+                            <p className="text-2xl font-bold text-destructive">
+                              $
+                              {state.currentData.subscriptionDetails.pastDuePayments.toFixed(2)}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      {state.currentData.subscriptionDetails.pastDuePayments === 0 && (
+                        <div className="border-t border-border pt-4">
+                          <p className="text-sm text-muted-foreground">No payments due</p>
                         </div>
                       )}
                     </div>
-                    {state.currentData.subscriptionDetails.pastDuePayments > 0 && (
-                      <div className="border-t border-border pt-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="font-semibold text-foreground">Past Due Payments</h3>
-                            <p className="mt-1 text-sm text-muted-foreground">{state.currentData.subscriptionDetails.lastPayment}</p>
-                          </div>
-                          <p className="text-2xl font-bold text-destructive">
-                            $
-                            {state.currentData.subscriptionDetails.pastDuePayments.toFixed(2)}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                    {state.currentData.subscriptionDetails.pastDuePayments === 0 && (
-                      <div className="border-t border-border pt-4">
-                        <p className="text-sm text-muted-foreground">No payments due</p>
-                      </div>
-                    )}
+                  </div>
+                  <div className="mt-auto flex justify-end gap-3 pt-6">
+                    <Button className="w-fit bg-foreground text-background hover:bg-foreground/90">
+                      Change Membership
+                    </Button>
+                    <Button variant="destructive" className="w-fit">
+                      Hold
+                    </Button>
                   </div>
                 </Card>
               </div>
@@ -742,22 +711,6 @@ export default function EditMemberPage() {
                 </Card>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex justify-between gap-3 border-t border-border pt-6">
-                <Button
-                  variant="outline"
-                  onClick={handleCancel}
-                  disabled={state.isLoading}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleSave}
-                  disabled={!hasChanges || state.isLoading}
-                >
-                  {state.isLoading ? 'Saving...' : 'Save Changes'}
-                </Button>
-              </div>
             </div>
           )
         : (

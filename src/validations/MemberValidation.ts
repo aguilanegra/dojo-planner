@@ -7,13 +7,15 @@ export const MemberValidation = z.object({
   phone: z.string().optional(),
   memberType: z.enum(['individual', 'family-member', 'head-of-household']).optional(),
   address: z.object({
-    street: z.string().optional(),
+    street: z.string(),
     apartment: z.string().optional(),
-    city: z.string().optional(),
-    state: z.string().optional(),
-    country: z.string().optional(),
+    city: z.string(),
+    state: z.string(),
+    zipCode: z.string(),
+    country: z.string(),
   }).optional(),
   subscriptionPlan: z.enum(['free-trial', 'monthly', 'annual', 'custom']).optional(),
+  photoUrl: z.string().optional(),
 });
 
 export const EditMemberValidation = z.object({

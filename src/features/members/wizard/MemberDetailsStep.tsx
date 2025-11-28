@@ -4,6 +4,14 @@ import type { AddMemberWizardData } from '@/hooks/useAddMemberWizard';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { COUNTRIES, US_STATES } from '@/constants/locations';
 
 type MemberDetailsStepProps = {
   data: AddMemberWizardData;
@@ -12,6 +20,12 @@ type MemberDetailsStepProps = {
   onBack: () => void;
   onCancel: () => void;
   error?: string | null;
+};
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/;
+
+const isValidEmail = (email: string): boolean => {
+  return EMAIL_REGEX.test(email);
 };
 
 export const MemberDetailsStep = ({ data, onUpdate, onNext, onBack, onCancel, error }: MemberDetailsStepProps) => {
@@ -24,13 +38,25 @@ export const MemberDetailsStep = ({ data, onUpdate, onNext, onBack, onCancel, er
   const handleAddressChange = (field: string, value: string) => {
     onUpdate({
       address: {
-        ...(data.address || { street: '', city: '', state: '', country: '' }),
+        ...(data.address || { street: '', apartment: '', city: '', state: '', zipCode: '', country: 'US' }),
         [field]: value,
       },
     });
   };
 
-  const isFormValid = data.firstName && data.lastName && data.email && data.phone;
+  const isAddressValid
+    = data.address?.street
+      && data.address?.city
+      && data.address?.state
+      && data.address?.zipCode
+      && data.address?.country;
+
+  const isFormValid
+    = data.firstName
+      && data.lastName
+      && data.phone
+      && isValidEmail(data.email)
+      && isAddressValid;
 
   return (
     <div className="space-y-6">
@@ -74,7 +100,11 @@ export const MemberDetailsStep = ({ data, onUpdate, onNext, onBack, onCancel, er
             placeholder={t('email_placeholder')}
             value={data.email}
             onChange={e => handleInputChange('email', e.target.value)}
+            aria-invalid={data.email && !isValidEmail(data.email) ? 'true' : 'false'}
           />
+          {data.email && !isValidEmail(data.email) && (
+            <p className="text-xs text-destructive">Please enter a valid email address</p>
+          )}
         </div>
 
         <div className="space-y-1.5">
@@ -109,8 +139,8 @@ export const MemberDetailsStep = ({ data, onUpdate, onNext, onBack, onCancel, er
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
+            <div className="grid grid-cols-12 gap-4">
+              <div className="col-span-6 space-y-1.5">
                 <label className="text-xs font-medium text-muted-foreground">{t('city_label')}</label>
                 <Input
                   placeholder={t('city_placeholder')}
@@ -118,23 +148,45 @@ export const MemberDetailsStep = ({ data, onUpdate, onNext, onBack, onCancel, er
                   onChange={e => handleAddressChange('city', e.target.value)}
                 />
               </div>
-              <div className="space-y-1.5">
+              <div className="col-span-2 space-y-1.5">
                 <label className="text-xs font-medium text-muted-foreground">{t('state_label')}</label>
+                <Select value={data.address?.state || ''} onValueChange={value => handleAddressChange('state', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('state_placeholder')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {US_STATES.map(state => (
+                      <SelectItem key={state.value} value={state.value}>
+                        {state.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="col-span-4 space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">{t('zip_code_label')}</label>
                 <Input
-                  placeholder={t('state_placeholder')}
-                  value={data.address?.state || ''}
-                  onChange={e => handleAddressChange('state', e.target.value)}
+                  placeholder={t('zip_code_placeholder')}
+                  value={data.address?.zipCode || ''}
+                  onChange={e => handleAddressChange('zipCode', e.target.value)}
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground">{t('country_label')}</label>
-              <Input
-                placeholder={t('country_placeholder')}
-                value={data.address?.country || ''}
-                onChange={e => handleAddressChange('country', e.target.value)}
-              />
+              <Select value={data.address?.country || 'US'} onValueChange={value => handleAddressChange('country', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t('country_placeholder')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {COUNTRIES.map(country => (
+                    <SelectItem key={country.value} value={country.value}>
+                      {country.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>
