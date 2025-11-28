@@ -26,7 +26,7 @@ export async function runMigrations(): Promise<void> {
 
     // Run migrations from the migrations folder
     await migrate(db, {
-      migrationsFolder: 'drizzle',
+      migrationsFolder: 'migrations',
     });
 
     console.info('[Migrations] Database migrations completed successfully');

@@ -44,7 +44,25 @@ jobs:
 
       - name: Create summary # export the markdown report to the job summary.
         id: create-summary
-        run: cat checkly-github-report.md > $GITHUB_STEP_SUMMARY
+        if: always()
+        run: |
+          if [ -f checkly-github-report.md ]; then
+            cat checkly-github-report.md > $GITHUB_STEP_SUMMARY
+          else
+            echo "## Checkly Test Results" > $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            if [ "${{ steps.run-checks.outcome }}" = "success" ]; then
+              echo "✅ All tests passed" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "❌ Tests failed or no tests found" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "**Possible causes:**" >> $GITHUB_STEP_SUMMARY
+              echo "- No test files matching the pattern: \`**/tests/e2e/**/*.e2e.ts\`" >> $GITHUB_STEP_SUMMARY
+              echo "- Test execution failed before generating report" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "Check the logs above for details." >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
 
       - name: Deploy checks # if the test run was successful and we are on Production, deploy the checks
         id: deploy-checks
