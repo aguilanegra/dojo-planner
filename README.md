@@ -2,6 +2,8 @@
 
 [![CI](https://github.com/aguilanegra/dojo-planner/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/aguilanegra/dojo-planner/actions/workflows/CI.yml)
 
+[![Checkly](https://github.com/aguilanegra/dojo-planner/actions/workflows/checkly.yml/badge.svg)](https://github.com/aguilanegra/dojo-planner/actions/workflows/checkly.yml)
+
 🥋 **Dojo Planner** - A martial arts dojo management and planning application. Built with **Next.js** and **Tailwind CSS**, and the modular UI components of **Shadcn UI**.
 
 Packed with essential features like built-in **Authentication**, **Multi-Tenancy** with Team support, **Role & Permission**, Database, I18n (internationalization), Landing Page, User Dashboard, Form handling, SEO optimization, Logging, Error reporting with [Sentry](https://sentry.io/for/nextjs/?utm_source=github&utm_medium=paid-community&utm_campaign=general-fy25q1-nextjs&utm_content=github-banner-nextjsboilerplate-logo), Testing, Deployment, Monitoring, and **User Impersonation**, this SaaS template provides everything you need to get started.
