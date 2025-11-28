@@ -1,19 +1,16 @@
-import { clerkSetup, setupClerkTestingToken } from '@clerk/testing/playwright';
+import { clerkSetup } from '@clerk/testing/playwright';
 import { test as setup } from '@playwright/test';
 
+setup.describe.configure({ mode: 'serial' });
+
 setup('authenticate with Clerk', async ({ page, context }) => {
-  // Initialize Clerk testing environment
-  await clerkSetup();
-
-  // Setup Clerk testing token - this injects test credentials into the browser
-  await setupClerkTestingToken({ page });
-
-  // Navigate to the app to initialize authenticated session
-  await page.goto('/');
-
-  // Wait for Clerk to initialize
-  await page.waitForLoadState('domcontentloaded');
-
-  // Save the authenticated state for reuse in tests
-  await context.storageState({ path: '.playwright/auth.json' });
+  try {
+    await clerkSetup();
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('networkidle');
+    await context.storageState({ path: '.playwright/auth.json' });
+  } catch (error) {
+    console.error('Clerk authentication setup failed:', error);
+    throw error;
+  }
 });
