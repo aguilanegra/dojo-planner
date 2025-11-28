@@ -4,7 +4,7 @@
     "meta_description": "An easy way to manage your academy."
   },
   "Hero": {
-    "title": "Dojo Planner allows you to track and scale your academies with ease.",
+    "title": "Dojo Planner",
     "primary_button": "Get Started"
   },
   "Features": {
@@ -126,9 +126,12 @@
   },
   "Members": {
     "add_member_button": "Add Member",
-    "import_members_button": "Import Members",
+    "import_members_button": "Import Members"
+  },
+  "Staff": {
+    "invite_staff_button": "Invite Staff Member",
     "access_denied_title": "Access Denied",
-    "access_denied_message": "You do not have permission to view the members list. Only organization administrators can access this page."
+    "access_denied_message": "You do not have permission to view the staff list. Only organization administrators can access this page."
   },
   "MemberDetailOverview": {
     "contact_information": "Contact Information",
@@ -203,7 +206,9 @@
       "city_label": "City",
       "city_placeholder": "San Francisco",
       "state_label": "State",
-      "state_placeholder": "California",
+      "state_placeholder": "CA",
+      "zip_code_label": "Zip Code",
+      "zip_code_placeholder": "94102",
       "country_label": "Country / Region",
       "country_placeholder": "United States",
       "back_button": "Back",

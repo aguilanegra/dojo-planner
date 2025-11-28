@@ -16,11 +16,11 @@ const createStripePrice = async (plan: PricingPlan) => {
     product: product.id,
   });
 
-  console.log(`Plan: ${plan.id} - Price ID: ${price.id}`);
+  console.info(`Plan: ${plan.id} - Price ID: ${price.id}`);
 };
 
 async function main() {
-  console.log('Create Stripe price started');
+  console.info('Create Stripe price started');
 
   const paidPricingPlanList = Object.entries(PricingPlanList).filter(([id, _plan]) => id !== PLAN_ID.FREE);
 
@@ -34,6 +34,6 @@ async function main() {
 
 main().catch((error) => {
   console.error('Create Stripe price failed');
-  console.log(error);
+  console.warn(error);
   process.exit(1);
 });

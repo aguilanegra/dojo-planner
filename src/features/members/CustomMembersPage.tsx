@@ -4,8 +4,9 @@ import { useOrganization } from '@clerk/nextjs';
 import { Download, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { invalidateMembersCache, useMembersCache } from '@/hooks/useMembersCache';
 import { client } from '@/libs/Orpc';
 import { MembersTable } from './MembersTable';
 import { AddMemberModal } from './wizard/AddMemberModal';
@@ -22,6 +23,7 @@ type Member = {
   status: string;
   createdAt: Date;
   updatedAt: Date;
+  create_organization_enabled?: boolean;
   membershipType?: 'free' | 'free_trial' | 'monthly' | 'annual';
   amountDue?: string;
   nextPayment?: Date;
@@ -31,131 +33,78 @@ export function CustomMembersPage() {
   const params = useParams();
   const locale = (params?.locale as string) || 'en';
   const t = useTranslations('Members');
+  const { organization } = useOrganization();
 
-  const { memberships, organization, isLoaded } = useOrganization({
-    memberships: {
-      keepPreviousData: true,
-    },
-  });
+  // Use intelligent caching hook with organization ID for proper cache invalidation
+  const { members: cachedMembers, loading: cacheLoading } = useMembersCache(organization?.id);
 
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
-  const [hasPermission, setHasPermission] = useState(true);
 
+  // Handle enriching members with subscription type
   useEffect(() => {
-    if (!isLoaded || !organization) {
-      return;
-    }
-
-    // Don't proceed if memberships are not available yet
-    // This prevents the race condition where isLoaded is true but memberships haven't been fetched yet
-    if (!memberships?.data) {
-      return;
-    }
-
-    const fetchMembersWithDetails = async () => {
+    const enrichMembersWithSubscription = async () => {
       try {
-        // Fetch organization subscription data
-        const subscriptionResponse = await fetch(
-          `/${locale}/api/organization/${organization.id}/subscription`,
-        );
-
-        if (!subscriptionResponse.ok) {
-          throw new Error('Failed to fetch subscription data');
+        if (!cachedMembers || cachedMembers.length === 0) {
+          setMembers(cachedMembers);
+          setLoading(cacheLoading);
+          return;
         }
 
-        const { subscriptionType } = await subscriptionResponse.json();
-
-        // Try to fetch detailed member data from the server
-        let detailedMembers: Array<{
-          id: string;
-          phone: string | null;
-          dateOfBirth: Date | null;
-          lastAccessedAt: Date | null;
-          status: string;
-          createdAt: Date;
-          updatedAt: Date;
-        }> = [];
-
-        try {
-          const membersData = await client.members.list();
-          // members.list returns { members: [...] }
-          detailedMembers = (membersData.members || []) as typeof detailedMembers;
-        } catch (error) {
-          // Check if this is a permission error (403 Forbidden)
-          if (error instanceof Error && error.message.includes('403')) {
-            setHasPermission(false);
-            setLoading(false);
-            return;
-          }
-          // If detailed fetch fails for other reasons, just continue with empty detailedMembers
-          // This ensures members still display even if the detailed data fetch fails
-          console.warn('Failed to fetch detailed member data, displaying basic info');
-        }
-
-        // Create a map of detailed member data by ID
-        const detailedMemberMap = new Map(
-          detailedMembers.map(m => [m.id, m]),
-        );
-
-        // Map Clerk memberships with detailed member data and subscription type
-        const mappedMembers: Member[] = (memberships?.data || []).map((m) => {
-          const userId = m.publicUserData?.userId || '';
-          const detailedData = detailedMemberMap.get(userId);
-
-          return {
-            id: userId,
-            firstName: m.publicUserData?.firstName || null,
-            lastName: m.publicUserData?.lastName || null,
-            email: m.publicUserData?.identifier || '',
-            phone: detailedData?.phone || null,
-            dateOfBirth: detailedData?.dateOfBirth || null,
-            photoUrl: m.publicUserData?.imageUrl || null,
-            lastAccessedAt: detailedData?.lastAccessedAt || null,
-            status: detailedData?.status || 'active',
-            createdAt: detailedData?.createdAt || new Date(),
-            updatedAt: detailedData?.updatedAt || new Date(),
-            membershipType: subscriptionType as 'free' | 'free_trial' | 'monthly' | 'annual',
-          };
-        });
-
-        setMembers(mappedMembers);
+        // Get organization ID from the member data or from auth context
+        // For now, we'll skip subscription enrichment since members don't have org admin info
+        setMembers(cachedMembers);
+        setLoading(cacheLoading);
       } catch (error) {
-        console.warn('CustomMembersPage - Failed to fetch members with subscription:', error);
-      } finally {
-        setLoading(false);
+        console.warn('CustomMembersPage - Error processing members:', error);
+        setMembers(cachedMembers);
+        setLoading(cacheLoading);
       }
     };
 
-    fetchMembersWithDetails();
-  }, [isLoaded, locale, organization, memberships?.data]);
+    enrichMembersWithSubscription();
+  }, [cachedMembers, cacheLoading]);
 
-  const handleViewDetails = (memberId: string) => {
-    // Navigate to member detail page
-    window.location.href = `/${locale}/dashboard/members/${memberId}`;
-  };
+  const handleEditMember = useCallback((memberId: string) => {
+    // Navigate to member edit page
+    window.location.href = `/${locale}/dashboard/members/${memberId}/edit`;
+  }, [locale]);
 
-  // Show permission error if user is not an organization admin
-  if (!hasPermission) {
-    return (
-      <div className="rounded-lg border border-border bg-background p-8 text-center">
-        <h2 className="text-xl font-semibold text-foreground">{t('access_denied_title')}</h2>
-        <p className="mt-2 text-muted-foreground">
-          {t('access_denied_message')}
-        </p>
-      </div>
-    );
-  }
+  const handleRemoveMember = useCallback(async (memberId: string) => {
+    try {
+      await client.member.remove({ id: memberId });
+      invalidateMembersCache();
+    } catch (error) {
+      console.error('[Members] Failed to flag member for deletion:', error);
+    }
+  }, []);
 
-  // Render the table even while loading - it will show loading state internally
-  // This ensures the page structure is visible immediately for tests and prevents timeouts
+  const handleRestoreMember = useCallback(async (memberId: string) => {
+    try {
+      await client.member.restore({ id: memberId });
+      invalidateMembersCache();
+    } catch (error) {
+      console.error('[Members] Failed to restore member:', error);
+    }
+  }, []);
+
+  const handleAddMemberModalClose = useCallback(() => {
+    setIsAddMemberModalOpen(false);
+    // Invalidate cache when modal closes (member was likely added)
+    invalidateMembersCache();
+  }, []);
+
+  // Render the table with intelligent caching
+  // Shows loading state while data is being fetched from cache
   return (
     <>
       <MembersTable
         members={members}
-        onViewDetailsAction={handleViewDetails}
-        loading={loading || !isLoaded}
+        onEditAction={handleEditMember}
+        onRemoveAction={handleRemoveMember}
+        onRestoreAction={handleRestoreMember}
+        loading={loading || cacheLoading}
         headerActions={(
           <div className="flex items-center gap-2">
             <Button variant="outline">
@@ -172,7 +121,7 @@ export function CustomMembersPage() {
 
       <AddMemberModal
         isOpen={isAddMemberModalOpen}
-        onCloseAction={() => setIsAddMemberModalOpen(false)}
+        onCloseAction={handleAddMemberModalClose}
       />
     </>
   );

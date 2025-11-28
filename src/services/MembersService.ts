@@ -1,13 +1,21 @@
 import { randomUUID } from 'node:crypto';
-import { clerkClient } from '@clerk/nextjs/server';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { db } from '@/libs/DB';
 import { addressSchema, memberSchema } from '@/models/Schema';
 
+type Address = {
+  street: string;
+  apartment?: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+};
+
 type MemberWithCustomData = {
-  id: string; // Clerk user ID
-  firstName: string | null;
-  lastName: string | null;
+  id: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string | null;
   dateOfBirth: Date | null;
@@ -18,10 +26,12 @@ type MemberWithCustomData = {
   status: string;
   createdAt: Date;
   updatedAt: Date;
+  create_organization_enabled?: boolean;
+  address?: Address;
 };
 
 type CreateMemberInput = {
-  id: string;
+  id?: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -35,6 +45,7 @@ type CreateMemberInput = {
     apartment?: string;
     city?: string;
     state?: string;
+    zipCode?: string;
     country?: string;
   };
 };
@@ -54,61 +65,66 @@ type UpdateMemberInput = {
 };
 
 /**
- * Fetch organization members from Clerk and merge with custom member data
- * @param organizationId - The Clerk organization ID
- * @returns Array of members with both Clerk data and custom database data
+ * Fetch organization members from database
+ * @param organizationId - The organization ID
+ * @returns Array of members from the database
  */
 export async function getOrganizationMembers(
   organizationId: string,
 ): Promise<MemberWithCustomData[]> {
-  // Fetch memberships from Clerk
-  const client = await clerkClient();
-  const memberships = await client.organizations.getOrganizationMembershipList({
+  // Fetch all members for the organization from the database
+  const members = await db
+    .select()
+    .from(memberSchema)
+    .where(eq(memberSchema.organizationId, organizationId));
+
+  console.info('[MembersService] Fetched members from database:', {
     organizationId,
+    count: members.length,
+    memberIds: members.map(m => m.id),
   });
 
-  const members = memberships.data || [];
-
-  if (!members || members.length === 0) {
-    return [];
-  }
-
-  // Extract user IDs to fetch custom data
-  const userIds = members
-    .map(m => m.publicUserData?.userId)
-    .filter((id): id is string => Boolean(id));
-
-  // Fetch custom member data from database
-  const customMemberData = userIds.length > 0
-    ? await db.select().from(memberSchema)
+  // Fetch addresses for all members
+  const memberIds = members.map(m => m.id);
+  const addresses = memberIds.length > 0
+    ? await db
+        .select()
+        .from(addressSchema)
+        .where(inArray(addressSchema.memberId, memberIds))
     : [];
 
-  // Create a map of custom member data by user ID
-  const customDataMap = new Map(
-    customMemberData.map(member => [member.id, member]),
-  );
-
-  // Merge Clerk data with custom database data
-  return members.map((clerkMember) => {
-    const userId = clerkMember.publicUserData?.userId;
-    const customData = userId ? customDataMap.get(userId) : null;
-
-    return {
-      id: userId || '',
-      firstName: clerkMember.publicUserData?.firstName || null,
-      lastName: clerkMember.publicUserData?.lastName || null,
-      email: clerkMember.publicUserData?.identifier || '',
-      phone: customData?.phone || null,
-      dateOfBirth: customData?.dateOfBirth || null,
-      photoUrl: customData?.photoUrl || null,
-      memberType: customData?.memberType || null,
-      subscriptionPlan: customData?.subscriptionPlan || null,
-      lastAccessedAt: customData?.lastAccessedAt || null,
-      status: customData?.status || 'active',
-      createdAt: customData?.createdAt || new Date(),
-      updatedAt: customData?.updatedAt || new Date(),
-    };
+  // Create a map of member ID to address for quick lookup
+  const addressMap = new Map<string, Address>();
+  addresses.forEach((addr) => {
+    if (addr.memberId && addr.isDefault) {
+      addressMap.set(addr.memberId, {
+        street: addr.street,
+        apartment: undefined,
+        city: addr.city,
+        state: addr.state,
+        zipCode: addr.zipCode,
+        country: addr.country,
+      });
+    }
   });
+
+  return members.map(member => ({
+    id: member.id,
+    firstName: member.firstName,
+    lastName: member.lastName,
+    email: member.email,
+    phone: member.phone || null,
+    dateOfBirth: member.dateOfBirth || null,
+    photoUrl: member.photoUrl || null,
+    memberType: member.memberType || null,
+    subscriptionPlan: member.subscriptionPlan || null,
+    lastAccessedAt: member.lastAccessedAt || null,
+    status: member.status,
+    createdAt: member.createdAt,
+    updatedAt: member.updatedAt,
+    create_organization_enabled: false, // Members table doesn't have admins
+    address: addressMap.get(member.id),
+  }));
 }
 
 /**
@@ -124,22 +140,23 @@ export async function createMember(member: CreateMemberInput, organizationId: st
     .insert(memberSchema)
     .values({
       ...memberData,
+      id: memberData.id || randomUUID(),
       organizationId,
     })
     .returning();
 
   // Create address record if address data is provided
-  if (address && (address.street || address.city || address.state) && result[0]) {
+  if (address && address.street && address.city && address.state && address.zipCode && result[0]) {
     await db
       .insert(addressSchema)
       .values({
         id: randomUUID(),
         memberId: result[0].id,
         type: 'home',
-        street: address.street || '',
-        city: address.city || '',
-        state: address.state || '',
-        zipCode: '', // Not collected in wizard
+        street: address.street,
+        city: address.city,
+        state: address.state,
+        zipCode: address.zipCode,
         country: address.country || 'US',
         isDefault: true,
       })
@@ -164,14 +181,35 @@ export function updateMember(member: UpdateMemberInput, organizationId: string) 
 }
 
 /**
- * Delete a member
- * @param memberId - The member ID to delete
+ * Flag a member for deletion (soft delete with 30-day retention)
+ * @param memberId - The member ID to flag
  * @param organizationId - The organization ID
- * @returns The deleted member record
+ * @returns The updated member record
  */
-export function deleteMember(memberId: string, organizationId: string) {
+export function flagMemberForDeletion(memberId: string, organizationId: string) {
   return db
-    .delete(memberSchema)
+    .update(memberSchema)
+    .set({
+      status: 'flagged-for-deletion',
+      flaggedForDeletionAt: new Date(),
+    })
+    .where(and(eq(memberSchema.id, memberId), eq(memberSchema.organizationId, organizationId)))
+    .returning();
+}
+
+/**
+ * Restore a member that was flagged for deletion
+ * @param memberId - The member ID to restore
+ * @param organizationId - The organization ID
+ * @returns The updated member record
+ */
+export function restoreFlaggedMember(memberId: string, organizationId: string) {
+  return db
+    .update(memberSchema)
+    .set({
+      status: 'active',
+      flaggedForDeletionAt: null,
+    })
     .where(and(eq(memberSchema.id, memberId), eq(memberSchema.organizationId, organizationId)))
     .returning();
 }

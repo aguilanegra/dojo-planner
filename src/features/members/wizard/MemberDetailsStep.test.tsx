@@ -206,6 +206,13 @@ describe('MemberDetailsStep', () => {
       email: 'john@example.com',
       phone: '1234567890',
       subscriptionPlan: null,
+      address: {
+        street: '123 Main St',
+        city: 'San Francisco',
+        state: 'CA',
+        zipCode: '94102',
+        country: 'US',
+      },
     };
 
     render(

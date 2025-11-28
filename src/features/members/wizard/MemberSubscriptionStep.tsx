@@ -23,6 +23,9 @@ export const MemberSubscriptionStep = ({
 }: MemberSubscriptionStepProps) => {
   const t = useTranslations('AddMemberWizard.MemberSubscriptionStep');
 
+  const monthlyPrice = t('monthly_price');
+  const annualPrice = t('annual_price');
+
   const subscriptionPlans: {
     id: SubscriptionPlan;
     label: string;
@@ -37,14 +40,14 @@ export const MemberSubscriptionStep = ({
     {
       id: 'monthly',
       label: t('monthly_label'),
-      description: t('monthly_description'),
-      price: t('monthly_price'),
+      description: t('monthly_description', { price: monthlyPrice }),
+      price: monthlyPrice,
     },
     {
       id: 'annual',
       label: t('annual_label'),
       description: t('annual_description'),
-      price: t('annual_price'),
+      price: annualPrice,
     },
     {
       id: 'custom',
@@ -82,12 +85,12 @@ export const MemberSubscriptionStep = ({
                 : 'border-border bg-background hover:border-primary/50 hover:bg-accent/50'
             }`}
           >
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-start justify-between gap-4">
                 <h3 className="font-semibold text-foreground">{plan.label}</h3>
-                <p className="text-sm text-muted-foreground">{plan.description}</p>
+                {plan.price && <span className="shrink-0 text-sm font-semibold text-foreground">{plan.price}</span>}
               </div>
-              {plan.price && <span className="text-sm font-semibold text-foreground">{plan.price}</span>}
+              <p className="text-sm text-muted-foreground">{plan.description}</p>
             </div>
           </button>
         ))}

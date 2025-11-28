@@ -17,6 +17,7 @@ export type AddMemberWizardData = {
     apartment?: string;
     city: string;
     state: string;
+    zipCode: string;
     country: string;
   };
 
@@ -45,7 +46,10 @@ export const useAddMemberWizard = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const updateData = (updates: Partial<AddMemberWizardData>) => {
-    setData(prev => ({ ...prev, ...updates }));
+    setData((prev) => {
+      const newData = { ...prev, ...updates };
+      return newData;
+    });
     setError(null);
   };
 

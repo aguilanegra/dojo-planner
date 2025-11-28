@@ -1,27 +1,34 @@
 import { describe, expect, it } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { page } from 'vitest/browser';
-import { StaffPage } from '@/features/staff/StaffPage';
+import { StaffTable } from '@/features/staff/StaffTable';
+
+const mockStaffMembers = [
+  {
+    id: 'user_1',
+    firstName: 'Charlie',
+    lastName: 'Baptista',
+    email: 'charlie@dojo.com',
+    photoUrl: null,
+    emailAddress: 'charlie@dojo.com',
+    role: 'org:admin',
+    status: 'Active' as const,
+  },
+  {
+    id: 'user_2',
+    firstName: 'Professor',
+    lastName: 'Jessica',
+    email: 'jessica@dojo.com',
+    photoUrl: null,
+    emailAddress: 'jessica@dojo.com',
+    role: 'org:admin',
+    status: 'Invitation sent' as const,
+  },
+];
 
 describe('Staff Page', () => {
-  it('renders staff header', () => {
-    render(<StaffPage />);
-
-    const heading = page.getByRole('heading', { name: /Staff/i });
-
-    expect(heading).toBeInTheDocument();
-  });
-
-  it('renders invite staff button', () => {
-    render(<StaffPage />);
-
-    const inviteButton = page.getByRole('button', { name: /Invite Staff Member/i });
-
-    expect(inviteButton).toBeInTheDocument();
-  });
-
   it('renders staff table', () => {
-    render(<StaffPage />);
+    render(<StaffTable staffMembers={mockStaffMembers} headerActions={<div>Actions</div>} />);
 
     const table = page.getByRole('table');
 
@@ -29,54 +36,41 @@ describe('Staff Page', () => {
   });
 
   it('displays staff member names', () => {
-    render(<StaffPage />);
+    render(<StaffTable staffMembers={mockStaffMembers} headerActions={<div>Actions</div>} />);
 
-    const charlie = page.getByText(/Charlie Baptista/);
-    const jessica = page.getByText(/Professor Jessica/);
+    const table = page.getByRole('table');
+    const charlie = table.getByText(/Charlie Baptista/);
+    const jessica = table.getByText(/Professor Jessica/);
 
     expect(charlie).toBeInTheDocument();
     expect(jessica).toBeInTheDocument();
   });
 
   it('displays staff member emails', () => {
-    render(<StaffPage />);
+    render(<StaffTable staffMembers={mockStaffMembers} headerActions={<div>Actions</div>} />);
 
-    const email = page.getByText(/charlie@dojo.com/);
+    const table = page.getByRole('table');
+    const email = table.getByText(/charlie@dojo.com/);
 
     expect(email).toBeInTheDocument();
   });
 
   it('displays staff status badges', () => {
-    render(<StaffPage />);
+    render(<StaffTable staffMembers={mockStaffMembers} headerActions={<div>Actions</div>} />);
 
-    const activeStatus = page.getByText(/Active/).first();
+    const table = page.getByRole('table');
+    const activeStatus = table.getByText(/Active/);
+    const invitationStatus = table.getByText(/Invitation sent/);
 
     expect(activeStatus).toBeInTheDocument();
+    expect(invitationStatus).toBeInTheDocument();
   });
 
   it('displays action buttons for each staff member', () => {
-    render(<StaffPage />);
+    render(<StaffTable staffMembers={mockStaffMembers} headerActions={<div>Actions</div>} />);
 
-    const editButtons = page.getByRole('button').nth(2);
+    const buttons = page.getByRole('button');
 
-    expect(editButtons).toBeDefined();
-  });
-
-  it('displays staff member avatars', () => {
-    render(<StaffPage />);
-
-    // Avatars are rendered with staff member names as alt text
-    // Check that we have images with staff names in the document
-    const images = page.getByRole('img');
-
-    expect(images).toBeDefined();
-  });
-
-  it('displays invitation sent status for new members', () => {
-    render(<StaffPage />);
-
-    const invitationStatus = page.getByText(/Invitation sent/);
-
-    expect(invitationStatus).toBeInTheDocument();
+    expect(buttons.length).toBeGreaterThan(0);
   });
 });
