@@ -1,16 +1,15 @@
 'use client';
 
-import { OrganizationSwitcher, useClerk } from '@clerk/nextjs';
+import { useClerk } from '@clerk/nextjs';
 import { BookMarked, Briefcase, CalendarDays, CircleUser, CreditCard, HelpCircle, Home, LogOut, Mail, Map, Megaphone, Settings, ShieldCheck, Users, Users2 } from 'lucide-react';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { Badge } from '@/components/ui/badge';
 import { Sidebar, SidebarContent, SidebarHeader, SidebarRail } from '@/components/ui/sidebar';
 import { AppSidebarNav } from '@/features/dashboard/AppSidebarNav';
+import { OrganizationSelector } from '@/features/dashboard/OrganizationSelector';
 import { Logo } from '@/templates/Logo';
-import { getI18nPath } from '@/utils/Helpers';
 
 export const AppSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
-  const locale = useLocale();
   const t = useTranslations('DashboardLayout');
   const { signOut } = useClerk();
 
@@ -21,22 +20,7 @@ export const AppSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
           <Logo />
         </div>
 
-        <OrganizationSwitcher
-          organizationProfileMode="navigation"
-          organizationProfileUrl={getI18nPath('/dashboard/organization-profile', locale)}
-          afterCreateOrganizationUrl="/onboarding/organization-selection"
-          hidePersonal
-          skipInvitationScreen
-          appearance={{
-            elements: {
-              organizationSwitcherTrigger: 'w-64 md:w-60 justify-between',
-              organizationSwitcherPopoverRootBox: {
-                // WORKAROUND: conflict with Shadcn Sidebar, solution from https://github.com/clerk/javascript/issues/3739
-                pointerEvents: 'auto',
-              },
-            },
-          }}
-        />
+        <OrganizationSelector />
       </SidebarHeader>
       <SidebarContent>
         <AppSidebarNav

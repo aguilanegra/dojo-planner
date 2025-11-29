@@ -1,0 +1,120 @@
+'use client';
+
+import { useClerk, useOrganization } from '@clerk/nextjs';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useState } from 'react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+type OrgData = {
+  id: string;
+  name: string | null;
+  image_url: string | null;
+};
+
+/**
+ * Custom organization selector component that replaces Clerk's OrganizationSwitcher.
+ * Displays organization logos and allows switching between organizations.
+ */
+export const OrganizationSelector = () => {
+  const { organization, isLoaded: orgLoaded } = useOrganization();
+  const { user, setActive } = useClerk();
+  const router = useRouter();
+  const [isChanging, setIsChanging] = useState(false);
+  const [organizations, setOrganizations] = useState<OrgData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Get user's organizations on mount
+  useEffect(() => {
+    const fetchOrganizations = async () => {
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const orgs = user.organizationMemberships?.map(membership => ({
+          id: membership.organization.id,
+          name: membership.organization.name,
+          image_url: membership.organization.imageUrl,
+        })) || [];
+        setOrganizations(orgs);
+      } catch (error) {
+        console.error('Failed to fetch organizations:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchOrganizations();
+  }, [user]);
+
+  // Handle organization change
+  const handleOrganizationChange = useCallback(
+    async (organizationId: string) => {
+      if (!organizations || !setActive) {
+        return;
+      }
+
+      const selectedOrg = organizations.find(org => org.id === organizationId);
+      if (!selectedOrg) {
+        return;
+      }
+
+      setIsChanging(true);
+      try {
+        await setActive({ organization: selectedOrg.id });
+        // Refresh the page to fetch new organization data
+        router.refresh();
+      } catch (error) {
+        console.error('Failed to switch organization:', error);
+      } finally {
+        setIsChanging(false);
+      }
+    },
+    [organizations, setActive, router],
+  );
+
+  if (!orgLoaded || !organization || isLoading || organizations.length === 0) {
+    return null;
+  }
+
+  return (
+    <Select value={organization.id} onValueChange={handleOrganizationChange} disabled={isChanging}>
+      <SelectTrigger className="w-64 md:w-60">
+        <SelectValue asChild>
+          <div className="flex items-center gap-2">
+            {organization.imageUrl && (
+              <Image
+                src={organization.imageUrl}
+                alt={organization.name || 'Organization'}
+                width={20}
+                height={20}
+                className="rounded-sm object-cover"
+              />
+            )}
+            <span className="truncate">{organization.name}</span>
+          </div>
+        </SelectValue>
+      </SelectTrigger>
+      <SelectContent>
+        {organizations.map(org => (
+          <SelectItem key={org.id} value={org.id}>
+            <div className="flex items-center gap-2">
+              {org.image_url && (
+                <Image
+                  src={org.image_url}
+                  alt={org.name || 'Organization'}
+                  width={16}
+                  height={16}
+                  className="rounded-sm object-cover"
+                />
+              )}
+              <span>{org.name}</span>
+            </div>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+};
