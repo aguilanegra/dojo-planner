@@ -1,7 +1,8 @@
 import { useState } from 'react';
 
 export type MemberType = 'individual' | 'family-member' | 'head-of-household';
-export type SubscriptionPlan = 'free-trial' | 'monthly' | 'annual' | 'custom';
+export type SubscriptionPlan = 'free-trial' | 'monthly' | 'annual';
+export type PaymentMethod = 'card' | 'ach';
 
 export type AddMemberWizardData = {
   // Step 1: Member Type
@@ -28,9 +29,19 @@ export type AddMemberWizardData = {
   // Step 4: Subscription
   subscriptionPlan: SubscriptionPlan | null;
   subscriptionId?: string;
+
+  // Step 5: Payment (only for monthly/annual plans)
+  paymentMethod?: PaymentMethod;
+  cardholderName?: string;
+  cardNumber?: string;
+  cardExpiry?: string;
+  cardCvc?: string;
+  achAccountHolder?: string;
+  achRoutingNumber?: string;
+  achAccountNumber?: string;
 };
 
-export type WizardStep = 'member-type' | 'details' | 'photo' | 'subscription' | 'success';
+export type WizardStep = 'member-type' | 'details' | 'photo' | 'subscription' | 'payment' | 'success';
 
 export const useAddMemberWizard = () => {
   const [step, setStep] = useState<WizardStep>('member-type');
@@ -54,7 +65,7 @@ export const useAddMemberWizard = () => {
   };
 
   const nextStep = () => {
-    const steps: WizardStep[] = ['member-type', 'details', 'photo', 'subscription', 'success'];
+    const steps: WizardStep[] = ['member-type', 'details', 'photo', 'subscription', 'payment', 'success'];
     const currentIndex = steps.indexOf(step);
     if (currentIndex < steps.length - 1 && currentIndex !== -1) {
       const nextStepValue = steps[currentIndex + 1];
@@ -66,7 +77,7 @@ export const useAddMemberWizard = () => {
   };
 
   const previousStep = () => {
-    const steps: WizardStep[] = ['member-type', 'details', 'photo', 'subscription', 'success'];
+    const steps: WizardStep[] = ['member-type', 'details', 'photo', 'subscription', 'payment', 'success'];
     const currentIndex = steps.indexOf(step);
     if (currentIndex > 0) {
       const prevStepValue = steps[currentIndex - 1];
@@ -94,6 +105,14 @@ export const useAddMemberWizard = () => {
       email: '',
       phone: '',
       subscriptionPlan: null,
+      paymentMethod: undefined,
+      cardholderName: undefined,
+      cardNumber: undefined,
+      cardExpiry: undefined,
+      cardCvc: undefined,
+      achAccountHolder: undefined,
+      achRoutingNumber: undefined,
+      achAccountNumber: undefined,
     });
     setError(null);
     setIsLoading(false);

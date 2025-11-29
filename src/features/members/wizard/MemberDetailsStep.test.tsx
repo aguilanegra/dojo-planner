@@ -5,8 +5,45 @@ import { page, userEvent } from 'vitest/browser';
 import { MemberDetailsStep } from './MemberDetailsStep';
 
 // Mock next-intl
+const translationKeys: Record<string, string> = {
+  title: 'Add Member Details',
+  subtitle: 'Enter the member\'s basic information',
+  first_name_label: 'First Name',
+  first_name_placeholder: 'Enter first name',
+  last_name_label: 'Last Name',
+  last_name_placeholder: 'Enter last name',
+  email_label: 'Email',
+  email_placeholder: 'you@example.com',
+  phone_label: 'Phone Number',
+  phone_placeholder: '(555) 123-4567',
+  address_label: 'Address (Optional)',
+  street_label: 'Street Address',
+  street_placeholder: '123 Main St',
+  apartment_label: 'Apartment / Line 2',
+  apartment_placeholder: '#201',
+  city_label: 'City',
+  city_placeholder: 'San Francisco',
+  state_label: 'State',
+  state_placeholder: 'CA',
+  zip_code_label: 'Zip Code',
+  zip_code_placeholder: '94102',
+  country_label: 'Country / Region',
+  country_placeholder: 'United States',
+  back_button: 'Back',
+  cancel_button: 'Cancel',
+  next_button: 'Next',
+};
+
 vi.mock('next-intl', () => ({
-  useTranslations: () => (key: string) => key,
+  useTranslations: () => (key: string, params?: Record<string, string | number>) => {
+    let result = translationKeys[key] || key;
+    if (params) {
+      Object.entries(params).forEach(([paramKey, paramValue]) => {
+        result = result.replace(`{${paramKey}}`, String(paramValue));
+      });
+    }
+    return result;
+  },
 }));
 
 describe('MemberDetailsStep', () => {

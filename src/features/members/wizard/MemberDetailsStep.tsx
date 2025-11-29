@@ -154,7 +154,7 @@ export const MemberDetailsStep = ({ data, onUpdate, onNext, onBack, onCancel, er
                   <SelectTrigger>
                     <SelectValue placeholder={t('state_placeholder')} />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="max-h-80">
                     {US_STATES.map(state => (
                       <SelectItem key={state.value} value={state.value}>
                         {state.label}
@@ -179,7 +179,7 @@ export const MemberDetailsStep = ({ data, onUpdate, onNext, onBack, onCancel, er
                 <SelectTrigger>
                   <SelectValue placeholder={t('country_placeholder')} />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-80">
                   {COUNTRIES.map(country => (
                     <SelectItem key={country.value} value={country.value}>
                       {country.label}

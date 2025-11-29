@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 type MemberSubscriptionStepProps = {
   data: AddMemberWizardData;
   onUpdate: (updates: Partial<AddMemberWizardData>) => void;
-  onNext: () => void;
+  onNext: () => void | Promise<void>;
   onBack: () => void;
   onCancel: () => void;
   isLoading?: boolean;
@@ -49,20 +49,15 @@ export const MemberSubscriptionStep = ({
       description: t('annual_description'),
       price: annualPrice,
     },
-    {
-      id: 'custom',
-      label: t('custom_label'),
-      description: t('custom_description'),
-    },
   ];
 
   const handleSelect = (plan: SubscriptionPlan) => {
     onUpdate({ subscriptionPlan: plan });
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (data.subscriptionPlan) {
-      onNext();
+      await onNext();
     }
   };
 

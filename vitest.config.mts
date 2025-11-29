@@ -10,6 +10,7 @@ export default defineConfig({
     include: ['next-intl', '@radix-ui/react-tabs', 'recharts'],
   },
   test: {
+    silent: true,
     coverage: {
       include: ['src/**/*'],
       exclude: ['src/**/*.stories.{js,jsx,ts,tsx}'],

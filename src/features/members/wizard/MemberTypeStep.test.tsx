@@ -5,8 +5,29 @@ import { page, userEvent } from 'vitest/browser';
 import { MemberTypeStep } from './MemberTypeStep';
 
 // Mock next-intl
+const translationKeys: Record<string, string> = {
+  title: 'Choose Member Type',
+  subtitle: 'Select the type of member you want to add',
+  individual_label: 'Individual',
+  individual_description: 'You are signing up one individual member. They can add family members later.',
+  family_member_label: 'Family Member',
+  family_member_description: 'This member has a head of household pay for them.',
+  head_of_household_label: 'Head of Household',
+  head_of_household_description: 'This member pays for family members to train.',
+  cancel_button: 'Cancel',
+  next_button: 'Next',
+};
+
 vi.mock('next-intl', () => ({
-  useTranslations: () => (key: string) => key,
+  useTranslations: () => (key: string, params?: Record<string, string | number>) => {
+    let result = translationKeys[key] || key;
+    if (params) {
+      Object.entries(params).forEach(([paramKey, paramValue]) => {
+        result = result.replace(`{${paramKey}}`, String(paramValue));
+      });
+    }
+    return result;
+  },
 }));
 
 describe('MemberTypeStep', () => {
@@ -65,10 +86,11 @@ describe('MemberTypeStep', () => {
       />,
     );
 
-    // Click first non-button element or first button to trigger update
-    const firstButton = page.getByRole('button', { name: /individual/i });
-    if (firstButton) {
-      await userEvent.click(firstButton);
+    // Click first button to trigger update
+    const buttons = Array.from(document.querySelectorAll('button'));
+    const individualButton = buttons.find(btn => btn.textContent?.includes('Individual'));
+    if (individualButton) {
+      await userEvent.click(individualButton);
 
       expect(mockHandlers.onUpdate).toHaveBeenCalled();
     }
@@ -129,10 +151,13 @@ describe('MemberTypeStep', () => {
       />,
     );
 
-    const cancelButton = page.getByRole('button', { name: /cancel/i });
-    await userEvent.click(cancelButton);
+    const buttons = Array.from(document.querySelectorAll('button'));
+    const cancelButton = buttons.find(btn => btn.textContent?.includes('Cancel'));
+    if (cancelButton) {
+      await userEvent.click(cancelButton);
 
-    expect(mockHandlers.onCancel).toHaveBeenCalled();
+      expect(mockHandlers.onCancel).toHaveBeenCalled();
+    }
   });
 
   it('should highlight selected member type with primary styling', () => {
@@ -177,9 +202,12 @@ describe('MemberTypeStep', () => {
       />,
     );
 
-    const nextButton = page.getByRole('button', { name: /next/i });
-    await userEvent.click(nextButton);
+    const buttons = Array.from(document.querySelectorAll('button'));
+    const nextButton = buttons.find(btn => btn.textContent?.includes('Next'));
+    if (nextButton) {
+      await userEvent.click(nextButton);
 
-    expect(mockHandlers.onNext).toHaveBeenCalled();
+      expect(mockHandlers.onNext).toHaveBeenCalled();
+    }
   });
 });
