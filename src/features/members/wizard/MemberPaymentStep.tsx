@@ -3,6 +3,7 @@
 import type { AddMemberWizardData, PaymentMethod } from '@/hooks/useAddMemberWizard';
 import { CreditCard, Landmark } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -37,6 +38,7 @@ export const MemberPaymentStep = ({
   isLoading = false,
 }: MemberPaymentStepProps) => {
   const t = useTranslations('AddMemberWizard.MemberPaymentStep');
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   const paymentMethod = data.paymentMethod || 'card';
   const paymentAmount = getPaymentAmount(data.subscriptionPlan);
@@ -45,9 +47,24 @@ export const MemberPaymentStep = ({
     onUpdate({ [field]: value });
   };
 
+  const handleInputBlur = (field: string) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+  };
+
   const handlePaymentMethodChange = (method: PaymentMethod) => {
     onUpdate({ paymentMethod: method });
   };
+
+  // Card validation helpers for touched fields
+  const isCardholderNameInvalid = touched.cardholderName && !data.cardholderName;
+  const isCardNumberInvalid = touched.cardNumber && !data.cardNumber;
+  const isCardExpiryInvalid = touched.cardExpiry && !data.cardExpiry;
+  const isCardCvcInvalid = touched.cardCvc && !data.cardCvc;
+
+  // ACH validation helpers for touched fields
+  const isAchAccountHolderInvalid = touched.achAccountHolder && !data.achAccountHolder;
+  const isAchRoutingNumberInvalid = touched.achRoutingNumber && !data.achRoutingNumber;
+  const isAchAccountNumberInvalid = touched.achAccountNumber && !data.achAccountNumber;
 
   const isCardFormValid = paymentMethod === 'card'
     && data.cardholderName
@@ -127,8 +144,13 @@ export const MemberPaymentStep = ({
               placeholder={t('cardholder_name_placeholder')}
               value={data.cardholderName || ''}
               onChange={e => handleInputChange('cardholderName', e.target.value)}
+              onBlur={() => handleInputBlur('cardholderName')}
+              error={isCardholderNameInvalid}
               className="mt-1"
             />
+            {isCardholderNameInvalid && (
+              <p className="text-xs text-destructive">Please enter a cardholder name.</p>
+            )}
           </div>
 
           <div>
@@ -140,8 +162,13 @@ export const MemberPaymentStep = ({
               placeholder={t('card_number_placeholder')}
               value={data.cardNumber || ''}
               onChange={e => handleInputChange('cardNumber', e.target.value)}
+              onBlur={() => handleInputBlur('cardNumber')}
+              error={isCardNumberInvalid}
               className="mt-1"
             />
+            {isCardNumberInvalid && (
+              <p className="text-xs text-destructive">Please enter a card number.</p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -154,8 +181,13 @@ export const MemberPaymentStep = ({
                 placeholder={t('card_expiry_placeholder')}
                 value={data.cardExpiry || ''}
                 onChange={e => handleInputChange('cardExpiry', e.target.value)}
+                onBlur={() => handleInputBlur('cardExpiry')}
+                error={isCardExpiryInvalid}
                 className="mt-1"
               />
+              {isCardExpiryInvalid && (
+                <p className="text-xs text-destructive">Please enter an expiration date.</p>
+              )}
             </div>
 
             <div>
@@ -167,8 +199,13 @@ export const MemberPaymentStep = ({
                 placeholder={t('card_cvc_placeholder')}
                 value={data.cardCvc || ''}
                 onChange={e => handleInputChange('cardCvc', e.target.value)}
+                onBlur={() => handleInputBlur('cardCvc')}
+                error={isCardCvcInvalid}
                 className="mt-1"
               />
+              {isCardCvcInvalid && (
+                <p className="text-xs text-destructive">Please enter a CVC.</p>
+              )}
             </div>
           </div>
         </div>
@@ -186,8 +223,13 @@ export const MemberPaymentStep = ({
               placeholder={t('ach_account_holder_placeholder')}
               value={data.achAccountHolder || ''}
               onChange={e => handleInputChange('achAccountHolder', e.target.value)}
+              onBlur={() => handleInputBlur('achAccountHolder')}
+              error={isAchAccountHolderInvalid}
               className="mt-1"
             />
+            {isAchAccountHolderInvalid && (
+              <p className="text-xs text-destructive">Please enter an account holder name.</p>
+            )}
           </div>
 
           <div>
@@ -199,8 +241,13 @@ export const MemberPaymentStep = ({
               placeholder={t('ach_routing_number_placeholder')}
               value={data.achRoutingNumber || ''}
               onChange={e => handleInputChange('achRoutingNumber', e.target.value)}
+              onBlur={() => handleInputBlur('achRoutingNumber')}
+              error={isAchRoutingNumberInvalid}
               className="mt-1"
             />
+            {isAchRoutingNumberInvalid && (
+              <p className="text-xs text-destructive">Please enter a routing number.</p>
+            )}
           </div>
 
           <div>
@@ -212,8 +259,13 @@ export const MemberPaymentStep = ({
               placeholder={t('ach_account_number_placeholder')}
               value={data.achAccountNumber || ''}
               onChange={e => handleInputChange('achAccountNumber', e.target.value)}
+              onBlur={() => handleInputBlur('achAccountNumber')}
+              error={isAchAccountNumberInvalid}
               className="mt-1"
             />
+            {isAchAccountNumberInvalid && (
+              <p className="text-xs text-destructive">Please enter an account number.</p>
+            )}
           </div>
         </div>
       )}
