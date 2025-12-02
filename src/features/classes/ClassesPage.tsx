@@ -1,117 +1,12 @@
 'use client';
 
-import type { ClassCardProps } from '@/templates/ClassCard';
 import { ChevronDown, Grid3x3, List, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ButtonGroupItem, ButtonGroupRoot } from '@/components/ui/button-group';
 import { ClassCard } from '@/templates/ClassCard';
-
-const mockClasses: ClassCardProps[] = [
-  {
-    id: '1',
-    name: 'BJJ Fundamentals I',
-    description: 'Covers core positions, escapes, and submissions. Ideal for students in their first 6 months.',
-    level: 'Beginner',
-    type: 'Adults',
-    style: 'Gi',
-    schedule: 'M/W/F • 6-7 PM',
-    location: 'Downtown HQ',
-    instructors: [
-      { name: 'Coach Alex', photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex' },
-      { name: 'Professor Jessica', photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jessica' },
-    ],
-  },
-  {
-    id: '2',
-    name: 'BJJ Fundamentals II',
-    description: 'Learn core BJJ techniques like sweeps, submissions, and escapes. Ideal for building a strong grappling foundation.',
-    level: 'Beginner',
-    type: 'Adults',
-    style: 'Gi',
-    schedule: 'T/Th • 6-7:30 PM',
-    location: 'Downtown HQ',
-    instructors: [{ name: 'Professor Ivan', photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ivan' }],
-  },
-  {
-    id: '3',
-    name: 'BJJ Intermediate',
-    description: 'Covers our intermediate curriculum. Builds on what was learned in Fundamentals I and II. Has rolling after.',
-    level: 'Intermediate',
-    type: 'Adults',
-    style: 'Gi',
-    schedule: 'M/W • 7-8 PM',
-    location: 'Downtown HQ',
-    instructors: [{ name: 'Professor Joao', photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Joao' }],
-  },
-  {
-    id: '4',
-    name: 'BJJ Advanced',
-    description: 'Advanced curriculum that requires at least blue belt level to attend. Builds on previous curriculum. Has rolling after.',
-    level: 'Advanced',
-    type: 'Adults',
-    style: 'No Gi',
-    schedule: 'W/F • 7-8 PM',
-    location: 'Downtown HQ',
-    instructors: [{ name: 'Coach Alex', photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex' }],
-  },
-  {
-    id: '5',
-    name: 'Kids Class (Ages 6-9)',
-    description: 'Builds coordination, focus, and basic grappling skills through games and technique. Emphasis on safety and fun.',
-    level: 'Advanced',
-    type: 'Adults',
-    style: 'Gi',
-    schedule: 'T/Th • 7-8 PM',
-    location: 'Downtown HQ',
-    instructors: [{ name: 'Coach Liza', photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Liza' }],
-  },
-  {
-    id: '6',
-    name: 'Advanced No-Gi',
-    description: 'Explores high percentage transitions, leg entanglements, and situational sparring. Best for experienced students.',
-    level: 'Advanced',
-    type: 'Adults',
-    style: 'No Gi',
-    schedule: 'Sa/Su • 12-1 PM',
-    location: 'Downtown HQ',
-    instructors: [{ name: 'Professor Joao', photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Joao' }],
-  },
-  {
-    id: '7',
-    name: 'Jiujitsu Fit',
-    description: 'Conditioning class using jiu-jitsu based movements and drills. No sparring. Focuses on agility, endurance, and body control.',
-    level: 'All Levels',
-    type: 'Adults',
-    style: 'No Gi',
-    schedule: 'M/W/F • 12-1 PM',
-    location: 'Downtown HQ',
-    instructors: [{ name: 'Coach Liza', photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Liza' }],
-  },
-  {
-    id: '8',
-    name: 'Women\'s BJJ',
-    description: 'Technique focused class with optional sparring, designed to create a welcoming space for women to build skills and confidence.',
-    level: 'All Levels',
-    type: 'Women',
-    style: 'Gi',
-    schedule: 'M/W/F • 5-6 PM',
-    location: 'Downtown HQ',
-    instructors: [{ name: 'Professor Jessica', photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jessica' }],
-  },
-  {
-    id: '9',
-    name: 'Judo Fundamentals',
-    description: 'Fundamentals of Judo including breakfalls, technique (tachiwaza), holds (newaza), and Judo rules. No randori.',
-    level: 'Beginner',
-    type: 'Adults',
-    style: 'Judo Gi',
-    schedule: 'T/Th • 5-6 PM',
-    location: 'Downtown HQ',
-    instructors: [{ name: 'Sensei Nakayama', photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Nakayama' }],
-  },
-];
+import { mockClasses } from './classesData';
 
 export function ClassesPage() {
   const t = useTranslations('ClassesPage');

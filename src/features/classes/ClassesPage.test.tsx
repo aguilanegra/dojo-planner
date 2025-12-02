@@ -137,11 +137,9 @@ describe('ClassesPage', () => {
 
       const giBadge = page.getByText('Gi').first();
       const noGiBadge = page.getByText('No Gi').first();
-      const judoGiBadge = page.getByText('Judo Gi').first();
 
       expect(giBadge).toBeInTheDocument();
       expect(noGiBadge).toBeInTheDocument();
-      expect(judoGiBadge).toBeInTheDocument();
     });
   });
 
@@ -232,13 +230,13 @@ describe('ClassesPage', () => {
         /Advanced curriculum that requires at least blue belt/,
         /Builds coordination, focus, and basic grappling skills/,
         /Explores high percentage transitions/,
-        /Conditioning class using jiu-jitsu based movements/,
+        /Open training session/,
         /Technique focused class with optional sparring/,
-        /Fundamentals of Judo including breakfalls/,
+        /Advanced training for competition preparation/,
       ];
 
       for (const description of classDescriptions) {
-        const element = page.getByText(description);
+        const element = page.getByText(description).first();
 
         expect(element).toBeInTheDocument();
       }
@@ -251,9 +249,9 @@ describe('ClassesPage', () => {
         </I18nWrapper>,
       );
 
-      const sensei = page.getByText('Sensei Nakayama').first();
+      const coach = page.getByText('Coach Alex').first();
 
-      expect(sensei).toBeInTheDocument();
+      expect(coach).toBeInTheDocument();
     });
   });
 });
