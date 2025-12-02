@@ -92,14 +92,24 @@ export const useMembersCache = (organizationId?: string | undefined) => {
           organizationId,
           cacheAge: Date.now() - (cacheStore?.timestamp || 0),
         });
-        dispatch({ type: 'SET_MEMBERS', payload: cacheStore!.data });
+        const mappedMembers = cacheStore!.data.map(member => ({
+          ...member,
+          membershipType: (member as any).subscriptionPlan as any || member.membershipType,
+        }));
+        dispatch({ type: 'SET_MEMBERS', payload: mappedMembers });
         return;
       }
 
       console.info('[Members Cache] Fetching fresh members data for organization:', organizationId);
 
       const membersData = await client.members.list();
-      const detailedMembers = (membersData.members || []) as Member[];
+      const rawMembers = (membersData.members || []) as any[];
+
+      // Map subscriptionPlan from backend to membershipType for frontend
+      const detailedMembers: Member[] = rawMembers.map(member => ({
+        ...member,
+        membershipType: member.subscriptionPlan as any,
+      }));
 
       // Update cache
       cacheStore = {

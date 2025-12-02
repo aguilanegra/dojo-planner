@@ -183,6 +183,36 @@ export function MembersTable({
     return status.charAt(0).toUpperCase() + status.slice(1);
   };
 
+  const getMembershipTypeLabel = (membershipType: string | undefined) => {
+    switch (membershipType) {
+      case 'free-trial':
+        return 'Free Trial';
+      case 'monthly':
+        return 'Monthly';
+      case 'annual':
+        return 'Annual';
+      case 'free':
+        return 'Free';
+      default:
+        return '-';
+    }
+  };
+
+  const getMembershipTypeVariant = (membershipType: string | undefined): 'default' | 'secondary' | 'destructive' | 'outline' => {
+    switch (membershipType) {
+      case 'free-trial':
+        return 'outline';
+      case 'monthly':
+        return 'default';
+      case 'annual':
+        return 'default';
+      case 'free':
+        return 'secondary';
+      default:
+        return 'secondary';
+    }
+  };
+
   return (
     <div className="w-full space-y-6">
       {/* Summary Cards */}
@@ -365,16 +395,10 @@ export function MembersTable({
                                 </span>
                               </div>
                             </td>
-                            <td className="px-6 py-4 text-sm text-muted-foreground">
-                              {member.membershipType === 'monthly'
-                                ? 'Month to month'
-                                : member.membershipType === 'annual'
-                                  ? 'Annual'
-                                  : member.membershipType === 'free'
-                                    ? 'Free'
-                                    : member.membershipType === 'free_trial'
-                                      ? 'Free Trial'
-                                      : '-'}
+                            <td className="px-6 py-4">
+                              <Badge variant={getMembershipTypeVariant(member.membershipType)}>
+                                {getMembershipTypeLabel(member.membershipType)}
+                              </Badge>
                             </td>
                             <td className="px-6 py-4 text-sm text-muted-foreground">
                               {formatCurrency(member.amountDue)}
@@ -479,16 +503,10 @@ export function MembersTable({
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <div className="text-xs font-semibold text-muted-foreground">Membership</div>
-                            <div className="mt-1 text-sm text-foreground">
-                              {member.membershipType === 'monthly'
-                                ? 'Month to month'
-                                : member.membershipType === 'annual'
-                                  ? 'Annual'
-                                  : member.membershipType === 'free'
-                                    ? 'Free'
-                                    : member.membershipType === 'free_trial'
-                                      ? 'Free Trial'
-                                      : '-'}
+                            <div className="mt-1">
+                              <Badge variant={getMembershipTypeVariant(member.membershipType)}>
+                                {getMembershipTypeLabel(member.membershipType)}
+                              </Badge>
                             </div>
                           </div>
 

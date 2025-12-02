@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { useAddMemberWizard } from '@/hooks/useAddMemberWizard';
 import { client } from '@/libs/Orpc';
 import { MemberDetailsStep } from './MemberDetailsStep';
+import { MemberPaymentStep } from './MemberPaymentStep';
 import { MemberPhotoStep } from './MemberPhotoStep';
 import { MemberSubscriptionStep } from './MemberSubscriptionStep';
 import { MemberSuccessStep } from './MemberSuccessStep';
@@ -116,7 +117,7 @@ export const AddMemberModal = ({ isOpen, onCloseAction }: AddMemberModalProps) =
       });
 
       // Move to success step
-      wizard.nextStep();
+      wizard.setStep('success');
     } catch (error) {
       console.error('[Add Member Wizard] Failed to create member:', {
         timestamp: new Date().toISOString(),
@@ -139,6 +140,17 @@ export const AddMemberModal = ({ isOpen, onCloseAction }: AddMemberModalProps) =
     }
   };
 
+  const handleSubscriptionNext = async () => {
+    // Only require payment for monthly/annual plans
+    if (wizard.data.subscriptionPlan === 'free-trial') {
+      // For free trial, create member directly without payment step
+      await handleFinalNext();
+    } else {
+      // Go to payment step for monthly/annual
+      wizard.nextStep();
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={isOpen => !isOpen && handleCancel()}>
       <DialogContent className="max-w-2xl">
@@ -148,6 +160,7 @@ export const AddMemberModal = ({ isOpen, onCloseAction }: AddMemberModalProps) =
             {wizard.step === 'details' && 'Add Member Details'}
             {wizard.step === 'photo' && 'Add Member Photo'}
             {wizard.step === 'subscription' && 'Choose Membership Plan'}
+            {wizard.step === 'payment' && 'Payment Information'}
             {wizard.step === 'success' && 'Success'}
           </DialogTitle>
         </DialogHeader>
@@ -185,6 +198,17 @@ export const AddMemberModal = ({ isOpen, onCloseAction }: AddMemberModalProps) =
 
           {wizard.step === 'subscription' && (
             <MemberSubscriptionStep
+              data={wizard.data}
+              onUpdate={wizard.updateData}
+              onNext={handleSubscriptionNext}
+              onBack={wizard.previousStep}
+              onCancel={handleCancel}
+              isLoading={wizard.isLoading}
+            />
+          )}
+
+          {wizard.step === 'payment' && (
+            <MemberPaymentStep
               data={wizard.data}
               onUpdate={wizard.updateData}
               onNext={handleFinalNext}

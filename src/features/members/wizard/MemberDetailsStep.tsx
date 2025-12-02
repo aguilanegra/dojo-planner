@@ -2,6 +2,7 @@
 
 import type { AddMemberWizardData } from '@/hooks/useAddMemberWizard';
 import { useTranslations } from 'next-intl';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -30,9 +31,14 @@ const isValidEmail = (email: string): boolean => {
 
 export const MemberDetailsStep = ({ data, onUpdate, onNext, onBack, onCancel, error }: MemberDetailsStepProps) => {
   const t = useTranslations('AddMemberWizard.MemberDetailsStep');
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   const handleInputChange = (field: string, value: string) => {
     onUpdate({ [field]: value });
+  };
+
+  const handleInputBlur = (field: string) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
   };
 
   const handleAddressChange = (field: string, value: string) => {
@@ -42,6 +48,10 @@ export const MemberDetailsStep = ({ data, onUpdate, onNext, onBack, onCancel, er
         [field]: value,
       },
     });
+  };
+
+  const handleAddressBlur = (field: string) => {
+    setTouched(prev => ({ ...prev, [`address.${field}`]: true }));
   };
 
   const isAddressValid
@@ -57,6 +67,17 @@ export const MemberDetailsStep = ({ data, onUpdate, onNext, onBack, onCancel, er
       && data.phone
       && isValidEmail(data.email)
       && isAddressValid;
+
+  // Validation helpers for touched fields
+  const isFirstNameInvalid = touched.firstName && !data.firstName;
+  const isLastNameInvalid = touched.lastName && !data.lastName;
+  const isEmailInvalid = touched.email && (data.email ? !isValidEmail(data.email) : true);
+  const isPhoneInvalid = touched.phone && !data.phone;
+  const isStreetInvalid = touched['address.street'] && !data.address?.street;
+  const isCityInvalid = touched['address.city'] && !data.address?.city;
+  const isStateInvalid = touched['address.state'] && !data.address?.state;
+  const isZipCodeInvalid = touched['address.zipCode'] && !data.address?.zipCode;
+  const isCountryInvalid = touched['address.country'] && !data.address?.country;
 
   return (
     <div className="space-y-6">
@@ -80,7 +101,12 @@ export const MemberDetailsStep = ({ data, onUpdate, onNext, onBack, onCancel, er
               placeholder={t('first_name_placeholder')}
               value={data.firstName}
               onChange={e => handleInputChange('firstName', e.target.value)}
+              onBlur={() => handleInputBlur('firstName')}
+              error={isFirstNameInvalid}
             />
+            {isFirstNameInvalid && (
+              <p className="text-xs text-destructive">Please enter a first name.</p>
+            )}
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-foreground">{t('last_name_label')}</label>
@@ -88,7 +114,12 @@ export const MemberDetailsStep = ({ data, onUpdate, onNext, onBack, onCancel, er
               placeholder={t('last_name_placeholder')}
               value={data.lastName}
               onChange={e => handleInputChange('lastName', e.target.value)}
+              onBlur={() => handleInputBlur('lastName')}
+              error={isLastNameInvalid}
             />
+            {isLastNameInvalid && (
+              <p className="text-xs text-destructive">Please enter a last name.</p>
+            )}
           </div>
         </div>
 
@@ -100,9 +131,10 @@ export const MemberDetailsStep = ({ data, onUpdate, onNext, onBack, onCancel, er
             placeholder={t('email_placeholder')}
             value={data.email}
             onChange={e => handleInputChange('email', e.target.value)}
-            aria-invalid={data.email && !isValidEmail(data.email) ? 'true' : 'false'}
+            onBlur={() => handleInputBlur('email')}
+            error={isEmailInvalid}
           />
-          {data.email && !isValidEmail(data.email) && (
+          {isEmailInvalid && (
             <p className="text-xs text-destructive">Please enter a valid email address</p>
           )}
         </div>
@@ -114,7 +146,12 @@ export const MemberDetailsStep = ({ data, onUpdate, onNext, onBack, onCancel, er
             placeholder={t('phone_placeholder')}
             value={data.phone}
             onChange={e => handleInputChange('phone', e.target.value)}
+            onBlur={() => handleInputBlur('phone')}
+            error={isPhoneInvalid}
           />
+          {isPhoneInvalid && (
+            <p className="text-xs text-destructive">Please enter a phone number.</p>
+          )}
         </div>
 
         {/* Address Fields (Optional) */}
@@ -127,7 +164,12 @@ export const MemberDetailsStep = ({ data, onUpdate, onNext, onBack, onCancel, er
                 placeholder={t('street_placeholder')}
                 value={data.address?.street || ''}
                 onChange={e => handleAddressChange('street', e.target.value)}
+                onBlur={() => handleAddressBlur('street')}
+                error={isStreetInvalid}
               />
+              {isStreetInvalid && (
+                <p className="text-xs text-destructive">Please enter a street address.</p>
+              )}
             </div>
 
             <div className="space-y-1.5">
@@ -146,15 +188,20 @@ export const MemberDetailsStep = ({ data, onUpdate, onNext, onBack, onCancel, er
                   placeholder={t('city_placeholder')}
                   value={data.address?.city || ''}
                   onChange={e => handleAddressChange('city', e.target.value)}
+                  onBlur={() => handleAddressBlur('city')}
+                  error={isCityInvalid}
                 />
+                {isCityInvalid && (
+                  <p className="text-xs text-destructive">Please enter a city.</p>
+                )}
               </div>
               <div className="col-span-2 space-y-1.5">
                 <label className="text-xs font-medium text-muted-foreground">{t('state_label')}</label>
                 <Select value={data.address?.state || ''} onValueChange={value => handleAddressChange('state', value)}>
-                  <SelectTrigger>
+                  <SelectTrigger aria-invalid={isStateInvalid}>
                     <SelectValue placeholder={t('state_placeholder')} />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="max-h-80">
                     {US_STATES.map(state => (
                       <SelectItem key={state.value} value={state.value}>
                         {state.label}
@@ -162,6 +209,9 @@ export const MemberDetailsStep = ({ data, onUpdate, onNext, onBack, onCancel, er
                     ))}
                   </SelectContent>
                 </Select>
+                {isStateInvalid && (
+                  <p className="text-xs text-destructive">Please select a state.</p>
+                )}
               </div>
               <div className="col-span-4 space-y-1.5">
                 <label className="text-xs font-medium text-muted-foreground">{t('zip_code_label')}</label>
@@ -169,17 +219,22 @@ export const MemberDetailsStep = ({ data, onUpdate, onNext, onBack, onCancel, er
                   placeholder={t('zip_code_placeholder')}
                   value={data.address?.zipCode || ''}
                   onChange={e => handleAddressChange('zipCode', e.target.value)}
+                  onBlur={() => handleAddressBlur('zipCode')}
+                  error={isZipCodeInvalid}
                 />
+                {isZipCodeInvalid && (
+                  <p className="text-xs text-destructive">Please enter a zip code.</p>
+                )}
               </div>
             </div>
 
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground">{t('country_label')}</label>
               <Select value={data.address?.country || 'US'} onValueChange={value => handleAddressChange('country', value)}>
-                <SelectTrigger>
+                <SelectTrigger aria-invalid={isCountryInvalid}>
                   <SelectValue placeholder={t('country_placeholder')} />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-80">
                   {COUNTRIES.map(country => (
                     <SelectItem key={country.value} value={country.value}>
                       {country.label}
@@ -187,6 +242,9 @@ export const MemberDetailsStep = ({ data, onUpdate, onNext, onBack, onCancel, er
                   ))}
                 </SelectContent>
               </Select>
+              {isCountryInvalid && (
+                <p className="text-xs text-destructive">Please select a country.</p>
+              )}
             </div>
           </div>
         </div>
