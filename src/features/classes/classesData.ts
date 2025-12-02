@@ -134,11 +134,12 @@ function getClassColor(className: string): string {
   return '#6b7280'; // gray
 }
 
-export function generateWeeklySchedule(startDate: Date): ClassEvent[] {
+export function generateWeeklySchedule(startDate: Date, classesToUse?: typeof mockClasses): ClassEvent[] {
   const events: ClassEvent[] = [];
   const dayOfWeek = startDate.getDay();
   const weekStart = new Date(startDate);
   weekStart.setDate(startDate.getDate() - dayOfWeek);
+  const classesData = classesToUse || mockClasses;
 
   const classSchedules: Record<string, { day: number; hour: number; minute: number; duration: number }[]> = {
     'BJJ Fundamentals I': [
@@ -183,7 +184,7 @@ export function generateWeeklySchedule(startDate: Date): ClassEvent[] {
     ],
   };
 
-  for (const classData of mockClasses) {
+  for (const classData of classesData) {
     const schedules = classSchedules[classData.name] || [];
     for (const schedule of schedules) {
       events.push({
@@ -201,9 +202,10 @@ export function generateWeeklySchedule(startDate: Date): ClassEvent[] {
   return events;
 }
 
-export function generateMonthlySchedule(year: number, month: number): Record<string, ClassEvent[]> {
+export function generateMonthlySchedule(year: number, month: number, classesToUse?: typeof mockClasses): Record<string, ClassEvent[]> {
   const monthlyEvents: Record<string, ClassEvent[]> = {};
   const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const classesData = classesToUse || mockClasses;
 
   for (let day = 1; day <= daysInMonth; day++) {
     const date = new Date(year, month, day);
@@ -222,7 +224,7 @@ export function generateMonthlySchedule(year: number, month: number): Record<str
       'Competition Team': [1, 3, 5], // Mon, Wed, Fri
     };
 
-    for (const classData of mockClasses) {
+    for (const classData of classesData) {
       const daysForClass = classSchedules[classData.name] || [];
       if (daysForClass.includes(dayOfWeek)) {
         monthlyEvents[day.toString()]!.push({

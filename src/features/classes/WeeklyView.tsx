@@ -1,21 +1,50 @@
 'use client';
 
-import { ChevronDown, Plus } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import type { ClassFilters } from './ClassFilterBar';
+import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ButtonGroupItem, ButtonGroupRoot } from '@/components/ui/button-group';
-import { generateWeeklySchedule } from './classesData';
+import { generateWeeklySchedule, mockClasses } from './classesData';
+import { ClassFilterBar } from './ClassFilterBar';
 
 const DAYS_OF_WEEK = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 const HOURS = Array.from({ length: 17 }, (_, i) => i + 6); // 6 AM to 10 PM
 
-export function WeeklyView() {
-  const t = useTranslations('ClassesPage');
+type WeeklyViewProps = {
+  withFilters?: ClassFilters;
+};
+
+export function WeeklyView({ withFilters }: WeeklyViewProps = {}) {
   const [currentDate, setCurrentDate] = useState(() => new Date(2025, 8, 15)); // September 15, 2025
+  const [localFilters, setLocalFilters] = useState<ClassFilters>({
+    search: '',
+    tag: 'all',
+    instructor: 'all',
+  });
+
+  // Use parent filters if provided, otherwise use local filters
+  const filters = withFilters || localFilters;
+  const setFilters = withFilters ? () => {} : setLocalFilters;
+
   const dayOfWeek = currentDate.getDay();
   const weekStart = new Date(currentDate);
   weekStart.setDate(currentDate.getDate() - dayOfWeek);
+
+  // Get unique instructors from mockClasses
+  const allInstructors = Array.from(
+    new Set(mockClasses.flatMap(cls => cls.instructors.map(i => i.name))),
+  );
+
+  // Filter classes based on filters
+  const filteredClasses = mockClasses.filter((cls) => {
+    const matchesSearch = cls.name.toLowerCase().includes(filters.search.toLowerCase())
+      || cls.description.toLowerCase().includes(filters.search.toLowerCase());
+    const matchesTag = filters.tag === 'all' || cls.type === filters.tag || cls.style === filters.tag;
+    const matchesInstructor = filters.instructor === 'all'
+      || cls.instructors.some(i => i.name === filters.instructor);
+    return matchesSearch && matchesTag && matchesInstructor;
+  });
 
   const handlePrevious = () => {
     const newDate = new Date(currentDate);
@@ -36,7 +65,7 @@ export function WeeklyView() {
   const monthName = currentDate.toLocaleString('default', { month: 'long' });
   const dateDisplay = `${monthName} ${currentDate.getDate()}-${currentDate.getFullYear()} (day:${currentDate.getDate()})`;
 
-  const weeklyEvents = generateWeeklySchedule(currentDate);
+  const weeklyEvents = generateWeeklySchedule(currentDate, filteredClasses.length > 0 ? filteredClasses : mockClasses);
 
   const getEventsForTimeSlot = (dayIndex: number, hour: number) => {
     return weeklyEvents.filter(
@@ -71,58 +100,48 @@ export function WeeklyView() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Class Calendar</h1>
-      </div>
+      {/* Header - Only show when not embedded */}
+      {!withFilters && (
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Class Calendar</h1>
+        </div>
+      )}
 
-      {/* Controls */}
-      <div className="space-y-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Location Dropdown */}
-            <button
-              type="button"
-              className="flex cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 py-2 text-xs text-foreground hover:bg-muted sm:gap-2 sm:px-3 sm:text-sm"
-            >
-              <span className="hidden sm:inline">{t('location_label')}</span>
-              <span className="sm:hidden">Loc</span>
-              <ChevronDown className="h-4 w-4" />
-            </button>
+      {/* Controls - Only show when not embedded */}
+      {!withFilters && (
+        <div className="space-y-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+            {/* Filter Bar */}
+            <div className="flex-1">
+              <ClassFilterBar
+                onFiltersChange={setFilters}
+                instructors={allInstructors}
+              />
+            </div>
 
-            {/* Instructors Dropdown */}
-            <button
-              type="button"
-              className="flex cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 py-2 text-xs text-foreground hover:bg-muted sm:gap-2 sm:px-3 sm:text-sm"
-            >
-              <span className="hidden sm:inline">All Instructors</span>
-              <span className="sm:hidden">Instr</span>
-              <ChevronDown className="h-4 w-4" />
-            </button>
-          </div>
+            <div className="flex items-center gap-2 sm:gap-3">
+              {/* View Toggle Button Group */}
+              <ButtonGroupRoot value="weekly" onValueChange={() => {}}>
+                <ButtonGroupItem value="cards" title="Cards view">
+                  <span className="text-xs">Cards</span>
+                </ButtonGroupItem>
+                <ButtonGroupItem value="weekly" title="Weekly view">
+                  <span className="text-xs">Weekly</span>
+                </ButtonGroupItem>
+                <ButtonGroupItem value="monthly" title="Monthly view">
+                  <span className="text-xs">Monthly</span>
+                </ButtonGroupItem>
+              </ButtonGroupRoot>
 
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* View Toggle Button Group */}
-            <ButtonGroupRoot value="weekly" onValueChange={() => {}}>
-              <ButtonGroupItem value="cards" title="Cards view">
-                <span className="text-xs">Cards</span>
-              </ButtonGroupItem>
-              <ButtonGroupItem value="weekly" title="Weekly view">
-                <span className="text-xs">Weekly</span>
-              </ButtonGroupItem>
-              <ButtonGroupItem value="monthly" title="Monthly view">
-                <span className="text-xs">Monthly</span>
-              </ButtonGroupItem>
-            </ButtonGroupRoot>
-
-            {/* Add New Class Button */}
-            <Button>
-              <Plus className="h-4 w-4" />
-              <span className="ml-1 hidden sm:inline">Add New Class</span>
-            </Button>
+              {/* Add New Class Button */}
+              <Button>
+                <Plus className="h-4 w-4" />
+                <span className="ml-1 hidden sm:inline">Add New Class</span>
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Navigation */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
