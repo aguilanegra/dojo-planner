@@ -454,12 +454,27 @@
     "trial_options_label": "Options d'essai",
     "total_members_label": "Nombre total de membres",
     "add_new_membership_button": "Ajouter une nouvelle adhésion",
-    "status_filter": "Tous les statuts",
-    "programs_filter": "Tous les programmes",
-    "types_filter": "Tous les types",
+    "search_placeholder": "Rechercher des adhésions...",
+    "all_tags_filter": "Tous les tags",
+    "all_programs_filter": "Tous les programmes",
+    "tag_active": "Actif",
+    "tag_trial": "Essai",
+    "tag_inactive": "Inactif",
+    "program_adult": "Adulte",
+    "program_kids": "Enfants",
+    "program_women": "Femmes",
+    "program_competition": "Compétition"
+  },
+  "MembershipCard": {
+    "status_active": "Actif",
+    "status_inactive": "Inactif",
+    "trial_badge": "Essai",
     "frequency_label": "Fréquence",
     "contract_label": "Contrat",
-    "access_label": "Accès"
+    "access_label": "Accès",
+    "active_members": "Membres actifs",
+    "active_trials": "Essais actifs",
+    "edit_button_aria_label": "Modifier l'adhésion"
   },
   "SubscriptionPage": {
     "title": "Abonnement",
