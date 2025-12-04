@@ -4,8 +4,10 @@ import { ArrowDown01, ArrowDownAZ, ArrowUp10, ArrowUpZA, MoreHorizontal, Plus, U
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Pagination } from '@/components/ui/pagination/Pagination';
+import { Panel, PanelContent, PanelFooter, PanelHeader, PanelTabs } from '@/components/ui/panel';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const mockTransactions = [
   { id: '1', date: 'April 15, 2025', amount: '$160.00', purpose: 'Membership Dues', method: 'Saved Card Ending ••••1234', paymentId: '71MC01ANQ130', notes: '' },
@@ -88,178 +90,150 @@ export default function FinancesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">{t('title')}</h1>
-      </div>
+      <h1 className="text-3xl font-bold text-foreground">{t('title')}</h1>
 
-      {/* Transactions Card */}
-      <Card className="p-6">
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-foreground">{t('transactions_heading')}</h2>
-          <div className="flex gap-2">
-            <Button variant="outline">
-              <Upload className="mr-2 h-4 w-4" />
-              {t('import_transactions_button')}
-            </Button>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              {t('new_transaction_button')}
-            </Button>
-            <Button variant="ghost" size="sm">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+      {/* Transactions Panel */}
+      <Panel>
+        <Tabs
+          defaultValue="all"
+          onValueChange={(value) => {
+            setActiveFilter(value as FilterType);
+            setCurrentPage(0);
+          }}
+        >
+          <PanelHeader withDivider={true}>
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <h2 className="text-xl font-medium text-foreground">{t('transactions_heading')}</h2>
+                <div className="flex gap-2">
+                  <Button variant="outline">
+                    <Upload className="mr-2 h-4 w-4" />
+                    {t('import_transactions_button')}
+                  </Button>
+                  <Button>
+                    <Plus className="mr-2 h-4 w-4" />
+                    {t('new_transaction_button')}
+                  </Button>
+                  <Button variant="ghost" size="sm">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              <PanelTabs>
+                <TabsList className="h-auto bg-transparent p-0">
+                  <TabsTrigger value="all" className="border-b-2 border-transparent px-4 py-2 text-sm font-medium data-[state=active]:border-foreground data-[state=active]:bg-transparent">{t('tab_all')}</TabsTrigger>
+                  <TabsTrigger value="membership_dues" className="border-b-2 border-transparent px-4 py-2 text-sm font-medium data-[state=active]:border-foreground data-[state=active]:bg-transparent">{t('tab_membership_dues')}</TabsTrigger>
+                  <TabsTrigger value="purchases" className="border-b-2 border-transparent px-4 py-2 text-sm font-medium data-[state=active]:border-foreground data-[state=active]:bg-transparent">{t('tab_purchases')}</TabsTrigger>
+                  <TabsTrigger value="manually_added" className="border-b-2 border-transparent px-4 py-2 text-sm font-medium data-[state=active]:border-foreground data-[state=active]:bg-transparent">{t('tab_manually_added')}</TabsTrigger>
+                </TabsList>
+              </PanelTabs>
+            </div>
+          </PanelHeader>
 
-        {/* Filter Tabs */}
-        <div className="mb-6 flex gap-4 border-b border-border">
-          <button
-            type="button"
-            onClick={() => setActiveFilter('all')}
-            className={`pb-3 text-sm font-medium transition-colors ${
-              activeFilter === 'all'
-                ? 'border-b-2 border-foreground text-foreground'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            {t('tab_all')}
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveFilter('membership_dues')}
-            className={`pb-3 text-sm font-medium transition-colors ${
-              activeFilter === 'membership_dues'
-                ? 'border-b-2 border-foreground text-foreground'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            {t('tab_membership_dues')}
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveFilter('purchases')}
-            className={`pb-3 text-sm font-medium transition-colors ${
-              activeFilter === 'purchases'
-                ? 'border-b-2 border-foreground text-foreground'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            {t('tab_purchases')}
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveFilter('manually_added')}
-            className={`pb-3 text-sm font-medium transition-colors ${
-              activeFilter === 'manually_added'
-                ? 'border-b-2 border-foreground text-foreground'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            {t('tab_manually_added')}
-          </button>
-        </div>
-
-        {/* Transactions Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-border bg-secondary/50">
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                  <button
-                    type="button"
-                    onClick={() => handleSort('date')}
-                    className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
-                  >
-                    {t('table_date')}
-                    {sortField === 'date' && (
-                      sortDirection === 'asc'
-                        ? <ArrowDownAZ className="h-4 w-4" />
-                        : <ArrowUpZA className="h-4 w-4" />
-                    )}
-                  </button>
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                  <button
-                    type="button"
-                    onClick={() => handleSort('amount')}
-                    className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
-                  >
-                    {t('table_amount')}
-                    {sortField === 'amount' && (
-                      sortDirection === 'asc'
-                        ? <ArrowDown01 className="h-4 w-4" />
-                        : <ArrowUp10 className="h-4 w-4" />
-                    )}
-                  </button>
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                  <button
-                    type="button"
-                    onClick={() => handleSort('purpose')}
-                    className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
-                  >
-                    {t('table_purpose')}
-                    {sortField === 'purpose' && (
-                      sortDirection === 'asc'
-                        ? <ArrowDownAZ className="h-4 w-4" />
-                        : <ArrowUpZA className="h-4 w-4" />
-                    )}
-                  </button>
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                  <button
-                    type="button"
-                    onClick={() => handleSort('method')}
-                    className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
-                  >
-                    {t('table_method')}
-                    {sortField === 'method' && (
-                      sortDirection === 'asc'
-                        ? <ArrowDownAZ className="h-4 w-4" />
-                        : <ArrowUpZA className="h-4 w-4" />
-                    )}
-                  </button>
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                  <button
-                    type="button"
-                    onClick={() => handleSort('paymentId')}
-                    className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
-                  >
-                    {t('table_payment_id')}
-                    {sortField === 'paymentId' && (
-                      sortDirection === 'asc'
-                        ? <ArrowDownAZ className="h-4 w-4" />
-                        : <ArrowUpZA className="h-4 w-4" />
-                    )}
-                  </button>
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">{t('table_notes')}</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">{t('table_actions')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedTransactions.map(transaction => (
-                <tr key={transaction.id} className="border-b border-border hover:bg-secondary/30">
-                  <td className="px-6 py-4 text-sm text-foreground">{transaction.date}</td>
-                  <td className="px-6 py-4 text-sm text-foreground">{transaction.amount}</td>
-                  <td className="px-6 py-4 text-sm text-foreground">{transaction.purpose}</td>
-                  <td className="px-6 py-4 text-sm text-muted-foreground">{transaction.method}</td>
-                  <td className="px-6 py-4 text-sm text-muted-foreground">{transaction.paymentId}</td>
-                  <td className="px-6 py-4 text-sm text-muted-foreground">{transaction.notes}</td>
-                  <td className="px-6 py-4">
-                    <Button variant="ghost" size="sm">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+          <TabsContent value={activeFilter} className="mt-0">
+            <PanelContent>
+              {/* Transactions Table */}
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>
+                      <button
+                        type="button"
+                        onClick={() => handleSort('date')}
+                        className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
+                      >
+                        {t('table_date')}
+                        {sortField === 'date' && (
+                          sortDirection === 'asc'
+                            ? <ArrowDownAZ className="h-4 w-4" />
+                            : <ArrowUpZA className="h-4 w-4" />
+                        )}
+                      </button>
+                    </TableHead>
+                    <TableHead>
+                      <button
+                        type="button"
+                        onClick={() => handleSort('amount')}
+                        className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
+                      >
+                        {t('table_amount')}
+                        {sortField === 'amount' && (
+                          sortDirection === 'asc'
+                            ? <ArrowDown01 className="h-4 w-4" />
+                            : <ArrowUp10 className="h-4 w-4" />
+                        )}
+                      </button>
+                    </TableHead>
+                    <TableHead>
+                      <button
+                        type="button"
+                        onClick={() => handleSort('purpose')}
+                        className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
+                      >
+                        {t('table_purpose')}
+                        {sortField === 'purpose' && (
+                          sortDirection === 'asc'
+                            ? <ArrowDownAZ className="h-4 w-4" />
+                            : <ArrowUpZA className="h-4 w-4" />
+                        )}
+                      </button>
+                    </TableHead>
+                    <TableHead>
+                      <button
+                        type="button"
+                        onClick={() => handleSort('method')}
+                        className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
+                      >
+                        {t('table_method')}
+                        {sortField === 'method' && (
+                          sortDirection === 'asc'
+                            ? <ArrowDownAZ className="h-4 w-4" />
+                            : <ArrowUpZA className="h-4 w-4" />
+                        )}
+                      </button>
+                    </TableHead>
+                    <TableHead>
+                      <button
+                        type="button"
+                        onClick={() => handleSort('paymentId')}
+                        className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
+                      >
+                        {t('table_payment_id')}
+                        {sortField === 'paymentId' && (
+                          sortDirection === 'asc'
+                            ? <ArrowDownAZ className="h-4 w-4" />
+                            : <ArrowUpZA className="h-4 w-4" />
+                        )}
+                      </button>
+                    </TableHead>
+                    <TableHead>{t('table_notes')}</TableHead>
+                    <TableHead>{t('table_actions')}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedTransactions.map(transaction => (
+                    <TableRow key={transaction.id}>
+                      <TableCell className="text-sm text-foreground">{transaction.date}</TableCell>
+                      <TableCell className="text-sm text-foreground">{transaction.amount}</TableCell>
+                      <TableCell className="text-sm text-foreground">{transaction.purpose}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{transaction.method}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{transaction.paymentId}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{transaction.notes}</TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="sm">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </PanelContent>
+          </TabsContent>
+        </Tabs>
 
         {/* Pagination */}
-        <div className="mt-6">
+        <PanelFooter>
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
@@ -267,8 +241,8 @@ export default function FinancesPage() {
             itemsPerPage={ROWS_PER_PAGE}
             onPageChangeAction={setCurrentPage}
           />
-        </div>
-      </Card>
+        </PanelFooter>
+      </Panel>
     </div>
   );
 }

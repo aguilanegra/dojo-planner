@@ -7,7 +7,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Pagination } from '@/components/ui/pagination/Pagination';
+import { Panel, PanelContent, PanelFooter, PanelHeader, PanelTabs } from '@/components/ui/panel';
 import { Spinner } from '@/components/ui/spinner';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type Member = {
   id: string;
@@ -239,148 +242,250 @@ export function MembersTable({
         </Card>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="space-y-4">
-        <div className="flex items-end justify-between gap-4">
-          <h2 className="text-lg font-semibold text-foreground">All Members</h2>
-          {headerActions}
-        </div>
-
-        <div className="flex gap-4 border-b border-border">
-          {(['all', 'active', 'cancelled', 'removed'] as const).map(tab => (
-            <button
-              key={tab}
-              type="button"
-              onClick={() => {
-                setActiveFilter(tab);
-                setCurrentPage(0);
-              }}
-              className={`cursor-pointer px-1 pb-3 text-sm font-medium transition-colors ${
-                activeFilter === tab
-                  ? 'border-b-2 border-foreground text-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {tab === 'removed' ? 'Removed' : tab.charAt(0).toUpperCase() + tab.slice(1)}
-            </button>
-          ))}
-        </div>
-
-        {/* Members Table - Desktop View */}
-        <div className="hidden rounded-lg border border-border bg-background lg:block">
-          {loading
-            ? (
-                <div className="flex flex-col items-center justify-center gap-3 p-8">
-                  <Spinner size="lg" />
-                  <p className="text-sm text-muted-foreground">Loading members...</p>
+      {/* Members Panel */}
+      <Panel>
+        <Tabs
+          defaultValue="all"
+          onValueChange={(value) => {
+            setActiveFilter(value as typeof activeFilter);
+            setCurrentPage(0);
+          }}
+        >
+          <PanelHeader withDivider={true}>
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <h2 className="text-xl font-medium text-foreground">All Members</h2>
+                <div className="flex gap-2">
+                  {headerActions}
                 </div>
-              )
-            : filteredMembers.length === 0
-              ? (
-                  <div className="p-8 text-center text-muted-foreground">
-                    No members found
-                  </div>
-                )
-              : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b border-border bg-secondary">
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                            <button
-                              type="button"
-                              onClick={() => handleSort('firstName')}
-                              className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
-                            >
-                              Member name
-                              {sortField === 'firstName' && (
-                                sortDirection === 'asc'
-                                  ? <ArrowDownAZ className="h-4 w-4" />
-                                  : <ArrowUpZA className="h-4 w-4" />
-                              )}
-                            </button>
-                          </th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                            <button
-                              type="button"
-                              onClick={() => handleSort('membershipType')}
-                              className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
-                            >
-                              Membership type
-                              {sortField === 'membershipType' && (
-                                sortDirection === 'asc'
-                                  ? <ArrowDownAZ className="h-4 w-4" />
-                                  : <ArrowUpZA className="h-4 w-4" />
-                              )}
-                            </button>
-                          </th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                            <button
-                              type="button"
-                              onClick={() => handleSort('amountDue')}
-                              className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
-                            >
-                              Amount due
-                              {sortField === 'amountDue' && (
-                                sortDirection === 'asc'
-                                  ? <ArrowDown01 className="h-4 w-4" />
-                                  : <ArrowUp10 className="h-4 w-4" />
-                              )}
-                            </button>
-                          </th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                            <button
-                              type="button"
-                              onClick={() => handleSort('nextPayment')}
-                              className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
-                            >
-                              Next payment
-                              {sortField === 'nextPayment' && (
-                                sortDirection === 'asc'
-                                  ? <ArrowDownAZ className="h-4 w-4" />
-                                  : <ArrowUpZA className="h-4 w-4" />
-                              )}
-                            </button>
-                          </th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                            <button
-                              type="button"
-                              onClick={() => handleSort('status')}
-                              className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
-                            >
-                              Status
-                              {sortField === 'status' && (
-                                sortDirection === 'asc'
-                                  ? <ArrowDownAZ className="h-4 w-4" />
-                                  : <ArrowUpZA className="h-4 w-4" />
-                              )}
-                            </button>
-                          </th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                            <button
-                              type="button"
-                              onClick={() => handleSort('lastAccessedAt')}
-                              className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
-                            >
-                              Last visited
-                              {sortField === 'lastAccessedAt' && (
-                                sortDirection === 'asc'
-                                  ? <ArrowDownAZ className="h-4 w-4" />
-                                  : <ArrowUpZA className="h-4 w-4" />
-                              )}
-                            </button>
-                          </th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                            Action
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {paginatedMembers.map(member => (
-                          <tr key={member.id} className="border-b border-border hover:bg-secondary/30">
-                            <td className="px-6 py-4">
-                              <div className="flex items-center gap-3">
-                                <Avatar className="h-8 w-8 shrink-0">
+              </div>
+              <PanelTabs>
+                <TabsList className="h-auto bg-transparent p-0">
+                  <TabsTrigger value="all" className="border-b-2 border-transparent px-4 py-2 text-sm font-medium data-[state=active]:border-foreground data-[state=active]:bg-transparent">All</TabsTrigger>
+                  <TabsTrigger value="active" className="border-b-2 border-transparent px-4 py-2 text-sm font-medium data-[state=active]:border-foreground data-[state=active]:bg-transparent">Active</TabsTrigger>
+                  <TabsTrigger value="cancelled" className="border-b-2 border-transparent px-4 py-2 text-sm font-medium data-[state=active]:border-foreground data-[state=active]:bg-transparent">Cancelled</TabsTrigger>
+                  <TabsTrigger value="removed" className="border-b-2 border-transparent px-4 py-2 text-sm font-medium data-[state=active]:border-foreground data-[state=active]:bg-transparent">Removed</TabsTrigger>
+                </TabsList>
+              </PanelTabs>
+            </div>
+          </PanelHeader>
+
+          <TabsContent value={activeFilter} className="mt-0">
+            <PanelContent>
+              {/* Members Table - Desktop View */}
+              <div className="hidden lg:block">
+                {loading
+                  ? (
+                      <div className="flex flex-col items-center justify-center gap-3 p-8">
+                        <Spinner size="lg" />
+                        <p className="text-sm text-muted-foreground">Loading members...</p>
+                      </div>
+                    )
+                  : filteredMembers.length === 0
+                    ? (
+                        <div className="p-8 text-center text-muted-foreground">
+                          No members found
+                        </div>
+                      )
+                    : (
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>
+                                <button
+                                  type="button"
+                                  onClick={() => handleSort('firstName')}
+                                  className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
+                                >
+                                  Member name
+                                  {sortField === 'firstName' && (
+                                    sortDirection === 'asc'
+                                      ? <ArrowDownAZ className="h-4 w-4" />
+                                      : <ArrowUpZA className="h-4 w-4" />
+                                  )}
+                                </button>
+                              </TableHead>
+                              <TableHead>
+                                <button
+                                  type="button"
+                                  onClick={() => handleSort('membershipType')}
+                                  className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
+                                >
+                                  Membership type
+                                  {sortField === 'membershipType' && (
+                                    sortDirection === 'asc'
+                                      ? <ArrowDownAZ className="h-4 w-4" />
+                                      : <ArrowUpZA className="h-4 w-4" />
+                                  )}
+                                </button>
+                              </TableHead>
+                              <TableHead>
+                                <button
+                                  type="button"
+                                  onClick={() => handleSort('amountDue')}
+                                  className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
+                                >
+                                  Amount due
+                                  {sortField === 'amountDue' && (
+                                    sortDirection === 'asc'
+                                      ? <ArrowDown01 className="h-4 w-4" />
+                                      : <ArrowUp10 className="h-4 w-4" />
+                                  )}
+                                </button>
+                              </TableHead>
+                              <TableHead>
+                                <button
+                                  type="button"
+                                  onClick={() => handleSort('nextPayment')}
+                                  className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
+                                >
+                                  Next payment
+                                  {sortField === 'nextPayment' && (
+                                    sortDirection === 'asc'
+                                      ? <ArrowDownAZ className="h-4 w-4" />
+                                      : <ArrowUpZA className="h-4 w-4" />
+                                  )}
+                                </button>
+                              </TableHead>
+                              <TableHead>
+                                <button
+                                  type="button"
+                                  onClick={() => handleSort('status')}
+                                  className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
+                                >
+                                  Status
+                                  {sortField === 'status' && (
+                                    sortDirection === 'asc'
+                                      ? <ArrowDownAZ className="h-4 w-4" />
+                                      : <ArrowUpZA className="h-4 w-4" />
+                                  )}
+                                </button>
+                              </TableHead>
+                              <TableHead>
+                                <button
+                                  type="button"
+                                  onClick={() => handleSort('lastAccessedAt')}
+                                  className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
+                                >
+                                  Last visited
+                                  {sortField === 'lastAccessedAt' && (
+                                    sortDirection === 'asc'
+                                      ? <ArrowDownAZ className="h-4 w-4" />
+                                      : <ArrowUpZA className="h-4 w-4" />
+                                  )}
+                                </button>
+                              </TableHead>
+                              <TableHead>
+                                Action
+                              </TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {paginatedMembers.map(member => (
+                              <TableRow key={member.id}>
+                                <TableCell>
+                                  <div className="flex items-center gap-3">
+                                    <Avatar className="h-8 w-8 shrink-0">
+                                      {member.photoUrl && (
+                                        <AvatarImage src={member.photoUrl} />
+                                      )}
+                                      <AvatarFallback>
+                                        {getInitials(member.firstName, member.lastName)}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <span className="font-medium text-foreground">
+                                      {member.firstName}
+                                      {' '}
+                                      {member.lastName}
+                                    </span>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge variant={getMembershipTypeVariant(member.membershipType)}>
+                                    {getMembershipTypeLabel(member.membershipType)}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-sm text-muted-foreground">
+                                  {formatCurrency(member.amountDue)}
+                                </TableCell>
+                                <TableCell className="text-sm text-muted-foreground">
+                                  {formatDate(member.nextPayment)}
+                                </TableCell>
+                                <TableCell>
+                                  <Badge variant={getStatusColor(member.status)}>
+                                    {getStatusLabel(member.status)}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-sm text-muted-foreground">
+                                  {formatDate(member.lastAccessedAt)}
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-2">
+                                    {member.status !== 'flagged-for-deletion' && (
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => onEditAction(member.id)}
+                                        aria-label={`Edit ${member.firstName} ${member.lastName}`}
+                                        title={`Edit ${member.firstName} ${member.lastName}`}
+                                      >
+                                        <Edit className="h-4 w-4" />
+                                      </Button>
+                                    )}
+                                    {member.status !== 'flagged-for-deletion'
+                                      ? (
+                                          <Button
+                                            variant="destructive"
+                                            size="sm"
+                                            onClick={() => onRemoveAction(member.id)}
+                                            aria-label={`Remove ${member.firstName} ${member.lastName}`}
+                                            title="Flag for removal"
+                                          >
+                                            <Trash2 className="h-4 w-4" />
+                                          </Button>
+                                        )
+                                      : (
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => onRestoreAction(member.id)}
+                                            aria-label={`Restore ${member.firstName} ${member.lastName}`}
+                                            title="Restore member"
+                                          >
+                                            <ArchiveRestore className="h-4 w-4" />
+                                          </Button>
+                                        )}
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      )}
+              </div>
+
+              {/* Members Cards - Mobile View */}
+              <div className="space-y-4 lg:hidden">
+                {loading
+                  ? (
+                      <div className="flex flex-col items-center justify-center gap-3 p-8">
+                        <Spinner size="lg" />
+                        <p className="text-sm text-muted-foreground">Loading members...</p>
+                      </div>
+                    )
+                  : filteredMembers.length === 0
+                    ? (
+                        <div className="p-8 text-center text-muted-foreground">
+                          No members found
+                        </div>
+                      )
+                    : (
+                        paginatedMembers.map(member => (
+                          <Card key={member.id} className="p-4">
+                            <div className="space-y-4">
+                              {/* Member Name */}
+                              <div className="flex items-center gap-3 border-b border-border pb-4">
+                                <Avatar className="h-10 w-10 shrink-0">
                                   {member.photoUrl && (
                                     <AvatarImage src={member.photoUrl} />
                                   )}
@@ -388,209 +493,113 @@ export function MembersTable({
                                     {getInitials(member.firstName, member.lastName)}
                                   </AvatarFallback>
                                 </Avatar>
-                                <span className="font-medium text-foreground">
-                                  {member.firstName}
-                                  {' '}
-                                  {member.lastName}
-                                </span>
+                                <div>
+                                  <div className="font-medium text-foreground">
+                                    {member.firstName}
+                                    {' '}
+                                    {member.lastName}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">{member.email}</div>
+                                </div>
                               </div>
-                            </td>
-                            <td className="px-6 py-4">
-                              <Badge variant={getMembershipTypeVariant(member.membershipType)}>
-                                {getMembershipTypeLabel(member.membershipType)}
-                              </Badge>
-                            </td>
-                            <td className="px-6 py-4 text-sm text-muted-foreground">
-                              {formatCurrency(member.amountDue)}
-                            </td>
-                            <td className="px-6 py-4 text-sm text-muted-foreground">
-                              {formatDate(member.nextPayment)}
-                            </td>
-                            <td className="px-6 py-4">
-                              <Badge variant={getStatusColor(member.status)}>
-                                {getStatusLabel(member.status)}
-                              </Badge>
-                            </td>
-                            <td className="px-6 py-4 text-sm text-muted-foreground">
-                              {formatDate(member.lastAccessedAt)}
-                            </td>
-                            <td className="px-6 py-4">
-                              <div className="flex items-center gap-2">
-                                {member.status !== 'flagged-for-deletion' && (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => onEditAction(member.id)}
-                                    aria-label={`Edit ${member.firstName} ${member.lastName}`}
-                                    title={`Edit ${member.firstName} ${member.lastName}`}
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                )}
-                                {member.status !== 'flagged-for-deletion'
-                                  ? (
-                                      <Button
-                                        variant="destructive"
-                                        size="sm"
-                                        onClick={() => onRemoveAction(member.id)}
-                                        aria-label={`Remove ${member.firstName} ${member.lastName}`}
-                                        title="Flag for removal"
-                                      >
-                                        <Trash2 className="h-4 w-4" />
-                                      </Button>
-                                    )
-                                  : (
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => onRestoreAction(member.id)}
-                                        aria-label={`Restore ${member.firstName} ${member.lastName}`}
-                                        title="Restore member"
-                                      >
-                                        <ArchiveRestore className="h-4 w-4" />
-                                      </Button>
-                                    )}
+
+                              {/* Member Details Grid */}
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <div className="text-xs font-semibold text-muted-foreground">Membership</div>
+                                  <div className="mt-1">
+                                    <Badge variant={getMembershipTypeVariant(member.membershipType)}>
+                                      {getMembershipTypeLabel(member.membershipType)}
+                                    </Badge>
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <div className="text-xs font-semibold text-muted-foreground">Amount Due</div>
+                                  <div className="mt-1 text-sm text-foreground">
+                                    {formatCurrency(member.amountDue)}
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <div className="text-xs font-semibold text-muted-foreground">Next Payment</div>
+                                  <div className="mt-1 text-sm text-foreground">
+                                    {formatDate(member.nextPayment)}
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <div className="text-xs font-semibold text-muted-foreground">Last Visited</div>
+                                  <div className="mt-1 text-sm text-foreground">
+                                    {formatDate(member.lastAccessedAt)}
+                                  </div>
+                                </div>
                               </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-        </div>
 
-        {/* Members Cards - Mobile View */}
-        <div className="space-y-4 lg:hidden">
-          {loading
-            ? (
-                <div className="flex flex-col items-center justify-center gap-3 p-8">
-                  <Spinner size="lg" />
-                  <p className="text-sm text-muted-foreground">Loading members...</p>
-                </div>
-              )
-            : filteredMembers.length === 0
-              ? (
-                  <div className="p-8 text-center text-muted-foreground">
-                    No members found
-                  </div>
-                )
-              : (
-                  paginatedMembers.map(member => (
-                    <Card key={member.id} className="p-4">
-                      <div className="space-y-4">
-                        {/* Member Name */}
-                        <div className="flex items-center gap-3 border-b border-border pb-4">
-                          <Avatar className="h-10 w-10 shrink-0">
-                            {member.photoUrl && (
-                              <AvatarImage src={member.photoUrl} />
-                            )}
-                            <AvatarFallback>
-                              {getInitials(member.firstName, member.lastName)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <div className="font-medium text-foreground">
-                              {member.firstName}
-                              {' '}
-                              {member.lastName}
+                              {/* Status and Action */}
+                              <div className="flex items-center justify-between border-t border-border pt-4">
+                                <Badge variant={getStatusColor(member.status)}>
+                                  {getStatusLabel(member.status)}
+                                </Badge>
+                                <div className="flex items-center gap-2">
+                                  {member.status !== 'flagged-for-deletion' && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => onEditAction(member.id)}
+                                      aria-label={`Edit ${member.firstName} ${member.lastName}`}
+                                      title={`Edit ${member.firstName} ${member.lastName}`}
+                                    >
+                                      <Edit className="h-4 w-4" />
+                                    </Button>
+                                  )}
+                                  {member.status !== 'flagged-for-deletion'
+                                    ? (
+                                        <Button
+                                          variant="destructive"
+                                          size="sm"
+                                          onClick={() => onRemoveAction(member.id)}
+                                          aria-label={`Remove ${member.firstName} ${member.lastName}`}
+                                          title="Flag for removal"
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                      )
+                                    : (
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => onRestoreAction(member.id)}
+                                          aria-label={`Restore ${member.firstName} ${member.lastName}`}
+                                          title="Restore member"
+                                        >
+                                          <RotateCcw className="h-4 w-4" />
+                                        </Button>
+                                      )}
+                                </div>
+                              </div>
                             </div>
-                            <div className="text-xs text-muted-foreground">{member.email}</div>
-                          </div>
-                        </div>
-
-                        {/* Member Details Grid */}
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <div className="text-xs font-semibold text-muted-foreground">Membership</div>
-                            <div className="mt-1">
-                              <Badge variant={getMembershipTypeVariant(member.membershipType)}>
-                                {getMembershipTypeLabel(member.membershipType)}
-                              </Badge>
-                            </div>
-                          </div>
-
-                          <div>
-                            <div className="text-xs font-semibold text-muted-foreground">Amount Due</div>
-                            <div className="mt-1 text-sm text-foreground">
-                              {formatCurrency(member.amountDue)}
-                            </div>
-                          </div>
-
-                          <div>
-                            <div className="text-xs font-semibold text-muted-foreground">Next Payment</div>
-                            <div className="mt-1 text-sm text-foreground">
-                              {formatDate(member.nextPayment)}
-                            </div>
-                          </div>
-
-                          <div>
-                            <div className="text-xs font-semibold text-muted-foreground">Last Visited</div>
-                            <div className="mt-1 text-sm text-foreground">
-                              {formatDate(member.lastAccessedAt)}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Status and Action */}
-                        <div className="flex items-center justify-between border-t border-border pt-4">
-                          <Badge variant={getStatusColor(member.status)}>
-                            {getStatusLabel(member.status)}
-                          </Badge>
-                          <div className="flex items-center gap-2">
-                            {member.status !== 'flagged-for-deletion' && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => onEditAction(member.id)}
-                                aria-label={`Edit ${member.firstName} ${member.lastName}`}
-                                title={`Edit ${member.firstName} ${member.lastName}`}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            )}
-                            {member.status !== 'flagged-for-deletion'
-                              ? (
-                                  <Button
-                                    variant="destructive"
-                                    size="sm"
-                                    onClick={() => onRemoveAction(member.id)}
-                                    aria-label={`Remove ${member.firstName} ${member.lastName}`}
-                                    title="Flag for removal"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                )
-                              : (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => onRestoreAction(member.id)}
-                                    aria-label={`Restore ${member.firstName} ${member.lastName}`}
-                                    title="Restore member"
-                                  >
-                                    <RotateCcw className="h-4 w-4" />
-                                  </Button>
-                                )}
-                          </div>
-                        </div>
-                      </div>
-                    </Card>
-                  ))
-                )}
-        </div>
+                          </Card>
+                        ))
+                      )}
+              </div>
+            </PanelContent>
+          </TabsContent>
+        </Tabs>
 
         {/* Pagination */}
         {!loading && sortedMembers.length > 0 && (
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            totalItems={sortedMembers.length}
-            itemsPerPage={ROWS_PER_PAGE}
-            onPageChangeAction={setCurrentPage}
-          />
+          <PanelFooter>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={sortedMembers.length}
+              itemsPerPage={ROWS_PER_PAGE}
+              onPageChangeAction={setCurrentPage}
+            />
+          </PanelFooter>
         )}
-      </div>
+      </Panel>
     </div>
   );
 }

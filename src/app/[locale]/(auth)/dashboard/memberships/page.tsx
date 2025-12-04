@@ -1,10 +1,11 @@
 'use client';
 
-import { ChevronDown, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type Membership = {
   id: string;
@@ -164,29 +165,43 @@ export default function MembershipsPage() {
 
       {/* Filters and Search */}
       <div className="flex items-center gap-4">
-        <button
-          type="button"
-          className="flex cursor-pointer items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground hover:bg-muted"
-        >
-          {t('status_filter')}
-          <ChevronDown className="h-4 w-4" />
-        </button>
+        <Select defaultValue="all">
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder={t('status_filter')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('status_filter')}</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="inactive">Inactive</SelectItem>
+            <SelectItem value="trial">Trial</SelectItem>
+          </SelectContent>
+        </Select>
 
-        <button
-          type="button"
-          className="flex cursor-pointer items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground hover:bg-muted"
-        >
-          {t('programs_filter')}
-          <ChevronDown className="h-4 w-4" />
-        </button>
+        <Select defaultValue="all">
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder={t('programs_filter')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('programs_filter')}</SelectItem>
+            <SelectItem value="bjj">Brazilian Jiu-Jitsu</SelectItem>
+            <SelectItem value="mma">Mixed Martial Arts</SelectItem>
+            <SelectItem value="muay-thai">Muay Thai</SelectItem>
+            <SelectItem value="kids">Kids Programs</SelectItem>
+          </SelectContent>
+        </Select>
 
-        <button
-          type="button"
-          className="flex cursor-pointer items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground hover:bg-muted"
-        >
-          {t('types_filter')}
-          <ChevronDown className="h-4 w-4" />
-        </button>
+        <Select defaultValue="all">
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder={t('types_filter')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('types_filter')}</SelectItem>
+            <SelectItem value="monthly">Monthly</SelectItem>
+            <SelectItem value="annual">Annual</SelectItem>
+            <SelectItem value="drop-in">Drop-in</SelectItem>
+            <SelectItem value="unlimited">Unlimited</SelectItem>
+          </SelectContent>
+        </Select>
 
         <Button>
           <Plus className="mr-2 h-4 w-4" />

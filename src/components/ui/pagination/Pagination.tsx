@@ -134,7 +134,7 @@ export function Pagination({
                   className={cn(
                     'min-w-10 h-10 border shadow-none',
                     isActive
-                      ? 'border-neutral-1500 bg-neutral-1500 text-neutral-100 hover:bg-neutral-1500'
+                      ? 'border-neutral-1500 bg-neutral-1500 text-neutral-100 hover:!bg-neutral-1500 hover:!text-neutral-100 hover:!border-neutral-1500'
                       : 'border-neutral-400 bg-neutral-100 text-neutral-1000 hover:bg-neutral-200',
                   )}
                 >

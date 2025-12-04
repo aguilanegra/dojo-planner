@@ -8,6 +8,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Pagination } from '@/components/ui/pagination/Pagination';
+import { Panel, PanelContent, PanelFooter, PanelHeader, PanelTabs } from '@/components/ui/panel';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type User = {
   id: string;
@@ -278,217 +281,216 @@ export function UserPermissionsPage() {
       </div>
 
       {/* My Users Section */}
-      <div>
-        <div className="mb-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <h2 className="text-2xl font-bold text-foreground">{t('my_users_title')}</h2>
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            {t('add_user_button')}
-          </Button>
-        </div>
+      <Panel>
+        <Tabs defaultValue="all" onValueChange={value => setActiveFilter(value as typeof activeFilter)}>
+          <PanelHeader withDivider={true}>
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <h2 className="text-xl font-medium text-foreground">{t('my_users_title')}</h2>
+                <div className="flex gap-2">
+                  <Button>
+                    <Plus className="mr-2 h-4 w-4" />
+                    {t('add_user_button')}
+                  </Button>
+                </div>
+              </div>
+              <PanelTabs>
+                <TabsList className="h-auto bg-transparent p-0">
+                  <TabsTrigger value="all" className="border-b-2 border-transparent px-4 py-2 text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground">{t('filter_all')}</TabsTrigger>
+                  <TabsTrigger value="admins" className="border-b-2 border-transparent px-4 py-2 text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground">{t('filter_admins')}</TabsTrigger>
+                  <TabsTrigger value="coaches" className="border-b-2 border-transparent px-4 py-2 text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground">{t('filter_coaches')}</TabsTrigger>
+                  <TabsTrigger value="others" className="border-b-2 border-transparent px-4 py-2 text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground">{t('filter_others')}</TabsTrigger>
+                </TabsList>
+              </PanelTabs>
+            </div>
+          </PanelHeader>
 
-        {/* Filter Tabs */}
-        <div className="mb-4 flex gap-2 border-b border-border">
-          {(['all', 'admins', 'coaches', 'others'] as const).map(filter => (
-            <button
-              key={filter}
-              type="button"
-              onClick={() => setActiveFilter(filter)}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
-                activeFilter === filter
-                  ? 'border-b-2 border-foreground text-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {t(`filter_${filter}`)}
-            </button>
-          ))}
-        </div>
+          <TabsContent value={activeFilter} className="mt-0">
+            <PanelContent>
+              <div className="hidden lg:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>
+                        <button
+                          type="button"
+                          onClick={() => handleSort('name')}
+                          className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
+                        >
+                          {t('user_name_column')}
+                          {sortField === 'name' && (
+                            sortDirection === 'asc'
+                              ? <ArrowDownAZ className="h-4 w-4" />
+                              : <ArrowUpZA className="h-4 w-4" />
+                          )}
+                        </button>
+                      </TableHead>
+                      <TableHead>
+                        <button
+                          type="button"
+                          onClick={() => handleSort('title')}
+                          className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
+                        >
+                          {t('user_title_column')}
+                          {sortField === 'title' && (
+                            sortDirection === 'asc'
+                              ? <ArrowDownAZ className="h-4 w-4" />
+                              : <ArrowUpZA className="h-4 w-4" />
+                          )}
+                        </button>
+                      </TableHead>
+                      <TableHead>
+                        <button
+                          type="button"
+                          onClick={() => handleSort('permissions')}
+                          className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
+                        >
+                          {t('permissions_column')}
+                          {sortField === 'permissions' && (
+                            sortDirection === 'asc'
+                              ? <ArrowDownAZ className="h-4 w-4" />
+                              : <ArrowUpZA className="h-4 w-4" />
+                          )}
+                        </button>
+                      </TableHead>
+                      <TableHead>
+                        <button
+                          type="button"
+                          onClick={() => handleSort('status')}
+                          className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
+                        >
+                          {t('status_column')}
+                          {sortField === 'status' && (
+                            sortDirection === 'asc'
+                              ? <ArrowDownAZ className="h-4 w-4" />
+                              : <ArrowUpZA className="h-4 w-4" />
+                          )}
+                        </button>
+                      </TableHead>
+                      <TableHead>
+                        <button
+                          type="button"
+                          onClick={() => handleSort('recentActivity')}
+                          className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
+                        >
+                          {t('recent_activity_column')}
+                          {sortField === 'recentActivity' && (
+                            sortDirection === 'asc'
+                              ? <ArrowDownAZ className="h-4 w-4" />
+                              : <ArrowUpZA className="h-4 w-4" />
+                          )}
+                        </button>
+                      </TableHead>
+                      <TableHead>
+                        <button
+                          type="button"
+                          onClick={() => handleSort('lastLoggedIn')}
+                          className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
+                        >
+                          {t('last_logged_in_column')}
+                          {sortField === 'lastLoggedIn' && (
+                            sortDirection === 'asc'
+                              ? <ArrowDownAZ className="h-4 w-4" />
+                              : <ArrowUpZA className="h-4 w-4" />
+                          )}
+                        </button>
+                      </TableHead>
+                      <TableHead>{t('action_column')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedUsers.map(user => (
+                      <TableRow key={user.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-8 w-8">
+                              <AvatarFallback className="text-xs">
+                                {user.name.split(' ').map(n => n[0]).join('')}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="text-sm font-medium text-foreground">{user.name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm text-foreground">{user.title}</TableCell>
+                        <TableCell className="text-sm text-foreground">{user.permissions}</TableCell>
+                        <TableCell>
+                          <Badge variant={getStatusVariant(user.status)}>{user.status}</Badge>
+                        </TableCell>
+                        <TableCell className="text-sm text-foreground">{user.recentActivity}</TableCell>
+                        <TableCell className="text-sm text-foreground">{user.lastLoggedIn}</TableCell>
+                        <TableCell>
+                          <Button variant="outline" size="sm">
+                            {t('view_details_button')}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
 
-        {/* Users Table - Desktop View */}
-        <div className="hidden rounded-lg border border-border bg-background lg:block">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border bg-secondary">
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                    <button
-                      type="button"
-                      onClick={() => handleSort('name')}
-                      className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
-                    >
-                      {t('user_name_column')}
-                      {sortField === 'name' && (
-                        sortDirection === 'asc'
-                          ? <ArrowDownAZ className="h-4 w-4" />
-                          : <ArrowUpZA className="h-4 w-4" />
-                      )}
-                    </button>
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                    <button
-                      type="button"
-                      onClick={() => handleSort('title')}
-                      className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
-                    >
-                      {t('user_title_column')}
-                      {sortField === 'title' && (
-                        sortDirection === 'asc'
-                          ? <ArrowDownAZ className="h-4 w-4" />
-                          : <ArrowUpZA className="h-4 w-4" />
-                      )}
-                    </button>
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                    <button
-                      type="button"
-                      onClick={() => handleSort('permissions')}
-                      className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
-                    >
-                      {t('permissions_column')}
-                      {sortField === 'permissions' && (
-                        sortDirection === 'asc'
-                          ? <ArrowDownAZ className="h-4 w-4" />
-                          : <ArrowUpZA className="h-4 w-4" />
-                      )}
-                    </button>
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                    <button
-                      type="button"
-                      onClick={() => handleSort('status')}
-                      className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
-                    >
-                      {t('status_column')}
-                      {sortField === 'status' && (
-                        sortDirection === 'asc'
-                          ? <ArrowDownAZ className="h-4 w-4" />
-                          : <ArrowUpZA className="h-4 w-4" />
-                      )}
-                    </button>
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                    <button
-                      type="button"
-                      onClick={() => handleSort('recentActivity')}
-                      className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
-                    >
-                      {t('recent_activity_column')}
-                      {sortField === 'recentActivity' && (
-                        sortDirection === 'asc'
-                          ? <ArrowDownAZ className="h-4 w-4" />
-                          : <ArrowUpZA className="h-4 w-4" />
-                      )}
-                    </button>
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                    <button
-                      type="button"
-                      onClick={() => handleSort('lastLoggedIn')}
-                      className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
-                    >
-                      {t('last_logged_in_column')}
-                      {sortField === 'lastLoggedIn' && (
-                        sortDirection === 'asc'
-                          ? <ArrowDownAZ className="h-4 w-4" />
-                          : <ArrowUpZA className="h-4 w-4" />
-                      )}
-                    </button>
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">{t('action_column')}</th>
-                </tr>
-              </thead>
-              <tbody>
+              {/* Users Cards - Mobile View */}
+              <div className="space-y-4 px-6 py-4 lg:hidden">
                 {paginatedUsers.map(user => (
-                  <tr key={user.id} className="border-b border-border hover:bg-secondary/30">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-8 w-8">
+                  <Card key={user.id} className="p-4">
+                    <div className="space-y-4">
+                      {/* User Name and Avatar */}
+                      <div className="flex items-center gap-3 border-b border-border pb-4">
+                        <Avatar className="h-10 w-10 shrink-0">
                           <AvatarFallback className="text-xs">
                             {user.name.split(' ').map(n => n[0]).join('')}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="text-sm font-medium text-foreground">{user.name}</span>
+                        <div>
+                          <div className="font-medium text-foreground">{user.name}</div>
+                          <div className="text-xs text-muted-foreground">{user.title}</div>
+                        </div>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-foreground">{user.title}</td>
-                    <td className="px-6 py-4 text-sm text-foreground">{user.permissions}</td>
-                    <td className="px-6 py-4">
-                      <Badge variant={getStatusVariant(user.status)}>{user.status}</Badge>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-foreground">{user.recentActivity}</td>
-                    <td className="px-6 py-4 text-sm text-foreground">{user.lastLoggedIn}</td>
-                    <td className="px-6 py-4">
-                      <Button variant="outline" size="sm">
-                        {t('view_details_button')}
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
 
-        {/* Users Cards - Mobile View */}
-        <div className="space-y-4 lg:hidden">
-          {paginatedUsers.map(user => (
-            <Card key={user.id} className="p-4">
-              <div className="space-y-4">
-                {/* User Name and Avatar */}
-                <div className="flex items-center gap-3 border-b border-border pb-4">
-                  <Avatar className="h-10 w-10 shrink-0">
-                    <AvatarFallback className="text-xs">
-                      {user.name.split(' ').map(n => n[0]).join('')}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <div className="font-medium text-foreground">{user.name}</div>
-                    <div className="text-xs text-muted-foreground">{user.title}</div>
-                  </div>
-                </div>
+                      {/* User Details Grid */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <div className="text-xs font-semibold text-muted-foreground">{t('permissions_column')}</div>
+                          <div className="mt-1 text-sm text-foreground">{user.permissions}</div>
+                        </div>
 
-                {/* User Details Grid */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <div className="text-xs font-semibold text-muted-foreground">{t('permissions_column')}</div>
-                    <div className="mt-1 text-sm text-foreground">{user.permissions}</div>
-                  </div>
+                        <div>
+                          <div className="text-xs font-semibold text-muted-foreground">{t('status_column')}</div>
+                          <div className="mt-1">
+                            <Badge variant={getStatusVariant(user.status)} className="text-xs">
+                              {user.status}
+                            </Badge>
+                          </div>
+                        </div>
 
-                  <div>
-                    <div className="text-xs font-semibold text-muted-foreground">{t('status_column')}</div>
-                    <div className="mt-1">
-                      <Badge variant={getStatusVariant(user.status)} className="text-xs">
-                        {user.status}
-                      </Badge>
+                        <div>
+                          <div className="text-xs font-semibold text-muted-foreground">{t('recent_activity_column')}</div>
+                          <div className="mt-1 text-sm text-foreground">{user.recentActivity}</div>
+                        </div>
+
+                        <div>
+                          <div className="text-xs font-semibold text-muted-foreground">{t('last_logged_in_column')}</div>
+                          <div className="mt-1 text-sm text-foreground">{user.lastLoggedIn}</div>
+                        </div>
+                      </div>
+
+                      {/* Action Button */}
+                      <div className="flex justify-end border-t border-border pt-4">
+                        <Button variant="outline" size="sm">
+                          {t('view_details_button')}
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-
-                  <div>
-                    <div className="text-xs font-semibold text-muted-foreground">{t('recent_activity_column')}</div>
-                    <div className="mt-1 text-sm text-foreground">{user.recentActivity}</div>
-                  </div>
-
-                  <div>
-                    <div className="text-xs font-semibold text-muted-foreground">{t('last_logged_in_column')}</div>
-                    <div className="mt-1 text-sm text-foreground">{user.lastLoggedIn}</div>
-                  </div>
-                </div>
-
-                {/* Action Button */}
-                <div className="flex justify-end border-t border-border pt-4">
-                  <Button variant="outline" size="sm">
-                    {t('view_details_button')}
-                  </Button>
-                </div>
+                  </Card>
+                ))}
               </div>
-            </Card>
-          ))}
-        </div>
+            </PanelContent>
+          </TabsContent>
 
-        {/* Pagination */}
+        </Tabs>
+
         {sortedUsers.length > 0 && (
-          <div className="mt-6">
+          <PanelFooter>
             <Pagination
               currentPage={currentPage}
               totalPages={Math.ceil(totalEntries / ROWS_PER_PAGE)}
@@ -496,13 +498,15 @@ export function UserPermissionsPage() {
               itemsPerPage={ROWS_PER_PAGE}
               onPageChangeAction={setCurrentPage}
             />
-          </div>
+          </PanelFooter>
         )}
-      </div>
+      </Panel>
 
       {/* Permission Types Section */}
       <div>
-        <h2 className="mb-6 text-2xl font-bold text-foreground">{t('permission_types_title')}</h2>
+        <h2 className="mb-6 text-2xl font-bold text-foreground">
+          {t('permission_types_title')}
+        </h2>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {permissionTypes.map(permType => (
             <Card key={permType.id} className="p-6">

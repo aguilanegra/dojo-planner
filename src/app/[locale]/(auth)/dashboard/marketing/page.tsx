@@ -1,11 +1,14 @@
 'use client';
 
-import { ArrowDownAZ, ArrowUpZA, ChevronDown, Edit, Plus, Trash2 } from 'lucide-react';
+import { ArrowDownAZ, ArrowUpZA, Edit, Plus, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Pagination } from '@/components/ui/pagination/Pagination';
+import { Panel, PanelContent, PanelFooter, PanelHeader } from '@/components/ui/panel';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 type Coupon = {
   id: string;
@@ -225,268 +228,287 @@ export default function MarketingPage() {
         </Card>
       </div>
 
-      {/* Filters */}
-      <Card className="p-6">
-        <div className="mb-6 flex items-center gap-2">
-          {/* Status Filter */}
-          <button
-            type="button"
-            className="flex cursor-pointer items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground hover:bg-muted"
-          >
-            {STATUS_FILTER}
-            <ChevronDown className="h-4 w-4" />
-          </button>
+      {/* Coupons Panel */}
+      <Panel>
+        <PanelHeader>
+          <div className="flex items-center gap-2">
+            {/* Status Filter */}
+            <Select defaultValue="all">
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder={STATUS_FILTER} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{STATUS_FILTER}</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="expired">Expired</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
 
-          {/* Type Filter */}
-          <button
-            type="button"
-            className="flex cursor-pointer items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground hover:bg-muted"
-          >
-            {TYPE_FILTER}
-            <ChevronDown className="h-4 w-4" />
-          </button>
+            {/* Type Filter */}
+            <Select defaultValue="all">
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder={TYPE_FILTER} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{TYPE_FILTER}</SelectItem>
+                <SelectItem value="percentage">Percentage</SelectItem>
+                <SelectItem value="fixed">Fixed Amount</SelectItem>
+                <SelectItem value="free-trial">Free Trial</SelectItem>
+              </SelectContent>
+            </Select>
 
-          {/* Apply To Filter */}
-          <button
-            type="button"
-            className="flex cursor-pointer items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground hover:bg-muted"
-          >
-            {APPLY_FILTER}
-            <ChevronDown className="h-4 w-4" />
-          </button>
+            {/* Apply To Filter */}
+            <Select defaultValue="all">
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder={APPLY_FILTER} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{APPLY_FILTER}</SelectItem>
+                <SelectItem value="memberships">Memberships</SelectItem>
+                <SelectItem value="products">Products</SelectItem>
+                <SelectItem value="both">Both</SelectItem>
+              </SelectContent>
+            </Select>
 
-          {/* Reset Button */}
-          <Button variant="outline">{t('reset_filters_button')}</Button>
-        </div>
+            {/* Reset Button */}
+            <Button variant="outline">{t('reset_filters_button')}</Button>
+          </div>
+        </PanelHeader>
 
-        {/* Coupons Table - Desktop View */}
-        <div className="hidden overflow-x-auto lg:block">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-border bg-secondary">
-                <th className="w-12 px-6 py-3">
-                  <input type="checkbox" className="rounded" />
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                  <button
-                    type="button"
-                    onClick={() => handleSort('code')}
-                    className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
-                  >
-                    {t('table_code')}
-                    {sortField === 'code' && (
-                      sortDirection === 'asc'
-                        ? <ArrowDownAZ className="h-4 w-4" />
-                        : <ArrowUpZA className="h-4 w-4" />
-                    )}
-                  </button>
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                  <button
-                    type="button"
-                    onClick={() => handleSort('type')}
-                    className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
-                  >
-                    {t('table_type')}
-                    {sortField === 'type' && (
-                      sortDirection === 'asc'
-                        ? <ArrowDownAZ className="h-4 w-4" />
-                        : <ArrowUpZA className="h-4 w-4" />
-                    )}
-                  </button>
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                  <button
-                    type="button"
-                    onClick={() => handleSort('amount')}
-                    className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
-                  >
-                    {t('table_amount')}
-                    {sortField === 'amount' && (
-                      sortDirection === 'asc'
-                        ? <ArrowDownAZ className="h-4 w-4" />
-                        : <ArrowUpZA className="h-4 w-4" />
-                    )}
-                  </button>
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                  <button
-                    type="button"
-                    onClick={() => handleSort('applyTo')}
-                    className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
-                  >
-                    {t('table_apply_to')}
-                    {sortField === 'applyTo' && (
-                      sortDirection === 'asc'
-                        ? <ArrowDownAZ className="h-4 w-4" />
-                        : <ArrowUpZA className="h-4 w-4" />
-                    )}
-                  </button>
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                  <button
-                    type="button"
-                    onClick={() => handleSort('usage')}
-                    className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
-                  >
-                    {t('table_usage_limit')}
-                    {sortField === 'usage' && (
-                      sortDirection === 'asc'
-                        ? <ArrowDownAZ className="h-4 w-4" />
-                        : <ArrowUpZA className="h-4 w-4" />
-                    )}
-                  </button>
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                  <button
-                    type="button"
-                    onClick={() => handleSort('expiry')}
-                    className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
-                  >
-                    {t('table_expiry')}
-                    {sortField === 'expiry' && (
-                      sortDirection === 'asc'
-                        ? <ArrowDownAZ className="h-4 w-4" />
-                        : <ArrowUpZA className="h-4 w-4" />
-                    )}
-                  </button>
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                  <button
-                    type="button"
-                    onClick={() => handleSort('status')}
-                    className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
-                  >
-                    {t('table_status')}
-                    {sortField === 'status' && (
-                      sortDirection === 'asc'
-                        ? <ArrowDownAZ className="h-4 w-4" />
-                        : <ArrowUpZA className="h-4 w-4" />
-                    )}
-                  </button>
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">{t('table_actions')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedCoupons.map(coupon => (
-                <tr key={coupon.id} className="border-b border-border hover:bg-secondary/30">
-                  <td className="px-6 py-4">
+        <PanelContent>
+
+          {/* Coupons Table - Desktop View */}
+          <div className="hidden lg:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-12">
                     <input type="checkbox" className="rounded" />
-                  </td>
-                  <td className="px-6 py-4">
+                  </TableHead>
+                  <TableHead>
+                    <button
+                      type="button"
+                      onClick={() => handleSort('code')}
+                      className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
+                    >
+                      {t('table_code')}
+                      {sortField === 'code' && (
+                        sortDirection === 'asc'
+                          ? <ArrowDownAZ className="h-4 w-4" />
+                          : <ArrowUpZA className="h-4 w-4" />
+                      )}
+                    </button>
+                  </TableHead>
+                  <TableHead>
+                    <button
+                      type="button"
+                      onClick={() => handleSort('type')}
+                      className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
+                    >
+                      {t('table_type')}
+                      {sortField === 'type' && (
+                        sortDirection === 'asc'
+                          ? <ArrowDownAZ className="h-4 w-4" />
+                          : <ArrowUpZA className="h-4 w-4" />
+                      )}
+                    </button>
+                  </TableHead>
+                  <TableHead>
+                    <button
+                      type="button"
+                      onClick={() => handleSort('amount')}
+                      className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
+                    >
+                      {t('table_amount')}
+                      {sortField === 'amount' && (
+                        sortDirection === 'asc'
+                          ? <ArrowDownAZ className="h-4 w-4" />
+                          : <ArrowUpZA className="h-4 w-4" />
+                      )}
+                    </button>
+                  </TableHead>
+                  <TableHead>
+                    <button
+                      type="button"
+                      onClick={() => handleSort('applyTo')}
+                      className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
+                    >
+                      {t('table_apply_to')}
+                      {sortField === 'applyTo' && (
+                        sortDirection === 'asc'
+                          ? <ArrowDownAZ className="h-4 w-4" />
+                          : <ArrowUpZA className="h-4 w-4" />
+                      )}
+                    </button>
+                  </TableHead>
+                  <TableHead>
+                    <button
+                      type="button"
+                      onClick={() => handleSort('usage')}
+                      className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
+                    >
+                      {t('table_usage_limit')}
+                      {sortField === 'usage' && (
+                        sortDirection === 'asc'
+                          ? <ArrowDownAZ className="h-4 w-4" />
+                          : <ArrowUpZA className="h-4 w-4" />
+                      )}
+                    </button>
+                  </TableHead>
+                  <TableHead>
+                    <button
+                      type="button"
+                      onClick={() => handleSort('expiry')}
+                      className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
+                    >
+                      {t('table_expiry')}
+                      {sortField === 'expiry' && (
+                        sortDirection === 'asc'
+                          ? <ArrowDownAZ className="h-4 w-4" />
+                          : <ArrowUpZA className="h-4 w-4" />
+                      )}
+                    </button>
+                  </TableHead>
+                  <TableHead>
+                    <button
+                      type="button"
+                      onClick={() => handleSort('status')}
+                      className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
+                    >
+                      {t('table_status')}
+                      {sortField === 'status' && (
+                        sortDirection === 'asc'
+                          ? <ArrowDownAZ className="h-4 w-4" />
+                          : <ArrowUpZA className="h-4 w-4" />
+                      )}
+                    </button>
+                  </TableHead>
+                  <TableHead>{t('table_actions')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedCoupons.map(coupon => (
+                  <TableRow key={coupon.id}>
+                    <TableCell className="w-12">
+                      <input type="checkbox" className="rounded" />
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <p className="text-sm font-medium text-foreground">{coupon.code}</p>
+                        <p className="text-xs text-muted-foreground">{coupon.description}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm text-foreground">{coupon.type}</TableCell>
+                    <TableCell className="text-sm text-foreground">{coupon.amount}</TableCell>
+                    <TableCell className="text-sm text-foreground">{coupon.applyTo}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-foreground">{coupon.usage}</span>
+                        <div className="relative h-1 w-16 rounded-full bg-muted">
+                          <div
+                            className="h-1 rounded-full bg-blue-500"
+                            style={{ width: `${getUsagePercentage(coupon.usage)}%` }}
+                          />
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm text-foreground">{coupon.expiry}</TableCell>
+                    <TableCell className={`text-sm font-medium ${getStatusColor(coupon.status)}`}>
+                      {coupon.status}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="destructive" size="sm">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Coupons Cards - Mobile View */}
+          <div className="space-y-4 lg:hidden">
+            {paginatedCoupons.map(coupon => (
+              <Card key={coupon.id} className="p-4">
+                <div className="space-y-4">
+                  {/* Header with Code and Status */}
+                  <div className="flex items-start justify-between gap-4 border-b border-border pb-4">
+                    <div className="flex-1">
+                      <div className="text-xs font-semibold text-muted-foreground">{t('table_code')}</div>
+                      <div className="mt-1">
+                        <p className="text-sm font-medium text-foreground">{coupon.code}</p>
+                        <p className="text-xs text-muted-foreground">{coupon.description}</p>
+                      </div>
+                    </div>
+                    <div className={`text-sm font-medium whitespace-nowrap ${getStatusColor(coupon.status)}`}>
+                      {coupon.status}
+                    </div>
+                  </div>
+
+                  {/* Details Grid */}
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-xs font-semibold text-muted-foreground">{t('table_type')}</span>
+                      <span className="text-sm font-medium text-foreground">{coupon.type}</span>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span className="text-xs font-semibold text-muted-foreground">{t('table_amount')}</span>
+                      <span className="text-sm font-medium text-foreground">{coupon.amount}</span>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span className="text-xs font-semibold text-muted-foreground">{t('table_apply_to')}</span>
+                      <span className="text-sm font-medium text-foreground">{coupon.applyTo}</span>
+                    </div>
+
                     <div>
-                      <p className="text-sm font-medium text-foreground">{coupon.code}</p>
-                      <p className="text-xs text-muted-foreground">{coupon.description}</p>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-foreground">{coupon.type}</td>
-                  <td className="px-6 py-4 text-sm text-foreground">{coupon.amount}</td>
-                  <td className="px-6 py-4 text-sm text-foreground">{coupon.applyTo}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-foreground">{coupon.usage}</span>
-                      <div className="relative h-1 w-16 rounded-full bg-muted">
-                        <div
-                          className="h-1 rounded-full bg-blue-500"
-                          style={{ width: `${getUsagePercentage(coupon.usage)}%` }}
-                        />
+                      <span className="text-xs font-semibold text-muted-foreground">{t('table_usage_limit')}</span>
+                      <div className="mt-2 flex items-center gap-2">
+                        <span className="text-sm text-foreground">{coupon.usage}</span>
+                        <div className="relative h-1 w-16 rounded-full bg-muted">
+                          <div
+                            className="h-1 rounded-full bg-blue-500"
+                            style={{ width: `${getUsagePercentage(coupon.usage)}%` }}
+                          />
+                        </div>
                       </div>
                     </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-foreground">{coupon.expiry}</td>
-                  <td className={`px-6 py-4 text-sm font-medium ${getStatusColor(coupon.status)}`}>
-                    {coupon.status}
-                  </td>
-                  <td className="flex gap-2 px-6 py-4">
-                    <Button variant="outline" size="sm">
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="destructive" size="sm">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
 
-        {/* Coupons Cards - Mobile View */}
-        <div className="space-y-4 lg:hidden">
-          {paginatedCoupons.map(coupon => (
-            <Card key={coupon.id} className="p-4">
-              <div className="space-y-4">
-                {/* Header with Code and Status */}
-                <div className="flex items-start justify-between gap-4 border-b border-border pb-4">
-                  <div className="flex-1">
-                    <div className="text-xs font-semibold text-muted-foreground">{t('table_code')}</div>
-                    <div className="mt-1">
-                      <p className="text-sm font-medium text-foreground">{coupon.code}</p>
-                      <p className="text-xs text-muted-foreground">{coupon.description}</p>
-                    </div>
-                  </div>
-                  <div className={`text-sm font-medium whitespace-nowrap ${getStatusColor(coupon.status)}`}>
-                    {coupon.status}
-                  </div>
-                </div>
-
-                {/* Details Grid */}
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-xs font-semibold text-muted-foreground">{t('table_type')}</span>
-                    <span className="text-sm font-medium text-foreground">{coupon.type}</span>
-                  </div>
-
-                  <div className="flex justify-between">
-                    <span className="text-xs font-semibold text-muted-foreground">{t('table_amount')}</span>
-                    <span className="text-sm font-medium text-foreground">{coupon.amount}</span>
-                  </div>
-
-                  <div className="flex justify-between">
-                    <span className="text-xs font-semibold text-muted-foreground">{t('table_apply_to')}</span>
-                    <span className="text-sm font-medium text-foreground">{coupon.applyTo}</span>
-                  </div>
-
-                  <div>
-                    <span className="text-xs font-semibold text-muted-foreground">{t('table_usage_limit')}</span>
-                    <div className="mt-2 flex items-center gap-2">
-                      <span className="text-sm text-foreground">{coupon.usage}</span>
-                      <div className="relative h-1 w-16 rounded-full bg-muted">
-                        <div
-                          className="h-1 rounded-full bg-blue-500"
-                          style={{ width: `${getUsagePercentage(coupon.usage)}%` }}
-                        />
-                      </div>
+                    <div className="flex justify-between">
+                      <span className="text-xs font-semibold text-muted-foreground">{t('table_expiry')}</span>
+                      <span className="text-sm font-medium text-foreground">{coupon.expiry}</span>
                     </div>
                   </div>
 
-                  <div className="flex justify-between">
-                    <span className="text-xs font-semibold text-muted-foreground">{t('table_expiry')}</span>
-                    <span className="text-sm font-medium text-foreground">{coupon.expiry}</span>
+                  {/* Action Buttons */}
+                  <div className="border-t border-border pt-4">
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="flex-1">
+                        <Edit className="mr-2 h-4 w-4" />
+                        {t('table_actions')}
+                      </Button>
+                      <Button variant="destructive" size="sm" className="flex-1">
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete
+                      </Button>
+                    </div>
                   </div>
                 </div>
+              </Card>
+            ))}
+          </div>
 
-                {/* Action Buttons */}
-                <div className="border-t border-border pt-4">
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="flex-1">
-                      <Edit className="mr-2 h-4 w-4" />
-                      {t('table_actions')}
-                    </Button>
-                    <Button variant="destructive" size="sm" className="flex-1">
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
+        </PanelContent>
 
-        {/* Pagination */}
-        <div className="mt-6">
+        <PanelFooter>
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
@@ -494,8 +516,8 @@ export default function MarketingPage() {
             itemsPerPage={ROWS_PER_PAGE}
             onPageChangeAction={setCurrentPage}
           />
-        </div>
-      </Card>
+        </PanelFooter>
+      </Panel>
     </div>
   );
 }

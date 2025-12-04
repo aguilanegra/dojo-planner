@@ -95,3 +95,66 @@ export const States: Story = {
     </div>
   ),
 };
+
+export const DarkModeStates: Story = {
+  render: () => (
+    <div className="dark rounded-lg bg-background p-8">
+      <div className="space-y-6">
+        <div className="flex items-center gap-8">
+          <div className="flex flex-col gap-2">
+            <p className="text-sm font-medium text-foreground">Off</p>
+            <Switch />
+          </div>
+          <div className="flex flex-col gap-2">
+            <p className="text-sm font-medium text-foreground">On</p>
+            <Switch checked />
+          </div>
+          <div className="flex flex-col gap-2">
+            <p className="text-sm font-medium text-foreground">Disabled</p>
+            <Switch disabled />
+          </div>
+          <div className="flex flex-col gap-2">
+            <p className="text-sm font-medium text-foreground">Disabled On</p>
+            <Switch disabled checked />
+          </div>
+        </div>
+      </div>
+    </div>
+  ),
+};
+
+export const LightVsDark: Story = {
+  render: () => (
+    <div className="space-y-8">
+      {/* Light Mode Section */}
+      <div className="rounded-lg border bg-background p-6">
+        <h3 className="mb-4 font-semibold text-foreground">Light Mode</h3>
+        <div className="flex items-center gap-6">
+          <div className="flex flex-col items-center gap-2">
+            <Switch />
+            <span className="text-xs text-muted-foreground">Off</span>
+          </div>
+          <div className="flex flex-col items-center gap-2">
+            <Switch checked />
+            <span className="text-xs text-muted-foreground">On</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Dark Mode Section */}
+      <div className="dark rounded-lg border bg-background p-6">
+        <h3 className="mb-4 font-semibold text-foreground">Dark Mode</h3>
+        <div className="flex items-center gap-6">
+          <div className="flex flex-col items-center gap-2">
+            <Switch />
+            <span className="text-xs text-muted-foreground">Off</span>
+          </div>
+          <div className="flex flex-col items-center gap-2">
+            <Switch checked />
+            <span className="text-xs text-muted-foreground">On</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  ),
+};

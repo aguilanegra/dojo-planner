@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Panel, PanelContent, PanelHeader } from '@/components/ui/panel';
 import {
   Select,
   SelectContent,
@@ -13,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 type Invoice = {
   id: string;
@@ -244,22 +246,23 @@ export function AccountSettingsPage() {
       </Card>
 
       {/* Billing History Section */}
-      <div>
-        {/* Header */}
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-foreground">{t('billing_history_title')}</h3>
-          <Button variant="outline" size="sm">
-            {t('download_all_invoices_button')}
-          </Button>
-        </div>
+      <Panel>
+        <PanelHeader>
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-foreground">{t('billing_history_title')}</h3>
+            <Button variant="outline" size="sm">
+              {t('download_all_invoices_button')}
+            </Button>
+          </div>
+        </PanelHeader>
 
-        {/* Desktop Table View */}
-        <div className="hidden rounded-lg border border-border bg-background lg:block">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border bg-secondary">
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
+        <PanelContent>
+          {/* Desktop Table View */}
+          <div className="hidden lg:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>
                     <button
                       type="button"
                       onClick={() => handleSort('number')}
@@ -272,8 +275,8 @@ export function AccountSettingsPage() {
                           : <ArrowUpZA className="h-4 w-4" />
                       )}
                     </button>
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
+                  </TableHead>
+                  <TableHead>
                     <button
                       type="button"
                       onClick={() => handleSort('date')}
@@ -286,8 +289,8 @@ export function AccountSettingsPage() {
                           : <ArrowUp10 className="h-4 w-4" />
                       )}
                     </button>
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
+                  </TableHead>
+                  <TableHead>
                     <button
                       type="button"
                       onClick={() => handleSort('description')}
@@ -300,8 +303,8 @@ export function AccountSettingsPage() {
                           : <ArrowUpZA className="h-4 w-4" />
                       )}
                     </button>
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
+                  </TableHead>
+                  <TableHead>
                     <button
                       type="button"
                       onClick={() => handleSort('amount')}
@@ -314,8 +317,8 @@ export function AccountSettingsPage() {
                           : <ArrowUp10 className="h-4 w-4" />
                       )}
                     </button>
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
+                  </TableHead>
+                  <TableHead>
                     <button
                       type="button"
                       onClick={() => handleSort('status')}
@@ -328,21 +331,21 @@ export function AccountSettingsPage() {
                           : <ArrowUpZA className="h-4 w-4" />
                       )}
                     </button>
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">{t('actions_column')}</th>
-                </tr>
-              </thead>
-              <tbody>
+                  </TableHead>
+                  <TableHead>{t('actions_column')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {sortedInvoices.map(invoice => (
-                  <tr key={invoice.id} className="border-b border-border hover:bg-secondary/30">
-                    <td className="px-6 py-4 text-sm font-medium text-foreground">{invoice.number}</td>
-                    <td className="px-6 py-4 text-sm text-foreground">{invoice.date}</td>
-                    <td className="px-6 py-4 text-sm text-foreground">{invoice.description}</td>
-                    <td className="px-6 py-4 text-sm text-foreground">{invoice.amount}</td>
-                    <td className="px-6 py-4">
+                  <TableRow key={invoice.id}>
+                    <TableCell className="text-sm font-medium text-foreground">{invoice.number}</TableCell>
+                    <TableCell className="text-sm text-foreground">{invoice.date}</TableCell>
+                    <TableCell className="text-sm text-foreground">{invoice.description}</TableCell>
+                    <TableCell className="text-sm text-foreground">{invoice.amount}</TableCell>
+                    <TableCell>
                       <Badge variant={getStatusVariant(invoice.status)}>{invoice.status}</Badge>
-                    </td>
-                    <td className="px-6 py-4">
+                    </TableCell>
+                    <TableCell>
                       <div className="flex justify-end gap-2">
                         <Button variant="outline" size="sm">
                           {t('view_action_button')}
@@ -351,65 +354,65 @@ export function AccountSettingsPage() {
                           <Download className="h-4 w-4" />
                         </Button>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
-        </div>
 
-        {/* Mobile Card View */}
-        <div className="space-y-4 lg:hidden">
-          {sortedInvoices.map(invoice => (
-            <Card key={invoice.id} className="p-4">
-              <div className="space-y-4">
-                {/* Header with Invoice Number and Date */}
-                <div className="flex items-start justify-between border-b border-border pb-4">
-                  <div>
-                    <div className="text-xs font-semibold text-muted-foreground">{t('invoice_number_column')}</div>
-                    <div className="mt-1 text-sm font-medium text-foreground">{invoice.number}</div>
+          {/* Mobile Card View */}
+          <div className="space-y-4 lg:hidden">
+            {sortedInvoices.map(invoice => (
+              <Card key={invoice.id} className="p-4">
+                <div className="space-y-4">
+                  {/* Header with Invoice Number and Date */}
+                  <div className="flex items-start justify-between border-b border-border pb-4">
+                    <div>
+                      <div className="text-xs font-semibold text-muted-foreground">{t('invoice_number_column')}</div>
+                      <div className="mt-1 text-sm font-medium text-foreground">{invoice.number}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs font-semibold text-muted-foreground">{t('date_column')}</div>
+                      <div className="mt-1 text-sm font-medium text-foreground">{invoice.date}</div>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-xs font-semibold text-muted-foreground">{t('date_column')}</div>
-                    <div className="mt-1 text-sm font-medium text-foreground">{invoice.date}</div>
+
+                  {/* Details */}
+                  <div className="space-y-3">
+                    <div>
+                      <div className="text-xs font-semibold text-muted-foreground">{t('description_column')}</div>
+                      <div className="mt-1 text-sm text-foreground">{invoice.description}</div>
+                    </div>
+
+                    <div>
+                      <div className="text-xs font-semibold text-muted-foreground">{t('amount_column')}</div>
+                      <div className="mt-1 text-sm text-foreground">{invoice.amount}</div>
+                    </div>
+
+                    <div>
+                      <div className="text-xs font-semibold text-muted-foreground">{t('status_column')}</div>
+                      <Badge variant={getStatusVariant(invoice.status)} className="mt-1">
+                        {invoice.status}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex justify-end gap-2 border-t border-border pt-4">
+                    <Button variant="outline" size="sm">
+                      {t('view_action_button')}
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      <Download className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
-
-                {/* Details */}
-                <div className="space-y-3">
-                  <div>
-                    <div className="text-xs font-semibold text-muted-foreground">{t('description_column')}</div>
-                    <div className="mt-1 text-sm text-foreground">{invoice.description}</div>
-                  </div>
-
-                  <div>
-                    <div className="text-xs font-semibold text-muted-foreground">{t('amount_column')}</div>
-                    <div className="mt-1 text-sm text-foreground">{invoice.amount}</div>
-                  </div>
-
-                  <div>
-                    <div className="text-xs font-semibold text-muted-foreground">{t('status_column')}</div>
-                    <Badge variant={getStatusVariant(invoice.status)} className="mt-1">
-                      {invoice.status}
-                    </Badge>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex justify-end gap-2 border-t border-border pt-4">
-                  <Button variant="outline" size="sm">
-                    {t('view_action_button')}
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    <Download className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
-      </div>
+              </Card>
+            ))}
+          </div>
+        </PanelContent>
+      </Panel>
     </div>
   );
 }

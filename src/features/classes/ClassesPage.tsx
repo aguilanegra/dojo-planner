@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronDown, Grid3x3, List, Plus } from 'lucide-react';
+import { Grid3x3, List, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ButtonGroupItem, ButtonGroupRoot } from '@/components/ui/button-group';
 import { Card } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const mockClasses = [
   {
@@ -152,31 +153,48 @@ export function ClassesPage() {
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             {/* Location Dropdown */}
-            <button
-              type="button"
-              className="flex cursor-pointer items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground hover:bg-muted"
-            >
-              {t('location_label')}
-              <ChevronDown className="h-4 w-4" />
-            </button>
+            <Select defaultValue="all">
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder={t('location_label')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('location_label')}</SelectItem>
+                <SelectItem value="downtown">Downtown HQ</SelectItem>
+                <SelectItem value="northside">Northside Branch</SelectItem>
+                <SelectItem value="eastside">Eastside Dojo</SelectItem>
+              </SelectContent>
+            </Select>
 
             {/* Arrange Dropdown */}
-            <button
-              type="button"
-              className="flex cursor-pointer items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground hover:bg-muted"
-            >
-              {t('arrange_label')}
-              <ChevronDown className="h-4 w-4" />
-            </button>
+            <Select defaultValue="name-asc">
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder={t('arrange_label')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="name-asc">{t('arrange_label')}</SelectItem>
+                <SelectItem value="name-desc">Name (Z to A)</SelectItem>
+                <SelectItem value="level-beginner">Level (Beginner First)</SelectItem>
+                <SelectItem value="level-advanced">Level (Advanced First)</SelectItem>
+                <SelectItem value="recent">Recently Added</SelectItem>
+              </SelectContent>
+            </Select>
 
             {/* Filter Dropdown */}
-            <button
-              type="button"
-              className="flex cursor-pointer items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground hover:bg-muted"
-            >
-              {t('filter_label')}
-              <ChevronDown className="h-4 w-4" />
-            </button>
+            <Select defaultValue="all">
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder={t('filter_label')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('filter_label')}</SelectItem>
+                <SelectItem value="beginner">Beginner</SelectItem>
+                <SelectItem value="intermediate">Intermediate</SelectItem>
+                <SelectItem value="advanced">Advanced</SelectItem>
+                <SelectItem value="adults">Adults</SelectItem>
+                <SelectItem value="kids">Kids</SelectItem>
+                <SelectItem value="gi">Gi Classes</SelectItem>
+                <SelectItem value="nogi">No-Gi Classes</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex items-center gap-3">
