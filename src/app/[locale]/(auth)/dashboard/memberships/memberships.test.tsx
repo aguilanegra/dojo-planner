@@ -13,7 +13,7 @@ describe('Memberships Page', () => {
     expect(heading).toBeInTheDocument();
   });
 
-  it('renders statistics', () => {
+  it('renders statistics cards', () => {
     render(<I18nWrapper><MembershipsPage /></I18nWrapper>);
 
     const totalMemberships = page.getByText(/Total memberships/);
@@ -25,6 +25,16 @@ describe('Memberships Page', () => {
     expect(totalMembers).toBeInTheDocument();
   });
 
+  it('renders statistics values', () => {
+    render(<I18nWrapper><MembershipsPage /></I18nWrapper>);
+
+    // Stats should show dynamic values from mock data
+    // Total memberships count of 7 appears in stats card
+    const statValues = page.getByText('7', { exact: true }).elements();
+
+    expect(statValues.length).toBeGreaterThan(0);
+  });
+
   it('renders add new membership button', () => {
     render(<I18nWrapper><MembershipsPage /></I18nWrapper>);
 
@@ -33,17 +43,33 @@ describe('Memberships Page', () => {
     expect(button).toBeInTheDocument();
   });
 
-  it('renders filter dropdowns', () => {
+  it('renders search input', () => {
     render(<I18nWrapper><MembershipsPage /></I18nWrapper>);
 
-    const statusButton = page.getByRole('button', { name: /All Status/i });
-    const programButton = page.getByRole('button', { name: /All Programs/i });
+    const searchInput = page.getByPlaceholder(/Search memberships/i);
 
-    expect(statusButton).toBeInTheDocument();
-    expect(programButton).toBeInTheDocument();
+    expect(searchInput).toBeInTheDocument();
   });
 
-  it('renders membership cards', () => {
+  it('renders tags filter dropdown', () => {
+    render(<I18nWrapper><MembershipsPage /></I18nWrapper>);
+
+    // Select trigger should show "All Tags" as default
+    const tagsSelect = page.getByRole('combobox').elements();
+
+    expect(tagsSelect.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('renders programs filter dropdown', () => {
+    render(<I18nWrapper><MembershipsPage /></I18nWrapper>);
+
+    // Both tag and program selects should be rendered
+    const selectTriggers = page.getByRole('combobox').elements();
+
+    expect(selectTriggers.length).toBe(2);
+  });
+
+  it('renders membership cards with names', () => {
     render(<I18nWrapper><MembershipsPage /></I18nWrapper>);
 
     const monthlyCard = page.getByText(/12 Month Commitment/);
@@ -53,13 +79,47 @@ describe('Memberships Page', () => {
     expect(kidsCard).toBeInTheDocument();
   });
 
-  it('renders membership details', () => {
+  it('renders membership card pricing', () => {
     render(<I18nWrapper><MembershipsPage /></I18nWrapper>);
 
     const price = page.getByText(/\$150.00\/mo/);
-    const activeMembers = page.getByText(/89 Active Members/);
 
     expect(price).toBeInTheDocument();
+  });
+
+  it('renders membership card active members count', () => {
+    render(<I18nWrapper><MembershipsPage /></I18nWrapper>);
+
+    const activeMembers = page.getByText(/89 Active Members/);
+
     expect(activeMembers).toBeInTheDocument();
+  });
+
+  it('renders membership card details labels', () => {
+    render(<I18nWrapper><MembershipsPage /></I18nWrapper>);
+
+    const frequencyLabels = page.getByText('Frequency').elements();
+    const contractLabels = page.getByText('Contract').elements();
+    const accessLabels = page.getByText('Access').elements();
+
+    expect(frequencyLabels.length).toBeGreaterThan(0);
+    expect(contractLabels.length).toBeGreaterThan(0);
+    expect(accessLabels.length).toBeGreaterThan(0);
+  });
+
+  it('renders edit buttons on membership cards', () => {
+    render(<I18nWrapper><MembershipsPage /></I18nWrapper>);
+
+    const editButtons = page.getByRole('button', { name: /Edit membership/i }).elements();
+
+    expect(editButtons.length).toBe(7);
+  });
+
+  it('renders active trials label for trial memberships', () => {
+    render(<I18nWrapper><MembershipsPage /></I18nWrapper>);
+
+    const activeTrials = page.getByText(/Active Trials/).elements();
+
+    expect(activeTrials.length).toBeGreaterThan(0);
   });
 });

@@ -482,12 +482,27 @@
     "trial_options_label": "Trial Options",
     "total_members_label": "Total Members",
     "add_new_membership_button": "Add New Membership",
-    "status_filter": "All Status",
-    "programs_filter": "All Programs",
-    "types_filter": "All Types",
+    "search_placeholder": "Search memberships...",
+    "all_tags_filter": "All Tags",
+    "all_programs_filter": "All Programs",
+    "tag_active": "Active",
+    "tag_trial": "Trial",
+    "tag_inactive": "Inactive",
+    "program_adult": "Adult",
+    "program_kids": "Kids",
+    "program_women": "Women",
+    "program_competition": "Competition"
+  },
+  "MembershipCard": {
+    "status_active": "Active",
+    "status_inactive": "Inactive",
+    "trial_badge": "Trial",
     "frequency_label": "Frequency",
     "contract_label": "Contract",
-    "access_label": "Access"
+    "access_label": "Access",
+    "active_members": "Active Members",
+    "active_trials": "Active Trials",
+    "edit_button_aria_label": "Edit membership"
   },
   "SubscriptionPage": {
     "title": "Subscription",
