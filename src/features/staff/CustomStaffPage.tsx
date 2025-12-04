@@ -1,7 +1,6 @@
 import { auth, clerkClient } from '@clerk/nextjs/server';
-import { Plus } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
-import { Button } from '@/components/ui/button';
+import { StaffHeaderActions } from './StaffHeaderActions';
 import { StaffTable } from './StaffTable';
 
 type ClerkStaffMember = {
@@ -81,12 +80,7 @@ export async function CustomStaffPage() {
       <StaffTable
         staffMembers={staffMembers}
         headerActions={(
-          <div className="flex items-center gap-2">
-            <Button data-testid="invite-staff-button">
-              <Plus className="mr-0.5 h-4 w-4" />
-              {t('invite_staff_button')}
-            </Button>
-          </div>
+          <StaffHeaderActions />
         )}
       />
     );
