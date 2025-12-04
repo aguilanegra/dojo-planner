@@ -279,9 +279,6 @@
   "ClassesPage": {
     "title": "Classes",
     "description": "Manage and view all classes",
-    "location_label": "Downtown HQ",
-    "arrange_label": "Arrange",
-    "filter_label": "Filter",
     "list_view_label": "List",
     "grid_view_label": "Grid",
     "add_new_class_button": "Add New Class"
