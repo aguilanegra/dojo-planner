@@ -34,7 +34,7 @@ function ButtonGroupItem({ className, value, onClick, ...props }: ButtonGroupIte
 
   return (
     <Button
-      size="sm"
+      size="default"
       variant={buttonGroup?.value === value ? 'default' : 'ghost'}
       className={cn('flex items-center justify-center rounded-none', className)}
       onClick={(e) => {
