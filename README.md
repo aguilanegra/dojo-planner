@@ -1,7 +1,7 @@
 # Dojo Planner
 
 [![CI](https://github.com/aguilanegra/dojo-planner/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/aguilanegra/dojo-planner/actions/workflows/CI.yml)
-
+[![Release](https://github.com/aguilanegra/dojo-planner/actions/workflows/release.yml/badge.svg)](https://github.com/aguilanegra/dojo-planner/actions/workflows/release.yml)
 [![Checkly](https://github.com/aguilanegra/dojo-planner/actions/workflows/checkly.yml/badge.svg)](https://github.com/aguilanegra/dojo-planner/actions/workflows/checkly.yml)
 
 🥋 **Dojo Planner** - A martial arts dojo management and planning application. Built with **Next.js** and **Tailwind CSS**, and the modular UI components of **Shadcn UI**.
