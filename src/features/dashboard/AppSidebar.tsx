@@ -1,7 +1,7 @@
 'use client';
 
 import { useClerk } from '@clerk/nextjs';
-import { BookMarked, Briefcase, CalendarDays, CircleUser, CreditCard, HelpCircle, Home, LogOut, Mail, Map, Megaphone, Settings, ShieldCheck, Users, Users2 } from 'lucide-react';
+import { BookMarked, Briefcase, CalendarDays, CircleUser, CreditCard, HelpCircle, Home, LogOut, Mail, Map, Megaphone, Settings, Users, Users2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Badge } from '@/components/ui/badge';
 import { Sidebar, SidebarContent, SidebarHeader, SidebarRail } from '@/components/ui/sidebar';
@@ -89,11 +89,6 @@ export const AppSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
           label={t('settings_section_label')}
           items={[
             {
-              title: t('my_profile'),
-              url: '/dashboard/my-profile',
-              icon: CircleUser,
-            },
-            {
               title: t('account_settings'),
               url: '/dashboard/account-settings',
               icon: Settings,
@@ -113,11 +108,6 @@ export const AppSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
               title: t('user_permissions'),
               url: '/dashboard/user-permissions',
               icon: CircleUser,
-            },
-            {
-              title: t('security'),
-              url: '/dashboard/security',
-              icon: ShieldCheck,
             },
             {
               title: t('help'),

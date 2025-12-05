@@ -1,8 +1,8 @@
-import { UserButton } from '@clerk/nextjs';
 import { DarkModeToggle } from '@/components/DarkModeToggle';
 import { LocaleSwitcher } from '@/components/LocaleSwitcher';
 import { NotificationButton } from '@/components/NotificationButton';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import { UserMenu } from '@/features/dashboard/UserMenu';
 
 export const AppSidebarHeader = () => (
   <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b px-2">
@@ -24,16 +24,7 @@ export const AppSidebarHeader = () => (
       </li>
 
       <li>
-        <UserButton
-          userProfileMode="navigation"
-          userProfileUrl="/dashboard/user-profile"
-          afterSwitchSessionUrl="/dashboard"
-          appearance={{
-            elements: {
-              rootBox: 'px-2 py-1.5',
-            },
-          }}
-        />
+        <UserMenu />
       </li>
     </ul>
   </header>
