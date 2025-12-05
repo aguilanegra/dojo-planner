@@ -1,10 +1,9 @@
 'use client';
 
-import { ArchiveRestore, ArrowDown01, ArrowDownAZ, ArrowUp10, ArrowUpZA, Edit, RotateCcw, Trash2 } from 'lucide-react';
+import { ArrowDown01, ArrowDownAZ, ArrowUp10, ArrowUpZA } from 'lucide-react';
 import { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Pagination } from '@/components/ui/pagination/Pagination';
 import { Spinner } from '@/components/ui/spinner';
@@ -30,9 +29,7 @@ type Member = {
 
 type MembersTableProps = {
   members: Member[];
-  onEditAction: (memberId: string) => void;
-  onRemoveAction: (memberId: string) => void;
-  onRestoreAction: (memberId: string) => void;
+  onRowClick: (memberId: string) => void;
   loading?: boolean;
   headerActions?: React.ReactNode;
 };
@@ -42,9 +39,7 @@ type SortDirection = 'asc' | 'desc';
 
 export function MembersTable({
   members,
-  onEditAction,
-  onRemoveAction,
-  onRestoreAction,
+  onRowClick,
   loading = false,
   headerActions,
 }: MembersTableProps) {
@@ -370,14 +365,15 @@ export function MembersTable({
                               )}
                             </button>
                           </th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                            Action
-                          </th>
                         </tr>
                       </thead>
                       <tbody>
                         {paginatedMembers.map(member => (
-                          <tr key={member.id} className="border-b border-border hover:bg-secondary/30">
+                          <tr
+                            key={member.id}
+                            className="cursor-pointer border-b border-border hover:bg-secondary/30"
+                            onClick={() => onRowClick(member.id)}
+                          >
                             <td className="px-6 py-4">
                               <div className="flex items-center gap-3">
                                 <Avatar className="h-8 w-8 shrink-0">
@@ -414,44 +410,6 @@ export function MembersTable({
                             <td className="px-6 py-4 text-sm text-muted-foreground">
                               {formatDate(member.lastAccessedAt)}
                             </td>
-                            <td className="px-6 py-4">
-                              <div className="flex items-center gap-2">
-                                {member.status !== 'flagged-for-deletion' && (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => onEditAction(member.id)}
-                                    aria-label={`Edit ${member.firstName} ${member.lastName}`}
-                                    title={`Edit ${member.firstName} ${member.lastName}`}
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                )}
-                                {member.status !== 'flagged-for-deletion'
-                                  ? (
-                                      <Button
-                                        variant="destructive"
-                                        size="sm"
-                                        onClick={() => onRemoveAction(member.id)}
-                                        aria-label={`Remove ${member.firstName} ${member.lastName}`}
-                                        title="Flag for removal"
-                                      >
-                                        <Trash2 className="h-4 w-4" />
-                                      </Button>
-                                    )
-                                  : (
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => onRestoreAction(member.id)}
-                                        aria-label={`Restore ${member.firstName} ${member.lastName}`}
-                                        title="Restore member"
-                                      >
-                                        <ArchiveRestore className="h-4 w-4" />
-                                      </Button>
-                                    )}
-                              </div>
-                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -477,7 +435,11 @@ export function MembersTable({
                 )
               : (
                   paginatedMembers.map(member => (
-                    <Card key={member.id} className="p-4">
+                    <Card
+                      key={member.id}
+                      className="cursor-pointer p-4 transition-colors hover:bg-secondary/30"
+                      onClick={() => onRowClick(member.id)}
+                    >
                       <div className="space-y-4">
                         {/* Member Name */}
                         <div className="flex items-center gap-3 border-b border-border pb-4">
@@ -532,47 +494,11 @@ export function MembersTable({
                           </div>
                         </div>
 
-                        {/* Status and Action */}
-                        <div className="flex items-center justify-between border-t border-border pt-4">
+                        {/* Status */}
+                        <div className="border-t border-border pt-4">
                           <Badge variant={getStatusColor(member.status)}>
                             {getStatusLabel(member.status)}
                           </Badge>
-                          <div className="flex items-center gap-2">
-                            {member.status !== 'flagged-for-deletion' && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => onEditAction(member.id)}
-                                aria-label={`Edit ${member.firstName} ${member.lastName}`}
-                                title={`Edit ${member.firstName} ${member.lastName}`}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            )}
-                            {member.status !== 'flagged-for-deletion'
-                              ? (
-                                  <Button
-                                    variant="destructive"
-                                    size="sm"
-                                    onClick={() => onRemoveAction(member.id)}
-                                    aria-label={`Remove ${member.firstName} ${member.lastName}`}
-                                    title="Flag for removal"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                )
-                              : (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => onRestoreAction(member.id)}
-                                    aria-label={`Restore ${member.firstName} ${member.lastName}`}
-                                    title="Restore member"
-                                  >
-                                    <RotateCcw className="h-4 w-4" />
-                                  </Button>
-                                )}
-                          </div>
                         </div>
                       </div>
                     </Card>

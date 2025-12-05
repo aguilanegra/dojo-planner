@@ -7,7 +7,6 @@ import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { invalidateMembersCache, useMembersCache } from '@/hooks/useMembersCache';
-import { client } from '@/libs/Orpc';
 import { MembersTable } from './MembersTable';
 import { AddMemberModal } from './wizard/AddMemberModal';
 
@@ -66,28 +65,9 @@ export function CustomMembersPage() {
     enrichMembersWithSubscription();
   }, [cachedMembers, cacheLoading]);
 
-  const handleEditMember = useCallback((memberId: string) => {
-    // Navigate to member edit page
+  const handleRowClick = useCallback((memberId: string) => {
     window.location.href = `/${locale}/dashboard/members/${memberId}/edit`;
   }, [locale]);
-
-  const handleRemoveMember = useCallback(async (memberId: string) => {
-    try {
-      await client.member.remove({ id: memberId });
-      invalidateMembersCache();
-    } catch (error) {
-      console.error('[Members] Failed to flag member for deletion:', error);
-    }
-  }, []);
-
-  const handleRestoreMember = useCallback(async (memberId: string) => {
-    try {
-      await client.member.restore({ id: memberId });
-      invalidateMembersCache();
-    } catch (error) {
-      console.error('[Members] Failed to restore member:', error);
-    }
-  }, []);
 
   const handleAddMemberModalClose = useCallback(() => {
     setIsAddMemberModalOpen(false);
@@ -101,13 +81,11 @@ export function CustomMembersPage() {
     <>
       <MembersTable
         members={members}
-        onEditAction={handleEditMember}
-        onRemoveAction={handleRemoveMember}
-        onRestoreAction={handleRestoreMember}
+        onRowClick={handleRowClick}
         loading={loading || cacheLoading}
         headerActions={(
           <div className="flex items-center gap-2">
-            <Button variant="outline">
+            <Button variant="outline" disabled>
               <Download className="mr-0.5 h-4 w-4" />
               {t('import_members_button')}
             </Button>
