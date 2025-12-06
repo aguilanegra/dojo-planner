@@ -4,29 +4,11 @@ import { useOrganization } from '@clerk/nextjs';
 import { Download, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { invalidateMembersCache, useMembersCache } from '@/hooks/useMembersCache';
 import { MembersTable } from './MembersTable';
 import { AddMemberModal } from './wizard/AddMemberModal';
-
-type Member = {
-  id: string;
-  firstName: string | null;
-  lastName: string | null;
-  email: string;
-  phone: string | null;
-  dateOfBirth: Date | null;
-  photoUrl: string | null;
-  lastAccessedAt: Date | null;
-  status: string;
-  createdAt: Date;
-  updatedAt: Date;
-  create_organization_enabled?: boolean;
-  membershipType?: 'free' | 'free_trial' | 'monthly' | 'annual';
-  amountDue?: string;
-  nextPayment?: Date;
-};
 
 export function CustomMembersPage() {
   const params = useParams();
@@ -35,35 +17,9 @@ export function CustomMembersPage() {
   const { organization } = useOrganization();
 
   // Use intelligent caching hook with organization ID for proper cache invalidation
-  const { members: cachedMembers, loading: cacheLoading } = useMembersCache(organization?.id);
+  const { members, loading } = useMembersCache(organization?.id);
 
-  const [members, setMembers] = useState<Member[]>([]);
-  const [loading, setLoading] = useState(true);
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
-
-  // Handle enriching members with subscription type
-  useEffect(() => {
-    const enrichMembersWithSubscription = async () => {
-      try {
-        if (!cachedMembers || cachedMembers.length === 0) {
-          setMembers(cachedMembers);
-          setLoading(cacheLoading);
-          return;
-        }
-
-        // Get organization ID from the member data or from auth context
-        // For now, we'll skip subscription enrichment since members don't have org admin info
-        setMembers(cachedMembers);
-        setLoading(cacheLoading);
-      } catch (error) {
-        console.warn('CustomMembersPage - Error processing members:', error);
-        setMembers(cachedMembers);
-        setLoading(cacheLoading);
-      }
-    };
-
-    enrichMembersWithSubscription();
-  }, [cachedMembers, cacheLoading]);
 
   const handleRowClick = useCallback((memberId: string) => {
     window.location.href = `/${locale}/dashboard/members/${memberId}/edit`;
@@ -81,8 +37,8 @@ export function CustomMembersPage() {
     <>
       <MembersTable
         members={members}
-        onRowClick={handleRowClick}
-        loading={loading || cacheLoading}
+        onRowClickAction={handleRowClick}
+        loading={loading}
         headerActions={(
           <div className="flex items-center gap-2">
             <Button variant="outline" disabled>

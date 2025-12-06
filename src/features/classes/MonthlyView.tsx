@@ -99,7 +99,7 @@ export function MonthlyView({ withFilters }: MonthlyViewProps = {}) {
             {/* Filter Bar */}
             <div className="flex-1">
               <ClassFilterBar
-                onFiltersChange={setFilters}
+                onFiltersChangeAction={setFilters}
                 instructors={allInstructors}
               />
             </div>

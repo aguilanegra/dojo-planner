@@ -22,6 +22,13 @@
       "when": 1764275013462,
       "tag": "0002_exotic_corsair",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1764376800000,
+      "tag": "0003_rename_status_changed_at",
+      "breakpoints": true
     }
   ]
 }

@@ -1,12 +1,14 @@
 'use client';
 
+import type { MemberFilters } from './MemberFilterBar';
 import { ArrowDown01, ArrowDownAZ, ArrowUp10, ArrowUpZA } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Pagination } from '@/components/ui/pagination/Pagination';
 import { Spinner } from '@/components/ui/spinner';
+import { MemberFilterBar } from './MemberFilterBar';
 
 type Member = {
   id: string;
@@ -21,15 +23,14 @@ type Member = {
   createdAt: Date;
   updatedAt: Date;
   create_organization_enabled?: boolean;
-  // Extended fields from Clerk Billing API (to be added)
-  membershipType?: 'free' | 'free_trial' | 'monthly' | 'annual';
+  membershipType?: 'free' | 'free-trial' | 'monthly' | 'annual';
   amountDue?: string;
   nextPayment?: Date;
 };
 
 type MembersTableProps = {
   members: Member[];
-  onRowClick: (memberId: string) => void;
+  onRowClickAction: (memberId: string) => void;
   loading?: boolean;
   headerActions?: React.ReactNode;
 };
@@ -39,25 +40,65 @@ type SortDirection = 'asc' | 'desc';
 
 export function MembersTable({
   members,
-  onRowClick,
+  onRowClickAction,
   loading = false,
   headerActions,
 }: MembersTableProps) {
-  const [activeFilter, setActiveFilter] = useState<
-    'all' | 'active' | 'cancelled' | 'removed'
-  >('all');
+  const [filters, setFilters] = useState<MemberFilters>({
+    search: '',
+    status: 'all',
+    membershipType: 'all',
+  });
   const [sortField, setSortField] = useState<SortField>('firstName');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [currentPage, setCurrentPage] = useState(0);
   const ROWS_PER_PAGE = 10;
 
-  const filteredMembers = activeFilter === 'all'
-    ? members
-    : activeFilter === 'active'
-      ? members.filter(m => m.status === 'active')
-      : activeFilter === 'cancelled'
-        ? members.filter(m => m.status === 'cancelled')
-        : members.filter(m => m.status === 'flagged-for-deletion');
+  const handleFiltersChange = (newFilters: MemberFilters) => {
+    setFilters(newFilters);
+    setCurrentPage(0);
+  };
+
+  // Compute available statuses from actual member data
+  const availableStatuses = useMemo(() => {
+    const statuses = new Set<string>();
+    members.forEach((member) => {
+      if (member.status) {
+        statuses.add(member.status);
+      }
+    });
+    return Array.from(statuses).sort();
+  }, [members]);
+
+  // Compute available membership types from actual member data
+  const availableMembershipTypes = useMemo(() => {
+    const types = new Set<string>();
+    members.forEach((member) => {
+      if (member.membershipType) {
+        types.add(member.membershipType);
+      }
+    });
+    return Array.from(types).sort();
+  }, [members]);
+
+  const filteredMembers = members.filter((member) => {
+    // Search filter
+    const searchLower = filters.search.toLowerCase();
+    const matchesSearch = filters.search === ''
+      || (member.firstName?.toLowerCase().includes(searchLower))
+      || (member.lastName?.toLowerCase().includes(searchLower))
+      || member.email.toLowerCase().includes(searchLower)
+      || (member.phone?.toLowerCase().includes(searchLower));
+
+    // Status filter
+    const matchesStatus = filters.status === 'all' || member.status === filters.status;
+
+    // Membership type filter
+    const matchesMembershipType = filters.membershipType === 'all'
+      || member.membershipType === filters.membershipType;
+
+    return matchesSearch && matchesStatus && matchesMembershipType;
+  });
 
   const sortedMembers = [...filteredMembers].sort((a, b) => {
     let aValue: string | number | Date | null | undefined;
@@ -121,9 +162,9 @@ export function MembersTable({
   const stats = {
     totalMembers: members.filter(m => m.status === 'active').length,
     totalCancelled: members.filter(m => m.status === 'cancelled').length,
-    totalRemoved: members.filter(m => m.status === 'flagged-for-deletion').length,
+    totalOnHold: members.filter(m => m.status === 'hold').length,
     paidMembers: members.filter(m => m.membershipType === 'monthly' || m.membershipType === 'annual').length,
-    freeMembers: members.filter(m => m.membershipType === 'free' || m.membershipType === 'free_trial').length,
+    freeMembers: members.filter(m => m.membershipType === 'free-trial').length,
   };
 
   const getInitials = (firstName: string | null, lastName: string | null) => {
@@ -161,21 +202,29 @@ export function MembersTable({
     });
   };
 
-  const getStatusColor = (status: string) => {
-    if (status === 'active') {
-      return 'default';
+  const getStatusColor = (status: string): 'default' | 'secondary' | 'destructive' | 'outline' => {
+    switch (status) {
+      case 'active':
+        return 'default';
+      case 'trial':
+        return 'outline';
+      case 'hold':
+        return 'secondary';
+      case 'cancelled':
+      case 'past due':
+        return 'destructive';
+      default:
+        return 'secondary';
     }
-    if (status === 'flagged-for-deletion') {
-      return 'destructive';
-    }
-    return 'secondary';
   };
 
   const getStatusLabel = (status: string) => {
-    if (status === 'flagged-for-deletion') {
-      return 'Flagged for removal';
+    switch (status) {
+      case 'past due':
+        return 'Past Due';
+      default:
+        return status.charAt(0).toUpperCase() + status.slice(1);
     }
-    return status.charAt(0).toUpperCase() + status.slice(1);
   };
 
   const getMembershipTypeLabel = (membershipType: string | undefined) => {
@@ -186,8 +235,6 @@ export function MembersTable({
         return 'Monthly';
       case 'annual':
         return 'Annual';
-      case 'free':
-        return 'Free';
       default:
         return '-';
     }
@@ -201,8 +248,6 @@ export function MembersTable({
         return 'default';
       case 'annual':
         return 'default';
-      case 'free':
-        return 'secondary';
       default:
         return 'secondary';
     }
@@ -234,32 +279,18 @@ export function MembersTable({
         </Card>
       </div>
 
-      {/* Filter Tabs */}
+      {/* Search and Filter Bar */}
       <div className="space-y-4">
         <div className="flex items-end justify-between gap-4">
           <h2 className="text-lg font-semibold text-foreground">All Members</h2>
           {headerActions}
         </div>
 
-        <div className="flex gap-4 border-b border-border">
-          {(['all', 'active', 'cancelled', 'removed'] as const).map(tab => (
-            <button
-              key={tab}
-              type="button"
-              onClick={() => {
-                setActiveFilter(tab);
-                setCurrentPage(0);
-              }}
-              className={`cursor-pointer px-1 pb-3 text-sm font-medium transition-colors ${
-                activeFilter === tab
-                  ? 'border-b-2 border-foreground text-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {tab === 'removed' ? 'Removed' : tab.charAt(0).toUpperCase() + tab.slice(1)}
-            </button>
-          ))}
-        </div>
+        <MemberFilterBar
+          onFiltersChangeAction={handleFiltersChange}
+          availableStatuses={availableStatuses}
+          availableMembershipTypes={availableMembershipTypes}
+        />
 
         {/* Members Table - Desktop View */}
         <div className="hidden rounded-lg border border-border bg-background lg:block">
@@ -372,7 +403,7 @@ export function MembersTable({
                           <tr
                             key={member.id}
                             className="cursor-pointer border-b border-border hover:bg-secondary/30"
-                            onClick={() => onRowClick(member.id)}
+                            onClick={() => onRowClickAction(member.id)}
                           >
                             <td className="px-6 py-4">
                               <div className="flex items-center gap-3">
@@ -438,7 +469,7 @@ export function MembersTable({
                     <Card
                       key={member.id}
                       className="cursor-pointer p-4 transition-colors hover:bg-secondary/30"
-                      onClick={() => onRowClick(member.id)}
+                      onClick={() => onRowClickAction(member.id)}
                     >
                       <div className="space-y-4">
                         {/* Member Name */}

@@ -126,7 +126,18 @@
   },
   "Members": {
     "add_member_button": "Ajouter un membre",
-    "import_members_button": "Importer des membres"
+    "import_members_button": "Importer des membres",
+    "search_placeholder": "Rechercher des membres...",
+    "all_statuses_filter": "Tous les statuts",
+    "status_active": "Actif",
+    "status_hold": "En attente",
+    "status_trial": "Essai",
+    "status_cancelled": "Annulé",
+    "status_past_due": "En retard",
+    "all_membership_types_filter": "Tous les types d'adhésion",
+    "membership_type_free_trial": "Essai gratuit",
+    "membership_type_monthly": "Mensuel",
+    "membership_type_annual": "Annuel"
   },
   "Staff": {
     "invite_staff_button": "Inviter un membre du personnel",
