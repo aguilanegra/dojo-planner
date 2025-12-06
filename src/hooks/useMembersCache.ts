@@ -14,7 +14,7 @@ type Member = {
   createdAt: Date;
   updatedAt: Date;
   create_organization_enabled?: boolean;
-  membershipType?: 'free' | 'free_trial' | 'monthly' | 'annual';
+  membershipType?: 'free' | 'free-trial' | 'monthly' | 'annual';
   amountDue?: string;
   nextPayment?: Date;
 };

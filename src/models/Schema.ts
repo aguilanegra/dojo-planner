@@ -47,11 +47,11 @@ export const memberSchema = pgTable('member', {
   phone: text('phone'),
   dateOfBirth: timestamp('date_of_birth', { mode: 'date' }),
   photoUrl: text('photo_url'),
-  subscriptionPlan: text('subscription_plan'), // free-trial, monthly, annual, custom
+  subscriptionPlan: text('subscription_plan'), // free-trial, monthly, annual
   lastAccessedAt: timestamp('last_accessed_at', { mode: 'date' })
     .$onUpdate(() => new Date()),
-  status: text('status').notNull().default('active'), // active, flagged-for-deletion, cancelled
-  flaggedForDeletionAt: timestamp('flagged_for_deletion_at', { mode: 'date' }),
+  status: text('status').notNull().default('active'), // active, hold, trial, cancelled, past due
+  statusChangedAt: timestamp('status_changed_at', { mode: 'date' }),
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' })
     .defaultNow()

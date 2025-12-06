@@ -181,34 +181,18 @@ export function updateMember(member: UpdateMemberInput, organizationId: string) 
 }
 
 /**
- * Flag a member for deletion (soft delete with 30-day retention)
- * @param memberId - The member ID to flag
+ * Update a member's status
+ * @param memberId - The member ID to update
  * @param organizationId - The organization ID
+ * @param status - The new status (active, hold, trial, cancelled, past due)
  * @returns The updated member record
  */
-export function flagMemberForDeletion(memberId: string, organizationId: string) {
+export function updateMemberStatus(memberId: string, organizationId: string, status: string) {
   return db
     .update(memberSchema)
     .set({
-      status: 'flagged-for-deletion',
-      flaggedForDeletionAt: new Date(),
-    })
-    .where(and(eq(memberSchema.id, memberId), eq(memberSchema.organizationId, organizationId)))
-    .returning();
-}
-
-/**
- * Restore a member that was flagged for deletion
- * @param memberId - The member ID to restore
- * @param organizationId - The organization ID
- * @returns The updated member record
- */
-export function restoreFlaggedMember(memberId: string, organizationId: string) {
-  return db
-    .update(memberSchema)
-    .set({
-      status: 'active',
-      flaggedForDeletionAt: null,
+      status,
+      statusChangedAt: new Date(),
     })
     .where(and(eq(memberSchema.id, memberId), eq(memberSchema.organizationId, organizationId)))
     .returning();

@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { auth } from '@clerk/nextjs/server';
 import { ORPCError, os } from '@orpc/server';
 import { logger } from '@/libs/Logger';
-import { createMember, flagMemberForDeletion, restoreFlaggedMember, updateMember } from '@/services/MembersService';
+import { createMember, updateMember, updateMemberStatus } from '@/services/MembersService';
 import { ORG_ROLE } from '@/types/Auth';
 import { DeleteMemberValidation, EditMemberValidation, MemberValidation } from '@/validations/MemberValidation';
 import { guardRole } from './AuthGuards';
@@ -65,13 +65,13 @@ export const remove = os
   .handler(async ({ input }) => {
     const { orgId } = await guardRole(ORG_ROLE.ADMIN);
 
-    const result = await flagMemberForDeletion(input.id, orgId);
+    const result = await updateMemberStatus(input.id, orgId, 'cancelled');
 
     if (result.length === 0) {
       throw new ORPCError('Member not found', { status: 404 });
     }
 
-    logger.info(`Member flagged for deletion: ${input.id}`);
+    logger.info(`Member cancelled: ${input.id}`);
 
     return {};
   });
@@ -81,13 +81,13 @@ export const restore = os
   .handler(async ({ input }) => {
     const { orgId } = await guardRole(ORG_ROLE.ADMIN);
 
-    const result = await restoreFlaggedMember(input.id, orgId);
+    const result = await updateMemberStatus(input.id, orgId, 'active');
 
     if (result.length === 0) {
       throw new ORPCError('Member not found', { status: 404 });
     }
 
-    logger.info(`Member restored from deletion: ${input.id}`);
+    logger.info(`Member restored to active: ${input.id}`);
 
     return {};
   });

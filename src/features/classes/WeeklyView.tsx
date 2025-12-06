@@ -114,7 +114,7 @@ export function WeeklyView({ withFilters }: WeeklyViewProps = {}) {
             {/* Filter Bar */}
             <div className="flex-1">
               <ClassFilterBar
-                onFiltersChange={setFilters}
+                onFiltersChangeAction={setFilters}
                 instructors={allInstructors}
               />
             </div>
