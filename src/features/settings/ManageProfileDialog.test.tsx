@@ -1,7 +1,34 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { page, userEvent } from 'vitest/browser';
 import { ManageProfileDialog } from './ManageProfileDialog';
+
+// Mock user data
+const mockUser = {
+  firstName: 'John',
+  lastName: 'Doe',
+  primaryEmailAddress: { emailAddress: 'john.doe@example.com' },
+  primaryPhoneNumber: { phoneNumber: '+1 555-123-4567' },
+  imageUrl: 'https://example.com/avatar.jpg',
+  passwordEnabled: true,
+  updatePassword: vi.fn(),
+};
+
+// Mock logger to prevent process.env issues
+vi.mock('@/libs/Logger', () => ({
+  logger: {
+    error: vi.fn(),
+  },
+}));
+
+// Mock Clerk useUser hook
+vi.mock('@clerk/nextjs', () => ({
+  useUser: () => ({
+    user: mockUser,
+    isLoaded: true,
+    isSignedIn: true,
+  }),
+}));
 
 vi.mock('next-intl', () => ({
   useTranslations: (namespace: string) => (key: string) => {
@@ -11,7 +38,7 @@ vi.mock('next-intl', () => ({
       },
       MyProfile: {
         title: 'My Profile',
-        edit_button: 'Edit My Information',
+        edit_button: 'Edit',
         first_name_label: 'First Name',
         last_name_label: 'Last Name',
         phone_label: 'Phone',
@@ -28,6 +55,13 @@ vi.mock('next-intl', () => ({
         confirm_password_placeholder: 'Confirm new password',
         save_button: 'Save',
         cancel_button: 'Cancel',
+        saving_button: 'Saving...',
+        password_changed_success: 'Password changed successfully',
+        password_change_error: 'Failed to change password. Please try again.',
+        current_password_incorrect: 'Current password is incorrect',
+        passwords_do_not_match: 'Passwords do not match',
+        password_too_weak: 'Password must be at least 8 characters and include uppercase, lowercase, number, and special character',
+        password_required: 'Password is required',
         two_factor_title: '2-Factor Authentication (2FA)',
         two_factor_description: 'Make your account more secure by adding a second form of authentication',
         add_2fa_button: 'Add 2FA',
@@ -38,6 +72,10 @@ vi.mock('next-intl', () => ({
 }));
 
 describe('ManageProfileDialog', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('should render the dialog when open', () => {
     render(<ManageProfileDialog open onOpenChange={() => {}} />);
 
@@ -50,20 +88,20 @@ describe('ManageProfileDialog', () => {
     expect(page.getByText('Manage Profile').elements().length).toBe(0);
   });
 
-  it('should display user information', () => {
+  it('should display user information from Clerk', () => {
     render(<ManageProfileDialog open onOpenChange={() => {}} />);
 
-    expect(page.getByText('Anika Green')).toBeDefined();
+    expect(page.getByText('John Doe')).toBeDefined();
     expect(page.getByText('Account Owner')).toBeDefined();
   });
 
   it('should display user details in the profile section', () => {
     render(<ManageProfileDialog open onOpenChange={() => {}} />);
 
-    expect(page.getByText('Anika')).toBeDefined();
-    expect(page.getByText('Green')).toBeDefined();
-    expect(page.getByText('(415) 223-4123')).toBeDefined();
-    expect(page.getByText('agreen@gmail.com')).toBeDefined();
+    expect(page.getByText('John')).toBeDefined();
+    expect(page.getByText('Doe')).toBeDefined();
+    expect(page.getByText('+1 555-123-4567')).toBeDefined();
+    expect(page.getByText('john.doe@example.com')).toBeDefined();
   });
 
   it('should render all profile label fields', () => {
@@ -75,14 +113,14 @@ describe('ManageProfileDialog', () => {
     expect(page.getByText('Email')).toBeDefined();
   });
 
-  it('should render the edit button', () => {
+  it('should render the edit button in the profile card', () => {
     render(<ManageProfileDialog open onOpenChange={() => {}} />);
-    const editButton = page.getByRole('button', { name: /edit my information/i });
+    const editButton = page.getByRole('button', { name: /^edit$/i });
 
     expect(editButton).toBeDefined();
   });
 
-  it('should render change password section', () => {
+  it('should render change password section for password-authenticated users', () => {
     render(<ManageProfileDialog open onOpenChange={() => {}} />);
 
     expect(page.getByText('Change Password')).toBeDefined();
@@ -97,11 +135,12 @@ describe('ManageProfileDialog', () => {
     ).toBeDefined();
   });
 
-  it('should render add 2FA button', () => {
+  it('should render add 2FA button as disabled', () => {
     render(<ManageProfileDialog open onOpenChange={() => {}} />);
     const add2faButton = page.getByRole('button', { name: /add 2fa/i });
 
     expect(add2faButton).toBeDefined();
+    expect(add2faButton.element().hasAttribute('disabled')).toBe(true);
   });
 
   it('should show password form when change password button is clicked', async () => {
@@ -125,5 +164,12 @@ describe('ManageProfileDialog', () => {
     await userEvent.click(cancelButton.element());
 
     expect(page.getByText('Enter Current Password').elements().length).toBe(0);
+  });
+
+  it('should render avatar with user initials as fallback', () => {
+    render(<ManageProfileDialog open onOpenChange={() => {}} />);
+
+    // The avatar fallback should contain initials JD
+    expect(page.getByText('JD')).toBeDefined();
   });
 });
