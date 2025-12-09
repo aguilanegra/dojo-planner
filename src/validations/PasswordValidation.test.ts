@@ -4,9 +4,9 @@ import { isStrongPassword, PasswordValidation } from './PasswordValidation';
 describe('PasswordValidation', () => {
   describe('isStrongPassword', () => {
     it('should return true for a strong password', () => {
-      expect(isStrongPassword('StrongP@ss1')).toBe(true);
-      expect(isStrongPassword('Complex!Pass123')).toBe(true);
-      expect(isStrongPassword('MyP@ssword1')).toBe(true);
+      expect(isStrongPassword('StrongP@ss1')).toBe(true); // ggignore
+      expect(isStrongPassword('Complex!Pass123')).toBe(true); // ggignore
+      expect(isStrongPassword('MyP@ssword1')).toBe(true); // ggignore
     });
 
     it('should return false for passwords shorter than 8 characters', () => {
@@ -39,8 +39,8 @@ describe('PasswordValidation', () => {
     it('should validate a correct password change form', () => {
       const validData = {
         currentPassword: 'currentpass',
-        newPassword: 'StrongP@ss1!',
-        confirmPassword: 'StrongP@ss1!',
+        newPassword: 'StrongP@ss1!', // ggignore
+        confirmPassword: 'StrongP@ss1!', // ggignore
       };
 
       const result = PasswordValidation.safeParse(validData);
@@ -51,8 +51,8 @@ describe('PasswordValidation', () => {
     it('should fail when currentPassword is empty', () => {
       const invalidData = {
         currentPassword: '',
-        newPassword: 'StrongP@ss1!',
-        confirmPassword: 'StrongP@ss1!',
+        newPassword: 'StrongP@ss1!', // ggignore
+        confirmPassword: 'StrongP@ss1!', // ggignore
       };
 
       const result = PasswordValidation.safeParse(invalidData);
@@ -75,8 +75,8 @@ describe('PasswordValidation', () => {
     it('should fail when passwords do not match', () => {
       const invalidData = {
         currentPassword: 'currentpass',
-        newPassword: 'StrongP@ss1!',
-        confirmPassword: 'DifferentP@ss1!',
+        newPassword: 'StrongP@ss1!', // ggignore
+        confirmPassword: 'DifferentP@ss1!', // ggignore
       };
 
       const result = PasswordValidation.safeParse(invalidData);
@@ -95,7 +95,7 @@ describe('PasswordValidation', () => {
     it('should fail when confirmPassword is empty', () => {
       const invalidData = {
         currentPassword: 'currentpass',
-        newPassword: 'StrongP@ss1!',
+        newPassword: 'StrongP@ss1!', // ggignore
         confirmPassword: '',
       };
 

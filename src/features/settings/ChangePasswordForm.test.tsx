@@ -121,8 +121,8 @@ describe('ChangePasswordForm', () => {
     const confirmPasswordInput = page.getByPlaceholder('Confirm new password');
 
     await userEvent.fill(currentPasswordInput.element(), 'currentpass');
-    await userEvent.fill(newPasswordInput.element(), 'StrongP@ss1');
-    await userEvent.fill(confirmPasswordInput.element(), 'DifferentP@ss1');
+    await userEvent.fill(newPasswordInput.element(), 'StrongP@ss1'); // ggignore
+    await userEvent.fill(confirmPasswordInput.element(), 'DifferentP@ss1'); // ggignore
 
     const saveButton = page.getByRole('button', { name: /save/i });
     await userEvent.click(saveButton.element());
@@ -140,15 +140,15 @@ describe('ChangePasswordForm', () => {
     const confirmPasswordInput = page.getByPlaceholder('Confirm new password');
 
     await userEvent.fill(currentPasswordInput.element(), 'currentpass');
-    await userEvent.fill(newPasswordInput.element(), 'StrongP@ss1!');
-    await userEvent.fill(confirmPasswordInput.element(), 'StrongP@ss1!');
+    await userEvent.fill(newPasswordInput.element(), 'StrongP@ss1!'); // ggignore
+    await userEvent.fill(confirmPasswordInput.element(), 'StrongP@ss1!'); // ggignore
 
     const saveButton = page.getByRole('button', { name: /save/i });
     await userEvent.click(saveButton.element());
 
     expect(mockUpdatePassword).toHaveBeenCalledWith({
       currentPassword: 'currentpass',
-      newPassword: 'StrongP@ss1!',
+      newPassword: 'StrongP@ss1!', // ggignore
     });
   });
 
@@ -162,8 +162,8 @@ describe('ChangePasswordForm', () => {
     const confirmPasswordInput = page.getByPlaceholder('Confirm new password');
 
     await userEvent.fill(currentPasswordInput.element(), 'currentpass');
-    await userEvent.fill(newPasswordInput.element(), 'StrongP@ss1!');
-    await userEvent.fill(confirmPasswordInput.element(), 'StrongP@ss1!');
+    await userEvent.fill(newPasswordInput.element(), 'StrongP@ss1!'); // ggignore
+    await userEvent.fill(confirmPasswordInput.element(), 'StrongP@ss1!'); // ggignore
 
     const saveButton = page.getByRole('button', { name: /save/i });
     await userEvent.click(saveButton.element());
@@ -186,8 +186,8 @@ describe('ChangePasswordForm', () => {
     const confirmPasswordInput = page.getByPlaceholder('Confirm new password');
 
     await userEvent.fill(currentPasswordInput.element(), 'wrongpassword');
-    await userEvent.fill(newPasswordInput.element(), 'StrongP@ss1!');
-    await userEvent.fill(confirmPasswordInput.element(), 'StrongP@ss1!');
+    await userEvent.fill(newPasswordInput.element(), 'StrongP@ss1!'); // ggignore
+    await userEvent.fill(confirmPasswordInput.element(), 'StrongP@ss1!'); // ggignore
 
     const saveButton = page.getByRole('button', { name: /save/i });
     await userEvent.click(saveButton.element());
@@ -222,8 +222,8 @@ describe('ChangePasswordForm', () => {
     const confirmPasswordInput = page.getByPlaceholder('Confirm new password');
 
     await userEvent.fill(currentPasswordInput.element(), 'currentpass');
-    await userEvent.fill(newPasswordInput.element(), 'StrongP@ss1!');
-    await userEvent.fill(confirmPasswordInput.element(), 'StrongP@ss1!');
+    await userEvent.fill(newPasswordInput.element(), 'StrongP@ss1!'); // ggignore
+    await userEvent.fill(confirmPasswordInput.element(), 'StrongP@ss1!'); // ggignore
 
     const saveButton = page.getByRole('button', { name: /save/i });
     await userEvent.click(saveButton.element());
@@ -248,8 +248,8 @@ describe('ChangePasswordForm', () => {
     const confirmPasswordInput = page.getByPlaceholder('Confirm new password');
 
     await userEvent.fill(currentPasswordInput.element(), 'currentpass');
-    await userEvent.fill(newPasswordInput.element(), 'StrongP@ss1!');
-    await userEvent.fill(confirmPasswordInput.element(), 'StrongP@ss1!');
+    await userEvent.fill(newPasswordInput.element(), 'StrongP@ss1!'); // ggignore
+    await userEvent.fill(confirmPasswordInput.element(), 'StrongP@ss1!'); // ggignore
 
     const saveButton = page.getByRole('button', { name: /save/i });
     await userEvent.click(saveButton.element());
