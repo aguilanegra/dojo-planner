@@ -18,11 +18,11 @@ export type ClassFilters = {
 };
 
 type ClassFilterBarProps = {
-  onFiltersChange: (filters: ClassFilters) => void;
+  onFiltersChangeAction: (filters: ClassFilters) => void;
   instructors: string[];
 };
 
-export function ClassFilterBar({ onFiltersChange, instructors }: ClassFilterBarProps) {
+export function ClassFilterBar({ onFiltersChangeAction, instructors }: ClassFilterBarProps) {
   const [filters, setFilters] = useState<ClassFilters>({
     search: '',
     tag: 'all',
@@ -32,19 +32,19 @@ export function ClassFilterBar({ onFiltersChange, instructors }: ClassFilterBarP
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newFilters = { ...filters, search: e.target.value };
     setFilters(newFilters);
-    onFiltersChange(newFilters);
+    onFiltersChangeAction(newFilters);
   };
 
   const handleTagChange = (value: string) => {
     const newFilters = { ...filters, tag: value };
     setFilters(newFilters);
-    onFiltersChange(newFilters);
+    onFiltersChangeAction(newFilters);
   };
 
   const handleInstructorChange = (value: string) => {
     const newFilters = { ...filters, instructor: value };
     setFilters(newFilters);
-    onFiltersChange(newFilters);
+    onFiltersChangeAction(newFilters);
   };
 
   const tags = ['all', 'Adults', 'Kids', 'Women', 'No Gi', 'Gi', 'Competition', 'Open'];

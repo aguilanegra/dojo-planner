@@ -216,7 +216,7 @@ export default function MembershipsPage() {
           {/* Filter Bar */}
           <div className="flex-1">
             <MembershipFilterBar
-              onFiltersChange={setFilters}
+              onFiltersChangeAction={setFilters}
               programs={allPrograms}
             />
           </div>

@@ -19,11 +19,11 @@ export type MembershipFilters = {
 };
 
 type MembershipFilterBarProps = {
-  onFiltersChange: (filters: MembershipFilters) => void;
+  onFiltersChangeAction: (filters: MembershipFilters) => void;
   programs: string[];
 };
 
-export function MembershipFilterBar({ onFiltersChange, programs }: MembershipFilterBarProps) {
+export function MembershipFilterBar({ onFiltersChangeAction, programs }: MembershipFilterBarProps) {
   const t = useTranslations('MembershipsPage');
   const [filters, setFilters] = useState<MembershipFilters>({
     search: '',
@@ -34,19 +34,19 @@ export function MembershipFilterBar({ onFiltersChange, programs }: MembershipFil
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newFilters = { ...filters, search: e.target.value };
     setFilters(newFilters);
-    onFiltersChange(newFilters);
+    onFiltersChangeAction(newFilters);
   };
 
   const handleTagChange = (value: string) => {
     const newFilters = { ...filters, tag: value };
     setFilters(newFilters);
-    onFiltersChange(newFilters);
+    onFiltersChangeAction(newFilters);
   };
 
   const handleProgramChange = (value: string) => {
     const newFilters = { ...filters, program: value };
     setFilters(newFilters);
-    onFiltersChange(newFilters);
+    onFiltersChangeAction(newFilters);
   };
 
   const tags = [
