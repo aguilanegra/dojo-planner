@@ -58,12 +58,10 @@
     "memberships": "Memberships",
     "subscription": "Subscription",
     "marketing": "Marketing",
-    "my_profile": "My Profile",
     "account_settings": "Account Settings",
     "location_settings": "Location Settings",
     "preferences": "Preferences",
     "user_permissions": "User Permissions",
-    "security": "Security",
     "help": "Help",
     "log_out": "Log Out"
   },
@@ -329,6 +327,13 @@
     "last_name_label": "Last Name",
     "phone_label": "Phone",
     "email_label": "Email"
+  },
+  "UserMenu": {
+    "manage_profile": "Manage Profile",
+    "sign_out": "Sign Out"
+  },
+  "ManageProfileDialog": {
+    "title": "Manage Profile"
   },
   "Help": {
     "title": "Help",
