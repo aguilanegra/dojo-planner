@@ -1,16 +1,15 @@
 'use client';
 
-import { ArchiveRestore, ArrowDown01, ArrowDownAZ, ArrowUp10, ArrowUpZA, Edit, RotateCcw, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import type { MemberFilters } from './MemberFilterBar';
+import { ArrowDown01, ArrowDownAZ, ArrowUp10, ArrowUpZA } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Pagination } from '@/components/ui/pagination/Pagination';
 import { Panel, PanelContent, PanelFooter, PanelHeader, PanelTabs } from '@/components/ui/panel';
 import { Spinner } from '@/components/ui/spinner';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { MemberFilterBar } from './MemberFilterBar';
 
 type Member = {
   id: string;
@@ -25,17 +24,14 @@ type Member = {
   createdAt: Date;
   updatedAt: Date;
   create_organization_enabled?: boolean;
-  // Extended fields from Clerk Billing API (to be added)
-  membershipType?: 'free' | 'free_trial' | 'monthly' | 'annual';
+  membershipType?: 'free' | 'free-trial' | 'monthly' | 'annual';
   amountDue?: string;
   nextPayment?: Date;
 };
 
 type MembersTableProps = {
   members: Member[];
-  onEditAction: (memberId: string) => void;
-  onRemoveAction: (memberId: string) => void;
-  onRestoreAction: (memberId: string) => void;
+  onRowClickAction: (memberId: string) => void;
   loading?: boolean;
   headerActions?: React.ReactNode;
 };
@@ -45,27 +41,65 @@ type SortDirection = 'asc' | 'desc';
 
 export function MembersTable({
   members,
-  onEditAction,
-  onRemoveAction,
-  onRestoreAction,
+  onRowClickAction,
   loading = false,
   headerActions,
 }: MembersTableProps) {
-  const [activeFilter, setActiveFilter] = useState<
-    'all' | 'active' | 'cancelled' | 'removed'
-  >('all');
+  const [filters, setFilters] = useState<MemberFilters>({
+    search: '',
+    status: 'all',
+    membershipType: 'all',
+  });
   const [sortField, setSortField] = useState<SortField>('firstName');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [currentPage, setCurrentPage] = useState(0);
   const ROWS_PER_PAGE = 10;
 
-  const filteredMembers = activeFilter === 'all'
-    ? members
-    : activeFilter === 'active'
-      ? members.filter(m => m.status === 'active')
-      : activeFilter === 'cancelled'
-        ? members.filter(m => m.status === 'cancelled')
-        : members.filter(m => m.status === 'flagged-for-deletion');
+  const handleFiltersChange = (newFilters: MemberFilters) => {
+    setFilters(newFilters);
+    setCurrentPage(0);
+  };
+
+  // Compute available statuses from actual member data
+  const availableStatuses = useMemo(() => {
+    const statuses = new Set<string>();
+    members.forEach((member) => {
+      if (member.status) {
+        statuses.add(member.status);
+      }
+    });
+    return Array.from(statuses).sort();
+  }, [members]);
+
+  // Compute available membership types from actual member data
+  const availableMembershipTypes = useMemo(() => {
+    const types = new Set<string>();
+    members.forEach((member) => {
+      if (member.membershipType) {
+        types.add(member.membershipType);
+      }
+    });
+    return Array.from(types).sort();
+  }, [members]);
+
+  const filteredMembers = members.filter((member) => {
+    // Search filter
+    const searchLower = filters.search.toLowerCase();
+    const matchesSearch = filters.search === ''
+      || (member.firstName?.toLowerCase().includes(searchLower))
+      || (member.lastName?.toLowerCase().includes(searchLower))
+      || member.email.toLowerCase().includes(searchLower)
+      || (member.phone?.toLowerCase().includes(searchLower));
+
+    // Status filter
+    const matchesStatus = filters.status === 'all' || member.status === filters.status;
+
+    // Membership type filter
+    const matchesMembershipType = filters.membershipType === 'all'
+      || member.membershipType === filters.membershipType;
+
+    return matchesSearch && matchesStatus && matchesMembershipType;
+  });
 
   const sortedMembers = [...filteredMembers].sort((a, b) => {
     let aValue: string | number | Date | null | undefined;
@@ -129,9 +163,9 @@ export function MembersTable({
   const stats = {
     totalMembers: members.filter(m => m.status === 'active').length,
     totalCancelled: members.filter(m => m.status === 'cancelled').length,
-    totalRemoved: members.filter(m => m.status === 'flagged-for-deletion').length,
+    totalOnHold: members.filter(m => m.status === 'hold').length,
     paidMembers: members.filter(m => m.membershipType === 'monthly' || m.membershipType === 'annual').length,
-    freeMembers: members.filter(m => m.membershipType === 'free' || m.membershipType === 'free_trial').length,
+    freeMembers: members.filter(m => m.membershipType === 'free-trial').length,
   };
 
   const getInitials = (firstName: string | null, lastName: string | null) => {
@@ -169,21 +203,29 @@ export function MembersTable({
     });
   };
 
-  const getStatusColor = (status: string) => {
-    if (status === 'active') {
-      return 'default';
+  const getStatusColor = (status: string): 'default' | 'secondary' | 'destructive' | 'outline' => {
+    switch (status) {
+      case 'active':
+        return 'default';
+      case 'trial':
+        return 'outline';
+      case 'hold':
+        return 'secondary';
+      case 'cancelled':
+      case 'past due':
+        return 'destructive';
+      default:
+        return 'secondary';
     }
-    if (status === 'flagged-for-deletion') {
-      return 'destructive';
-    }
-    return 'secondary';
   };
 
   const getStatusLabel = (status: string) => {
-    if (status === 'flagged-for-deletion') {
-      return 'Flagged for removal';
+    switch (status) {
+      case 'past due':
+        return 'Past Due';
+      default:
+        return status.charAt(0).toUpperCase() + status.slice(1);
     }
-    return status.charAt(0).toUpperCase() + status.slice(1);
   };
 
   const getMembershipTypeLabel = (membershipType: string | undefined) => {
@@ -194,8 +236,6 @@ export function MembersTable({
         return 'Monthly';
       case 'annual':
         return 'Annual';
-      case 'free':
-        return 'Free';
       default:
         return '-';
     }
@@ -209,8 +249,6 @@ export function MembersTable({
         return 'default';
       case 'annual':
         return 'default';
-      case 'free':
-        return 'secondary';
       default:
         return 'secondary';
     }
@@ -242,250 +280,135 @@ export function MembersTable({
         </Card>
       </div>
 
-      {/* Members Panel */}
-      <Panel>
-        <Tabs
-          defaultValue="all"
-          onValueChange={(value) => {
-            setActiveFilter(value as typeof activeFilter);
-            setCurrentPage(0);
-          }}
-        >
-          <PanelHeader withDivider={true}>
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <h2 className="text-xl font-medium text-foreground">All Members</h2>
-                <div className="flex gap-2">
-                  {headerActions}
+      {/* Search and Filter Bar */}
+      <div className="space-y-4">
+        <div className="flex items-end justify-between gap-4">
+          <h2 className="text-lg font-semibold text-foreground">All Members</h2>
+          {headerActions}
+        </div>
+
+        <MemberFilterBar
+          onFiltersChangeAction={handleFiltersChange}
+          availableStatuses={availableStatuses}
+          availableMembershipTypes={availableMembershipTypes}
+        />
+
+        {/* Members Table - Desktop View */}
+        <div className="hidden rounded-lg border border-border bg-background lg:block">
+          {loading
+            ? (
+                <div className="flex flex-col items-center justify-center gap-3 p-8">
+                  <Spinner size="lg" />
+                  <p className="text-sm text-muted-foreground">Loading members...</p>
                 </div>
-              </div>
-              <PanelTabs>
-                <TabsList className="h-auto bg-transparent p-0">
-                  <TabsTrigger value="all" className="border-b-2 border-transparent px-4 py-2 text-sm font-medium data-[state=active]:border-foreground data-[state=active]:bg-transparent">All</TabsTrigger>
-                  <TabsTrigger value="active" className="border-b-2 border-transparent px-4 py-2 text-sm font-medium data-[state=active]:border-foreground data-[state=active]:bg-transparent">Active</TabsTrigger>
-                  <TabsTrigger value="cancelled" className="border-b-2 border-transparent px-4 py-2 text-sm font-medium data-[state=active]:border-foreground data-[state=active]:bg-transparent">Cancelled</TabsTrigger>
-                  <TabsTrigger value="removed" className="border-b-2 border-transparent px-4 py-2 text-sm font-medium data-[state=active]:border-foreground data-[state=active]:bg-transparent">Removed</TabsTrigger>
-                </TabsList>
-              </PanelTabs>
-            </div>
-          </PanelHeader>
-
-          <TabsContent value={activeFilter} className="mt-0">
-            <PanelContent>
-              {/* Members Table - Desktop View */}
-              <div className="hidden lg:block">
-                {loading
-                  ? (
-                      <div className="flex flex-col items-center justify-center gap-3 p-8">
-                        <Spinner size="lg" />
-                        <p className="text-sm text-muted-foreground">Loading members...</p>
-                      </div>
-                    )
-                  : filteredMembers.length === 0
-                    ? (
-                        <div className="p-8 text-center text-muted-foreground">
-                          No members found
-                        </div>
-                      )
-                    : (
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>
-                                <button
-                                  type="button"
-                                  onClick={() => handleSort('firstName')}
-                                  className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
-                                >
-                                  Member name
-                                  {sortField === 'firstName' && (
-                                    sortDirection === 'asc'
-                                      ? <ArrowDownAZ className="h-4 w-4" />
-                                      : <ArrowUpZA className="h-4 w-4" />
-                                  )}
-                                </button>
-                              </TableHead>
-                              <TableHead>
-                                <button
-                                  type="button"
-                                  onClick={() => handleSort('membershipType')}
-                                  className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
-                                >
-                                  Membership type
-                                  {sortField === 'membershipType' && (
-                                    sortDirection === 'asc'
-                                      ? <ArrowDownAZ className="h-4 w-4" />
-                                      : <ArrowUpZA className="h-4 w-4" />
-                                  )}
-                                </button>
-                              </TableHead>
-                              <TableHead>
-                                <button
-                                  type="button"
-                                  onClick={() => handleSort('amountDue')}
-                                  className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
-                                >
-                                  Amount due
-                                  {sortField === 'amountDue' && (
-                                    sortDirection === 'asc'
-                                      ? <ArrowDown01 className="h-4 w-4" />
-                                      : <ArrowUp10 className="h-4 w-4" />
-                                  )}
-                                </button>
-                              </TableHead>
-                              <TableHead>
-                                <button
-                                  type="button"
-                                  onClick={() => handleSort('nextPayment')}
-                                  className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
-                                >
-                                  Next payment
-                                  {sortField === 'nextPayment' && (
-                                    sortDirection === 'asc'
-                                      ? <ArrowDownAZ className="h-4 w-4" />
-                                      : <ArrowUpZA className="h-4 w-4" />
-                                  )}
-                                </button>
-                              </TableHead>
-                              <TableHead>
-                                <button
-                                  type="button"
-                                  onClick={() => handleSort('status')}
-                                  className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
-                                >
-                                  Status
-                                  {sortField === 'status' && (
-                                    sortDirection === 'asc'
-                                      ? <ArrowDownAZ className="h-4 w-4" />
-                                      : <ArrowUpZA className="h-4 w-4" />
-                                  )}
-                                </button>
-                              </TableHead>
-                              <TableHead>
-                                <button
-                                  type="button"
-                                  onClick={() => handleSort('lastAccessedAt')}
-                                  className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
-                                >
-                                  Last visited
-                                  {sortField === 'lastAccessedAt' && (
-                                    sortDirection === 'asc'
-                                      ? <ArrowDownAZ className="h-4 w-4" />
-                                      : <ArrowUpZA className="h-4 w-4" />
-                                  )}
-                                </button>
-                              </TableHead>
-                              <TableHead>
-                                Action
-                              </TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {paginatedMembers.map(member => (
-                              <TableRow key={member.id}>
-                                <TableCell>
-                                  <div className="flex items-center gap-3">
-                                    <Avatar className="h-8 w-8 shrink-0">
-                                      {member.photoUrl && (
-                                        <AvatarImage src={member.photoUrl} />
-                                      )}
-                                      <AvatarFallback>
-                                        {getInitials(member.firstName, member.lastName)}
-                                      </AvatarFallback>
-                                    </Avatar>
-                                    <span className="font-medium text-foreground">
-                                      {member.firstName}
-                                      {' '}
-                                      {member.lastName}
-                                    </span>
-                                  </div>
-                                </TableCell>
-                                <TableCell>
-                                  <Badge variant={getMembershipTypeVariant(member.membershipType)}>
-                                    {getMembershipTypeLabel(member.membershipType)}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell className="text-sm text-muted-foreground">
-                                  {formatCurrency(member.amountDue)}
-                                </TableCell>
-                                <TableCell className="text-sm text-muted-foreground">
-                                  {formatDate(member.nextPayment)}
-                                </TableCell>
-                                <TableCell>
-                                  <Badge variant={getStatusColor(member.status)}>
-                                    {getStatusLabel(member.status)}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell className="text-sm text-muted-foreground">
-                                  {formatDate(member.lastAccessedAt)}
-                                </TableCell>
-                                <TableCell>
-                                  <div className="flex items-center gap-2">
-                                    {member.status !== 'flagged-for-deletion' && (
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => onEditAction(member.id)}
-                                        aria-label={`Edit ${member.firstName} ${member.lastName}`}
-                                        title={`Edit ${member.firstName} ${member.lastName}`}
-                                      >
-                                        <Edit className="h-4 w-4" />
-                                      </Button>
-                                    )}
-                                    {member.status !== 'flagged-for-deletion'
-                                      ? (
-                                          <Button
-                                            variant="destructive"
-                                            size="sm"
-                                            onClick={() => onRemoveAction(member.id)}
-                                            aria-label={`Remove ${member.firstName} ${member.lastName}`}
-                                            title="Flag for removal"
-                                          >
-                                            <Trash2 className="h-4 w-4" />
-                                          </Button>
-                                        )
-                                      : (
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => onRestoreAction(member.id)}
-                                            aria-label={`Restore ${member.firstName} ${member.lastName}`}
-                                            title="Restore member"
-                                          >
-                                            <ArchiveRestore className="h-4 w-4" />
-                                          </Button>
-                                        )}
-                                  </div>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      )}
-              </div>
-
-              {/* Members Cards - Mobile View */}
-              <div className="space-y-4 lg:hidden">
-                {loading
-                  ? (
-                      <div className="flex flex-col items-center justify-center gap-3 p-8">
-                        <Spinner size="lg" />
-                        <p className="text-sm text-muted-foreground">Loading members...</p>
-                      </div>
-                    )
-                  : filteredMembers.length === 0
-                    ? (
-                        <div className="p-8 text-center text-muted-foreground">
-                          No members found
-                        </div>
-                      )
-                    : (
-                        paginatedMembers.map(member => (
-                          <Card key={member.id} className="p-4">
-                            <div className="space-y-4">
-                              {/* Member Name */}
-                              <div className="flex items-center gap-3 border-b border-border pb-4">
-                                <Avatar className="h-10 w-10 shrink-0">
+              )
+            : filteredMembers.length === 0
+              ? (
+                  <div className="p-8 text-center text-muted-foreground">
+                    No members found
+                  </div>
+                )
+              : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-border bg-secondary">
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
+                            <button
+                              type="button"
+                              onClick={() => handleSort('firstName')}
+                              className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
+                            >
+                              Member name
+                              {sortField === 'firstName' && (
+                                sortDirection === 'asc'
+                                  ? <ArrowDownAZ className="h-4 w-4" />
+                                  : <ArrowUpZA className="h-4 w-4" />
+                              )}
+                            </button>
+                          </th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
+                            <button
+                              type="button"
+                              onClick={() => handleSort('membershipType')}
+                              className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
+                            >
+                              Membership type
+                              {sortField === 'membershipType' && (
+                                sortDirection === 'asc'
+                                  ? <ArrowDownAZ className="h-4 w-4" />
+                                  : <ArrowUpZA className="h-4 w-4" />
+                              )}
+                            </button>
+                          </th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
+                            <button
+                              type="button"
+                              onClick={() => handleSort('amountDue')}
+                              className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
+                            >
+                              Amount due
+                              {sortField === 'amountDue' && (
+                                sortDirection === 'asc'
+                                  ? <ArrowDown01 className="h-4 w-4" />
+                                  : <ArrowUp10 className="h-4 w-4" />
+                              )}
+                            </button>
+                          </th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
+                            <button
+                              type="button"
+                              onClick={() => handleSort('nextPayment')}
+                              className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
+                            >
+                              Next payment
+                              {sortField === 'nextPayment' && (
+                                sortDirection === 'asc'
+                                  ? <ArrowDownAZ className="h-4 w-4" />
+                                  : <ArrowUpZA className="h-4 w-4" />
+                              )}
+                            </button>
+                          </th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
+                            <button
+                              type="button"
+                              onClick={() => handleSort('status')}
+                              className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
+                            >
+                              Status
+                              {sortField === 'status' && (
+                                sortDirection === 'asc'
+                                  ? <ArrowDownAZ className="h-4 w-4" />
+                                  : <ArrowUpZA className="h-4 w-4" />
+                              )}
+                            </button>
+                          </th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
+                            <button
+                              type="button"
+                              onClick={() => handleSort('lastAccessedAt')}
+                              className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
+                            >
+                              Last visited
+                              {sortField === 'lastAccessedAt' && (
+                                sortDirection === 'asc'
+                                  ? <ArrowDownAZ className="h-4 w-4" />
+                                  : <ArrowUpZA className="h-4 w-4" />
+                              )}
+                            </button>
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {paginatedMembers.map(member => (
+                          <tr
+                            key={member.id}
+                            className="cursor-pointer border-b border-border hover:bg-secondary/30"
+                            onClick={() => onRowClickAction(member.id)}
+                          >
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-3">
+                                <Avatar className="h-8 w-8 shrink-0">
                                   {member.photoUrl && (
                                     <AvatarImage src={member.photoUrl} />
                                   )}
@@ -493,15 +416,82 @@ export function MembersTable({
                                     {getInitials(member.firstName, member.lastName)}
                                   </AvatarFallback>
                                 </Avatar>
-                                <div>
-                                  <div className="font-medium text-foreground">
-                                    {member.firstName}
-                                    {' '}
-                                    {member.lastName}
-                                  </div>
-                                  <div className="text-xs text-muted-foreground">{member.email}</div>
-                                </div>
+                                <span className="font-medium text-foreground">
+                                  {member.firstName}
+                                  {' '}
+                                  {member.lastName}
+                                </span>
                               </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <Badge variant={getMembershipTypeVariant(member.membershipType)}>
+                                {getMembershipTypeLabel(member.membershipType)}
+                              </Badge>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-muted-foreground">
+                              {formatCurrency(member.amountDue)}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-muted-foreground">
+                              {formatDate(member.nextPayment)}
+                            </td>
+                            <td className="px-6 py-4">
+                              <Badge variant={getStatusColor(member.status)}>
+                                {getStatusLabel(member.status)}
+                              </Badge>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-muted-foreground">
+                              {formatDate(member.lastAccessedAt)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+        </div>
+
+        {/* Members Cards - Mobile View */}
+        <div className="space-y-4 lg:hidden">
+          {loading
+            ? (
+                <div className="flex flex-col items-center justify-center gap-3 p-8">
+                  <Spinner size="lg" />
+                  <p className="text-sm text-muted-foreground">Loading members...</p>
+                </div>
+              )
+            : filteredMembers.length === 0
+              ? (
+                  <div className="p-8 text-center text-muted-foreground">
+                    No members found
+                  </div>
+                )
+              : (
+                  paginatedMembers.map(member => (
+                    <Card
+                      key={member.id}
+                      className="cursor-pointer p-4 transition-colors hover:bg-secondary/30"
+                      onClick={() => onRowClickAction(member.id)}
+                    >
+                      <div className="space-y-4">
+                        {/* Member Name */}
+                        <div className="flex items-center gap-3 border-b border-border pb-4">
+                          <Avatar className="h-10 w-10 shrink-0">
+                            {member.photoUrl && (
+                              <AvatarImage src={member.photoUrl} />
+                            )}
+                            <AvatarFallback>
+                              {getInitials(member.firstName, member.lastName)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <div className="font-medium text-foreground">
+                              {member.firstName}
+                              {' '}
+                              {member.lastName}
+                            </div>
+                            <div className="text-xs text-muted-foreground">{member.email}</div>
+                          </div>
+                        </div>
 
                               {/* Member Details Grid */}
                               <div className="grid grid-cols-2 gap-4">
@@ -536,56 +526,17 @@ export function MembersTable({
                                 </div>
                               </div>
 
-                              {/* Status and Action */}
-                              <div className="flex items-center justify-between border-t border-border pt-4">
-                                <Badge variant={getStatusColor(member.status)}>
-                                  {getStatusLabel(member.status)}
-                                </Badge>
-                                <div className="flex items-center gap-2">
-                                  {member.status !== 'flagged-for-deletion' && (
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => onEditAction(member.id)}
-                                      aria-label={`Edit ${member.firstName} ${member.lastName}`}
-                                      title={`Edit ${member.firstName} ${member.lastName}`}
-                                    >
-                                      <Edit className="h-4 w-4" />
-                                    </Button>
-                                  )}
-                                  {member.status !== 'flagged-for-deletion'
-                                    ? (
-                                        <Button
-                                          variant="destructive"
-                                          size="sm"
-                                          onClick={() => onRemoveAction(member.id)}
-                                          aria-label={`Remove ${member.firstName} ${member.lastName}`}
-                                          title="Flag for removal"
-                                        >
-                                          <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                      )
-                                    : (
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          onClick={() => onRestoreAction(member.id)}
-                                          aria-label={`Restore ${member.firstName} ${member.lastName}`}
-                                          title="Restore member"
-                                        >
-                                          <RotateCcw className="h-4 w-4" />
-                                        </Button>
-                                      )}
-                                </div>
-                              </div>
-                            </div>
-                          </Card>
-                        ))
-                      )}
-              </div>
-            </PanelContent>
-          </TabsContent>
-        </Tabs>
+                        {/* Status */}
+                        <div className="border-t border-border pt-4">
+                          <Badge variant={getStatusColor(member.status)}>
+                            {getStatusLabel(member.status)}
+                          </Badge>
+                        </div>
+                      </div>
+                    </Card>
+                  ))
+                )}
+        </div>
 
         {/* Pagination */}
         {!loading && sortedMembers.length > 0 && (

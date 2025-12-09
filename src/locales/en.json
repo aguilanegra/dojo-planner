@@ -124,7 +124,18 @@
   },
   "Members": {
     "add_member_button": "Add Member",
-    "import_members_button": "Import Members"
+    "import_members_button": "Import Members",
+    "search_placeholder": "Search members...",
+    "all_statuses_filter": "All Statuses",
+    "status_active": "Active",
+    "status_hold": "Hold",
+    "status_trial": "Trial",
+    "status_cancelled": "Cancelled",
+    "status_past_due": "Past Due",
+    "all_membership_types_filter": "All Membership Types",
+    "membership_type_free_trial": "Free Trial",
+    "membership_type_monthly": "Monthly",
+    "membership_type_annual": "Annual"
   },
   "Staff": {
     "invite_staff_button": "Invite Staff Member",
