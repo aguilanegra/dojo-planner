@@ -280,18 +280,21 @@ export function MembersTable({
         </Card>
       </div>
 
+      {/* Header */}
+      <h1 className="text-3xl font-bold text-foreground">Members</h1>
+
       {/* Search and Filter Bar */}
       <div className="space-y-4">
-        <div className="flex items-end justify-between gap-4">
-          <h2 className="text-lg font-semibold text-foreground">All Members</h2>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+          <div className="flex-1">
+            <MemberFilterBar
+              onFiltersChangeAction={handleFiltersChange}
+              availableStatuses={availableStatuses}
+              availableMembershipTypes={availableMembershipTypes}
+            />
+          </div>
           {headerActions}
         </div>
-
-        <MemberFilterBar
-          onFiltersChangeAction={handleFiltersChange}
-          availableStatuses={availableStatuses}
-          availableMembershipTypes={availableMembershipTypes}
-        />
 
         {/* Members Table - Desktop View */}
         <div className="hidden rounded-lg border border-border bg-background lg:block">

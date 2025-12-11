@@ -32,6 +32,11 @@ export const AppSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
               icon: Home,
             },
             {
+              title: t('programs'),
+              url: '/dashboard/programs',
+              icon: Map,
+            },
+            {
               title: t('classes'),
               url: '/dashboard/classes',
               icon: BookMarked,
@@ -45,6 +50,11 @@ export const AppSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
               title: t('members'),
               url: '/dashboard/members',
               icon: Users,
+            },
+            {
+              title: t('roles'),
+              url: '/dashboard/roles',
+              icon: CircleUser,
             },
             {
               title: t('staff'),
@@ -94,20 +104,10 @@ export const AppSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
               icon: Settings,
             },
             {
-              title: t('location_settings'),
-              url: '/dashboard/location-settings',
-              icon: Map,
-              disabled: true,
-            },
-            {
               title: t('preferences'),
               url: '/dashboard/preferences',
               icon: Settings,
-            },
-            {
-              title: t('user_permissions'),
-              url: '/dashboard/user-permissions',
-              icon: CircleUser,
+              disabled: true,
             },
             {
               title: t('help'),

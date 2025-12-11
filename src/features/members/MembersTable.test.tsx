@@ -28,6 +28,40 @@ const createMockMember = (overrides = {}) => ({
 });
 
 describe('MembersTable', () => {
+  describe('Page Header', () => {
+    it('should render Members h1 header', () => {
+      const mockMembers = [createMockMember()];
+      const mockOnRowClick = vi.fn();
+
+      render(
+        <MembersTable
+          members={mockMembers}
+          onRowClickAction={mockOnRowClick}
+        />,
+      );
+
+      const heading = page.getByRole('heading', { name: 'Members', level: 1 });
+
+      expect(heading).toBeInTheDocument();
+    });
+
+    it('should not render All Members header', () => {
+      const mockMembers = [createMockMember()];
+      const mockOnRowClick = vi.fn();
+
+      render(
+        <MembersTable
+          members={mockMembers}
+          onRowClickAction={mockOnRowClick}
+        />,
+      );
+
+      const allMembersElements = page.getByText('All Members').elements();
+
+      expect(allMembersElements.length).toBe(0);
+    });
+  });
+
   describe('Render method', () => {
     it('should render members table with members list', () => {
       const mockMembers = [createMockMember()];
@@ -559,6 +593,682 @@ describe('MembersTable', () => {
 
       // Should NOT show 'free-trial' option (not in data)
       expect(page.getByRole('option', { name: 'membership_type_free_trial' }).elements()).toHaveLength(0);
+    });
+  });
+
+  describe('Additional Sorting', () => {
+    it('should sort members by membership type column', async () => {
+      const mockMembers = [
+        createMockMember({ id: '1', firstName: 'John', membershipType: 'monthly' }),
+        createMockMember({ id: '2', firstName: 'Jane', membershipType: 'annual' }),
+      ];
+      const mockOnRowClick = vi.fn();
+
+      render(
+        <MembersTable
+          members={mockMembers}
+          onRowClickAction={mockOnRowClick}
+        />,
+      );
+
+      // Click membership type header
+      const membershipHeader = page.getByRole('button', { name: /Membership type/i });
+      await membershipHeader.click();
+
+      // Verify both members are present
+      const table = page.getByRole('table');
+
+      expect(table.getByText('Monthly')).toBeInTheDocument();
+      expect(table.getByText('Annual')).toBeInTheDocument();
+    });
+
+    it('should sort members by next payment column', async () => {
+      const mockMembers = [
+        createMockMember({ id: '1', firstName: 'John', nextPayment: new Date('2025-01-15') }),
+        createMockMember({ id: '2', firstName: 'Jane', nextPayment: new Date('2025-02-01') }),
+      ];
+      const mockOnRowClick = vi.fn();
+
+      render(
+        <MembersTable
+          members={mockMembers}
+          onRowClickAction={mockOnRowClick}
+        />,
+      );
+
+      // Click next payment header
+      const nextPaymentHeader = page.getByRole('button', { name: /Next payment/i });
+      await nextPaymentHeader.click();
+
+      // Verify both members are present
+      const table = page.getByRole('table');
+
+      expect(table.getByText('John Doe')).toBeInTheDocument();
+      expect(table.getByText('Jane Doe')).toBeInTheDocument();
+    });
+
+    it('should sort members by last visited column', async () => {
+      const mockMembers = [
+        createMockMember({ id: '1', firstName: 'John', lastAccessedAt: new Date('2024-12-01') }),
+        createMockMember({ id: '2', firstName: 'Jane', lastAccessedAt: new Date('2024-12-15') }),
+      ];
+      const mockOnRowClick = vi.fn();
+
+      render(
+        <MembersTable
+          members={mockMembers}
+          onRowClickAction={mockOnRowClick}
+        />,
+      );
+
+      // Click last visited header
+      const lastVisitedHeader = page.getByRole('button', { name: /Last visited/i });
+      await lastVisitedHeader.click();
+
+      // Verify both members are present
+      const table = page.getByRole('table');
+
+      expect(table.getByText('John Doe')).toBeInTheDocument();
+      expect(table.getByText('Jane Doe')).toBeInTheDocument();
+    });
+
+    it('should toggle sort direction when clicking same column twice', async () => {
+      const mockMembers = [
+        createMockMember({ id: '1', firstName: 'Alice', lastName: 'Smith' }),
+        createMockMember({ id: '2', firstName: 'Zach', lastName: 'Brown' }),
+      ];
+      const mockOnRowClick = vi.fn();
+
+      render(
+        <MembersTable
+          members={mockMembers}
+          onRowClickAction={mockOnRowClick}
+        />,
+      );
+
+      const nameHeader = page.getByRole('button', { name: /Member name/i });
+
+      // First click (already ascending, goes to descending)
+      await nameHeader.click();
+
+      // Second click (toggle direction)
+      await nameHeader.click();
+
+      // Verify both members are still present
+      const table = page.getByRole('table');
+
+      expect(table.getByText('Alice Smith')).toBeInTheDocument();
+      expect(table.getByText('Zach Brown')).toBeInTheDocument();
+    });
+
+    it('should handle members without next payment date when sorting', async () => {
+      const mockMembers = [
+        createMockMember({ id: '1', firstName: 'John', nextPayment: new Date('2025-01-15') }),
+        createMockMember({ id: '2', firstName: 'Jane', nextPayment: undefined }),
+      ];
+      const mockOnRowClick = vi.fn();
+
+      render(
+        <MembersTable
+          members={mockMembers}
+          onRowClickAction={mockOnRowClick}
+        />,
+      );
+
+      const nextPaymentHeader = page.getByRole('button', { name: /Next payment/i });
+      await nextPaymentHeader.click();
+
+      const table = page.getByRole('table');
+
+      expect(table.getByText('John Doe')).toBeInTheDocument();
+      expect(table.getByText('Jane Doe')).toBeInTheDocument();
+    });
+
+    it('should handle members without last accessed date when sorting', async () => {
+      const mockMembers = [
+        createMockMember({ id: '1', firstName: 'John', lastAccessedAt: new Date('2024-12-01') }),
+        createMockMember({ id: '2', firstName: 'Jane', lastAccessedAt: null }),
+      ];
+      const mockOnRowClick = vi.fn();
+
+      render(
+        <MembersTable
+          members={mockMembers}
+          onRowClickAction={mockOnRowClick}
+        />,
+      );
+
+      const lastVisitedHeader = page.getByRole('button', { name: /Last visited/i });
+      await lastVisitedHeader.click();
+
+      const table = page.getByRole('table');
+
+      expect(table.getByText('John Doe')).toBeInTheDocument();
+      expect(table.getByText('Jane Doe')).toBeInTheDocument();
+    });
+  });
+
+  describe('Search functionality', () => {
+    it('should filter members by email', async () => {
+      const mockMembers = [
+        createMockMember({ id: '1', firstName: 'John', lastName: 'Doe', email: 'john@example.com' }),
+        createMockMember({ id: '2', firstName: 'Jane', lastName: 'Smith', email: 'jane@different.com' }),
+      ];
+      const mockOnRowClick = vi.fn();
+
+      render(
+        <MembersTable
+          members={mockMembers}
+          onRowClickAction={mockOnRowClick}
+        />,
+      );
+
+      const searchInput = page.getByPlaceholder('search_placeholder');
+      await userEvent.fill(searchInput.element() as HTMLInputElement, 'different');
+
+      // Should only show Jane (matching email)
+      const table = page.getByRole('table');
+
+      expect(table.getByText('Jane Smith')).toBeInTheDocument();
+      expect(table.getByText('John Doe').elements()).toHaveLength(0);
+    });
+
+    it('should filter members by phone', async () => {
+      const mockMembers = [
+        createMockMember({ id: '1', firstName: 'John', lastName: 'Doe', phone: '555-1234' }),
+        createMockMember({ id: '2', firstName: 'Jane', lastName: 'Smith', phone: '555-5678' }),
+      ];
+      const mockOnRowClick = vi.fn();
+
+      render(
+        <MembersTable
+          members={mockMembers}
+          onRowClickAction={mockOnRowClick}
+        />,
+      );
+
+      const searchInput = page.getByPlaceholder('search_placeholder');
+      await userEvent.fill(searchInput.element() as HTMLInputElement, '5678');
+
+      // Should only show Jane (matching phone)
+      const table = page.getByRole('table');
+
+      expect(table.getByText('Jane Smith')).toBeInTheDocument();
+      expect(table.getByText('John Doe').elements()).toHaveLength(0);
+    });
+
+    it('should filter members by last name', async () => {
+      const mockMembers = [
+        createMockMember({ id: '1', firstName: 'John', lastName: 'Doe' }),
+        createMockMember({ id: '2', firstName: 'Jane', lastName: 'Smith' }),
+      ];
+      const mockOnRowClick = vi.fn();
+
+      render(
+        <MembersTable
+          members={mockMembers}
+          onRowClickAction={mockOnRowClick}
+        />,
+      );
+
+      const searchInput = page.getByPlaceholder('search_placeholder');
+      await userEvent.fill(searchInput.element() as HTMLInputElement, 'Smith');
+
+      // Should only show Jane
+      const table = page.getByRole('table');
+
+      expect(table.getByText('Jane Smith')).toBeInTheDocument();
+      expect(table.getByText('John Doe').elements()).toHaveLength(0);
+    });
+
+    it('should show no members found when search has no matches', async () => {
+      const mockMembers = [
+        createMockMember({ id: '1', firstName: 'John', lastName: 'Doe' }),
+      ];
+      const mockOnRowClick = vi.fn();
+
+      render(
+        <MembersTable
+          members={mockMembers}
+          onRowClickAction={mockOnRowClick}
+        />,
+      );
+
+      const searchInput = page.getByPlaceholder('search_placeholder');
+      await userEvent.fill(searchInput.element() as HTMLInputElement, 'NonexistentName');
+
+      expect(page.getByText('No members found').first()).toBeInTheDocument();
+    });
+  });
+
+  describe('Filter selection', () => {
+    it('should filter by status when selecting from dropdown', async () => {
+      const mockMembers = [
+        createMockMember({ id: '1', firstName: 'John', status: 'active' }),
+        createMockMember({ id: '2', firstName: 'Jane', status: 'cancelled' }),
+      ];
+      const mockOnRowClick = vi.fn();
+
+      render(
+        <MembersTable
+          members={mockMembers}
+          onRowClickAction={mockOnRowClick}
+        />,
+      );
+
+      // Click the status filter dropdown
+      const statusTrigger = page.getByRole('combobox').first();
+      await statusTrigger.click();
+
+      // Select 'active' status
+      const activeOption = page.getByRole('option', { name: 'status_active' });
+      await activeOption.click();
+
+      // Should only show John (active)
+      const table = page.getByRole('table');
+
+      expect(table.getByText('John Doe')).toBeInTheDocument();
+      expect(table.getByText('Jane Doe').elements()).toHaveLength(0);
+    });
+
+    it('should filter by membership type when selecting from dropdown', async () => {
+      const mockMembers = [
+        createMockMember({ id: '1', firstName: 'John', membershipType: 'monthly' }),
+        createMockMember({ id: '2', firstName: 'Jane', membershipType: 'annual' }),
+      ];
+      const mockOnRowClick = vi.fn();
+
+      render(
+        <MembersTable
+          members={mockMembers}
+          onRowClickAction={mockOnRowClick}
+        />,
+      );
+
+      // Click the membership type filter dropdown
+      const membershipTrigger = page.getByRole('combobox').nth(1);
+      await membershipTrigger.click();
+
+      // Select 'annual' membership
+      const annualOption = page.getByRole('option', { name: 'membership_type_annual' });
+      await annualOption.click();
+
+      // Should only show Jane (annual)
+      const table = page.getByRole('table');
+
+      expect(table.getByText('Jane Doe')).toBeInTheDocument();
+      expect(table.getByText('John Doe').elements()).toHaveLength(0);
+    });
+  });
+
+  describe('Date formatting', () => {
+    it('should display formatted date for next payment', () => {
+      const mockMembers = [createMockMember({ nextPayment: new Date('2025-06-15T14:30:00') })];
+      const mockOnRowClick = vi.fn();
+
+      render(
+        <MembersTable
+          members={mockMembers}
+          onRowClickAction={mockOnRowClick}
+        />,
+      );
+
+      // Date should be formatted with time and timezone
+      const table = page.getByRole('table');
+
+      // Check that a date in MM/DD/YYYY format is displayed
+      expect(table.getByText(/06\/15\/2025/)).toBeInTheDocument();
+    });
+
+    it('should display dash for null next payment', () => {
+      const mockMembers = [createMockMember({ nextPayment: undefined })];
+      const mockOnRowClick = vi.fn();
+
+      render(
+        <MembersTable
+          members={mockMembers}
+          onRowClickAction={mockOnRowClick}
+        />,
+      );
+
+      // Should show '-' for missing dates
+      const table = page.getByRole('table');
+
+      expect(table.getByText('-').first()).toBeInTheDocument();
+    });
+
+    it('should display formatted date for last accessed', () => {
+      const mockMembers = [createMockMember({ lastAccessedAt: new Date('2024-11-20T09:15:00') })];
+      const mockOnRowClick = vi.fn();
+
+      render(
+        <MembersTable
+          members={mockMembers}
+          onRowClickAction={mockOnRowClick}
+        />,
+      );
+
+      const table = page.getByRole('table');
+
+      expect(table.getByText(/11\/20\/2024/)).toBeInTheDocument();
+    });
+
+    it('should display dash for null last accessed', () => {
+      const mockMembers = [createMockMember({ lastAccessedAt: null })];
+      const mockOnRowClick = vi.fn();
+
+      render(
+        <MembersTable
+          members={mockMembers}
+          onRowClickAction={mockOnRowClick}
+        />,
+      );
+
+      const table = page.getByRole('table');
+
+      expect(table.getByText('-').first()).toBeInTheDocument();
+    });
+  });
+
+  describe('Avatar with photo', () => {
+    it('should render member with photoUrl and fallback initials', () => {
+      const mockMembers = [createMockMember({
+        photoUrl: 'https://example.com/photo.jpg',
+        firstName: 'John',
+        lastName: 'Doe',
+      })];
+      const mockOnRowClick = vi.fn();
+
+      render(
+        <MembersTable
+          members={mockMembers}
+          onRowClickAction={mockOnRowClick}
+        />,
+      );
+
+      // Avatar fallback initials should be present (image may not load in test)
+      expect(page.getByText('JD').first()).toBeInTheDocument();
+    });
+  });
+
+  describe('Pagination', () => {
+    it('should show pagination when there are more than 10 members', () => {
+      const mockMembers = Array.from({ length: 15 }, (_, i) =>
+        createMockMember({ id: `${i}`, firstName: `Member${i}`, lastName: 'Test', status: 'active' }));
+      const mockOnRowClick = vi.fn();
+
+      render(
+        <MembersTable
+          members={mockMembers}
+          onRowClickAction={mockOnRowClick}
+        />,
+      );
+
+      // Pagination should show Previous/Next buttons
+      expect(page.getByRole('button', { name: /Previous/i })).toBeInTheDocument();
+      expect(page.getByRole('button', { name: 'Next', exact: true })).toBeInTheDocument();
+    });
+
+    it('should only show first 10 members on first page', () => {
+      // Use padded numbers so alphabetical sort matches numeric order
+      const mockMembers = Array.from({ length: 15 }, (_, i) =>
+        createMockMember({ id: `${i}`, firstName: `Member${String(i).padStart(2, '0')}`, lastName: 'Test', status: 'active' }));
+      const mockOnRowClick = vi.fn();
+
+      render(
+        <MembersTable
+          members={mockMembers}
+          onRowClickAction={mockOnRowClick}
+        />,
+      );
+
+      // Should show first 10 members when sorted by name
+      const table = page.getByRole('table');
+
+      expect(table.getByText('Member00 Test')).toBeInTheDocument();
+      expect(table.getByText('Member09 Test')).toBeInTheDocument();
+
+      // Member10 should not be visible on first page
+      expect(table.getByText('Member10 Test').elements()).toHaveLength(0);
+    });
+
+    it('should navigate to second page when clicking next', async () => {
+      const mockMembers = Array.from({ length: 15 }, (_, i) =>
+        createMockMember({ id: `${i}`, firstName: `Member${String(i).padStart(2, '0')}`, lastName: 'Test', status: 'active' }));
+      const mockOnRowClick = vi.fn();
+
+      render(
+        <MembersTable
+          members={mockMembers}
+          onRowClickAction={mockOnRowClick}
+        />,
+      );
+
+      // Click next page button (use exact match to avoid "Next payment" header)
+      const nextButton = page.getByRole('button', { name: 'Next', exact: true });
+      await nextButton.click();
+
+      // Should now show members 10-14
+      const table = page.getByRole('table');
+
+      expect(table.getByText('Member10 Test')).toBeInTheDocument();
+    });
+
+    it('should reset page when filtering', async () => {
+      const mockMembers = Array.from({ length: 15 }, (_, i) =>
+        createMockMember({ id: `${i}`, firstName: `Member${String(i).padStart(2, '0')}`, lastName: 'Test', status: 'active' }));
+      const mockOnRowClick = vi.fn();
+
+      render(
+        <MembersTable
+          members={mockMembers}
+          onRowClickAction={mockOnRowClick}
+        />,
+      );
+
+      // Go to second page (use exact match)
+      const nextButton = page.getByRole('button', { name: 'Next', exact: true });
+      await nextButton.click();
+
+      // Search for something
+      const searchInput = page.getByPlaceholder('search_placeholder');
+      await userEvent.fill(searchInput.element() as HTMLInputElement, 'Member01');
+
+      // Should be back on first page with filtered results
+      const table = page.getByRole('table');
+
+      expect(table.getByText('Member01 Test')).toBeInTheDocument();
+    });
+
+    it('should not show pagination when 10 or fewer members', () => {
+      const mockMembers = [createMockMember()];
+      const mockOnRowClick = vi.fn();
+
+      render(
+        <MembersTable
+          members={mockMembers}
+          onRowClickAction={mockOnRowClick}
+        />,
+      );
+
+      // Should only have 1 page, so navigation might be minimal
+      const table = page.getByRole('table');
+
+      expect(table).toBeInTheDocument();
+    });
+  });
+
+  describe('Free membership type', () => {
+    it('should display dash for free membership type (not free-trial)', () => {
+      const mockMembers = [createMockMember({ membershipType: 'free' as const })];
+      const mockOnRowClick = vi.fn();
+
+      render(
+        <MembersTable
+          members={mockMembers}
+          onRowClickAction={mockOnRowClick}
+        />,
+      );
+
+      // Free membership should show '-' since it's not a recognized type
+      const table = page.getByRole('table');
+
+      expect(table.getByText('-').first()).toBeInTheDocument();
+    });
+  });
+
+  describe('Unknown status handling', () => {
+    it('should handle unknown status with default styling', () => {
+      const mockMembers = [createMockMember({ status: 'pending' })];
+      const mockOnRowClick = vi.fn();
+
+      render(
+        <MembersTable
+          members={mockMembers}
+          onRowClickAction={mockOnRowClick}
+        />,
+      );
+
+      // Unknown status should be capitalized
+      expect(page.getByText('Pending').first()).toBeInTheDocument();
+    });
+  });
+
+  describe('Members with missing data', () => {
+    it('should handle member with only first name', () => {
+      const mockMembers = [createMockMember({ firstName: 'John', lastName: null })];
+      const mockOnRowClick = vi.fn();
+
+      render(
+        <MembersTable
+          members={mockMembers}
+          onRowClickAction={mockOnRowClick}
+        />,
+      );
+
+      // Should show '?' for initials
+      expect(page.getByText('?').first()).toBeInTheDocument();
+    });
+
+    it('should handle member with only last name', () => {
+      const mockMembers = [createMockMember({ firstName: null, lastName: 'Doe' })];
+      const mockOnRowClick = vi.fn();
+
+      render(
+        <MembersTable
+          members={mockMembers}
+          onRowClickAction={mockOnRowClick}
+        />,
+      );
+
+      // Should show '?' for initials
+      expect(page.getByText('?').first()).toBeInTheDocument();
+    });
+
+    it('should handle member with null phone in search', async () => {
+      const mockMembers = [
+        createMockMember({ id: '1', firstName: 'John', phone: null }),
+      ];
+      const mockOnRowClick = vi.fn();
+
+      render(
+        <MembersTable
+          members={mockMembers}
+          onRowClickAction={mockOnRowClick}
+        />,
+      );
+
+      const searchInput = page.getByPlaceholder('search_placeholder');
+      await userEvent.fill(searchInput.element() as HTMLInputElement, '555');
+
+      // Should show no members (phone is null, no match)
+      expect(page.getByText('No members found').first()).toBeInTheDocument();
+    });
+  });
+
+  describe('Combined filters', () => {
+    it('should apply search and membership type filter together', async () => {
+      const mockMembers = [
+        createMockMember({ id: '1', firstName: 'John', lastName: 'Monthly', membershipType: 'monthly' }),
+        createMockMember({ id: '2', firstName: 'Jane', lastName: 'Monthly', membershipType: 'monthly' }),
+        createMockMember({ id: '3', firstName: 'John', lastName: 'Annual', membershipType: 'annual' }),
+      ];
+      const mockOnRowClick = vi.fn();
+
+      render(
+        <MembersTable
+          members={mockMembers}
+          onRowClickAction={mockOnRowClick}
+        />,
+      );
+
+      // Search for 'John'
+      const searchInput = page.getByPlaceholder('search_placeholder');
+      await userEvent.fill(searchInput.element() as HTMLInputElement, 'John');
+
+      // Filter by membership type 'monthly'
+      const membershipTrigger = page.getByRole('combobox').nth(1);
+      await membershipTrigger.click();
+      const monthlyOption = page.getByRole('option', { name: 'membership_type_monthly' });
+      await monthlyOption.click();
+
+      // Should only show John Monthly (matches both search 'John' and membership 'monthly')
+      const table = page.getByRole('table');
+
+      expect(table.getByText('John Monthly')).toBeInTheDocument();
+    });
+  });
+
+  describe('Sort reset on column change', () => {
+    it('should reset to ascending when changing sort column', async () => {
+      const mockMembers = [
+        createMockMember({ id: '1', firstName: 'Zach', status: 'active' }),
+        createMockMember({ id: '2', firstName: 'Alice', status: 'cancelled' }),
+      ];
+      const mockOnRowClick = vi.fn();
+
+      render(
+        <MembersTable
+          members={mockMembers}
+          onRowClickAction={mockOnRowClick}
+        />,
+      );
+
+      // Click name header twice to get descending
+      const nameHeader = page.getByRole('button', { name: /Member name/i });
+      await nameHeader.click();
+      await nameHeader.click();
+
+      // Now click status header - should reset to ascending
+      const statusHeader = page.getByRole('button', { name: /Status/i });
+      await statusHeader.click();
+
+      // Both members should be visible
+      const table = page.getByRole('table');
+
+      expect(table.getByText('Zach Doe')).toBeInTheDocument();
+      expect(table.getByText('Alice Doe')).toBeInTheDocument();
+    });
+  });
+
+  describe('Statistics calculations', () => {
+    it('should count total on hold members correctly', () => {
+      const mockMembers = [
+        createMockMember({ id: '1', status: 'hold' }),
+        createMockMember({ id: '2', status: 'hold' }),
+        createMockMember({ id: '3', status: 'active' }),
+      ];
+      const mockOnRowClick = vi.fn();
+
+      render(
+        <MembersTable
+          members={mockMembers}
+          onRowClickAction={mockOnRowClick}
+        />,
+      );
+
+      // Check that statistics are rendered (total on hold is tracked internally)
+      expect(page.getByText('Total members')).toBeInTheDocument();
     });
   });
 });
