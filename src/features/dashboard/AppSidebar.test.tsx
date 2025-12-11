@@ -11,9 +11,11 @@ describe('AppSidebar', () => {
 
       // Check Academy items exist and have correct values
       expect(dashboardLayout.dashboard).toBe('Dashboard');
+      expect(dashboardLayout.programs).toBe('Programs');
       expect(dashboardLayout.classes).toBe('Classes');
       expect(dashboardLayout.schedule).toBe('Schedule');
       expect(dashboardLayout.members).toBe('Members');
+      expect(dashboardLayout.roles).toBe('Roles');
       expect(dashboardLayout.staff).toBe('Staff');
       expect(dashboardLayout.messaging).toBe('Messaging');
     });
@@ -39,9 +41,7 @@ describe('AppSidebar', () => {
 
       // Check Settings items exist and have correct values
       expect(dashboardLayout.account_settings).toBe('Account Settings');
-      expect(dashboardLayout.location_settings).toBe('Location Settings');
       expect(dashboardLayout.preferences).toBe('Preferences');
-      expect(dashboardLayout.user_permissions).toBe('User Permissions');
       expect(dashboardLayout.help).toBe('Help');
     });
 
@@ -62,16 +62,16 @@ describe('AppSidebar', () => {
         'classes',
         'schedule',
         'members',
+        'roles',
         'staff',
         'messaging',
         'finances',
         'memberships',
         'subscription',
+        'programs',
         'marketing',
         'account_settings',
-        'location_settings',
         'preferences',
-        'user_permissions',
         'help',
         'log_out',
       ];

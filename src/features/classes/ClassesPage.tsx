@@ -3,9 +3,10 @@
 import type { ClassFilters } from './ClassFilterBar';
 import { Grid3x3, List, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ButtonGroupItem, ButtonGroupRoot } from '@/components/ui/button-group';
+import { Card } from '@/components/ui/card';
 import { ClassCard } from '@/templates/ClassCard';
 import { mockClasses } from './classesData';
 import { ClassFilterBar } from './ClassFilterBar';
@@ -26,6 +27,18 @@ export function ClassesPage() {
     new Set(mockClasses.flatMap(cls => cls.instructors.map(i => i.name))),
   );
 
+  // Calculate stats
+  const stats = useMemo(() => {
+    const uniqueTypes = new Set(mockClasses.map(cls => cls.type));
+    const uniqueStyles = new Set(mockClasses.map(cls => cls.style));
+    const totalTags = uniqueTypes.size + uniqueStyles.size;
+    return {
+      totalClasses: mockClasses.length,
+      totalTags,
+      totalInstructors: allInstructors.length,
+    };
+  }, [allInstructors.length]);
+
   // Filter classes based on filters
   const filteredClasses = mockClasses.filter((cls) => {
     const matchesSearch = cls.name.toLowerCase().includes(filters.search.toLowerCase())
@@ -38,11 +51,30 @@ export function ClassesPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">{t('title')}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{t('description')}</p>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <Card className="p-4">
+          <div className="text-sm font-medium text-muted-foreground">
+            {t('total_classes_label')}
+          </div>
+          <div className="mt-2 text-3xl font-bold text-foreground">{stats.totalClasses}</div>
+        </Card>
+        <Card className="p-4">
+          <div className="text-sm font-medium text-muted-foreground">
+            {t('total_tags_label')}
+          </div>
+          <div className="mt-2 text-3xl font-bold text-foreground">{stats.totalTags}</div>
+        </Card>
+        <Card className="p-4">
+          <div className="text-sm font-medium text-muted-foreground">
+            {t('total_instructors_label')}
+          </div>
+          <div className="mt-2 text-3xl font-bold text-foreground">{stats.totalInstructors}</div>
+        </Card>
       </div>
+
+      {/* Header */}
+      <h1 className="text-3xl font-bold text-foreground">{t('title')}</h1>
 
       {/* Controls - Shown for all views */}
       <div className="space-y-4">
