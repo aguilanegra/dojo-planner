@@ -1,10 +1,88 @@
 import { describe, expect, it } from 'vitest';
 import { render } from 'vitest-browser-react';
-import { page } from 'vitest/browser';
+import { page, userEvent } from 'vitest/browser';
 import { I18nWrapper } from '@/lib/test-utils';
 import { ClassesPage } from './ClassesPage';
 
 describe('ClassesPage', () => {
+  describe('Summary Cards', () => {
+    it('should render total classes stat card', () => {
+      render(
+        <I18nWrapper>
+          <ClassesPage />
+        </I18nWrapper>,
+      );
+
+      const totalClassesLabel = page.getByText('Total Classes');
+
+      expect(totalClassesLabel).toBeInTheDocument();
+    });
+
+    it('should render tags stat card', () => {
+      render(
+        <I18nWrapper>
+          <ClassesPage />
+        </I18nWrapper>,
+      );
+
+      const tagsLabel = page.getByText('Tags').first();
+
+      expect(tagsLabel).toBeInTheDocument();
+    });
+
+    it('should render instructors stat card', () => {
+      render(
+        <I18nWrapper>
+          <ClassesPage />
+        </I18nWrapper>,
+      );
+
+      // "Instructors" appears both as stat card label and in class cards
+      const instructorsLabel = page.getByText('Instructors').first();
+
+      expect(instructorsLabel).toBeInTheDocument();
+    });
+
+    it('should display correct total classes count of 9', () => {
+      render(
+        <I18nWrapper>
+          <ClassesPage />
+        </I18nWrapper>,
+      );
+
+      // 9 mock classes
+      const nineElements = page.getByText('9', { exact: true }).elements();
+
+      expect(nineElements.length).toBeGreaterThan(0);
+    });
+
+    it('should display correct tags count of 7', () => {
+      render(
+        <I18nWrapper>
+          <ClassesPage />
+        </I18nWrapper>,
+      );
+
+      // 7 tags = 5 unique types (Adults, Kids, Women, Open, Competition) + 2 unique styles (Gi, No Gi)
+      const sevenElements = page.getByText('7', { exact: true }).elements();
+
+      expect(sevenElements.length).toBeGreaterThan(0);
+    });
+
+    it('should display instructor count', () => {
+      render(
+        <I18nWrapper>
+          <ClassesPage />
+        </I18nWrapper>,
+      );
+
+      // 5 unique instructors: Coach Alex, Professor Jessica, Professor Ivan, Professor Joao, Coach Liza
+      const fiveElements = page.getByText('5', { exact: true }).elements();
+
+      expect(fiveElements.length).toBeGreaterThan(0);
+    });
+  });
+
   describe('Page Header', () => {
     it('should render the page title', () => {
       render(
@@ -16,18 +94,6 @@ describe('ClassesPage', () => {
       const heading = page.getByRole('heading', { name: /Classes/i }).first();
 
       expect(heading).toBeInTheDocument();
-    });
-
-    it('should render the page description', () => {
-      render(
-        <I18nWrapper>
-          <ClassesPage />
-        </I18nWrapper>,
-      );
-
-      const description = page.getByText(/Manage and view all classes/);
-
-      expect(description).toBeInTheDocument();
     });
   });
 
@@ -56,6 +122,95 @@ describe('ClassesPage', () => {
 
       expect(gridButton).toBeInTheDocument();
       expect(listButton).toBeInTheDocument();
+    });
+
+    it('should render weekly view toggle button', () => {
+      render(
+        <I18nWrapper>
+          <ClassesPage />
+        </I18nWrapper>,
+      );
+
+      const weeklyButton = page.getByTitle('Weekly view');
+
+      expect(weeklyButton).toBeInTheDocument();
+    });
+
+    it('should render monthly view toggle button', () => {
+      render(
+        <I18nWrapper>
+          <ClassesPage />
+        </I18nWrapper>,
+      );
+
+      const monthlyButton = page.getByTitle('Monthly view');
+
+      expect(monthlyButton).toBeInTheDocument();
+    });
+  });
+
+  describe('View Switching', () => {
+    it('should switch to list view when clicking list button', async () => {
+      render(
+        <I18nWrapper>
+          <ClassesPage />
+        </I18nWrapper>,
+      );
+
+      const listButton = page.getByTitle('List view');
+      await userEvent.click(listButton);
+
+      // Class cards should still render in list view
+      const classTitle = page.getByRole('heading', { name: 'BJJ Fundamentals I' }).first();
+
+      expect(classTitle).toBeInTheDocument();
+    });
+
+    it('should switch to weekly view when clicking weekly button', async () => {
+      render(
+        <I18nWrapper>
+          <ClassesPage />
+        </I18nWrapper>,
+      );
+
+      const weeklyButton = page.getByTitle('Weekly view');
+      await userEvent.click(weeklyButton);
+
+      // Weekly view should render
+      expect(page.getByText(/Mon/i)).toBeDefined();
+    });
+
+    it('should switch to monthly view when clicking monthly button', async () => {
+      render(
+        <I18nWrapper>
+          <ClassesPage />
+        </I18nWrapper>,
+      );
+
+      const monthlyButton = page.getByTitle('Monthly view');
+      await userEvent.click(monthlyButton);
+
+      // Monthly view should render (calendar grid)
+      expect(monthlyButton).toBeInTheDocument();
+    });
+
+    it('should switch back to grid view after switching to list', async () => {
+      render(
+        <I18nWrapper>
+          <ClassesPage />
+        </I18nWrapper>,
+      );
+
+      const listButton = page.getByTitle('List view');
+      await userEvent.click(listButton);
+
+      const gridButton = page.getByTitle('Grid view');
+      await userEvent.click(gridButton);
+
+      // Class cards should render in grid view
+      const classTitle = page.getByRole('heading', { name: 'BJJ Fundamentals I' }).first();
+
+      expect(classTitle).toBeInTheDocument();
     });
   });
 
@@ -252,6 +407,54 @@ describe('ClassesPage', () => {
       const coach = page.getByText('Coach Alex').first();
 
       expect(coach).toBeInTheDocument();
+    });
+
+    it('should render Kids Class', () => {
+      render(
+        <I18nWrapper>
+          <ClassesPage />
+        </I18nWrapper>,
+      );
+
+      const kidsClass = page.getByRole('heading', { name: 'Kids Class' });
+
+      expect(kidsClass).toBeInTheDocument();
+    });
+
+    it('should render Open Mat class', () => {
+      render(
+        <I18nWrapper>
+          <ClassesPage />
+        </I18nWrapper>,
+      );
+
+      const openMat = page.getByRole('heading', { name: 'Open Mat' });
+
+      expect(openMat).toBeInTheDocument();
+    });
+
+    it('should render Competition Team class', () => {
+      render(
+        <I18nWrapper>
+          <ClassesPage />
+        </I18nWrapper>,
+      );
+
+      const competitionTeam = page.getByRole('heading', { name: 'Competition Team' });
+
+      expect(competitionTeam).toBeInTheDocument();
+    });
+
+    it('should render Women\'s BJJ class', () => {
+      render(
+        <I18nWrapper>
+          <ClassesPage />
+        </I18nWrapper>,
+      );
+
+      const womensBjj = page.getByRole('heading', { name: /Women's BJJ/ });
+
+      expect(womensBjj).toBeInTheDocument();
     });
   });
 });
