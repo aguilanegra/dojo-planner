@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
-export type StaffCardProps = {
+type StaffCardProps = {
   id: string;
   firstName: string | null;
   lastName: string | null;

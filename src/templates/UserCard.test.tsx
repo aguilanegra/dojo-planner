@@ -1,7 +1,7 @@
 import type { UserCardProps } from './UserCard';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
-import { page, userEvent } from 'vitest/browser';
+import { page } from 'vitest/browser';
 import { UserCard } from './UserCard';
 
 const defaultProps: UserCardProps = {
@@ -67,7 +67,7 @@ describe('UserCard', () => {
     render(<UserCard {...defaultProps} onClick={mockOnClick} />);
 
     const card = page.getByRole('button');
-    await userEvent.click(card);
+    await card.click();
 
     expect(mockOnClick).toHaveBeenCalledWith('1');
   });
@@ -75,7 +75,10 @@ describe('UserCard', () => {
   it('should not be clickable when onClick is not provided', () => {
     render(<UserCard {...defaultProps} />);
 
-    expect(() => page.getByRole('button')).toThrow();
+    // Should not have button role when onClick is not provided
+    const buttons = page.getByRole('button', { includeHidden: true });
+
+    expect(buttons.elements()).toHaveLength(0);
   });
 
   it('should format text by default', () => {

@@ -159,6 +159,8 @@ export function MemberCard({
     <Card
       className={`p-4 transition-colors ${onClick ? 'cursor-pointer hover:bg-secondary/30' : ''}`}
       onClick={onClick ? () => onClick(id) : undefined}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
     >
       <div className="space-y-4">
         {/* Member Name */}
