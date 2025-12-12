@@ -1,4 +1,6 @@
 import type { Preview } from '@storybook/nextjs-vite';
+import React from 'react';
+import { I18nWrapper } from '../src/lib/test-utils';
 import '../src/styles/global.css';
 
 const preview: Preview = {
@@ -19,6 +21,13 @@ const preview: Preview = {
       test: 'todo', // Make a11y tests optional
     },
   },
+  decorators: [
+    Story => (
+      <I18nWrapper>
+        <Story />
+      </I18nWrapper>
+    ),
+  ],
   tags: ['autodocs'],
 };
 

@@ -354,11 +354,11 @@ describe('MembersTable', () => {
       );
 
       // Click amount due header
-      const amountHeader = page.getByRole('button', { name: /Amount due/i });
+      const table = page.getByRole('table');
+      const amountHeader = table.getByRole('button', { name: /Amount due/i });
       await amountHeader.click();
 
       // Verify both amounts are present
-      const table = page.getByRole('table');
 
       expect(table.getByText('$50.00')).toBeInTheDocument();
       expect(table.getByText('$100.00')).toBeInTheDocument();
@@ -637,11 +637,11 @@ describe('MembersTable', () => {
       );
 
       // Click next payment header
-      const nextPaymentHeader = page.getByRole('button', { name: /Next payment/i });
+      const table = page.getByRole('table');
+      const nextPaymentHeader = table.getByRole('button', { name: /Next payment/i });
       await nextPaymentHeader.click();
 
       // Verify both members are present
-      const table = page.getByRole('table');
 
       expect(table.getByText('John Doe')).toBeInTheDocument();
       expect(table.getByText('Jane Doe')).toBeInTheDocument();
@@ -662,11 +662,11 @@ describe('MembersTable', () => {
       );
 
       // Click last visited header
-      const lastVisitedHeader = page.getByRole('button', { name: /Last visited/i });
+      const table = page.getByRole('table');
+      const lastVisitedHeader = table.getByRole('button', { name: /Last visited/i });
       await lastVisitedHeader.click();
 
       // Verify both members are present
-      const table = page.getByRole('table');
 
       expect(table.getByText('John Doe')).toBeInTheDocument();
       expect(table.getByText('Jane Doe')).toBeInTheDocument();
@@ -715,10 +715,9 @@ describe('MembersTable', () => {
         />,
       );
 
-      const nextPaymentHeader = page.getByRole('button', { name: /Next payment/i });
-      await nextPaymentHeader.click();
-
       const table = page.getByRole('table');
+      const nextPaymentHeader = table.getByRole('button', { name: /Next payment/i });
+      await nextPaymentHeader.click();
 
       expect(table.getByText('John Doe')).toBeInTheDocument();
       expect(table.getByText('Jane Doe')).toBeInTheDocument();
@@ -738,10 +737,9 @@ describe('MembersTable', () => {
         />,
       );
 
-      const lastVisitedHeader = page.getByRole('button', { name: /Last visited/i });
-      await lastVisitedHeader.click();
-
       const table = page.getByRole('table');
+      const lastVisitedHeader = table.getByRole('button', { name: /Last visited/i });
+      await lastVisitedHeader.click();
 
       expect(table.getByText('John Doe')).toBeInTheDocument();
       expect(table.getByText('Jane Doe')).toBeInTheDocument();
