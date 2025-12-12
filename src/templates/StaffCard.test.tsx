@@ -183,7 +183,7 @@ describe('StaffCard', () => {
     );
 
     // Find the avatar fallback by looking for initials in the component
-    const fallback = page.getByText('D', { exact: true }).first;
+    const fallback = page.getByText('D', { exact: true }).first();
 
     expect(fallback).toBeInTheDocument();
   });
@@ -198,7 +198,7 @@ describe('StaffCard', () => {
     );
 
     // Find the avatar fallback by looking for initials in the component
-    const fallback = page.getByText('J', { exact: true }).first;
+    const fallback = page.getByText('J', { exact: true }).first();
 
     expect(fallback).toBeInTheDocument();
   });
