@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { StaffCard } from '@/templates/StaffCard';
 
 type StaffMember = {
   id: string;
@@ -226,71 +226,19 @@ export function StaffTable({
               )
             : (
                 sortedStaff.map(staff => (
-                  <Card key={staff.id} className="p-4">
-                    <div className="space-y-4">
-                      {/* Staff Name */}
-                      <div className="flex items-center gap-3 border-b border-border pb-4">
-                        <Avatar className="h-10 w-10 shrink-0">
-                          {staff.photoUrl && (
-                            <AvatarImage src={staff.photoUrl} alt={`${staff.firstName} ${staff.lastName}`} />
-                          )}
-                          <AvatarFallback>
-                            {getInitials(staff.firstName, staff.lastName)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <div className="font-medium text-foreground">
-                            {staff.firstName}
-                            {' '}
-                            {staff.lastName}
-                          </div>
-                          <div className="text-xs text-muted-foreground">{staff.email}</div>
-                        </div>
-                      </div>
-
-                      {/* Staff Details */}
-                      <div className="space-y-3">
-                        <div>
-                          <div className="text-xs font-semibold text-muted-foreground">Role</div>
-                          <div className="mt-1">
-                            <Badge variant={getRoleVariant(staff.role)}>
-                              {staff.role === 'org:admin' ? 'Admin' : staff.role}
-                            </Badge>
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-xs font-semibold text-muted-foreground">Status</div>
-                          <div className="mt-1">
-                            <Badge variant={getStatusVariant()}>
-                              {staff.status}
-                            </Badge>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex items-center justify-end gap-2 border-t border-border pt-4">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEditStaff(staff.id)}
-                          aria-label={`Edit ${staff.firstName} ${staff.lastName}`}
-                          title={`Edit ${staff.firstName} ${staff.lastName}`}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleRemoveStaff(staff.id)}
-                          aria-label={`Remove ${staff.firstName} ${staff.lastName}`}
-                          title={`Remove ${staff.firstName} ${staff.lastName}`}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </Card>
+                  <StaffCard
+                    key={staff.id}
+                    id={staff.id}
+                    firstName={staff.firstName}
+                    lastName={staff.lastName}
+                    email={staff.email}
+                    photoUrl={staff.photoUrl}
+                    emailAddress={staff.emailAddress}
+                    role={staff.role}
+                    status={staff.status}
+                    onEdit={handleEditStaff}
+                    onRemove={handleRemoveStaff}
+                  />
                 ))
               )}
         </div>
