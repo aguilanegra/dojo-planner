@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Pagination } from '@/components/ui/pagination/Pagination';
+import { UserCard } from '@/templates/UserCard';
 import { RolesFilterBar } from './RolesFilterBar';
 
 type User = {
@@ -466,53 +467,24 @@ export function RolesPage() {
       {/* Users Cards - Mobile View */}
       <div className="space-y-4 lg:hidden">
         {paginatedUsers.map(user => (
-          <Card
+          <UserCard
             key={user.id}
-            className="cursor-pointer p-4 hover:bg-secondary/30"
-            onClick={() => handleRowClick(user.id)}
-          >
-            <div className="space-y-4">
-              {/* User Name and Avatar */}
-              <div className="flex items-center gap-3 border-b border-border pb-4">
-                <Avatar className="h-10 w-10 shrink-0">
-                  <AvatarFallback className="text-xs">
-                    {user.name.split(' ').map(n => n[0]).join('')}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <div className="font-medium text-foreground">{user.name}</div>
-                  <div className="text-xs text-muted-foreground">{user.title}</div>
-                </div>
-              </div>
-
-              {/* User Details Grid */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <div className="text-xs font-semibold text-muted-foreground">{t('roles_column')}</div>
-                  <div className="mt-1 text-sm text-foreground">{user.roles}</div>
-                </div>
-
-                <div>
-                  <div className="text-xs font-semibold text-muted-foreground">{t('status_column')}</div>
-                  <div className="mt-1">
-                    <Badge variant={getStatusVariant(user.status)} className="text-xs">
-                      {user.status}
-                    </Badge>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="text-xs font-semibold text-muted-foreground">{t('recent_activity_column')}</div>
-                  <div className="mt-1 text-sm text-foreground">{user.recentActivity}</div>
-                </div>
-
-                <div>
-                  <div className="text-xs font-semibold text-muted-foreground">{t('last_logged_in_column')}</div>
-                  <div className="mt-1 text-sm text-foreground">{user.lastLoggedIn}</div>
-                </div>
-              </div>
-            </div>
-          </Card>
+            id={user.id}
+            name={user.name}
+            title={user.title}
+            roles={user.roles}
+            status={user.status}
+            recentActivity={user.recentActivity}
+            lastLoggedIn={user.lastLoggedIn}
+            avatar={user.avatar}
+            onClick={handleRowClick}
+            labels={{
+              roles: t('roles_column'),
+              status: t('status_column'),
+              recentActivity: t('recent_activity_column'),
+              lastLoggedIn: t('last_logged_in_column'),
+            }}
+          />
         ))}
       </div>
 

@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Pagination } from '@/components/ui/pagination/Pagination';
 import { Spinner } from '@/components/ui/spinner';
+import { MemberCard } from '@/templates/MemberCard';
 import { MemberFilterBar } from './MemberFilterBar';
 
 type Member = {
@@ -469,73 +470,28 @@ export function MembersTable({
                 )
               : (
                   paginatedMembers.map(member => (
-                    <Card
+                    <MemberCard
                       key={member.id}
-                      className="cursor-pointer p-4 transition-colors hover:bg-secondary/30"
-                      onClick={() => onRowClickAction(member.id)}
-                    >
-                      <div className="space-y-4">
-                        {/* Member Name */}
-                        <div className="flex items-center gap-3 border-b border-border pb-4">
-                          <Avatar className="h-10 w-10 shrink-0">
-                            {member.photoUrl && (
-                              <AvatarImage src={member.photoUrl} />
-                            )}
-                            <AvatarFallback>
-                              {getInitials(member.firstName, member.lastName)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <div className="font-medium text-foreground">
-                              {member.firstName}
-                              {' '}
-                              {member.lastName}
-                            </div>
-                            <div className="text-xs text-muted-foreground">{member.email}</div>
-                          </div>
-                        </div>
-
-                        {/* Member Details Grid */}
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <div className="text-xs font-semibold text-muted-foreground">Membership</div>
-                            <div className="mt-1">
-                              <Badge variant={getMembershipTypeVariant(member.membershipType)}>
-                                {getMembershipTypeLabel(member.membershipType)}
-                              </Badge>
-                            </div>
-                          </div>
-
-                          <div>
-                            <div className="text-xs font-semibold text-muted-foreground">Amount Due</div>
-                            <div className="mt-1 text-sm text-foreground">
-                              {formatCurrency(member.amountDue)}
-                            </div>
-                          </div>
-
-                          <div>
-                            <div className="text-xs font-semibold text-muted-foreground">Next Payment</div>
-                            <div className="mt-1 text-sm text-foreground">
-                              {formatDate(member.nextPayment)}
-                            </div>
-                          </div>
-
-                          <div>
-                            <div className="text-xs font-semibold text-muted-foreground">Last Visited</div>
-                            <div className="mt-1 text-sm text-foreground">
-                              {formatDate(member.lastAccessedAt)}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Status */}
-                        <div className="border-t border-border pt-4">
-                          <Badge variant={getStatusColor(member.status)}>
-                            {getStatusLabel(member.status)}
-                          </Badge>
-                        </div>
-                      </div>
-                    </Card>
+                      id={member.id}
+                      firstName={member.firstName}
+                      lastName={member.lastName}
+                      email={member.email}
+                      phone={member.phone}
+                      dateOfBirth={member.dateOfBirth}
+                      photoUrl={member.photoUrl}
+                      lastAccessedAt={member.lastAccessedAt}
+                      status={member.status}
+                      membershipType={member.membershipType}
+                      amountDue={member.amountDue}
+                      nextPayment={member.nextPayment}
+                      onClick={onRowClickAction}
+                      formatters={{
+                        currency: formatCurrency,
+                        date: formatDate,
+                        membershipType: getMembershipTypeLabel,
+                        status: getStatusLabel,
+                      }}
+                    />
                   ))
                 )}
         </div>

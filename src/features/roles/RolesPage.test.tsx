@@ -220,7 +220,8 @@ describe('RolesPage', () => {
     it('should sort by status when clicking Status header', async () => {
       render(<RolesPage />);
 
-      const statusHeader = page.getByRole('button', { name: /status/i });
+      const table = page.getByRole('table');
+      const statusHeader = table.getByRole('button', { name: /status/i });
       await userEvent.click(statusHeader);
 
       expect(page.getByRole('table')).toBeDefined();
@@ -229,7 +230,8 @@ describe('RolesPage', () => {
     it('should sort by recent activity when clicking Recent activity header', async () => {
       render(<RolesPage />);
 
-      const activityHeader = page.getByRole('button', { name: /recent activity/i });
+      const table = page.getByRole('table');
+      const activityHeader = table.getByRole('button', { name: /recent activity/i });
       await userEvent.click(activityHeader);
 
       expect(page.getByRole('table')).toBeDefined();
@@ -238,7 +240,8 @@ describe('RolesPage', () => {
     it('should sort by last logged in when clicking Last logged in header', async () => {
       render(<RolesPage />);
 
-      const lastLoggedInHeader = page.getByRole('button', { name: /last logged in/i });
+      const table = page.getByRole('table');
+      const lastLoggedInHeader = table.getByRole('button', { name: /last logged in/i });
       await userEvent.click(lastLoggedInHeader);
 
       expect(page.getByRole('table')).toBeDefined();
