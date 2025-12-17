@@ -57,7 +57,6 @@
     "messaging": "Messaging",
     "finances": "Finances",
     "memberships": "Memberships",
-    "subscription": "Subscription",
     "programs": "Programs",
     "marketing": "Marketing",
     "account_settings": "Account Settings",
@@ -354,6 +353,7 @@
   },
   "UserMenu": {
     "manage_profile": "Manage Profile",
+    "subscription": "Subscription",
     "sign_out": "Sign Out"
   },
   "ManageProfileDialog": {

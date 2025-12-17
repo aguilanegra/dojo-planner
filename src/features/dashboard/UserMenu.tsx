@@ -1,11 +1,12 @@
 'use client';
 
 import { useClerk, useUser } from '@clerk/nextjs';
-import { LogOut, User } from 'lucide-react';
+import { CreditCard, LogOut, User } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { SubscriptionDialog } from '@/features/billing/SubscriptionDialog';
 import { ManageProfileDialog } from '@/features/settings/ManageProfileDialog';
 
 export function UserMenu() {
@@ -13,6 +14,7 @@ export function UserMenu() {
   const { signOut } = useClerk();
   const { user } = useUser();
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  const [subscriptionDialogOpen, setSubscriptionDialogOpen] = useState(false);
 
   const userInitials = user
     ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`
@@ -44,6 +46,13 @@ export function UserMenu() {
             <User className="mr-2 h-4 w-4" />
             {t('manage_profile')}
           </DropdownMenuItem>
+          <DropdownMenuItem
+            className="cursor-pointer"
+            onClick={() => setSubscriptionDialogOpen(true)}
+          >
+            <CreditCard className="mr-2 h-4 w-4" />
+            {t('subscription')}
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             className="cursor-pointer"
@@ -59,6 +68,11 @@ export function UserMenu() {
       <ManageProfileDialog
         open={profileDialogOpen}
         onOpenChange={setProfileDialogOpen}
+      />
+
+      <SubscriptionDialog
+        open={subscriptionDialogOpen}
+        onOpenChange={setSubscriptionDialogOpen}
       />
     </>
   );
