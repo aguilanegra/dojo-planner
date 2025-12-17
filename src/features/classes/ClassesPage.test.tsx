@@ -110,6 +110,54 @@ describe('ClassesPage', () => {
       expect(addButton).toBeInTheDocument();
     });
 
+    it('should render Manage Tags button', () => {
+      render(
+        <I18nWrapper>
+          <ClassesPage />
+        </I18nWrapper>,
+      );
+
+      const manageTagsButton = page.getByRole('button', { name: /Manage Tags/i });
+
+      expect(manageTagsButton).toBeInTheDocument();
+    });
+
+    it('should open Class Tags Management sheet when Manage Tags button is clicked', async () => {
+      render(
+        <I18nWrapper>
+          <ClassesPage />
+        </I18nWrapper>,
+      );
+
+      const manageTagsButton = page.getByRole('button', { name: /Manage Tags/i });
+      await userEvent.click(manageTagsButton);
+
+      const sheetTitle = page.getByRole('heading', { name: 'Class Tags Management' });
+
+      expect(sheetTitle).toBeInTheDocument();
+    });
+
+    it('should close Class Tags Management sheet when close button is clicked', async () => {
+      render(
+        <I18nWrapper>
+          <ClassesPage />
+        </I18nWrapper>,
+      );
+
+      const manageTagsButton = page.getByRole('button', { name: /Manage Tags/i });
+      await userEvent.click(manageTagsButton);
+
+      const closeButton = page.getByRole('button', { name: 'Close' });
+      await userEvent.click(closeButton);
+
+      // Wait for animation to complete
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      const sheetTitles = page.getByRole('heading', { name: 'Class Tags Management' });
+
+      expect(sheetTitles.elements()).toHaveLength(0);
+    });
+
     it('should render view toggle buttons', () => {
       render(
         <I18nWrapper>
