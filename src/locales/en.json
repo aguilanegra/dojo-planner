@@ -530,6 +530,7 @@
     "trial_options_label": "Trial Options",
     "total_members_label": "Total Members",
     "add_new_membership_button": "Add New Membership",
+    "manage_tags_button": "Manage Tags",
     "search_placeholder": "Search memberships...",
     "all_tags_filter": "All Tags",
     "all_programs_filter": "All Programs",
@@ -540,6 +541,17 @@
     "program_kids": "Kids",
     "program_women": "Women",
     "program_competition": "Competition"
+  },
+  "MembershipTagsManagement": {
+    "title": "Membership Tags Management",
+    "search_placeholder": "Search tags...",
+    "add_new_tag_button": "Add New Tag",
+    "tag_name_column": "Tag Name",
+    "usage_column": "Usage",
+    "actions_column": "Actions",
+    "edit_button": "Edit",
+    "delete_button": "Delete",
+    "no_tags_found": "No tags found."
   },
   "MembershipCard": {
     "status_active": "Active",

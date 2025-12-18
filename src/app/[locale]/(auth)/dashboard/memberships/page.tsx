@@ -1,13 +1,14 @@
 'use client';
 
-import type { MembershipFilters } from '@/features/memberships/MembershipFilterBar';
+import type { AvailableTag, MembershipFilters } from '@/features/memberships/MembershipFilterBar';
 import type { MembershipCardProps, MembershipStatus } from '@/templates/MembershipCard';
-import { Plus } from 'lucide-react';
+import { Plus, Tags } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { MembershipFilterBar } from '@/features/memberships/MembershipFilterBar';
+import { MembershipTagsManagement } from '@/features/memberships/MembershipTagsManagement';
 import { MembershipCard } from '@/templates/MembershipCard';
 
 type ProgramType = 'Adult' | 'Kids' | 'Women' | 'Competition';
@@ -137,6 +138,7 @@ function handleEditMembership(_id: string) {
 
 export default function MembershipsPage() {
   const t = useTranslations('MembershipsPage');
+  const [isTagsSheetOpen, setIsTagsSheetOpen] = useState(false);
   const [filters, setFilters] = useState<MembershipFilters>({
     search: '',
     tag: 'all',
@@ -155,30 +157,89 @@ export default function MembershipsPage() {
     totalMembers: mockMemberships.reduce((sum, m) => sum + m.activeCount, 0),
   }), []);
 
+  // Helper function to get tag for a membership
+  const getMembershipTag = (membership: Membership): AvailableTag => {
+    if (membership.isTrial) {
+      return 'Trial';
+    }
+    if (membership.status === 'Inactive') {
+      return 'Inactive';
+    }
+    return 'Active';
+  };
+
+  // Helper function to check if membership matches tag filter
+  const matchesTagFilter = (membership: Membership, tag: string): boolean => {
+    if (tag === 'all') {
+      return true;
+    }
+    if (tag === 'Trial') {
+      return !!membership.isTrial;
+    }
+    if (tag === 'Active') {
+      return membership.status === 'Active' && !membership.isTrial;
+    }
+    if (tag === 'Inactive') {
+      return membership.status === 'Inactive';
+    }
+    return true;
+  };
+
+  // Helper function to check if membership matches search filter
+  const matchesSearchFilter = (membership: Membership, search: string): boolean => {
+    if (!search) {
+      return true;
+    }
+    const searchLower = search.toLowerCase();
+    return membership.name.toLowerCase().includes(searchLower)
+      || membership.category.toLowerCase().includes(searchLower);
+  };
+
+  // Helper function to check if membership matches program filter
+  const matchesProgramFilter = (membership: Membership, program: string): boolean => {
+    return program === 'all' || membership.program === program;
+  };
+
   const filteredMemberships = useMemo(() => {
     return mockMemberships.filter((membership) => {
-      // Search filter
-      const matchesSearch = membership.name.toLowerCase().includes(filters.search.toLowerCase())
-        || membership.category.toLowerCase().includes(filters.search.toLowerCase());
-
-      // Tag filter (status/trial)
-      let matchesTag = true;
-      if (filters.tag !== 'all') {
-        if (filters.tag === 'Trial') {
-          matchesTag = !!membership.isTrial;
-        } else if (filters.tag === 'Active') {
-          matchesTag = membership.status === 'Active' && !membership.isTrial;
-        } else if (filters.tag === 'Inactive') {
-          matchesTag = membership.status === 'Inactive';
-        }
-      }
-
-      // Program filter
-      const matchesProgram = filters.program === 'all' || membership.program === filters.program;
-
+      const matchesSearch = matchesSearchFilter(membership, filters.search);
+      const matchesTag = matchesTagFilter(membership, filters.tag);
+      const matchesProgram = matchesProgramFilter(membership, filters.program);
       return matchesSearch && matchesTag && matchesProgram;
     });
   }, [filters]);
+
+  // Compute available tags based on memberships that match current search and program filters
+  const availableTags = useMemo((): AvailableTag[] => {
+    const membershipsMatchingOtherFilters = mockMemberships.filter((membership) => {
+      const matchesSearch = matchesSearchFilter(membership, filters.search);
+      const matchesProgram = matchesProgramFilter(membership, filters.program);
+      return matchesSearch && matchesProgram;
+    });
+
+    const tagsInResults = new Set<AvailableTag>();
+    membershipsMatchingOtherFilters.forEach((membership) => {
+      tagsInResults.add(getMembershipTag(membership));
+    });
+
+    return Array.from(tagsInResults);
+  }, [filters.search, filters.program]);
+
+  // Compute available programs based on memberships that match current search and tag filters
+  const availablePrograms = useMemo((): string[] => {
+    const membershipsMatchingOtherFilters = mockMemberships.filter((membership) => {
+      const matchesSearch = matchesSearchFilter(membership, filters.search);
+      const matchesTag = matchesTagFilter(membership, filters.tag);
+      return matchesSearch && matchesTag;
+    });
+
+    const programsInResults = new Set<string>();
+    membershipsMatchingOtherFilters.forEach((membership) => {
+      programsInResults.add(membership.program);
+    });
+
+    return Array.from(programsInResults);
+  }, [filters.search, filters.tag]);
 
   return (
     <div className="w-full space-y-6">
@@ -210,7 +271,16 @@ export default function MembershipsPage() {
         </Card>
       </div>
 
-      {/* Header with Filter Bar */}
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <h1 className="text-3xl font-bold text-foreground">{t('title')}</h1>
+        <Button variant="outline" onClick={() => setIsTagsSheetOpen(true)}>
+          <Tags className="mr-1 size-4" />
+          {t('manage_tags_button')}
+        </Button>
+      </div>
+
+      {/* Filter Bar and Add Button */}
       <div className="space-y-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
           {/* Filter Bar */}
@@ -218,6 +288,8 @@ export default function MembershipsPage() {
             <MembershipFilterBar
               onFiltersChangeAction={setFilters}
               programs={allPrograms}
+              availableTags={availableTags}
+              availablePrograms={availablePrograms}
             />
           </div>
 
@@ -228,9 +300,6 @@ export default function MembershipsPage() {
           </Button>
         </div>
       </div>
-
-      {/* Title */}
-      <h1 className="text-3xl font-bold text-foreground">{t('title')}</h1>
 
       {/* Memberships Grid */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -262,6 +331,12 @@ export default function MembershipsPage() {
               })
             )}
       </div>
+
+      {/* Membership Tags Management Sheet */}
+      <MembershipTagsManagement
+        open={isTagsSheetOpen}
+        onOpenChange={setIsTagsSheetOpen}
+      />
     </div>
   );
 }
