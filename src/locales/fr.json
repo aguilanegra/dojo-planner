@@ -533,6 +533,7 @@
     "trial_options_label": "Options d'essai",
     "total_members_label": "Nombre total de membres",
     "add_new_membership_button": "Ajouter une nouvelle adhésion",
+    "manage_tags_button": "Gérer les étiquettes",
     "search_placeholder": "Rechercher des adhésions...",
     "all_tags_filter": "Tous les tags",
     "all_programs_filter": "Tous les programmes",
@@ -543,6 +544,17 @@
     "program_kids": "Enfants",
     "program_women": "Femmes",
     "program_competition": "Compétition"
+  },
+  "MembershipTagsManagement": {
+    "title": "Gestion des étiquettes d'adhésion",
+    "search_placeholder": "Rechercher des étiquettes...",
+    "add_new_tag_button": "Ajouter une nouvelle étiquette",
+    "tag_name_column": "Nom de l'étiquette",
+    "usage_column": "Utilisation",
+    "actions_column": "Actions",
+    "edit_button": "Modifier",
+    "delete_button": "Supprimer",
+    "no_tags_found": "Aucune étiquette trouvée."
   },
   "MembershipCard": {
     "status_active": "Actif",

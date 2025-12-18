@@ -18,12 +18,21 @@ export type MembershipFilters = {
   program: string;
 };
 
+export type AvailableTag = 'Active' | 'Trial' | 'Inactive';
+
 type MembershipFilterBarProps = {
   onFiltersChangeAction: (filters: MembershipFilters) => void;
   programs: string[];
+  availableTags?: AvailableTag[];
+  availablePrograms?: string[];
 };
 
-export function MembershipFilterBar({ onFiltersChangeAction, programs }: MembershipFilterBarProps) {
+export function MembershipFilterBar({
+  onFiltersChangeAction,
+  programs,
+  availableTags,
+  availablePrograms,
+}: MembershipFilterBarProps) {
   const t = useTranslations('MembershipsPage');
   const [filters, setFilters] = useState<MembershipFilters>({
     search: '',
@@ -49,12 +58,17 @@ export function MembershipFilterBar({ onFiltersChangeAction, programs }: Members
     onFiltersChangeAction(newFilters);
   };
 
-  const tags = [
+  const allTags: Array<{ value: string; label: string }> = [
     { value: 'all', label: t('all_tags_filter') },
     { value: 'Active', label: t('tag_active') },
     { value: 'Trial', label: t('tag_trial') },
     { value: 'Inactive', label: t('tag_inactive') },
   ];
+
+  // Filter tags based on availableTags prop (if provided)
+  const tags = availableTags
+    ? allTags.filter(tag => tag.value === 'all' || availableTags.includes(tag.value as AvailableTag))
+    : allTags;
 
   const programLabels: Record<string, string> = {
     Adult: t('program_adult'),
@@ -63,9 +77,12 @@ export function MembershipFilterBar({ onFiltersChangeAction, programs }: Members
     Competition: t('program_competition'),
   };
 
+  // Filter programs based on availablePrograms prop (if provided)
+  const filteredPrograms = availablePrograms || programs;
+
   const programOptions = [
     { value: 'all', label: t('all_programs_filter') },
-    ...programs.map(program => ({
+    ...filteredPrograms.map(program => ({
       value: program,
       label: programLabels[program] || program,
     })),
