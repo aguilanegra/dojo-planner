@@ -325,7 +325,19 @@
     "filter_label": "Filtrer",
     "list_view_label": "Liste",
     "grid_view_label": "Grille",
-    "add_new_class_button": "Ajouter un nouveau cours"
+    "add_new_class_button": "Ajouter un nouveau cours",
+    "manage_tags_button": "Gérer les étiquettes"
+  },
+  "ClassTagsManagement": {
+    "title": "Gestion des étiquettes de cours",
+    "search_placeholder": "Rechercher des étiquettes...",
+    "add_new_tag_button": "Ajouter une nouvelle étiquette",
+    "tag_name_column": "Nom de l'étiquette",
+    "usage_column": "Utilisation",
+    "actions_column": "Actions",
+    "edit_button": "Modifier",
+    "delete_button": "Supprimer",
+    "no_tags_found": "Aucune étiquette trouvée."
   },
   "SchedulePage": {
     "title": "Emploi du temps",

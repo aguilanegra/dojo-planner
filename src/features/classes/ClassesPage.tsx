@@ -1,7 +1,7 @@
 'use client';
 
 import type { ClassFilters } from './ClassFilterBar';
-import { Grid3x3, List, Plus } from 'lucide-react';
+import { Grid3x3, List, Plus, Tags } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -10,12 +10,14 @@ import { Card } from '@/components/ui/card';
 import { ClassCard } from '@/templates/ClassCard';
 import { mockClasses } from './classesData';
 import { ClassFilterBar } from './ClassFilterBar';
+import { ClassTagsManagement } from './ClassTagsManagement';
 import { MonthlyView } from './MonthlyView';
 import { WeeklyView } from './WeeklyView';
 
 export function ClassesPage() {
   const t = useTranslations('ClassesPage');
   const [viewType, setViewType] = useState('grid');
+  const [isTagsSheetOpen, setIsTagsSheetOpen] = useState(false);
   const [filters, setFilters] = useState<ClassFilters>({
     search: '',
     tag: 'all',
@@ -74,7 +76,13 @@ export function ClassesPage() {
       </div>
 
       {/* Header */}
-      <h1 className="text-3xl font-bold text-foreground">{t('title')}</h1>
+      <div className="flex items-center gap-4">
+        <h1 className="text-3xl font-bold text-foreground">{t('title')}</h1>
+        <Button variant="outline" onClick={() => setIsTagsSheetOpen(true)}>
+          <Tags className="mr-1 size-4" />
+          {t('manage_tags_button')}
+        </Button>
+      </div>
 
       {/* Controls - Shown for all views */}
       <div className="space-y-4">
@@ -133,6 +141,12 @@ export function ClassesPage() {
           ))}
         </div>
       )}
+
+      {/* Class Tags Management Sheet */}
+      <ClassTagsManagement
+        open={isTagsSheetOpen}
+        onOpenChange={setIsTagsSheetOpen}
+      />
     </div>
   );
 }

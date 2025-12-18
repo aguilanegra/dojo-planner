@@ -322,7 +322,19 @@
     "total_instructors_label": "Instructors",
     "list_view_label": "List",
     "grid_view_label": "Grid",
-    "add_new_class_button": "Add New Class"
+    "add_new_class_button": "Add New Class",
+    "manage_tags_button": "Manage Tags"
+  },
+  "ClassTagsManagement": {
+    "title": "Class Tags Management",
+    "search_placeholder": "Search tags...",
+    "add_new_tag_button": "Add New Tag",
+    "tag_name_column": "Tag Name",
+    "usage_column": "Usage",
+    "actions_column": "Actions",
+    "edit_button": "Edit",
+    "delete_button": "Delete",
+    "no_tags_found": "No tags found."
   },
   "SchedulePage": {
     "title": "Schedule",
