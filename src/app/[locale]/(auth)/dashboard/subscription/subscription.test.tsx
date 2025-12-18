@@ -1,8 +1,12 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { page } from 'vitest/browser';
 import { I18nWrapper } from '@/lib/test-utils';
 import SubscriptionPage from './page';
+
+vi.mock('next/navigation', () => ({
+  redirect: vi.fn(),
+}));
 
 describe('Subscription Page', () => {
   it('renders subscription header', () => {

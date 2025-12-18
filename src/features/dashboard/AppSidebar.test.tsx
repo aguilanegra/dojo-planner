@@ -27,9 +27,9 @@ describe('AppSidebar', () => {
       expect(dashboardLayout.business_section_label).toBe('Business');
 
       // Check Business items exist and have correct values
+      // Note: subscription was moved to user menu dropdown
       expect(dashboardLayout.finances).toBe('Finances');
       expect(dashboardLayout.memberships).toBe('Memberships');
-      expect(dashboardLayout.subscription).toBe('Subscription');
       expect(dashboardLayout.marketing).toBe('Marketing');
     });
 
@@ -54,6 +54,7 @@ describe('AppSidebar', () => {
 
     it('should have all required localization keys for navigation', () => {
       const dashboardLayout = messages.DashboardLayout;
+      // Note: subscription was moved to user menu dropdown
       const requiredKeys = [
         'academy_section_label',
         'business_section_label',
@@ -67,7 +68,6 @@ describe('AppSidebar', () => {
         'messaging',
         'finances',
         'memberships',
-        'subscription',
         'programs',
         'marketing',
         'account_settings',

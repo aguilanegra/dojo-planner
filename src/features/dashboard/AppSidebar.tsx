@@ -1,7 +1,7 @@
 'use client';
 
 import { useClerk } from '@clerk/nextjs';
-import { BookMarked, Briefcase, CalendarDays, CircleUser, CreditCard, HelpCircle, Home, LogOut, Mail, Map, Megaphone, Settings, Users, Users2 } from 'lucide-react';
+import { BookMarked, Briefcase, CalendarDays, CircleUser, HelpCircle, Home, LogOut, Mail, Map, Megaphone, Settings, Users, Users2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Badge } from '@/components/ui/badge';
 import { Sidebar, SidebarContent, SidebarHeader, SidebarRail } from '@/components/ui/sidebar';
@@ -82,11 +82,6 @@ export const AppSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
               title: t('memberships'),
               url: '/dashboard/memberships',
               icon: Users2,
-            },
-            {
-              title: t('subscription'),
-              url: '/dashboard/subscription',
-              icon: CreditCard,
             },
             {
               title: t('marketing'),
