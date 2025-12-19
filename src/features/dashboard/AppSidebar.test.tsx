@@ -13,7 +13,6 @@ describe('AppSidebar', () => {
       expect(dashboardLayout.dashboard).toBe('Dashboard');
       expect(dashboardLayout.programs).toBe('Programs');
       expect(dashboardLayout.classes).toBe('Classes');
-      expect(dashboardLayout.schedule).toBe('Schedule');
       expect(dashboardLayout.members).toBe('Members');
       expect(dashboardLayout.roles).toBe('Roles');
       expect(dashboardLayout.staff).toBe('Staff');
@@ -61,7 +60,6 @@ describe('AppSidebar', () => {
         'settings_section_label',
         'dashboard',
         'classes',
-        'schedule',
         'members',
         'roles',
         'staff',

@@ -1,5 +1,6 @@
 'use client';
 
+import type { MemberNote } from '@/features/members/details/MemberDetailNotes';
 import { useOrganization } from '@clerk/nextjs';
 import { Plus, Trash2 } from 'lucide-react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
@@ -10,9 +11,10 @@ import { MemberBreadcrumb } from '@/components/ui/breadcrumb/MemberBreadcrumb';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { MemberDetailFinancial } from '@/features/members/details/MemberDetailFinancial';
+import { MemberDetailNotes } from '@/features/members/details/MemberDetailNotes';
 import { useMembersCache } from '@/hooks/useMembersCache';
 
-type Tab = 'overview' | 'financial';
+type Tab = 'overview' | 'financial' | 'notes';
 
 type ContactInfo = {
   phone?: string;
@@ -92,6 +94,35 @@ type MemberData = {
   agreement: Agreement;
   billingHistory: BillingHistoryItem[];
 };
+
+// Mock notes data for demonstration
+// Note: Author names are for demonstration purposes only
+const MOCK_NOTES: MemberNote[] = [
+  {
+    id: 'note-1',
+    date: 'Dec 15, 2025 at 2:30 PM',
+    author: 'Staff Member',
+    content: 'Member requested to pause membership for 2 weeks due to travel. Approved and scheduled for Jan 5-19, 2026.',
+  },
+  {
+    id: 'note-2',
+    date: 'Nov 28, 2025 at 10:15 AM',
+    author: 'Front Desk',
+    content: 'Updated emergency contact information. New contact: spouse at the same address.',
+  },
+  {
+    id: 'note-3',
+    date: 'Oct 10, 2025 at 4:45 PM',
+    author: 'Instructor',
+    content: 'Great progress in fundamentals class. Ready to move up to intermediate level next month.',
+  },
+  {
+    id: 'note-4',
+    date: 'Sep 15, 2025 at 11:00 AM',
+    author: 'Admin',
+    content: 'Welcome call completed. Member is interested in competition training starting next year.',
+  },
+];
 
 // Base mock data fallback
 const BASE_MOCK_DATA = {
@@ -381,7 +412,7 @@ export default function EditMemberPage() {
   // Handler to sync tab from URL
   const syncTabFromUrl = useCallback(() => {
     const tabParam = searchParams.get('tab');
-    if (tabParam === 'financial' || tabParam === 'overview') {
+    if (tabParam === 'financial' || tabParam === 'overview' || tabParam === 'notes') {
       dispatch({ type: 'SET_ACTIVE_TAB', payload: tabParam as Tab });
     }
   }, [searchParams]);
@@ -554,184 +585,204 @@ export default function EditMemberPage() {
           >
             Financial
           </button>
+          <button
+            type="button"
+            onClick={() => handleTabChange('notes')}
+            className={`cursor-pointer pb-3 text-sm font-semibold transition-colors ${
+              state.activeTab === 'notes'
+                ? 'border-b-2 border-foreground text-foreground'
+                : 'border-b-2 border-transparent text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            Notes
+          </button>
         </div>
       </div>
 
       {/* Tab Content */}
-      {state.activeTab === 'overview'
-        ? (
-            <div className="space-y-6">
-              {/* Main Content Grid */}
-              <div className="grid gap-6 lg:grid-cols-2">
-                {/* Contact Information - Read Only Display */}
-                <Card className="flex flex-col p-6">
+      {state.activeTab === 'overview' && (
+        <div className="space-y-6">
+          {/* Main Content Grid */}
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* Contact Information - Read Only Display */}
+            <Card className="flex flex-col p-6">
+              <div>
+                <h2 className="mb-6 text-lg font-semibold text-foreground">Contact Information</h2>
+                <div className="space-y-4">
                   <div>
-                    <h2 className="mb-6 text-lg font-semibold text-foreground">Contact Information</h2>
-                    <div className="space-y-4">
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground">Address:</p>
-                        <p className="text-sm text-foreground">
-                          {state.currentData.contactInfo.street && `${state.currentData.contactInfo.street}, `}
-                          {state.currentData.contactInfo.city && `${state.currentData.contactInfo.city} `}
-                          {state.currentData.contactInfo.state && `${state.currentData.contactInfo.state} `}
-                          {state.currentData.contactInfo.zipCode}
+                    <p className="text-xs font-medium text-muted-foreground">Address:</p>
+                    <p className="text-sm text-foreground">
+                      {state.currentData.contactInfo.street && `${state.currentData.contactInfo.street}, `}
+                      {state.currentData.contactInfo.city && `${state.currentData.contactInfo.city} `}
+                      {state.currentData.contactInfo.state && `${state.currentData.contactInfo.state} `}
+                      {state.currentData.contactInfo.zipCode}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground">Phone:</p>
+                    <p className="text-sm text-foreground">{state.currentData.contactInfo.phone || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground">Email:</p>
+                    <p className="text-sm text-foreground">{state.currentData.contactInfo.email || '—'}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-auto flex justify-end pt-6">
+                <Button className="w-fit bg-foreground text-background hover:bg-foreground/90">
+                  Edit Details
+                </Button>
+              </div>
+            </Card>
+
+            {/* Subscription Details - Read Only */}
+            <Card className="flex flex-col p-6">
+              <div>
+                <h2 className="mb-6 text-lg font-semibold text-foreground">Subscription Details</h2>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold text-foreground">{state.currentData.subscriptionDetails.membershipType}</h3>
+                      <Badge variant={getStatusColor(state.currentData.subscriptionDetails.status)} className="mt-2">
+                        {getStatusLabel(state.currentData.subscriptionDetails.status)}
+                      </Badge>
+                    </div>
+                    {state.currentData.subscriptionDetails.amount > 0 && (
+                      <div className="text-right">
+                        <p className="text-2xl font-bold text-primary">
+                          $
+                          {state.currentData.subscriptionDetails.amount}
                         </p>
                       </div>
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground">Phone:</p>
-                        <p className="text-sm text-foreground">{state.currentData.contactInfo.phone || '—'}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground">Email:</p>
-                        <p className="text-sm text-foreground">{state.currentData.contactInfo.email || '—'}</p>
-                      </div>
-                    </div>
+                    )}
                   </div>
-                  <div className="mt-auto flex justify-end pt-6">
-                    <Button className="w-fit bg-foreground text-background hover:bg-foreground/90">
-                      Edit Details
-                    </Button>
-                  </div>
-                </Card>
-
-                {/* Subscription Details - Read Only */}
-                <Card className="flex flex-col p-6">
-                  <div>
-                    <h2 className="mb-6 text-lg font-semibold text-foreground">Subscription Details</h2>
-                    <div className="space-y-4">
+                  {state.currentData.subscriptionDetails.pastDuePayments > 0 && (
+                    <div className="border-t border-border pt-4">
                       <div className="flex items-center justify-between">
                         <div>
-                          <h3 className="font-semibold text-foreground">{state.currentData.subscriptionDetails.membershipType}</h3>
-                          <Badge variant={getStatusColor(state.currentData.subscriptionDetails.status)} className="mt-2">
-                            {getStatusLabel(state.currentData.subscriptionDetails.status)}
-                          </Badge>
+                          <h3 className="font-semibold text-foreground">Past Due Payments</h3>
+                          <p className="mt-1 text-sm text-muted-foreground">{state.currentData.subscriptionDetails.lastPayment}</p>
                         </div>
-                        {state.currentData.subscriptionDetails.amount > 0 && (
-                          <div className="text-right">
-                            <p className="text-2xl font-bold text-primary">
-                              $
-                              {state.currentData.subscriptionDetails.amount}
-                            </p>
-                          </div>
-                        )}
+                        <p className="text-2xl font-bold text-destructive">
+                          $
+                          {state.currentData.subscriptionDetails.pastDuePayments.toFixed(2)}
+                        </p>
                       </div>
-                      {state.currentData.subscriptionDetails.pastDuePayments > 0 && (
-                        <div className="border-t border-border pt-4">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h3 className="font-semibold text-foreground">Past Due Payments</h3>
-                              <p className="mt-1 text-sm text-muted-foreground">{state.currentData.subscriptionDetails.lastPayment}</p>
-                            </div>
-                            <p className="text-2xl font-bold text-destructive">
-                              $
-                              {state.currentData.subscriptionDetails.pastDuePayments.toFixed(2)}
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                      {state.currentData.subscriptionDetails.pastDuePayments === 0 && (
-                        <div className="border-t border-border pt-4">
-                          <p className="text-sm text-muted-foreground">No payments due</p>
-                        </div>
-                      )}
                     </div>
-                  </div>
-                  <div className="mt-auto flex justify-end gap-3 pt-6">
-                    <Button className="w-fit bg-foreground text-background hover:bg-foreground/90">
-                      Change Membership
-                    </Button>
-                    <Button variant="destructive" className="w-fit">
-                      Hold
-                    </Button>
-                  </div>
-                </Card>
-              </div>
-
-              {/* Family Members Section - With Remove Buttons */}
-              <div className="space-y-6">
-                <h2 className="text-lg font-semibold text-foreground">Family Members</h2>
-
-                {state.currentData.familyMembers.length > 0 && (
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {state.currentData.familyMembers.map((member: FamilyMember) => (
-                      <Card key={member.id} className="relative p-6">
-                        {/* Remove Button */}
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          className="absolute top-4 right-4"
-                          onClick={() => handleRemoveFamilyMember(member.id)}
-                          aria-label={`Remove ${member.name}`}
-                          title={`Remove ${member.name}`}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-
-                        <div className="mb-4 flex flex-col gap-3 pr-10">
-                          <div className="flex min-w-0 items-center gap-3">
-                            <Avatar className="h-10 w-10 shrink-0">
-                              {member.photoUrl && <AvatarImage src={member.photoUrl} alt={member.name} />}
-                              <AvatarFallback>{getInitials(member.name)}</AvatarFallback>
-                            </Avatar>
-                            <div className="min-w-0 flex-1">
-                              <h3 className="truncate font-semibold text-foreground">{member.name}</h3>
-                              <Badge variant="outline" className="mt-1 text-xs">{member.relationship}</Badge>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="space-y-3 border-t border-border pt-4">
-                          <div>
-                            <p className="text-xs font-semibold text-muted-foreground">{member.membershipType}</p>
-                            <Badge variant={getStatusColor(member.status)} className="mt-2">
-                              {getStatusLabel(member.status)}
-                            </Badge>
-                          </div>
-                          <p className="text-2xl font-bold text-primary">
-                            $
-                            {member.amount}
-                          </p>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-
-                {/* Add Family Member Card */}
-                <Card className="border-2 border-dashed p-6">
-                  <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
-                    <div className="rounded-lg bg-secondary p-3">
-                      <Plus className="h-6 w-6 text-muted-foreground" />
+                  )}
+                  {state.currentData.subscriptionDetails.pastDuePayments === 0 && (
+                    <div className="border-t border-border pt-4">
+                      <p className="text-sm text-muted-foreground">No payments due</p>
                     </div>
-                    <h3 className="font-semibold text-foreground">Add Family Member</h3>
-                    <p className="text-sm text-muted-foreground">Create a new family membership</p>
-                    <Button variant="outline" className="mt-2">
-                      Add Family Member
-                    </Button>
-                  </div>
-                </Card>
+                  )}
+                </div>
               </div>
+              <div className="mt-auto flex justify-end gap-3 pt-6">
+                <Button className="w-fit bg-foreground text-background hover:bg-foreground/90">
+                  Change Membership
+                </Button>
+                <Button variant="destructive" className="w-fit">
+                  Hold
+                </Button>
+              </div>
+            </Card>
+          </div>
 
-            </div>
-          )
-        : (
-            <MemberDetailFinancial
-              memberId={memberId}
-              memberName={state.currentData.memberName}
-              photoUrl={state.currentData.photoUrl}
-              billingContactRole={state.currentData.billingContactRole}
-              membershipBadge={state.currentData.membershipBadge}
-              amountOverdue={state.currentData.amountOverdue}
-              membershipDetails={state.currentData.membershipDetails}
-              paymentMethod={state.currentData.paymentMethod}
-              agreement={state.currentData.agreement}
-              billingHistory={state.currentData.billingHistory}
-              hideHeader={true}
-              onChangeMembership={() => console.warn('Change membership')}
-              onSendSecureLink={() => console.warn('Send secure link')}
-              onDownloadAgreement={() => console.warn('Download agreement')}
-              onRefund={() => console.warn('Refund')}
-            />
-          )}
+          {/* Family Members Section - With Remove Buttons */}
+          <div className="space-y-6">
+            <h2 className="text-lg font-semibold text-foreground">Family Members</h2>
+
+            {state.currentData.familyMembers.length > 0 && (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {state.currentData.familyMembers.map((member: FamilyMember) => (
+                  <Card key={member.id} className="relative p-6">
+                    {/* Remove Button */}
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="absolute top-4 right-4"
+                      onClick={() => handleRemoveFamilyMember(member.id)}
+                      aria-label={`Remove ${member.name}`}
+                      title={`Remove ${member.name}`}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+
+                    <div className="mb-4 flex flex-col gap-3 pr-10">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <Avatar className="h-10 w-10 shrink-0">
+                          {member.photoUrl && <AvatarImage src={member.photoUrl} alt={member.name} />}
+                          <AvatarFallback>{getInitials(member.name)}</AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="truncate font-semibold text-foreground">{member.name}</h3>
+                          <Badge variant="outline" className="mt-1 text-xs">{member.relationship}</Badge>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-3 border-t border-border pt-4">
+                      <div>
+                        <p className="text-xs font-semibold text-muted-foreground">{member.membershipType}</p>
+                        <Badge variant={getStatusColor(member.status)} className="mt-2">
+                          {getStatusLabel(member.status)}
+                        </Badge>
+                      </div>
+                      <p className="text-2xl font-bold text-primary">
+                        $
+                        {member.amount}
+                      </p>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            {/* Add Family Member Card */}
+            <Card className="border-2 border-dashed p-6">
+              <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
+                <div className="rounded-lg bg-secondary p-3">
+                  <Plus className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <h3 className="font-semibold text-foreground">Add Family Member</h3>
+                <p className="text-sm text-muted-foreground">Create a new family membership</p>
+                <Button variant="outline" className="mt-2">
+                  Add Family Member
+                </Button>
+              </div>
+            </Card>
+          </div>
+
+        </div>
+      )}
+
+      {state.activeTab === 'financial' && (
+        <MemberDetailFinancial
+          memberId={memberId}
+          memberName={state.currentData.memberName}
+          photoUrl={state.currentData.photoUrl}
+          billingContactRole={state.currentData.billingContactRole}
+          membershipBadge={state.currentData.membershipBadge}
+          amountOverdue={state.currentData.amountOverdue}
+          membershipDetails={state.currentData.membershipDetails}
+          paymentMethod={state.currentData.paymentMethod}
+          agreement={state.currentData.agreement}
+          billingHistory={state.currentData.billingHistory}
+          hideHeader={true}
+          onChangeMembership={() => console.warn('Change membership')}
+          onSendSecureLink={() => console.warn('Send secure link')}
+          onDownloadAgreement={() => console.warn('Download agreement')}
+          onRefund={() => console.warn('Refund')}
+        />
+      )}
+
+      {state.activeTab === 'notes' && (
+        <MemberDetailNotes
+          memberId={memberId}
+          memberName={state.currentData.memberName}
+          notes={MOCK_NOTES}
+          onAddNote={content => console.info('New note added:', content)}
+        />
+      )}
     </div>
   );
 }

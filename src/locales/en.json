@@ -50,7 +50,6 @@
     "settings_section_label": "Settings",
     "dashboard": "Dashboard",
     "classes": "Classes",
-    "schedule": "Schedule",
     "members": "Members",
     "roles": "Roles",
     "staff": "Staff",
@@ -213,6 +212,19 @@
     "actions_column": "Actions",
     "refund_button": "Refund"
   },
+  "MemberDetailNotes": {
+    "add_note_title": "Add Note",
+    "note_placeholder": "Enter your note here...",
+    "save_note_button": "Save Note",
+    "saving_button": "Saving...",
+    "notes_history_title": "Notes History",
+    "search_placeholder": "Search notes...",
+    "no_notes": "No notes yet",
+    "no_matching_notes": "No notes match your search",
+    "table_date": "Date",
+    "table_author": "Author",
+    "table_note": "Note"
+  },
   "AddMemberWizard": {
     "MemberTypeStep": {
       "title": "Choose Member Type",
@@ -335,14 +347,6 @@
     "edit_button": "Edit",
     "delete_button": "Delete",
     "no_tags_found": "No tags found."
-  },
-  "SchedulePage": {
-    "title": "Schedule",
-    "import_calendar_button": "Import Calendar",
-    "add_event_button": "Add Event",
-    "month_tab": "Month",
-    "week_tab": "Week",
-    "day_tab": "Day"
   },
   "MyProfile": {
     "title": "My Profile",

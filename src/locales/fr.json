@@ -50,7 +50,6 @@
     "settings_section_label": "Paramètres",
     "dashboard": "Tableau de bord",
     "classes": "Cours",
-    "schedule": "Emploi du temps",
     "members": "Membres",
     "roles": "Rôles",
     "staff": "Personnel",
@@ -213,6 +212,19 @@
     "actions_column": "Actions",
     "refund_button": "Remboursement"
   },
+  "MemberDetailNotes": {
+    "add_note_title": "Ajouter une note",
+    "note_placeholder": "Entrez votre note ici...",
+    "save_note_button": "Enregistrer la note",
+    "saving_button": "Enregistrement...",
+    "notes_history_title": "Historique des notes",
+    "search_placeholder": "Rechercher des notes...",
+    "no_notes": "Aucune note pour l'instant",
+    "no_matching_notes": "Aucune note ne correspond à votre recherche",
+    "table_date": "Date",
+    "table_author": "Auteur",
+    "table_note": "Note"
+  },
   "AddMemberWizard": {
     "MemberTypeStep": {
       "title": "Choisir le type de membre",
@@ -338,14 +350,6 @@
     "edit_button": "Modifier",
     "delete_button": "Supprimer",
     "no_tags_found": "Aucune étiquette trouvée."
-  },
-  "SchedulePage": {
-    "title": "Emploi du temps",
-    "import_calendar_button": "Importer le calendrier",
-    "add_event_button": "Ajouter un événement",
-    "month_tab": "Mois",
-    "week_tab": "Semaine",
-    "day_tab": "Jour"
   },
   "MyProfile": {
     "title": "Mon profil",
