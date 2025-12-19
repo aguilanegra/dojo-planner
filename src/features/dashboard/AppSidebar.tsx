@@ -1,7 +1,7 @@
 'use client';
 
 import { useClerk } from '@clerk/nextjs';
-import { BookMarked, Briefcase, CalendarDays, CircleUser, HelpCircle, Home, LogOut, Mail, Map, Megaphone, Settings, Users, Users2 } from 'lucide-react';
+import { BookMarked, Briefcase, CircleUser, HelpCircle, Home, LogOut, Mail, Map, Megaphone, Settings, Users, Users2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Badge } from '@/components/ui/badge';
 import { Sidebar, SidebarContent, SidebarHeader, SidebarRail } from '@/components/ui/sidebar';
@@ -40,11 +40,6 @@ export const AppSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
               title: t('classes'),
               url: '/dashboard/classes',
               icon: BookMarked,
-            },
-            {
-              title: t('schedule'),
-              url: '/dashboard/schedule',
-              icon: CalendarDays,
             },
             {
               title: t('members'),

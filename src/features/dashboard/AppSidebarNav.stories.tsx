@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { BookMarked, CalendarDays, CreditCard, Home, Mail, Settings, Users, Users2 } from 'lucide-react';
+import { BookMarked, CreditCard, Home, Mail, Settings, Users, Users2 } from 'lucide-react';
 import { vi } from 'vitest';
 import { Badge } from '@/components/ui/badge';
 import { SidebarProvider } from '@/components/ui/sidebar';
@@ -39,11 +39,6 @@ const mockItems = [
     title: 'Classes',
     url: '/dashboard/classes',
     icon: BookMarked,
-  },
-  {
-    title: 'Schedule',
-    url: '/dashboard/schedule',
-    icon: CalendarDays,
   },
   {
     title: 'Members',
