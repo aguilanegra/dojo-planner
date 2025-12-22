@@ -602,5 +602,28 @@
     "table_actions": "Actions",
     "support_button": "Support",
     "cancel_membership_button": "Cancel Membership"
+  },
+  "Notifications": {
+    "title": "Notifications",
+    "view_notifications": "View notifications",
+    "unread_indicator": "Unread notifications",
+    "unread_count": "{count} unread",
+    "mark_all_read": "Mark all as read",
+    "no_notifications": "No notifications",
+    "dismiss_notification": "Dismiss notification",
+    "new_member_joined": "New Member Joined",
+    "new_member_joined_message": "A new member has joined your academy and is ready to start training.",
+    "payment_received": "Payment Received",
+    "payment_received_message": "A membership payment has been successfully processed.",
+    "membership_expiring": "Membership Expiring Soon",
+    "membership_expiring_message": "A member's subscription will expire within the next 7 days.",
+    "payment_failed": "Payment Failed",
+    "payment_failed_message": "A scheduled payment could not be processed. Please review the member's payment method.",
+    "class_reminder": "Upcoming Class",
+    "class_reminder_message": "You have a class scheduled to begin in 1 hour.",
+    "trial_ending": "Trial Period Ending",
+    "trial_ending_message": "A member's free trial will end in 2 days. Consider reaching out to discuss membership options.",
+    "profile_updated": "Profile Updated",
+    "profile_updated_message": "Your profile information has been successfully updated."
   }
 }
