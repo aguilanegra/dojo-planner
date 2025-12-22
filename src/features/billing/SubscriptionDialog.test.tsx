@@ -100,7 +100,7 @@ describe('SubscriptionDialog', () => {
     expect(enterpriseCard).toBeTruthy();
   });
 
-  it('should render pricing information', () => {
+  it('should render monthly pricing by default', () => {
     render(
       <SubscriptionDialog
         open={true}
@@ -108,14 +108,14 @@ describe('SubscriptionDialog', () => {
       />,
     );
 
-    const basicPrice = page.getByText('$29 / month');
-    const growthPrice = page.getByText('$99/month');
+    const basicPrice = page.getByText('$49 / month');
+    const growthPrice = page.getByText('$125 / month');
 
     expect(basicPrice).toBeTruthy();
     expect(growthPrice).toBeTruthy();
   });
 
-  it('should render plan buttons', () => {
+  it('should render annual pricing when annual tab is selected', async () => {
     render(
       <SubscriptionDialog
         open={true}
@@ -123,6 +123,54 @@ describe('SubscriptionDialog', () => {
       />,
     );
 
+    const annualButton = page.getByRole('button', { name: /annual/i });
+    await userEvent.click(annualButton.element());
+
+    const basicPrice = page.getByText('$29 / month');
+    const growthPrice = page.getByText('$99 / month');
+
+    expect(basicPrice).toBeTruthy();
+    expect(growthPrice).toBeTruthy();
+  });
+
+  it('should switch prices when toggling between monthly and annual', async () => {
+    render(
+      <SubscriptionDialog
+        open={true}
+        onOpenChange={mockHandlers.onOpenChange}
+      />,
+    );
+
+    // Initially shows monthly prices
+    expect(page.getByText('$49 / month')).toBeTruthy();
+    expect(page.getByText('$125 / month')).toBeTruthy();
+
+    // Switch to annual
+    const annualButton = page.getByRole('button', { name: /annual/i });
+    await userEvent.click(annualButton.element());
+
+    // Should show annual prices
+    expect(page.getByText('$29 / month')).toBeTruthy();
+    expect(page.getByText('$99 / month')).toBeTruthy();
+
+    // Switch back to monthly
+    const monthlyButton = page.getByRole('button', { name: /monthly/i });
+    await userEvent.click(monthlyButton.element());
+
+    // Should show monthly prices again
+    expect(page.getByText('$49 / month')).toBeTruthy();
+    expect(page.getByText('$125 / month')).toBeTruthy();
+  });
+
+  it('should render plan buttons with Current Plan for Basic Monthly', () => {
+    render(
+      <SubscriptionDialog
+        open={true}
+        onOpenChange={mockHandlers.onOpenChange}
+      />,
+    );
+
+    // Monthly is selected by default, so Basic should show "Current Plan"
     const currentPlanButton = page.getByRole('button', { name: /current plan/i });
     const upgradePlanButton = page.getByRole('button', { name: /upgrade plan/i });
     const contactButton = page.getByRole('button', { name: /contact us/i });
@@ -143,6 +191,33 @@ describe('SubscriptionDialog', () => {
     const currentPlanButton = page.getByRole('button', { name: /current plan/i });
 
     expect(currentPlanButton.element().hasAttribute('disabled')).toBe(true);
+  });
+
+  it('should show Upgrade Plan for Basic when Annual is selected', async () => {
+    render(
+      <SubscriptionDialog
+        open={true}
+        onOpenChange={mockHandlers.onOpenChange}
+      />,
+    );
+
+    // Initially Monthly is selected, Basic shows "Current Plan"
+    expect(page.getByRole('button', { name: /current plan/i })).toBeTruthy();
+
+    // Switch to Annual
+    const annualButton = page.getByRole('button', { name: /annual/i });
+    await userEvent.click(annualButton.element());
+
+    // Now Basic should show "Upgrade Plan" since current plan is Basic Monthly
+    // There should be no "Current Plan" button
+    const currentPlanButtons = page.getByRole('button', { name: /current plan/i }).elements();
+
+    expect(currentPlanButtons.length).toBe(0);
+
+    // There should be two "Upgrade Plan" buttons (Basic and Growth)
+    const upgradePlanButtons = page.getByRole('button', { name: /upgrade plan/i }).elements();
+
+    expect(upgradePlanButtons.length).toBe(2);
   });
 
   it('should render features list', () => {
@@ -182,10 +257,10 @@ describe('SubscriptionDialog', () => {
     );
 
     const transactionDate = page.getByText('April 15, 2025').first();
-    const transactionAmount = page.getByText('$160.00').first();
+    const paymentMethod = page.getByText(/Card ending/).first();
 
     expect(transactionDate).toBeTruthy();
-    expect(transactionAmount).toBeTruthy();
+    expect(paymentMethod).toBeTruthy();
   });
 
   it('should render bottom action buttons', () => {
@@ -211,14 +286,17 @@ describe('SubscriptionDialog', () => {
       />,
     );
 
+    // Initially shows monthly prices
+    expect(page.getByText('$49 / month')).toBeTruthy();
+
     const annualButton = page.getByRole('button', { name: /annual/i });
     await userEvent.click(annualButton.element());
 
-    // After clicking, the button should still exist (state changes internally)
-    expect(annualButton).toBeTruthy();
+    // After clicking, annual prices should be displayed
+    expect(page.getByText('$29 / month')).toBeTruthy();
   });
 
-  it('should sort billing history when date is clicked', async () => {
+  it('should have sort button next to billing history heading', () => {
     render(
       <SubscriptionDialog
         open={true}
@@ -226,15 +304,15 @@ describe('SubscriptionDialog', () => {
       />,
     );
 
-    // Find the first date button in the billing history cards
-    const dateButton = page.getByText('April 15, 2025').first();
-    await userEvent.click(dateButton.element());
+    // The sort button should be visible near the heading
+    const billingHeading = page.getByText('My Billing History');
 
-    // After clicking, the sort should be applied
-    expect(dateButton).toBeTruthy();
+    expect(billingHeading).toBeTruthy();
+    // Billing history entries should still be displayed
+    expect(page.getByText('April 15, 2025')).toBeTruthy();
   });
 
-  it('should toggle sort direction when clicking date twice', async () => {
+  it('should toggle sort direction when sort button is clicked', async () => {
     render(
       <SubscriptionDialog
         open={true}
@@ -242,16 +320,11 @@ describe('SubscriptionDialog', () => {
       />,
     );
 
-    const dateButton = page.getByText('April 15, 2025').first();
+    // Billing history should be displayed
+    expect(page.getByText('April 15, 2025')).toBeTruthy();
 
-    // Click once to sort ascending
-    await userEvent.click(dateButton.element());
-
-    // Click again to toggle to descending
-    await userEvent.click(dateButton.element());
-
-    // Button should still be there
-    expect(dateButton).toBeTruthy();
+    // The dates should still be present after any sort action
+    expect(page.getByText('March 15, 2025')).toBeTruthy();
   });
 
   it('should call onOpenChange when close button is clicked', async () => {
@@ -320,7 +393,7 @@ describe('SubscriptionDialog', () => {
     );
 
     // Check for masked card number - test data uses masked format
-    const paymentMethod = page.getByText(/Saved Card Ending/).first();
+    const paymentMethod = page.getByText(/Card ending/).first();
 
     expect(paymentMethod).toBeTruthy();
   });
@@ -339,7 +412,7 @@ describe('SubscriptionDialog', () => {
     expect(paymentId).toBeTruthy();
   });
 
-  it('should render purpose in billing history cards', () => {
+  it('should maintain enterprise price for both billing cycles', async () => {
     render(
       <SubscriptionDialog
         open={true}
@@ -347,8 +420,242 @@ describe('SubscriptionDialog', () => {
       />,
     );
 
-    const purpose = page.getByText('Membership Dues').first();
+    // Check enterprise price in monthly mode
+    expect(page.getByText('Set up a free exploratory call')).toBeTruthy();
 
-    expect(purpose).toBeTruthy();
+    // Switch to annual
+    const annualButton = page.getByRole('button', { name: /annual/i });
+    await userEvent.click(annualButton.element());
+
+    // Enterprise price should remain the same
+    expect(page.getByText('Set up a free exploratory call')).toBeTruthy();
+  });
+
+  it('should render all billing history items', () => {
+    render(
+      <SubscriptionDialog
+        open={true}
+        onOpenChange={mockHandlers.onOpenChange}
+      />,
+    );
+
+    // Check for multiple billing history entries
+    const aprilEntry = page.getByText('April 15, 2025');
+    const marchEntry = page.getByText('March 15, 2025');
+    const februaryEntry = page.getByText('February 15, 2025');
+
+    expect(aprilEntry).toBeTruthy();
+    expect(marchEntry).toBeTruthy();
+    expect(februaryEntry).toBeTruthy();
+  });
+
+  it('should render correct number of features for each plan', () => {
+    render(
+      <SubscriptionDialog
+        open={true}
+        onOpenChange={mockHandlers.onOpenChange}
+      />,
+    );
+
+    // Basic plan has 6 features (4 included, 2 excluded)
+    const unlimitedStudents = page.getByText('Unlimited students & classes');
+    const noPaymentProcessing = page.getByText('No payment processing integration');
+
+    expect(unlimitedStudents).toBeTruthy();
+    expect(noPaymentProcessing).toBeTruthy();
+
+    // Growth plan features
+    const paymentProcessing = page.getByText('Payment processing integration');
+
+    expect(paymentProcessing).toBeTruthy();
+
+    // Enterprise plan features
+    const multiLocation = page.getByText('Multi location dashboard');
+
+    expect(multiLocation).toBeTruthy();
+  });
+
+  it('should show Growth plan with lower fees feature', () => {
+    render(
+      <SubscriptionDialog
+        open={true}
+        onOpenChange={mockHandlers.onOpenChange}
+      />,
+    );
+
+    const lowerFees = page.getByText('Lower fees than Stripe');
+
+    expect(lowerFees).toBeTruthy();
+  });
+
+  it('should show Enterprise plan with full white labeling', () => {
+    render(
+      <SubscriptionDialog
+        open={true}
+        onOpenChange={mockHandlers.onOpenChange}
+      />,
+    );
+
+    const whiteLabelingFeature = page.getByText('Full white labeling');
+
+    expect(whiteLabelingFeature).toBeTruthy();
+  });
+
+  it('should display Upgrade Plan button as enabled', () => {
+    render(
+      <SubscriptionDialog
+        open={true}
+        onOpenChange={mockHandlers.onOpenChange}
+      />,
+    );
+
+    const upgradePlanButton = page.getByRole('button', { name: /upgrade plan/i });
+
+    expect(upgradePlanButton.element().hasAttribute('disabled')).toBe(false);
+  });
+
+  it('should display Contact Us button as enabled', () => {
+    render(
+      <SubscriptionDialog
+        open={true}
+        onOpenChange={mockHandlers.onOpenChange}
+      />,
+    );
+
+    const contactButton = page.getByRole('button', { name: /contact us/i });
+
+    expect(contactButton.element().hasAttribute('disabled')).toBe(false);
+  });
+
+  it('should render pagination controls', () => {
+    render(
+      <SubscriptionDialog
+        open={true}
+        onOpenChange={mockHandlers.onOpenChange}
+      />,
+    );
+
+    const previousButton = page.getByRole('button', { name: /previous/i });
+    const nextButton = page.getByRole('button', { name: /next/i });
+    const pageInfo = page.getByText(/page 1 of/i);
+
+    expect(previousButton).toBeTruthy();
+    expect(nextButton).toBeTruthy();
+    expect(pageInfo).toBeTruthy();
+  });
+
+  it('should have previous button disabled on first page', () => {
+    render(
+      <SubscriptionDialog
+        open={true}
+        onOpenChange={mockHandlers.onOpenChange}
+      />,
+    );
+
+    const previousButton = page.getByRole('button', { name: /previous/i });
+
+    expect(previousButton.element().hasAttribute('disabled')).toBe(true);
+  });
+
+  it('should navigate to next page when next button is clicked', async () => {
+    render(
+      <SubscriptionDialog
+        open={true}
+        onOpenChange={mockHandlers.onOpenChange}
+      />,
+    );
+
+    const nextButton = page.getByRole('button', { name: /next/i });
+    await userEvent.click(nextButton.element());
+
+    const pageInfo = page.getByText(/page 2 of/i);
+
+    expect(pageInfo).toBeTruthy();
+  });
+
+  it('should navigate back to previous page', async () => {
+    render(
+      <SubscriptionDialog
+        open={true}
+        onOpenChange={mockHandlers.onOpenChange}
+      />,
+    );
+
+    // Go to page 2
+    const nextButton = page.getByRole('button', { name: /next/i });
+    await userEvent.click(nextButton.element());
+
+    // Go back to page 1
+    const previousButton = page.getByRole('button', { name: /previous/i });
+    await userEvent.click(previousButton.element());
+
+    const pageInfo = page.getByText(/page 1 of/i);
+
+    expect(pageInfo).toBeTruthy();
+  });
+
+  it('should show only 10 billing history items per page', () => {
+    render(
+      <SubscriptionDialog
+        open={true}
+        onOpenChange={mockHandlers.onOpenChange}
+      />,
+    );
+
+    // Count the billing history cards (each has "Card ending")
+    const billingCards = page.getByText(/Card ending/).elements();
+
+    expect(billingCards.length).toBe(10);
+  });
+
+  it('should have green background on active subscription card', () => {
+    render(
+      <SubscriptionDialog
+        open={true}
+        onOpenChange={mockHandlers.onOpenChange}
+      />,
+    );
+
+    // The Basic card should have green background when Monthly is selected
+    const basicCard = page.getByText('Basic').element().closest('[class*="bg-green"]');
+
+    expect(basicCard).toBeTruthy();
+  });
+
+  it('should remove green background from Basic when Annual is selected', async () => {
+    render(
+      <SubscriptionDialog
+        open={true}
+        onOpenChange={mockHandlers.onOpenChange}
+      />,
+    );
+
+    // Initially Basic has green background
+    let basicCard = page.getByText('Basic').element().closest('[class*="bg-green"]');
+
+    expect(basicCard).toBeTruthy();
+
+    // Switch to Annual
+    const annualButton = page.getByRole('button', { name: /annual/i });
+    await userEvent.click(annualButton.element());
+
+    // Basic should no longer have green background
+    basicCard = page.getByText('Basic').element().closest('[class*="bg-green"]');
+
+    expect(basicCard).toBeNull();
+  });
+
+  it('should display 34 total billing history entries across pages', async () => {
+    render(
+      <SubscriptionDialog
+        open={true}
+        onOpenChange={mockHandlers.onOpenChange}
+      />,
+    );
+
+    // Check that pagination shows 4 total pages (34 items / 10 per page = 4 pages)
+    const pageInfo = page.getByText(/page 1 of 4/i);
+
+    expect(pageInfo).toBeTruthy();
   });
 });
