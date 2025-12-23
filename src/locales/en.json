@@ -587,7 +587,29 @@
     "edit_button_aria_label": "Edit program",
     "delete_button_aria_label": "Delete program"
   },
-
+  "AddEditProgramModal": {
+    "add_title": "Add Program",
+    "edit_title": "Edit Program",
+    "name_label": "Program Name",
+    "name_placeholder": "Enter program name",
+    "name_error": "Please enter a program name.",
+    "description_label": "Description",
+    "description_placeholder": "Enter program description",
+    "description_error": "Please enter a description.",
+    "status_label": "Program status",
+    "status_active": "Active",
+    "status_inactive": "Inactive",
+    "cancel_button": "Cancel",
+    "add_button": "Add Program",
+    "save_changes_button": "Save Changes",
+    "saving_button": "Saving..."
+  },
+  "DeleteProgramAlertDialog": {
+    "title": "Are you absolutely sure?",
+    "description": "This action cannot be undone. This will permanently delete your program and remove the data from the servers.",
+    "cancel_button": "Cancel",
+    "delete_button": "Delete"
+  },
   "SubscriptionPage": {
     "title": "Subscription",
     "monthly_button": "Monthly",

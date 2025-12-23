@@ -1,12 +1,15 @@
 'use client';
 
+import type { ProgramFormData } from '@/features/programs/AddEditProgramModal';
 import type { ProgramFilters } from '@/features/programs/ProgramFilterBar';
 import type { ProgramCardProps, ProgramStatus } from '@/templates/ProgramCard';
 import { Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { AddEditProgramModal } from '@/features/programs/AddEditProgramModal';
+import { DeleteProgramAlertDialog } from '@/features/programs/DeleteProgramAlertDialog';
 import { ProgramFilterBar } from '@/features/programs/ProgramFilterBar';
 import { ProgramCard } from '@/templates/ProgramCard';
 
@@ -19,7 +22,7 @@ type Program = {
   status: ProgramStatus;
 };
 
-const mockPrograms: Program[] = [
+const initialMockPrograms: Program[] = [
   {
     id: '1',
     name: 'Adult Brazilian Jiu-jitsu',
@@ -56,19 +59,11 @@ const mockPrograms: Program[] = [
     id: '5',
     name: 'Wrestling Fundamentals',
     description: 'Traditional Wrestling program focusing on takedowns, mat control, and collegiate-style techniques.',
-    classCount: 1,
-    classNames: 'Wrestling Fundamentals',
+    classCount: 0,
+    classNames: '',
     status: 'Inactive',
   },
 ];
-
-function handleEditProgram(_id: string) {
-  // Placeholder for edit functionality - will be implemented when edit modal is added
-}
-
-function handleDeleteProgram(_id: string) {
-  // Placeholder for delete functionality - will be implemented when delete confirmation is added
-}
 
 export default function ProgramsPage() {
   const t = useTranslations('ProgramsPage');
@@ -76,15 +71,20 @@ export default function ProgramsPage() {
     search: '',
     status: 'all',
   });
+  const [programs, setPrograms] = useState<Program[]>(initialMockPrograms);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingProgram, setEditingProgram] = useState<ProgramFormData | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [deletingProgram, setDeletingProgram] = useState<{ id: string; name: string } | null>(null);
 
   const stats = useMemo(() => ({
-    totalPrograms: mockPrograms.length,
-    active: mockPrograms.filter(p => p.status === 'Active').length,
-    totalClasses: mockPrograms.reduce((sum, p) => sum + p.classCount, 0),
-  }), []);
+    totalPrograms: programs.length,
+    active: programs.filter(p => p.status === 'Active').length,
+    totalClasses: programs.reduce((sum, p) => sum + p.classCount, 0),
+  }), [programs]);
 
   const filteredPrograms = useMemo(() => {
-    return mockPrograms.filter((program) => {
+    return programs.filter((program) => {
       // Search filter
       const matchesSearch = program.name.toLowerCase().includes(filters.search.toLowerCase())
         || program.description.toLowerCase().includes(filters.search.toLowerCase());
@@ -94,7 +94,82 @@ export default function ProgramsPage() {
 
       return matchesSearch && matchesStatus;
     });
-  }, [filters]);
+  }, [filters, programs]);
+
+  const handleAddProgram = useCallback(() => {
+    setEditingProgram(null);
+    setIsModalOpen(true);
+  }, []);
+
+  const handleEditProgram = useCallback((id: string) => {
+    const program = programs.find(p => p.id === id);
+    if (program) {
+      setEditingProgram({
+        id: program.id,
+        name: program.name,
+        description: program.description,
+        status: program.status,
+      });
+      setIsModalOpen(true);
+    }
+  }, [programs]);
+
+  const handleDeleteProgram = useCallback((id: string) => {
+    // Only allow deletion if program has no classes
+    const program = programs.find(p => p.id === id);
+    if (program && program.classCount === 0) {
+      setDeletingProgram({ id: program.id, name: program.name });
+    }
+  }, [programs]);
+
+  const handleCloseDeleteDialog = useCallback(() => {
+    setDeletingProgram(null);
+  }, []);
+
+  const handleConfirmDelete = useCallback(() => {
+    if (deletingProgram) {
+      setPrograms(prev => prev.filter(p => p.id !== deletingProgram.id));
+      setDeletingProgram(null);
+    }
+  }, [deletingProgram]);
+
+  const handleCloseModal = useCallback(() => {
+    setIsModalOpen(false);
+    setEditingProgram(null);
+  }, []);
+
+  const handleSaveProgram = useCallback(async (data: ProgramFormData) => {
+    setIsLoading(true);
+
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      if (data.id) {
+        // Edit existing program
+        setPrograms(prev => prev.map(p =>
+          p.id === data.id
+            ? { ...p, name: data.name, description: data.description, status: data.status }
+            : p,
+        ));
+      } else {
+        // Add new program
+        const newProgram: Program = {
+          id: String(Date.now()),
+          name: data.name,
+          description: data.description,
+          classCount: 0,
+          classNames: '',
+          status: data.status,
+        };
+        setPrograms(prev => [...prev, newProgram]);
+      }
+
+      handleCloseModal();
+    } finally {
+      setIsLoading(false);
+    }
+  }, [handleCloseModal]);
 
   return (
     <div className="w-full space-y-6">
@@ -131,7 +206,7 @@ export default function ProgramsPage() {
           />
         </div>
 
-        <Button>
+        <Button onClick={handleAddProgram}>
           <Plus className="h-4 w-4" />
           <span className="ml-1 hidden sm:inline">{t('add_new_program_button')}</span>
         </Button>
@@ -155,13 +230,31 @@ export default function ProgramsPage() {
                   classNames: program.classNames,
                   status: program.status,
                   onEdit: handleEditProgram,
-                  onDelete: handleDeleteProgram,
+                  // Only pass onDelete if the program has no classes
+                  onDelete: program.classCount === 0 ? handleDeleteProgram : undefined,
                 };
 
                 return <ProgramCard key={program.id} {...cardProps} />;
               })
             )}
       </div>
+
+      {/* Add/Edit Program Modal */}
+      <AddEditProgramModal
+        isOpen={isModalOpen}
+        onCloseAction={handleCloseModal}
+        onSaveAction={handleSaveProgram}
+        program={editingProgram}
+        isLoading={isLoading}
+      />
+
+      {/* Delete Program Confirmation Dialog */}
+      <DeleteProgramAlertDialog
+        isOpen={!!deletingProgram}
+        programName={deletingProgram?.name ?? ''}
+        onCloseAction={handleCloseDeleteDialog}
+        onConfirmAction={handleConfirmDelete}
+      />
     </div>
   );
 }
