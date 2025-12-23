@@ -1,8 +1,16 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { page, userEvent } from 'vitest/browser';
 import { I18nWrapper } from '@/lib/test-utils';
 import { ClassesPage } from './ClassesPage';
+
+// Mock next/navigation for AddClassModal
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    refresh: vi.fn(),
+    push: vi.fn(),
+  }),
+}));
 
 describe('ClassesPage', () => {
   describe('Summary Cards', () => {

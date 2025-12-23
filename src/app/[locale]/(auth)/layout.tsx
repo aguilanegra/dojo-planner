@@ -3,7 +3,8 @@
 import { ClerkProvider } from '@clerk/nextjs';
 import { dark } from '@clerk/themes';
 import { useTheme } from 'next-themes';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import { routing } from '@/libs/I18nRouting';
 import { ClerkLocalizations } from '@/utils/AppConfig';
 
@@ -11,6 +12,7 @@ export default function AuthLayout(props: {
   children: React.ReactNode;
 }) {
   const { locale } = useParams<{ locale: string }>();
+  const router = useRouter();
 
   const clerkLocale = ClerkLocalizations.supportedLocales[locale] ?? ClerkLocalizations.defaultLocale;
   let signInUrl = '/sign-in';
@@ -28,6 +30,11 @@ export default function AuthLayout(props: {
   const { resolvedTheme } = useTheme();
 
   const isDark = resolvedTheme === 'dark';
+
+  // Force router refresh on mount to clear any stale session state
+  useEffect(() => {
+    router.refresh();
+  }, [router]);
 
   return (
     <ClerkProvider
@@ -54,6 +61,9 @@ export default function AuthLayout(props: {
       signInFallbackRedirectUrl={dashboardUrl}
       signUpFallbackRedirectUrl={dashboardUrl}
       afterSignOutUrl={afterSignOutUrl}
+      afterSignInUrl={dashboardUrl}
+      afterSignUpUrl={dashboardUrl}
+      dynamic
     >
       {props.children}
     </ClerkProvider>
