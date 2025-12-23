@@ -594,12 +594,8 @@
     "annual_button": "Annual",
     "billing_history_heading": "My Billing History",
     "table_date": "Date",
-    "table_amount": "Amount",
-    "table_purpose": "Purpose",
     "table_method": "Method",
     "table_payment_id": "Payment ID",
-    "table_notes": "Notes",
-    "table_actions": "Actions",
     "support_button": "Support",
     "cancel_membership_button": "Cancel Membership"
   },
