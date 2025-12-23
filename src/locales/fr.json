@@ -590,6 +590,29 @@
     "edit_button_aria_label": "Modifier le programme",
     "delete_button_aria_label": "Supprimer le programme"
   },
+  "AddEditProgramModal": {
+    "add_title": "Ajouter un programme",
+    "edit_title": "Modifier le programme",
+    "name_label": "Nom du programme",
+    "name_placeholder": "Entrez le nom du programme",
+    "name_error": "Veuillez entrer un nom de programme.",
+    "description_label": "Description",
+    "description_placeholder": "Entrez la description du programme",
+    "description_error": "Veuillez entrer une description.",
+    "status_label": "Statut du programme",
+    "status_active": "Actif",
+    "status_inactive": "Inactif",
+    "cancel_button": "Annuler",
+    "add_button": "Ajouter le programme",
+    "save_changes_button": "Enregistrer les modifications",
+    "saving_button": "Enregistrement..."
+  },
+  "DeleteProgramAlertDialog": {
+    "title": "Êtes-vous absolument sûr?",
+    "description": "Cette action est irréversible. Cela supprimera définitivement votre programme et supprimera les données des serveurs.",
+    "cancel_button": "Annuler",
+    "delete_button": "Supprimer"
+  },
   "SubscriptionPage": {
     "title": "Abonnement",
     "monthly_button": "Mensuel",

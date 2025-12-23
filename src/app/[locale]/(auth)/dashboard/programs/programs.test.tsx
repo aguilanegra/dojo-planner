@@ -1,181 +1,589 @@
 import { describe, expect, it } from 'vitest';
 import { render } from 'vitest-browser-react';
-import { page } from 'vitest/browser';
+import { page, userEvent } from 'vitest/browser';
 import { I18nWrapper } from '@/lib/test-utils';
 import ProgramsPage from './page';
 
 describe('Programs Page', () => {
-  it('renders programs management header', () => {
-    render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+  describe('Page Layout', () => {
+    it('renders programs management header', () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
 
-    const heading = page.getByRole('heading', { name: /Programs Management/i });
+      const heading = page.getByRole('heading', { name: /Programs Management/i });
 
-    expect(heading).toBeInTheDocument();
+      expect(heading).toBeInTheDocument();
+    });
+
+    it('renders statistics cards', () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+
+      const totalPrograms = page.getByText(/Total Programs/);
+      const active = page.getByText('Active').elements();
+      const totalClasses = page.getByText(/Total Classes/);
+
+      expect(totalPrograms).toBeInTheDocument();
+      expect(active.length).toBeGreaterThan(0);
+      expect(totalClasses).toBeInTheDocument();
+    });
+
+    it('renders statistics values', () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+
+      // Stats should show dynamic values from mock data
+      // Total programs count of 5 appears in stats card
+      const statValues = page.getByText('5', { exact: true }).elements();
+
+      expect(statValues.length).toBeGreaterThan(0);
+    });
+
+    it('renders total classes count correctly', () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+
+      // Total classes should be 11 (5 + 2 + 3 + 1 + 0 for Wrestling)
+      const classCount = page.getByText('11', { exact: true }).elements();
+
+      expect(classCount.length).toBeGreaterThan(0);
+    });
+
+    it('renders add new program button', () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+
+      const button = page.getByRole('button', { name: /Add New Program/i });
+
+      expect(button).toBeInTheDocument();
+    });
+
+    it('renders search input', () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+
+      const searchInput = page.getByPlaceholder(/Search programs/i);
+
+      expect(searchInput).toBeInTheDocument();
+    });
+
+    it('renders status filter dropdown', () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+
+      // Select trigger should be rendered
+      const statusSelect = page.getByRole('combobox').elements();
+
+      expect(statusSelect.length).toBeGreaterThanOrEqual(1);
+    });
   });
 
-  it('renders statistics cards', () => {
-    render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+  describe('Program Cards', () => {
+    it('renders program cards with names', () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
 
-    const totalPrograms = page.getByText(/Total Programs/);
-    const active = page.getByText('Active').elements();
-    const totalClasses = page.getByText(/Total Classes/);
+      const adultProgram = page.getByRole('heading', { name: 'Adult Brazilian Jiu-jitsu' });
+      const kidsProgram = page.getByRole('heading', { name: 'Kids Program' });
+      const competitionTeam = page.getByRole('heading', { name: 'Competition Team' });
+      const judoProgram = page.getByRole('heading', { name: 'Judo Fundamentals' });
 
-    expect(totalPrograms).toBeInTheDocument();
-    expect(active.length).toBeGreaterThan(0);
-    expect(totalClasses).toBeInTheDocument();
+      expect(adultProgram).toBeInTheDocument();
+      expect(kidsProgram).toBeInTheDocument();
+      expect(competitionTeam).toBeInTheDocument();
+      expect(judoProgram).toBeInTheDocument();
+    });
+
+    it('renders program card descriptions', () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+
+      const adultDescription = page.getByText(/Traditional Brazilian Jiu-Jitsu program for adults/);
+      const kidsDescription = page.getByText(/Fun and engaging martial arts program/);
+
+      expect(adultDescription).toBeInTheDocument();
+      expect(kidsDescription).toBeInTheDocument();
+    });
+
+    it('renders program card class counts', () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+
+      // Adult BJJ has 5 classes
+      const fiveClasses = page.getByText('5', { exact: true }).elements();
+
+      expect(fiveClasses.length).toBeGreaterThan(0);
+    });
+
+    it('renders program card class names', () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+
+      const classNames = page.getByText(/BJJ Fundamentals I & II/);
+
+      expect(classNames).toBeInTheDocument();
+    });
+
+    it('renders classes label on program cards', () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+
+      const classesLabels = page.getByText('Classes').elements();
+
+      expect(classesLabels.length).toBeGreaterThan(0);
+    });
+
+    it('renders edit buttons on program cards', () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+
+      const editButtons = page.getByRole('button', { name: /Edit program/i }).elements();
+
+      expect(editButtons.length).toBe(5);
+    });
+
+    it('renders all five program cards', () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+
+      // Verify all programs are rendered by checking unique program names using headings
+      const adultBjj = page.getByRole('heading', { name: 'Adult Brazilian Jiu-jitsu' });
+      const kidsProgram = page.getByRole('heading', { name: 'Kids Program' });
+      const competitionTeam = page.getByRole('heading', { name: 'Competition Team' });
+      const judoFundamentals = page.getByRole('heading', { name: 'Judo Fundamentals' });
+      const wrestlingFundamentals = page.getByRole('heading', { name: 'Wrestling Fundamentals' });
+
+      expect(adultBjj).toBeInTheDocument();
+      expect(kidsProgram).toBeInTheDocument();
+      expect(competitionTeam).toBeInTheDocument();
+      expect(judoFundamentals).toBeInTheDocument();
+      expect(wrestlingFundamentals).toBeInTheDocument();
+    });
+
+    it('renders active status badges on program cards', () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+
+      // All 4 programs are Active
+      const activeBadges = page.getByText('Active').elements();
+
+      // Should have Active in stats card + 4 program cards
+      expect(activeBadges.length).toBeGreaterThanOrEqual(4);
+    });
+
+    it('renders inactive status badge for Wrestling Fundamentals', () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+
+      const inactiveBadges = page.getByText('Inactive').elements();
+
+      // Should have 1 inactive program (Wrestling Fundamentals)
+      expect(inactiveBadges.length).toBe(1);
+    });
+
+    it('renders active count of 4 in stats card', () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+
+      // 4 out of 5 programs are active
+      const fourElements = page.getByText('4', { exact: true }).elements();
+
+      expect(fourElements.length).toBeGreaterThan(0);
+    });
   });
 
-  it('renders statistics values', () => {
-    render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+  describe('Delete Button Conditional Visibility', () => {
+    it('shows delete button only for programs with no classes', () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
 
-    // Stats should show dynamic values from mock data
-    // Total programs count of 5 appears in stats card
-    const statValues = page.getByText('5', { exact: true }).elements();
+      // Only Wrestling Fundamentals has 0 classes, so only 1 delete button should appear
+      const deleteButtons = page.getByRole('button', { name: /Delete program/i }).elements();
 
-    expect(statValues.length).toBeGreaterThan(0);
+      expect(deleteButtons.length).toBe(1);
+    });
+
+    it('does not show delete button for programs with classes', () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+
+      // Programs with classes should not have delete buttons
+      // Adult BJJ has 5 classes, Kids has 2, Competition has 3, Judo has 1
+      // Only Wrestling (0 classes) should have delete button
+      const deleteButtons = page.getByRole('button', { name: /Delete program/i }).elements();
+
+      expect(deleteButtons.length).toBe(1);
+    });
   });
 
-  it('renders total classes count correctly', () => {
-    render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+  describe('Add Program Modal', () => {
+    it('opens add program modal when add button is clicked', async () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
 
-    // Total classes should be 12 (5 + 2 + 3 + 1 + 1)
-    const classCount = page.getByText('12', { exact: true }).elements();
+      const addButton = page.getByRole('button', { name: /Add New Program/i });
+      await userEvent.click(addButton);
 
-    expect(classCount.length).toBeGreaterThan(0);
+      const modalTitle = page.getByRole('heading', { name: 'Add Program' });
+
+      expect(modalTitle).toBeInTheDocument();
+    });
+
+    it('closes modal when cancel button is clicked', async () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+
+      // Open modal
+      const addButton = page.getByRole('button', { name: /Add New Program/i });
+      await userEvent.click(addButton);
+
+      // First interact with an input to stabilize dialog
+      const nameInput = page.getByRole('textbox', { name: /Program Name/i });
+      await userEvent.type(nameInput, 'Test');
+
+      // Click cancel
+      const cancelButton = page.getByRole('button', { name: 'Cancel' });
+      await userEvent.click(cancelButton);
+
+      // Modal should be closed
+      const modalTitles = page.getByRole('heading', { name: 'Add Program' }).elements();
+
+      expect(modalTitles.length).toBe(0);
+    });
+
+    it('shows empty form in add mode', async () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+
+      // Open modal
+      const addButton = page.getByRole('button', { name: /Add New Program/i });
+      await userEvent.click(addButton);
+
+      const nameInput = page.getByRole('textbox', { name: /Program Name/i });
+      const descriptionInput = page.getByPlaceholder(/Enter program description/i);
+
+      expect(nameInput).toHaveValue('');
+      expect(descriptionInput).toHaveValue('');
+    });
+
+    it('disables submit button when form is empty', async () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+
+      // Open modal
+      const addButton = page.getByRole('button', { name: /Add New Program/i });
+      await userEvent.click(addButton);
+
+      // Submit button should be disabled when form is empty
+      const submitButton = page.getByRole('button', { name: 'Add Program' });
+
+      expect(submitButton).toBeDisabled();
+    });
+
+    it('can fill in the form fields', async () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+
+      // Open modal
+      const addButton = page.getByRole('button', { name: /Add New Program/i });
+      await userEvent.click(addButton);
+
+      // Fill form
+      const nameInput = page.getByRole('textbox', { name: /Program Name/i });
+      await userEvent.type(nameInput, 'New Test Program');
+
+      const descriptionInput = page.getByPlaceholder(/Enter program description/i);
+      await userEvent.type(descriptionInput, 'A new test program description');
+
+      expect(nameInput).toHaveValue('New Test Program');
+      expect(descriptionInput).toHaveValue('A new test program description');
+    });
+
+    it('can toggle status to inactive', async () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+
+      // Open modal
+      const addButton = page.getByRole('button', { name: /Add New Program/i });
+      await userEvent.click(addButton);
+
+      // First interact with an input to stabilize dialog
+      const nameInput = page.getByRole('textbox', { name: /Program Name/i });
+      await userEvent.type(nameInput, 'Test');
+
+      // Initially shows Active in the modal (verify switch is checked)
+      const statusSwitch = page.getByRole('switch');
+
+      expect(statusSwitch).toHaveAttribute('data-state', 'checked');
+
+      // Toggle status to inactive
+      await userEvent.click(statusSwitch);
+
+      // Should now be unchecked (Inactive)
+      expect(statusSwitch).toHaveAttribute('data-state', 'unchecked');
+    });
   });
 
-  it('renders add new program button', () => {
-    render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+  describe('Edit Program Modal', () => {
+    it('opens edit program modal when edit button is clicked', async () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
 
-    const button = page.getByRole('button', { name: /Add New Program/i });
+      // Click first edit button (Adult BJJ)
+      const editButtons = page.getByRole('button', { name: /Edit program/i }).elements();
+      await userEvent.click(editButtons[0]!);
 
-    expect(button).toBeInTheDocument();
+      const modalTitle = page.getByRole('heading', { name: 'Edit Program' });
+
+      expect(modalTitle).toBeInTheDocument();
+    });
+
+    it('populates form with program data in edit mode', async () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+
+      // Click first edit button (Adult BJJ)
+      const editButtons = page.getByRole('button', { name: /Edit program/i }).elements();
+      await userEvent.click(editButtons[0]!);
+
+      const nameInput = page.getByRole('textbox', { name: /Program Name/i });
+      const descriptionInput = page.getByPlaceholder(/Enter program description/i);
+
+      expect(nameInput).toHaveValue('Adult Brazilian Jiu-jitsu');
+      expect(descriptionInput).toHaveValue('Traditional Brazilian Jiu-Jitsu program for adults focusing on self-defense, competition, and fitness.');
+    });
+
+    it('shows save changes button in edit mode', async () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+
+      // Click first edit button
+      const editButtons = page.getByRole('button', { name: /Edit program/i }).elements();
+      await userEvent.click(editButtons[0]!);
+
+      const saveButton = page.getByRole('button', { name: 'Save Changes' });
+
+      expect(saveButton).toBeInTheDocument();
+    });
+
+    it('closes edit modal when cancel button is clicked', async () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+
+      // Click first edit button
+      const editButtons = page.getByRole('button', { name: /Edit program/i }).elements();
+      await userEvent.click(editButtons[0]!);
+
+      // Click cancel
+      const cancelButton = page.getByRole('button', { name: 'Cancel' });
+      await userEvent.click(cancelButton);
+
+      // Modal should be closed
+      const modalTitles = page.getByRole('heading', { name: 'Edit Program' }).elements();
+
+      expect(modalTitles.length).toBe(0);
+    });
+
+    it('can modify name in edit mode', async () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+
+      // Click first edit button (Adult BJJ)
+      const editButtons = page.getByRole('button', { name: /Edit program/i }).elements();
+      await userEvent.click(editButtons[0]!);
+
+      // Clear and modify name
+      const nameInput = page.getByRole('textbox', { name: /Program Name/i });
+      await userEvent.clear(nameInput);
+      await userEvent.type(nameInput, 'Updated BJJ Program');
+
+      expect(nameInput).toHaveValue('Updated BJJ Program');
+    });
+
+    it('can toggle status in edit mode', async () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+
+      // Click first edit button (Adult BJJ which is Active)
+      const editButtons = page.getByRole('button', { name: /Edit program/i }).elements();
+      await userEvent.click(editButtons[0]!);
+
+      // Verify switch is initially checked (Active)
+      const statusSwitch = page.getByRole('switch');
+
+      expect(statusSwitch).toHaveAttribute('data-state', 'checked');
+
+      // Toggle status
+      await userEvent.click(statusSwitch);
+
+      // Should now be unchecked (Inactive)
+      expect(statusSwitch).toHaveAttribute('data-state', 'unchecked');
+    });
   });
 
-  it('renders search input', () => {
-    render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+  describe('Delete Program', () => {
+    it('opens delete confirmation dialog when delete button is clicked', async () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
 
-    const searchInput = page.getByPlaceholder(/Search programs/i);
+      // Click delete button (only Wrestling has one since it has 0 classes)
+      const deleteButton = page.getByRole('button', { name: /Delete program/i });
+      await userEvent.click(deleteButton);
 
-    expect(searchInput).toBeInTheDocument();
+      // Delete confirmation dialog should appear
+      const dialogTitle = page.getByRole('heading', { name: 'Are you absolutely sure?' });
+
+      expect(dialogTitle).toBeInTheDocument();
+    });
+
+    it('shows correct warning message in delete confirmation dialog', async () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+
+      // Click delete button
+      const deleteButton = page.getByRole('button', { name: /Delete program/i });
+      await userEvent.click(deleteButton);
+
+      // Verify warning message
+      const warningMessage = page.getByText(/This action cannot be undone/);
+
+      expect(warningMessage).toBeInTheDocument();
+    });
+
+    it('closes delete dialog when cancel button is clicked', async () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+
+      // Click delete button
+      const deleteButton = page.getByRole('button', { name: /Delete program/i });
+      await userEvent.click(deleteButton);
+
+      // Click cancel
+      const cancelButton = page.getByRole('button', { name: 'Cancel' });
+      await userEvent.click(cancelButton);
+
+      // Dialog should be closed
+      const dialogTitles = page.getByRole('heading', { name: 'Are you absolutely sure?' }).elements();
+
+      expect(dialogTitles.length).toBe(0);
+
+      // Program should still exist
+      expect(page.getByRole('heading', { name: 'Wrestling Fundamentals' })).toBeInTheDocument();
+    });
+
+    it('removes program when delete is confirmed', async () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+
+      // Verify Wrestling Fundamentals exists
+      expect(page.getByRole('heading', { name: 'Wrestling Fundamentals' })).toBeInTheDocument();
+
+      // Click delete button (only Wrestling has one since it has 0 classes)
+      const deleteButton = page.getByRole('button', { name: /Delete program/i });
+      await userEvent.click(deleteButton);
+
+      // Click confirm delete in the dialog
+      const confirmDeleteButton = page.getByRole('button', { name: 'Delete' });
+      await userEvent.click(confirmDeleteButton);
+
+      // Wrestling Fundamentals should be removed
+      const wrestlingHeadings = page.getByRole('heading', { name: 'Wrestling Fundamentals' }).elements();
+
+      expect(wrestlingHeadings.length).toBe(0);
+    });
+
+    it('updates statistics after deletion is confirmed', async () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+
+      // Initial total programs: 5
+      expect(page.getByText('5', { exact: true }).elements().length).toBeGreaterThan(0);
+
+      // Delete Wrestling
+      const deleteButton = page.getByRole('button', { name: /Delete program/i });
+      await userEvent.click(deleteButton);
+
+      // Confirm deletion
+      const confirmDeleteButton = page.getByRole('button', { name: 'Delete' });
+      await userEvent.click(confirmDeleteButton);
+
+      // Total programs should now be 4
+      const fourElements = page.getByText('4', { exact: true }).elements();
+
+      // There should be at least two "4"s now (programs count and active count)
+      expect(fourElements.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('removes delete button after last deletable program is deleted', async () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+
+      // Initially 1 delete button (Wrestling has 0 classes)
+      expect(page.getByRole('button', { name: /Delete program/i }).elements().length).toBe(1);
+
+      // Delete Wrestling
+      const deleteButton = page.getByRole('button', { name: /Delete program/i });
+      await userEvent.click(deleteButton);
+
+      // Confirm deletion
+      const confirmDeleteButton = page.getByRole('button', { name: 'Delete' });
+      await userEvent.click(confirmDeleteButton);
+
+      // No more delete buttons (remaining programs all have classes)
+      const deleteButtons = page.getByRole('button', { name: /Delete program/i }).elements();
+
+      expect(deleteButtons.length).toBe(0);
+    });
+
+    it('closes dialog after confirming deletion', async () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+
+      // Click delete button
+      const deleteButton = page.getByRole('button', { name: /Delete program/i });
+      await userEvent.click(deleteButton);
+
+      // Confirm deletion
+      const confirmDeleteButton = page.getByRole('button', { name: 'Delete' });
+      await userEvent.click(confirmDeleteButton);
+
+      // Dialog should be closed
+      const dialogTitles = page.getByRole('heading', { name: 'Are you absolutely sure?' }).elements();
+
+      expect(dialogTitles.length).toBe(0);
+    });
   });
 
-  it('renders status filter dropdown', () => {
-    render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+  describe('Modal Close Button', () => {
+    it('closes add modal when X button is clicked', async () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
 
-    // Select trigger should be rendered
-    const statusSelect = page.getByRole('combobox').elements();
+      // Open modal
+      const addButton = page.getByRole('button', { name: /Add New Program/i });
+      await userEvent.click(addButton);
 
-    expect(statusSelect.length).toBeGreaterThanOrEqual(1);
+      // First interact with an input to stabilize dialog
+      const nameInput = page.getByRole('textbox', { name: /Program Name/i });
+      await userEvent.type(nameInput, 'Test');
+
+      // Click X close button
+      const closeButton = page.getByRole('button', { name: 'Close' });
+      await userEvent.click(closeButton);
+
+      // Modal should be closed
+      const modalTitles = page.getByRole('heading', { name: 'Add Program' }).elements();
+
+      expect(modalTitles.length).toBe(0);
+    });
+
+    it('closes edit modal when X button is clicked', async () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+
+      // Open edit modal
+      const editButtons = page.getByRole('button', { name: /Edit program/i }).elements();
+      await userEvent.click(editButtons[0]!);
+
+      // First interact with an input to stabilize dialog
+      const nameInput = page.getByRole('textbox', { name: /Program Name/i });
+      await userEvent.type(nameInput, 'Test');
+
+      // Click X close button
+      const closeButton = page.getByRole('button', { name: 'Close' });
+      await userEvent.click(closeButton);
+
+      // Modal should be closed
+      const modalTitles = page.getByRole('heading', { name: 'Edit Program' }).elements();
+
+      expect(modalTitles.length).toBe(0);
+    });
   });
 
-  it('renders program cards with names', () => {
-    render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+  describe('Form Fields', () => {
+    it('does not show required indicator on program name field', async () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
 
-    const adultProgram = page.getByRole('heading', { name: 'Adult Brazilian Jiu-jitsu' });
-    const kidsProgram = page.getByRole('heading', { name: 'Kids Program' });
-    const competitionTeam = page.getByRole('heading', { name: 'Competition Team' });
-    const judoProgram = page.getByRole('heading', { name: 'Judo Fundamentals' });
+      // Open modal
+      const addButton = page.getByRole('button', { name: /Add New Program/i });
+      await userEvent.click(addButton);
 
-    expect(adultProgram).toBeInTheDocument();
-    expect(kidsProgram).toBeInTheDocument();
-    expect(competitionTeam).toBeInTheDocument();
-    expect(judoProgram).toBeInTheDocument();
-  });
+      // There should be no asterisk for required fields
+      const requiredIndicators = page.getByText('*').elements();
 
-  it('renders program card descriptions', () => {
-    render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+      expect(requiredIndicators.length).toBe(0);
+    });
 
-    const adultDescription = page.getByText(/Traditional Brazilian Jiu-Jitsu program for adults/);
-    const kidsDescription = page.getByText(/Fun and engaging martial arts program/);
+    it('shows description label', async () => {
+      render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
 
-    expect(adultDescription).toBeInTheDocument();
-    expect(kidsDescription).toBeInTheDocument();
-  });
+      // Open modal
+      const addButton = page.getByRole('button', { name: /Add New Program/i });
+      await userEvent.click(addButton);
 
-  it('renders program card class counts', () => {
-    render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
+      const descriptionLabel = page.getByText('Description');
 
-    // Adult BJJ has 5 classes
-    const fiveClasses = page.getByText('5', { exact: true }).elements();
-
-    expect(fiveClasses.length).toBeGreaterThan(0);
-  });
-
-  it('renders program card class names', () => {
-    render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
-
-    const classNames = page.getByText(/BJJ Fundamentals I & II/);
-
-    expect(classNames).toBeInTheDocument();
-  });
-
-  it('renders classes label on program cards', () => {
-    render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
-
-    const classesLabels = page.getByText('Classes').elements();
-
-    expect(classesLabels.length).toBeGreaterThan(0);
-  });
-
-  it('renders edit buttons on program cards', () => {
-    render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
-
-    const editButtons = page.getByRole('button', { name: /Edit program/i }).elements();
-
-    expect(editButtons.length).toBe(5);
-  });
-
-  it('renders delete buttons on program cards', () => {
-    render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
-
-    const deleteButtons = page.getByRole('button', { name: /Delete program/i }).elements();
-
-    expect(deleteButtons.length).toBe(5);
-  });
-
-  it('renders active status badges on program cards', () => {
-    render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
-
-    // All 4 programs are Active
-    const activeBadges = page.getByText('Active').elements();
-
-    // Should have Active in stats card + 4 program cards
-    expect(activeBadges.length).toBeGreaterThanOrEqual(4);
-  });
-
-  it('renders all five program cards', () => {
-    render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
-
-    // Verify all programs are rendered by checking unique program names using headings
-    const adultBjj = page.getByRole('heading', { name: 'Adult Brazilian Jiu-jitsu' });
-    const kidsProgram = page.getByRole('heading', { name: 'Kids Program' });
-    const competitionTeam = page.getByRole('heading', { name: 'Competition Team' });
-    const judoFundamentals = page.getByRole('heading', { name: 'Judo Fundamentals' });
-    const wrestlingFundamentals = page.getByRole('heading', { name: 'Wrestling Fundamentals' });
-
-    expect(adultBjj).toBeInTheDocument();
-    expect(kidsProgram).toBeInTheDocument();
-    expect(competitionTeam).toBeInTheDocument();
-    expect(judoFundamentals).toBeInTheDocument();
-    expect(wrestlingFundamentals).toBeInTheDocument();
-  });
-
-  it('renders inactive status badge for Wrestling Fundamentals', () => {
-    render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
-
-    const inactiveBadges = page.getByText('Inactive').elements();
-
-    // Should have 1 inactive program (Wrestling Fundamentals)
-    expect(inactiveBadges.length).toBe(1);
-  });
-
-  it('renders active count of 4 in stats card', () => {
-    render(<I18nWrapper><ProgramsPage /></I18nWrapper>);
-
-    // 4 out of 5 programs are active
-    const fourElements = page.getByText('4', { exact: true }).elements();
-
-    expect(fourElements.length).toBeGreaterThan(0);
+      expect(descriptionLabel).toBeInTheDocument();
+    });
   });
 });
