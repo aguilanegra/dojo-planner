@@ -2,7 +2,7 @@
 
 import { Card } from '@/components/ui/card';
 
-export type StatCard = {
+type StatCard = {
   id: string;
   label: string;
   value: string | number;
@@ -16,7 +16,7 @@ export type StatCard = {
   formatValue?: (value: string | number) => string;
 };
 
-export type StatsCardsProps = {
+type StatsCardsProps = {
   /**
    * Array of stat card data to display
    */
