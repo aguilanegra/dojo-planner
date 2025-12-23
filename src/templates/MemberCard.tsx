@@ -127,12 +127,13 @@ function defaultDateFormatter(date: Date | null): string {
   return date.toLocaleDateString();
 }
 
-const defaultLabels = {
+// Default labels
+const getDefaultLabels = () => ({
   membership: 'Membership',
   amountDue: 'Amount Due',
   nextPayment: 'Next Payment',
   lastVisited: 'Last Visited',
-};
+});
 
 const defaultFormatters = {
   currency: defaultCurrencyFormatter,
@@ -152,9 +153,11 @@ export function MemberCard({
   status,
   formatText = true,
   onClick,
-  labels = defaultLabels,
+  labels,
   formatters = defaultFormatters,
 }: MemberCardProps) {
+  const defaultLabels = getDefaultLabels();
+  const finalLabels = { ...defaultLabels, ...labels };
   return (
     <Card
       className={`p-4 transition-colors ${onClick ? 'cursor-pointer hover:bg-secondary/30' : ''}`}
@@ -186,7 +189,7 @@ export function MemberCard({
         {/* Member Details Grid */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <div className="text-xs font-semibold text-muted-foreground">{labels.membership}</div>
+            <div className="text-xs font-semibold text-muted-foreground">{finalLabels.membership}</div>
             <div className="mt-1">
               <MembershipBadge
                 membershipType={membershipType}
@@ -197,21 +200,21 @@ export function MemberCard({
           </div>
 
           <div>
-            <div className="text-xs font-semibold text-muted-foreground">{labels.amountDue}</div>
+            <div className="text-xs font-semibold text-muted-foreground">{finalLabels.amountDue}</div>
             <div className="mt-1 text-sm text-foreground">
               {formatters.currency?.(amountDue || '')}
             </div>
           </div>
 
           <div>
-            <div className="text-xs font-semibold text-muted-foreground">{labels.nextPayment}</div>
+            <div className="text-xs font-semibold text-muted-foreground">{finalLabels.nextPayment}</div>
             <div className="mt-1 text-sm text-foreground">
               {formatters.date?.(nextPayment ?? null)}
             </div>
           </div>
 
           <div>
-            <div className="text-xs font-semibold text-muted-foreground">{labels.lastVisited}</div>
+            <div className="text-xs font-semibold text-muted-foreground">{finalLabels.lastVisited}</div>
             <div className="mt-1 text-sm text-foreground">
               {formatters.date?.(lastAccessedAt)}
             </div>

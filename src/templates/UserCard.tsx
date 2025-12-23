@@ -40,23 +40,21 @@ function StatusBadge({
 }) {
   const displayText = formatStatus ? formatText(status) : status;
 
-  if (status === 'Active') {
-    return (
-      <Badge className="bg-green-500 text-white hover:bg-green-600">
-        {displayText}
-      </Badge>
-    );
-  }
-  if (status === 'Inactive') {
-    return (
-      <Badge className="bg-red-500 text-white hover:bg-red-600">
-        {displayText}
-      </Badge>
-    );
-  }
-  // Invitation sent
+  const getStatusColor = (status: string): 'default' | 'secondary' | 'destructive' | 'outline' => {
+    switch (status.toLowerCase()) {
+      case 'active':
+        return 'default';
+      case 'inactive':
+        return 'destructive';
+      case 'invitation sent':
+        return 'secondary';
+      default:
+        return 'outline';
+    }
+  };
+
   return (
-    <Badge className="bg-amber-500 text-gray-900 hover:bg-amber-600">
+    <Badge variant={getStatusColor(status)}>
       {displayText}
     </Badge>
   );
@@ -66,12 +64,13 @@ function getInitials(name: string) {
   return name.split(' ').map(n => n[0]).join('').toUpperCase();
 }
 
-const defaultLabels = {
+// Default labels
+const getDefaultLabels = () => ({
   roles: 'Roles',
   status: 'Status',
   recentActivity: 'Recent Activity',
   lastLoggedIn: 'Last Logged In',
-};
+});
 
 export function UserCard({
   id,
@@ -84,8 +83,10 @@ export function UserCard({
   avatar,
   formatText = true,
   onClick,
-  labels = defaultLabels,
+  labels,
 }: UserCardProps) {
+  const defaultLabels = getDefaultLabels();
+  const finalLabels = { ...defaultLabels, ...labels };
   return (
     <Card
       className={`p-4 ${onClick ? 'cursor-pointer hover:bg-secondary/30' : ''}`}
@@ -113,24 +114,24 @@ export function UserCard({
         {/* User Details Grid */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <div className="text-xs font-semibold text-muted-foreground">{labels.roles}</div>
+            <div className="text-xs font-semibold text-muted-foreground">{finalLabels.roles}</div>
             <div className="mt-1 text-sm text-foreground">{roles}</div>
           </div>
 
           <div>
-            <div className="text-xs font-semibold text-muted-foreground">{labels.status}</div>
+            <div className="text-xs font-semibold text-muted-foreground">{finalLabels.status}</div>
             <div className="mt-1">
               <StatusBadge status={status} formatStatus={formatText} />
             </div>
           </div>
 
           <div>
-            <div className="text-xs font-semibold text-muted-foreground">{labels.recentActivity}</div>
+            <div className="text-xs font-semibold text-muted-foreground">{finalLabels.recentActivity}</div>
             <div className="mt-1 text-sm text-foreground">{recentActivity}</div>
           </div>
 
           <div>
-            <div className="text-xs font-semibold text-muted-foreground">{labels.lastLoggedIn}</div>
+            <div className="text-xs font-semibold text-muted-foreground">{finalLabels.lastLoggedIn}</div>
             <div className="mt-1 text-sm text-foreground">{lastLoggedIn}</div>
           </div>
         </div>
