@@ -7,11 +7,11 @@ import { Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useCallback, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { AddEditProgramModal } from '@/features/programs/AddEditProgramModal';
 import { DeleteProgramAlertDialog } from '@/features/programs/DeleteProgramAlertDialog';
 import { ProgramFilterBar } from '@/features/programs/ProgramFilterBar';
 import { ProgramCard } from '@/templates/ProgramCard';
+import { StatsCards } from '@/templates/StatsCards';
 
 type Program = {
   id: string;
@@ -171,29 +171,16 @@ export default function ProgramsPage() {
     }
   }, [handleCloseModal]);
 
+  const statsData = useMemo(() => [
+    { id: 'programs', label: t('total_programs_label'), value: stats.totalPrograms },
+    { id: 'active', label: t('active_label'), value: stats.active },
+    { id: 'classes', label: t('total_classes_label'), value: stats.totalClasses },
+  ], [stats, t]);
+
   return (
     <div className="w-full space-y-6">
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <Card className="p-4">
-          <div className="text-sm font-medium text-muted-foreground">
-            {t('total_programs_label')}
-          </div>
-          <div className="mt-2 text-3xl font-bold text-foreground">{stats.totalPrograms}</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-sm font-medium text-muted-foreground">
-            {t('active_label')}
-          </div>
-          <div className="mt-2 text-3xl font-bold text-foreground">{stats.active}</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-sm font-medium text-muted-foreground">
-            {t('total_classes_label')}
-          </div>
-          <div className="mt-2 text-3xl font-bold text-foreground">{stats.totalClasses}</div>
-        </Card>
-      </div>
+      <StatsCards stats={statsData} columns={3} />
 
       {/* Title */}
       <h1 className="text-3xl font-bold text-foreground">{t('title')}</h1>

@@ -7,8 +7,8 @@ import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ButtonGroupItem, ButtonGroupRoot } from '@/components/ui/button-group';
-import { Card } from '@/components/ui/card';
 import { ClassCard } from '@/templates/ClassCard';
+import { StatsCards } from '@/templates/StatsCards';
 import { mockClasses as initialMockClasses } from './classesData';
 import { ClassFilterBar } from './ClassFilterBar';
 import { ClassTagsManagement } from './ClassTagsManagement';
@@ -60,29 +60,16 @@ export function ClassesPage() {
     return matchesSearch && matchesTag && matchesInstructor;
   });
 
+  const statsData = useMemo(() => [
+    { id: 'classes', label: t('total_classes_label'), value: stats.totalClasses },
+    { id: 'tags', label: t('total_tags_label'), value: stats.totalTags },
+    { id: 'instructors', label: t('total_instructors_label'), value: stats.totalInstructors },
+  ], [stats, t]);
+
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <Card className="p-4">
-          <div className="text-sm font-medium text-muted-foreground">
-            {t('total_classes_label')}
-          </div>
-          <div className="mt-2 text-3xl font-bold text-foreground">{stats.totalClasses}</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-sm font-medium text-muted-foreground">
-            {t('total_tags_label')}
-          </div>
-          <div className="mt-2 text-3xl font-bold text-foreground">{stats.totalTags}</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-sm font-medium text-muted-foreground">
-            {t('total_instructors_label')}
-          </div>
-          <div className="mt-2 text-3xl font-bold text-foreground">{stats.totalInstructors}</div>
-        </Card>
-      </div>
+      <StatsCards stats={statsData} columns={3} />
 
       {/* Header */}
       <div className="flex items-center gap-4">

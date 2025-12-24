@@ -6,10 +6,10 @@ import { Plus, Tags } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { MembershipFilterBar } from '@/features/memberships/MembershipFilterBar';
 import { MembershipTagsManagement } from '@/features/memberships/MembershipTagsManagement';
 import { MembershipCard } from '@/templates/MembershipCard';
+import { StatsCards } from '@/templates/StatsCards';
 
 type ProgramType = 'Adult' | 'Kids' | 'Women' | 'Competition';
 
@@ -241,35 +241,17 @@ export default function MembershipsPage() {
     return Array.from(programsInResults);
   }, [filters.search, filters.tag]);
 
+  const statsData = useMemo(() => [
+    { id: 'memberships', label: t('total_memberships_label'), value: stats.totalMemberships },
+    { id: 'active', label: t('active_label'), value: stats.active },
+    { id: 'trials', label: t('trial_options_label'), value: stats.trialOptions },
+    { id: 'members', label: t('total_members_label'), value: stats.totalMembers },
+  ], [stats, t]);
+
   return (
     <div className="w-full space-y-6">
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-        <Card className="p-4">
-          <div className="text-sm font-medium text-muted-foreground">
-            {t('total_memberships_label')}
-          </div>
-          <div className="mt-2 text-3xl font-bold text-foreground">{stats.totalMemberships}</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-sm font-medium text-muted-foreground">
-            {t('active_label')}
-          </div>
-          <div className="mt-2 text-3xl font-bold text-foreground">{stats.active}</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-sm font-medium text-muted-foreground">
-            {t('trial_options_label')}
-          </div>
-          <div className="mt-2 text-3xl font-bold text-foreground">{stats.trialOptions}</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-sm font-medium text-muted-foreground">
-            {t('total_members_label')}
-          </div>
-          <div className="mt-2 text-3xl font-bold text-foreground">{stats.totalMembers}</div>
-        </Card>
-      </div>
+      <StatsCards stats={statsData} columns={4} />
 
       {/* Header */}
       <div className="flex items-center gap-4">

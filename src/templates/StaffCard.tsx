@@ -20,7 +20,7 @@ type StaffCardProps = {
   onRemove?: (id: string) => void;
 };
 
-function getRoleVariant(role: string): 'default' | 'secondary' | 'destructive' | 'outline' {
+function getRoleColor(role: string): 'default' | 'secondary' | 'destructive' | 'outline' {
   if (role === 'org:admin') {
     return 'default';
   }
@@ -44,23 +44,21 @@ function StatusBadge({
 }) {
   const displayText = formatStatus ? formatText(status) : status;
 
-  if (status === 'Active') {
-    return (
-      <Badge className="bg-green-500 text-white hover:bg-green-600">
-        {displayText}
-      </Badge>
-    );
-  }
-  if (status === 'Inactive') {
-    return (
-      <Badge className="bg-red-500 text-white hover:bg-red-600">
-        {displayText}
-      </Badge>
-    );
-  }
-  // Invitation sent
+  const getStatusColor = (status: string): 'default' | 'secondary' | 'destructive' | 'outline' => {
+    switch (status.toLowerCase()) {
+      case 'active':
+        return 'default';
+      case 'inactive':
+        return 'destructive';
+      case 'invitation sent':
+        return 'secondary';
+      default:
+        return 'outline';
+    }
+  };
+
   return (
-    <Badge className="bg-amber-500 text-gray-900 hover:bg-amber-600">
+    <Badge variant={getStatusColor(status)}>
       {displayText}
     </Badge>
   );
@@ -127,7 +125,7 @@ export function StaffCard({
           <div>
             <div className="text-xs font-semibold text-muted-foreground">Role</div>
             <div className="mt-1">
-              <Badge variant={getRoleVariant(role)}>
+              <Badge variant={getRoleColor(role)}>
                 {formatText ? formatRole(role) : role}
               </Badge>
             </div>

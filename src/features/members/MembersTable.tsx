@@ -5,10 +5,10 @@ import { ArrowDown01, ArrowDownAZ, ArrowUp10, ArrowUpZA } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
 import { Pagination } from '@/components/ui/pagination/Pagination';
 import { Spinner } from '@/components/ui/spinner';
 import { MemberCard } from '@/templates/MemberCard';
+import { StatsCards } from '@/templates/StatsCards';
 import { MemberFilterBar } from './MemberFilterBar';
 
 type Member = {
@@ -160,13 +160,13 @@ export function MembersTable({
     setCurrentPage(0);
   };
 
-  const stats = {
+  const stats = useMemo(() => ({
     totalMembers: members.filter(m => m.status === 'active').length,
     totalCancelled: members.filter(m => m.status === 'cancelled').length,
     totalOnHold: members.filter(m => m.status === 'hold').length,
     paidMembers: members.filter(m => m.membershipType === 'monthly' || m.membershipType === 'annual').length,
     freeMembers: members.filter(m => m.membershipType === 'free-trial').length,
-  };
+  }), [members]);
 
   const getInitials = (firstName: string | null, lastName: string | null) => {
     if (!firstName || !lastName) {
@@ -254,31 +254,17 @@ export function MembersTable({
     }
   };
 
+  const statsData = useMemo(() => [
+    { id: 'total', label: 'Total members', value: stats.totalMembers },
+    { id: 'cancelled', label: 'Total cancelled', value: stats.totalCancelled },
+    { id: 'paid', label: 'Paid members', value: stats.paidMembers },
+    { id: 'free', label: 'Free members', value: stats.freeMembers },
+  ], [stats]);
+
   return (
     <div className="w-full space-y-6">
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-        <Card className="p-4">
-          <div className="text-sm font-medium text-muted-foreground">Total members</div>
-          <div className="mt-2 text-3xl font-bold text-foreground">{stats.totalMembers}</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-sm font-medium text-muted-foreground">
-            Total cancelled
-          </div>
-          <div className="mt-2 text-3xl font-bold text-foreground">{stats.totalCancelled}</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-sm font-medium text-muted-foreground">Paid members</div>
-          <div className="mt-2 text-3xl font-bold text-foreground">{stats.paidMembers}</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-sm font-medium text-muted-foreground">
-            Free members
-          </div>
-          <div className="mt-2 text-3xl font-bold text-foreground">{stats.freeMembers}</div>
-        </Card>
-      </div>
+      <StatsCards stats={statsData} columns={4} />
 
       {/* Header */}
       <h1 className="text-3xl font-bold text-foreground">Members</h1>

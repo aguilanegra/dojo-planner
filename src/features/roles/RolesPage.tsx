@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Pagination } from '@/components/ui/pagination/Pagination';
+import { StatsCards } from '@/templates/StatsCards';
 import { UserCard } from '@/templates/UserCard';
 import { RolesFilterBar } from './RolesFilterBar';
 
@@ -301,27 +302,16 @@ export function RolesPage() {
     }
   };
 
+  const statsData = useMemo(() => [
+    { id: 'users', label: t('total_users_label'), value: mockUsers.length },
+    { id: 'admins', label: t('total_admins_label'), value: mockUsers.filter(u => u.roles.includes('Admin')).length },
+    { id: 'coaches', label: t('total_coaches_label'), value: mockUsers.filter(u => u.roles.includes('Coach')).length },
+  ], [t]);
+
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <Card className="p-4">
-          <div className="text-sm font-medium text-muted-foreground">{t('total_users_label')}</div>
-          <div className="mt-2 text-3xl font-bold text-foreground">{mockUsers.length}</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-sm font-medium text-muted-foreground">{t('total_admins_label')}</div>
-          <div className="mt-2 text-3xl font-bold text-foreground">
-            {mockUsers.filter(u => u.roles.includes('Admin')).length}
-          </div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-sm font-medium text-muted-foreground">{t('total_coaches_label')}</div>
-          <div className="mt-2 text-3xl font-bold text-foreground">
-            {mockUsers.filter(u => u.roles.includes('Coach')).length}
-          </div>
-        </Card>
-      </div>
+      <StatsCards stats={statsData} columns={3} />
 
       {/* Header */}
       <h1 className="text-3xl font-bold text-foreground">{t('title')}</h1>
