@@ -1,6 +1,7 @@
 'use client';
 
 import type { ClassFilters } from './ClassFilterBar';
+import type { ClassCardProps } from '@/templates/ClassCard';
 import { Grid3x3, List, Plus, Tags } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
@@ -8,41 +9,49 @@ import { Button } from '@/components/ui/button';
 import { ButtonGroupItem, ButtonGroupRoot } from '@/components/ui/button-group';
 import { ClassCard } from '@/templates/ClassCard';
 import { StatsCards } from '@/templates/StatsCards';
-import { mockClasses } from './classesData';
+import { mockClasses as initialMockClasses } from './classesData';
 import { ClassFilterBar } from './ClassFilterBar';
 import { ClassTagsManagement } from './ClassTagsManagement';
 import { MonthlyView } from './MonthlyView';
 import { WeeklyView } from './WeeklyView';
+import { AddClassModal } from './wizard';
 
 export function ClassesPage() {
   const t = useTranslations('ClassesPage');
   const [viewType, setViewType] = useState('grid');
   const [isTagsSheetOpen, setIsTagsSheetOpen] = useState(false);
+  const [isAddClassModalOpen, setIsAddClassModalOpen] = useState(false);
+  const [classes, setClasses] = useState<ClassCardProps[]>(initialMockClasses);
   const [filters, setFilters] = useState<ClassFilters>({
     search: '',
     tag: 'all',
     instructor: 'all',
   });
 
-  // Get unique instructors from mockClasses
+  // Handle new class creation
+  const handleClassCreated = (newClass: ClassCardProps) => {
+    setClasses(prev => [...prev, newClass]);
+  };
+
+  // Get unique instructors from classes
   const allInstructors = Array.from(
-    new Set(mockClasses.flatMap(cls => cls.instructors.map(i => i.name))),
+    new Set(classes.flatMap(cls => cls.instructors.map(i => i.name))),
   );
 
   // Calculate stats
   const stats = useMemo(() => {
-    const uniqueTypes = new Set(mockClasses.map(cls => cls.type));
-    const uniqueStyles = new Set(mockClasses.map(cls => cls.style));
+    const uniqueTypes = new Set(classes.map(cls => cls.type));
+    const uniqueStyles = new Set(classes.map(cls => cls.style));
     const totalTags = uniqueTypes.size + uniqueStyles.size;
     return {
-      totalClasses: mockClasses.length,
+      totalClasses: classes.length,
       totalTags,
       totalInstructors: allInstructors.length,
     };
-  }, [allInstructors.length]);
+  }, [classes, allInstructors.length]);
 
   // Filter classes based on filters
-  const filteredClasses = mockClasses.filter((cls) => {
+  const filteredClasses = classes.filter((cls) => {
     const matchesSearch = cls.name.toLowerCase().includes(filters.search.toLowerCase())
       || cls.description.toLowerCase().includes(filters.search.toLowerCase());
     const matchesTag = filters.tag === 'all' || cls.type === filters.tag || cls.style === filters.tag;
@@ -103,7 +112,7 @@ export function ClassesPage() {
             </ButtonGroupRoot>
 
             {/* Add New Class Button */}
-            <Button>
+            <Button onClick={() => setIsAddClassModalOpen(true)}>
               <Plus className="h-4 w-4" />
               <span className="ml-1 hidden sm:inline">{t('add_new_class_button')}</span>
             </Button>
@@ -133,6 +142,13 @@ export function ClassesPage() {
       <ClassTagsManagement
         open={isTagsSheetOpen}
         onOpenChange={setIsTagsSheetOpen}
+      />
+
+      {/* Add Class Wizard Modal */}
+      <AddClassModal
+        isOpen={isAddClassModalOpen}
+        onCloseAction={() => setIsAddClassModalOpen(false)}
+        onClassCreated={handleClassCreated}
       />
     </div>
   );

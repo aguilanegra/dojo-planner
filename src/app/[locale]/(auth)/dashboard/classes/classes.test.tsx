@@ -1,8 +1,16 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
-import { page } from 'vitest/browser';
+import { page, userEvent } from 'vitest/browser';
 import { ClassesPage } from '@/features/classes/ClassesPage';
 import { I18nWrapper } from '@/lib/test-utils';
+
+// Mock next/navigation
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    refresh: vi.fn(),
+    push: vi.fn(),
+  }),
+}));
 
 describe('Classes Page', () => {
   it('renders classes header', () => {
@@ -53,5 +61,34 @@ describe('Classes Page', () => {
     const instructorName = page.getByText(/Coach Alex/).first();
 
     expect(instructorName).toBeInTheDocument();
+  });
+
+  it('opens add class modal when clicking add button', async () => {
+    render(<I18nWrapper><ClassesPage /></I18nWrapper>);
+
+    const addButton = page.getByRole('button', { name: /Add New Class/i });
+    await userEvent.click(addButton);
+
+    const dialog = page.getByRole('dialog');
+
+    expect(dialog).toBeInTheDocument();
+  });
+
+  it('displays summary cards with correct labels', () => {
+    render(<I18nWrapper><ClassesPage /></I18nWrapper>);
+
+    const totalClassesLabel = page.getByText(/Total Classes/i);
+    const instructorsLabel = page.getByText(/Instructors/i).first();
+
+    expect(totalClassesLabel).toBeInTheDocument();
+    expect(instructorsLabel).toBeInTheDocument();
+  });
+
+  it('displays manage tags button', () => {
+    render(<I18nWrapper><ClassesPage /></I18nWrapper>);
+
+    const manageTagsButton = page.getByRole('button', { name: /Manage Tags/i });
+
+    expect(manageTagsButton).toBeInTheDocument();
   });
 });
