@@ -20,6 +20,7 @@ type Membership = {
   program: ProgramType;
   status: MembershipStatus;
   isTrial?: boolean;
+  isMonthly?: boolean;
   price: string;
   signupFee: string;
   frequency: string;
@@ -36,6 +37,7 @@ const mockMemberships: Membership[] = [
     category: 'Adult Brazilian Jiu-Jitsu',
     program: 'Adult',
     status: 'Active',
+    isMonthly: true,
     price: '$150.00/mo',
     signupFee: '$35 signup fee',
     frequency: 'Monthly',
@@ -50,6 +52,7 @@ const mockMemberships: Membership[] = [
     category: 'Adult Brazilian Jiu-Jitsu',
     program: 'Adult',
     status: 'Active',
+    isMonthly: true,
     price: '$170.00/mo',
     signupFee: '$35 signup fee',
     frequency: 'Monthly',
@@ -79,6 +82,7 @@ const mockMemberships: Membership[] = [
     category: 'Kids Program',
     program: 'Kids',
     status: 'Active',
+    isMonthly: true,
     price: '$95.00/mo',
     signupFee: '$25 signup fee',
     frequency: 'Monthly',
@@ -108,6 +112,7 @@ const mockMemberships: Membership[] = [
     category: 'Competition Team',
     program: 'Competition',
     status: 'Active',
+    isMonthly: true,
     price: '$200.00/mo',
     signupFee: '$50 signup fee',
     frequency: 'Monthly',
@@ -122,6 +127,7 @@ const mockMemberships: Membership[] = [
     category: 'Adult Brazilian Jiu-Jitsu',
     program: 'Adult',
     status: 'Inactive',
+    isMonthly: true,
     price: '$165.00/mo',
     signupFee: '$35 signup fee',
     frequency: 'Monthly',
@@ -157,15 +163,22 @@ export default function MembershipsPage() {
     totalMembers: mockMemberships.reduce((sum, m) => sum + m.activeCount, 0),
   }), []);
 
-  // Helper function to get tag for a membership
-  const getMembershipTag = (membership: Membership): AvailableTag => {
+  // Helper function to get all tags for a membership
+  const getMembershipTags = (membership: Membership): AvailableTag[] => {
+    const tags: AvailableTag[] = [];
     if (membership.isTrial) {
-      return 'Trial';
+      tags.push('Trial');
     }
     if (membership.status === 'Inactive') {
-      return 'Inactive';
+      tags.push('Inactive');
     }
-    return 'Active';
+    if (membership.status === 'Active' && !membership.isTrial) {
+      tags.push('Active');
+    }
+    if (membership.isMonthly) {
+      tags.push('Monthly');
+    }
+    return tags;
   };
 
   // Helper function to check if membership matches tag filter
@@ -181,6 +194,9 @@ export default function MembershipsPage() {
     }
     if (tag === 'Inactive') {
       return membership.status === 'Inactive';
+    }
+    if (tag === 'Monthly') {
+      return !!membership.isMonthly;
     }
     return true;
   };
@@ -219,7 +235,7 @@ export default function MembershipsPage() {
 
     const tagsInResults = new Set<AvailableTag>();
     membershipsMatchingOtherFilters.forEach((membership) => {
-      tagsInResults.add(getMembershipTag(membership));
+      getMembershipTags(membership).forEach(tag => tagsInResults.add(tag));
     });
 
     return Array.from(tagsInResults);
@@ -299,6 +315,7 @@ export default function MembershipsPage() {
                   category: membership.category,
                   status: membership.status,
                   isTrial: membership.isTrial,
+                  isMonthly: membership.isMonthly,
                   price: membership.price,
                   signupFee: membership.signupFee,
                   frequency: membership.frequency,

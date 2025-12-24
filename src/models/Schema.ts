@@ -1,4 +1,4 @@
-import { bigint, boolean, pgTable, primaryKey, serial, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
+import { bigint, boolean, pgTable, primaryKey, real, serial, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 
 // This file defines the structure of your database tables using the Drizzle ORM.
 
@@ -47,11 +47,48 @@ export const memberSchema = pgTable('member', {
   phone: text('phone'),
   dateOfBirth: timestamp('date_of_birth', { mode: 'date' }),
   photoUrl: text('photo_url'),
-  subscriptionPlan: text('subscription_plan'), // free-trial, monthly, annual
   lastAccessedAt: timestamp('last_accessed_at', { mode: 'date' })
     .$onUpdate(() => new Date()),
   status: text('status').notNull().default('active'), // active, hold, trial, cancelled, past due
   statusChangedAt: timestamp('status_changed_at', { mode: 'date' }),
+  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' })
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
+// Membership plans table - stores available membership types that can be created/edited/deleted
+export const membershipPlanSchema = pgTable('membership_plan', {
+  id: text('id').primaryKey(), // UUID v4
+  organizationId: text('organization_id').notNull(),
+  name: text('name').notNull(), // e.g., '12 Month Commitment (Gold)'
+  slug: text('slug').notNull(), // e.g., '12_month_commitment_gold' - used for identification
+  category: text('category').notNull(), // e.g., 'Adult Brazilian Jiu-Jitsu'
+  program: text('program').notNull(), // e.g., 'Adult', 'Kids', 'Competition'
+  price: real('price').notNull().default(0), // Monthly price amount
+  signupFee: real('signup_fee').notNull().default(0),
+  frequency: text('frequency').notNull().default('Monthly'), // Monthly, Annual, None
+  contractLength: text('contract_length').notNull(), // e.g., '12 Months', 'Month-to-Month', '7 Days'
+  accessLevel: text('access_level').notNull(), // e.g., 'Unlimited', '8 Classes/mo'
+  description: text('description'), // Short description of the plan
+  isTrial: boolean('is_trial').default(false),
+  isActive: boolean('is_active').default(true), // Whether the plan is currently offered
+  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date' })
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
+// Links members to their membership plans with historical tracking
+export const memberMembershipSchema = pgTable('member_membership', {
+  id: text('id').primaryKey(), // UUID v4
+  memberId: text('member_id').references(() => memberSchema.id).notNull(),
+  membershipPlanId: text('membership_plan_id').references(() => membershipPlanSchema.id).notNull(),
+  status: text('status').notNull().default('active'), // active, cancelled, expired, converted
+  startDate: timestamp('start_date', { mode: 'date' }).defaultNow().notNull(),
+  endDate: timestamp('end_date', { mode: 'date' }), // null if ongoing
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' })
     .defaultNow()

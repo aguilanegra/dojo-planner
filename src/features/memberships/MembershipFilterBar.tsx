@@ -18,7 +18,7 @@ export type MembershipFilters = {
   program: string;
 };
 
-export type AvailableTag = 'Active' | 'Trial' | 'Inactive';
+export type AvailableTag = 'Active' | 'Trial' | 'Inactive' | 'Monthly';
 
 type MembershipFilterBarProps = {
   onFiltersChangeAction: (filters: MembershipFilters) => void;
@@ -63,6 +63,7 @@ export function MembershipFilterBar({
     { value: 'Active', label: t('tag_active') },
     { value: 'Trial', label: t('tag_trial') },
     { value: 'Inactive', label: t('tag_inactive') },
+    { value: 'Monthly', label: t('tag_monthly') },
   ];
 
   // Filter tags based on availableTags prop (if provided)

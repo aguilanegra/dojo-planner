@@ -14,7 +14,6 @@ export const MemberValidation = z.object({
     zipCode: z.string(),
     country: z.string(),
   }).optional(),
-  subscriptionPlan: z.enum(['free-trial', 'monthly', 'annual', 'custom']).optional(),
   photoUrl: z.string().optional(),
 });
 
@@ -28,4 +27,18 @@ export const EditMemberValidation = z.object({
 
 export const DeleteMemberValidation = z.object({
   id: z.string(),
+});
+
+export const UpdateMemberContactInfoValidation = z.object({
+  id: z.string(),
+  email: z.string().email(),
+  phone: z.string().nullable().optional(),
+  address: z.object({
+    street: z.string(),
+    apartment: z.string().optional(),
+    city: z.string(),
+    state: z.string(),
+    zipCode: z.string(),
+    country: z.string(),
+  }).optional(),
 });

@@ -28,4 +28,11 @@ export const mockMembershipTags: MembershipTag[] = [
     usageCount: 1,
     membershipNames: ['6 Month Commitment (Silver)'],
   },
+  {
+    id: 'tag-4',
+    name: 'Monthly',
+    color: '#3b82f6', // blue-500 - for monthly billing tag
+    usageCount: 5,
+    membershipNames: ['12 Month Commitment (Gold)', 'Month to Month (Gold)', 'Kids Monthly', 'Competition Team', '6 Month Commitment (Silver)'],
+  },
 ];

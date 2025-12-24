@@ -67,7 +67,7 @@ vi.mock('@/libs/Orpc', () => ({
             createdAt: new Date('2024-01-01'),
             updatedAt: new Date('2024-01-15'),
             memberType: null,
-            subscriptionPlan: null,
+            membershipPlanId: null,
           },
         ],
       }),

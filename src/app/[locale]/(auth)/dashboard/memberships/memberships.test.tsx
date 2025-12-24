@@ -123,6 +123,34 @@ describe('Memberships Page', () => {
     expect(activeTrials.length).toBeGreaterThan(0);
   });
 
+  it('renders Monthly badges on non-trial membership cards', async () => {
+    render(<I18nWrapper><MembershipsPage /></I18nWrapper>);
+
+    // Filter by Monthly tag to show only monthly memberships
+    const tagDropdown = page.getByRole('combobox').first();
+    await userEvent.click(tagDropdown);
+    const monthlyOption = page.getByRole('option', { name: 'Monthly' });
+    await userEvent.click(monthlyOption);
+
+    // All 5 non-trial memberships should be visible (they all have isMonthly: true)
+    const goldCard = page.getByRole('heading', { name: '12 Month Commitment (Gold)' });
+    const monthToMonthCard = page.getByRole('heading', { name: 'Month to Month (Gold)' });
+    const kidsCard = page.getByRole('heading', { name: 'Kids Monthly' });
+    const competitionCard = page.getByRole('heading', { name: 'Competition Team' });
+    const silverCard = page.getByRole('heading', { name: '6 Month Commitment (Silver)' });
+
+    expect(goldCard).toBeInTheDocument();
+    expect(monthToMonthCard).toBeInTheDocument();
+    expect(kidsCard).toBeInTheDocument();
+    expect(competitionCard).toBeInTheDocument();
+    expect(silverCard).toBeInTheDocument();
+
+    // Trial memberships should NOT be visible
+    const trialCardElements = page.getByText('7-Day Free Trial');
+
+    expect(trialCardElements.elements()).toHaveLength(0);
+  });
+
   describe('Manage Tags Button', () => {
     it('renders manage tags button next to header', () => {
       render(<I18nWrapper><MembershipsPage /></I18nWrapper>);
@@ -224,6 +252,30 @@ describe('Memberships Page', () => {
       const inactiveCard = page.getByText('6 Month Commitment (Silver)');
 
       expect(inactiveCard).toBeInTheDocument();
+    });
+
+    it('filters memberships by tag - Monthly', async () => {
+      render(<I18nWrapper><MembershipsPage /></I18nWrapper>);
+
+      // Click on tags dropdown (first combobox)
+      const tagDropdown = page.getByRole('combobox').first();
+      await userEvent.click(tagDropdown);
+
+      // Select Monthly
+      const monthlyOption = page.getByRole('option', { name: 'Monthly' });
+      await userEvent.click(monthlyOption);
+
+      // Monthly memberships should be visible (non-trial memberships)
+      const goldCard = page.getByText('12 Month Commitment (Gold)');
+      const kidsCard = page.getByText('Kids Monthly');
+
+      expect(goldCard).toBeInTheDocument();
+      expect(kidsCard).toBeInTheDocument();
+
+      // Trial memberships should NOT be visible
+      const trialCardElements = page.getByText('7-Day Free Trial');
+
+      expect(trialCardElements.elements()).toHaveLength(0);
     });
 
     it('filters memberships by program', async () => {
@@ -335,7 +387,7 @@ describe('Memberships Page', () => {
       expect(kidsOption.elements()).toHaveLength(0);
     });
 
-    it('shows only Active tag when filtering by Competition program', async () => {
+    it('shows only Active and Monthly tags when filtering by Competition program', async () => {
       render(<I18nWrapper><MembershipsPage /></I18nWrapper>);
 
       // Click on programs dropdown and select Competition
@@ -348,10 +400,12 @@ describe('Memberships Page', () => {
       const tagDropdown = page.getByRole('combobox').first();
       await userEvent.click(tagDropdown);
 
-      // Active should be available (Competition Team is Active)
+      // Active and Monthly should be available (Competition Team is Active and Monthly)
       const activeOption = page.getByRole('option', { name: 'Active', exact: true });
+      const monthlyOption = page.getByRole('option', { name: 'Monthly' });
 
       expect(activeOption).toBeInTheDocument();
+      expect(monthlyOption).toBeInTheDocument();
 
       // Trial and Inactive should NOT be available since Competition Team is neither
       const trialOption = page.getByRole('option', { name: 'Trial' });
@@ -359,6 +413,47 @@ describe('Memberships Page', () => {
 
       expect(trialOption.elements()).toHaveLength(0);
       expect(inactiveOption.elements()).toHaveLength(0);
+    });
+
+    it('hides Monthly tag option when searching for Trial memberships', async () => {
+      render(<I18nWrapper><MembershipsPage /></I18nWrapper>);
+
+      // Search for "Trial" which only matches trial memberships
+      const searchInput = page.getByPlaceholder(/Search memberships/i);
+      await userEvent.type(searchInput, 'Free Trial');
+
+      // Check the tags dropdown
+      const tagDropdown = page.getByRole('combobox').first();
+      await userEvent.click(tagDropdown);
+
+      // Monthly should NOT be available since trial memberships are not monthly
+      const monthlyOption = page.getByRole('option', { name: 'Monthly' });
+
+      expect(monthlyOption.elements()).toHaveLength(0);
+
+      // Trial should still be available
+      const trialOption = page.getByRole('option', { name: 'Trial' });
+
+      expect(trialOption).toBeInTheDocument();
+    });
+
+    it('shows Monthly tag option when filtering by Kids program', async () => {
+      render(<I18nWrapper><MembershipsPage /></I18nWrapper>);
+
+      // Click on programs dropdown and select Kids
+      const programDropdown = page.getByRole('combobox').nth(1);
+      await userEvent.click(programDropdown);
+      const kidsOption = page.getByRole('option', { name: 'Kids' });
+      await userEvent.click(kidsOption);
+
+      // Now check the tags dropdown
+      const tagDropdown = page.getByRole('combobox').first();
+      await userEvent.click(tagDropdown);
+
+      // Monthly should be available (Kids Monthly has Monthly tag)
+      const monthlyOption = page.getByRole('option', { name: 'Monthly' });
+
+      expect(monthlyOption).toBeInTheDocument();
     });
   });
 });

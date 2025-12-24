@@ -1,7 +1,23 @@
 import { randomUUID } from 'node:crypto';
 import { and, eq, inArray } from 'drizzle-orm';
 import { db } from '@/libs/DB';
-import { addressSchema, memberSchema } from '@/models/Schema';
+import { addressSchema, memberMembershipSchema, memberSchema, membershipPlanSchema } from '@/models/Schema';
+
+export type MembershipPlanData = {
+  id: string;
+  name: string;
+  slug: string;
+  category: string;
+  program: string;
+  price: number;
+  signupFee: number;
+  frequency: string;
+  contractLength: string;
+  accessLevel: string;
+  description: string | null;
+  isTrial: boolean | null;
+  isActive: boolean | null;
+};
 
 type Address = {
   street: string;
@@ -10,6 +26,32 @@ type Address = {
   state: string;
   zipCode: string;
   country: string;
+};
+
+type MembershipPlan = {
+  id: string;
+  name: string;
+  slug: string;
+  category: string;
+  program: string;
+  price: number;
+  signupFee: number;
+  frequency: string;
+  contractLength: string;
+  accessLevel: string;
+  description: string | null;
+  isTrial: boolean | null;
+  isActive: boolean | null;
+};
+
+type MemberMembership = {
+  id: string;
+  membershipPlanId: string;
+  membershipPlan?: MembershipPlan | null;
+  status: string;
+  startDate: Date;
+  endDate: Date | null;
+  createdAt: Date;
 };
 
 type MemberWithCustomData = {
@@ -21,13 +63,14 @@ type MemberWithCustomData = {
   dateOfBirth: Date | null;
   photoUrl: string | null;
   memberType: string | null;
-  subscriptionPlan: string | null;
   lastAccessedAt: Date | null;
   status: string;
   createdAt: Date;
   updatedAt: Date;
   create_organization_enabled?: boolean;
   address?: Address;
+  currentMembership?: MemberMembership | null;
+  membershipHistory?: MemberMembership[];
 };
 
 type CreateMemberInput = {
@@ -37,7 +80,6 @@ type CreateMemberInput = {
   email: string;
   phone?: string;
   memberType?: string;
-  subscriptionPlan?: string;
   photoUrl?: string;
   status: string;
   address?: {
@@ -58,7 +100,6 @@ type UpdateMemberInput = {
   phone?: string | null;
   photoUrl?: string;
   memberType?: string;
-  subscriptionPlan?: string;
   dateOfBirth?: Date;
   lastAccessedAt?: Date;
   status: string;
@@ -108,6 +149,72 @@ export async function getOrganizationMembers(
     }
   });
 
+  // Fetch memberships for all members
+  const memberships = memberIds.length > 0
+    ? await db
+        .select()
+        .from(memberMembershipSchema)
+        .where(inArray(memberMembershipSchema.memberId, memberIds))
+    : [];
+
+  // Fetch all membership plans for the organization to join with memberships
+  const membershipPlanIds = [...new Set(memberships.map(m => m.membershipPlanId))];
+  const membershipPlans = membershipPlanIds.length > 0
+    ? await db
+        .select()
+        .from(membershipPlanSchema)
+        .where(inArray(membershipPlanSchema.id, membershipPlanIds))
+    : [];
+
+  // Create a map of plan ID to plan for quick lookup
+  const planMap = new Map<string, MembershipPlan>();
+  membershipPlans.forEach((plan) => {
+    planMap.set(plan.id, {
+      id: plan.id,
+      name: plan.name,
+      slug: plan.slug,
+      category: plan.category,
+      program: plan.program,
+      price: plan.price,
+      signupFee: plan.signupFee,
+      frequency: plan.frequency,
+      contractLength: plan.contractLength,
+      accessLevel: plan.accessLevel,
+      description: plan.description,
+      isTrial: plan.isTrial,
+      isActive: plan.isActive,
+    });
+  });
+
+  // Create maps for current membership and membership history
+  const currentMembershipMap = new Map<string, MemberMembership>();
+  const membershipHistoryMap = new Map<string, MemberMembership[]>();
+
+  memberships.forEach((membership) => {
+    const memberMembership: MemberMembership = {
+      id: membership.id,
+      membershipPlanId: membership.membershipPlanId,
+      membershipPlan: planMap.get(membership.membershipPlanId) || null,
+      status: membership.status,
+      startDate: membership.startDate,
+      endDate: membership.endDate,
+      createdAt: membership.createdAt,
+    };
+
+    // Build history
+    const history = membershipHistoryMap.get(membership.memberId) || [];
+    history.push(memberMembership);
+    membershipHistoryMap.set(membership.memberId, history);
+
+    // Set current membership (active status, most recent)
+    if (membership.status === 'active') {
+      const current = currentMembershipMap.get(membership.memberId);
+      if (!current || membership.startDate > current.startDate) {
+        currentMembershipMap.set(membership.memberId, memberMembership);
+      }
+    }
+  });
+
   return members.map(member => ({
     id: member.id,
     firstName: member.firstName,
@@ -117,13 +224,14 @@ export async function getOrganizationMembers(
     dateOfBirth: member.dateOfBirth || null,
     photoUrl: member.photoUrl || null,
     memberType: member.memberType || null,
-    subscriptionPlan: member.subscriptionPlan || null,
     lastAccessedAt: member.lastAccessedAt || null,
     status: member.status,
     createdAt: member.createdAt,
     updatedAt: member.updatedAt,
     create_organization_enabled: false, // Members table doesn't have admins
     address: addressMap.get(member.id),
+    currentMembership: currentMembershipMap.get(member.id) || null,
+    membershipHistory: membershipHistoryMap.get(member.id) || [],
   }));
 }
 
@@ -196,4 +304,168 @@ export function updateMemberStatus(memberId: string, organizationId: string, sta
     })
     .where(and(eq(memberSchema.id, memberId), eq(memberSchema.organizationId, organizationId)))
     .returning();
+}
+
+type UpdateMemberContactInfoInput = {
+  id: string;
+  email: string;
+  phone?: string | null;
+  address?: {
+    street: string;
+    apartment?: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    country: string;
+  };
+};
+
+/**
+ * Update a member's contact information (email, phone, address)
+ * @param input - Contact info data to update
+ * @param organizationId - The organization ID
+ * @returns The updated member record
+ */
+export async function updateMemberContactInfo(input: UpdateMemberContactInfoInput, organizationId: string) {
+  const { id, email, phone, address } = input;
+
+  // Update member email and phone
+  const memberResult = await db
+    .update(memberSchema)
+    .set({
+      email,
+      phone: phone ?? null,
+    })
+    .where(and(eq(memberSchema.id, id), eq(memberSchema.organizationId, organizationId)))
+    .returning();
+
+  if (memberResult.length === 0) {
+    return [];
+  }
+
+  // Handle address update
+  if (address && address.street && address.city && address.state && address.zipCode) {
+    // Check if member has an existing default address
+    const existingAddress = await db
+      .select()
+      .from(addressSchema)
+      .where(and(eq(addressSchema.memberId, id), eq(addressSchema.isDefault, true)));
+
+    if (existingAddress.length > 0) {
+      // Update existing address
+      await db
+        .update(addressSchema)
+        .set({
+          street: address.street,
+          city: address.city,
+          state: address.state,
+          zipCode: address.zipCode,
+          country: address.country || 'US',
+        })
+        .where(and(eq(addressSchema.memberId, id), eq(addressSchema.isDefault, true)));
+    } else {
+      // Create new address
+      await db
+        .insert(addressSchema)
+        .values({
+          id: randomUUID(),
+          memberId: id,
+          type: 'home',
+          street: address.street,
+          city: address.city,
+          state: address.state,
+          zipCode: address.zipCode,
+          country: address.country || 'US',
+          isDefault: true,
+        });
+    }
+  }
+
+  return memberResult;
+}
+
+/**
+ * Add a membership to a member
+ * @param memberId - The member ID
+ * @param membershipPlanId - The membership plan ID
+ * @returns The created membership record
+ */
+export async function addMemberMembership(memberId: string, membershipPlanId: string) {
+  const result = await db
+    .insert(memberMembershipSchema)
+    .values({
+      id: randomUUID(),
+      memberId,
+      membershipPlanId,
+      status: 'active',
+      startDate: new Date(),
+    })
+    .returning();
+
+  return result;
+}
+
+/**
+ * Change a member's membership (marks old one as converted and creates new one)
+ * @param memberId - The member ID
+ * @param newMembershipPlanId - The new membership plan ID
+ * @returns The new membership record
+ */
+export async function changeMemberMembership(memberId: string, newMembershipPlanId: string) {
+  // Mark all active memberships as converted
+  await db
+    .update(memberMembershipSchema)
+    .set({
+      status: 'converted',
+      endDate: new Date(),
+    })
+    .where(and(
+      eq(memberMembershipSchema.memberId, memberId),
+      eq(memberMembershipSchema.status, 'active'),
+    ));
+
+  // Create new membership
+  const result = await db
+    .insert(memberMembershipSchema)
+    .values({
+      id: randomUUID(),
+      memberId,
+      membershipPlanId: newMembershipPlanId,
+      status: 'active',
+      startDate: new Date(),
+    })
+    .returning();
+
+  return result;
+}
+
+/**
+ * Get all active membership plans for an organization
+ * @param organizationId - The organization ID
+ * @returns Array of active membership plans
+ */
+export async function getMembershipPlans(organizationId: string): Promise<MembershipPlanData[]> {
+  const plans = await db
+    .select()
+    .from(membershipPlanSchema)
+    .where(and(
+      eq(membershipPlanSchema.organizationId, organizationId),
+      eq(membershipPlanSchema.isActive, true),
+    ));
+
+  return plans.map(plan => ({
+    id: plan.id,
+    name: plan.name,
+    slug: plan.slug,
+    category: plan.category,
+    program: plan.program,
+    price: plan.price,
+    signupFee: plan.signupFee,
+    frequency: plan.frequency,
+    contractLength: plan.contractLength,
+    accessLevel: plan.accessLevel,
+    description: plan.description,
+    isTrial: plan.isTrial,
+    isActive: plan.isActive,
+  }));
 }

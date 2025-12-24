@@ -37,7 +37,7 @@ describe('MemberTypeStep', () => {
     lastName: '',
     email: '',
     phone: '',
-    subscriptionPlan: null,
+    membershipPlanId: null,
   };
 
   const mockHandlers = {
