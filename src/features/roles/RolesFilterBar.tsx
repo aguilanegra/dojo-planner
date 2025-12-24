@@ -14,26 +14,22 @@ import {
 
 export type RolesFilters = {
   search: string;
-  status: string;
-  role: string;
+  permission: string;
 };
 
 type RolesFilterBarProps = {
   onFiltersChangeAction: (filters: RolesFilters) => void;
-  availableStatuses: string[];
-  availableRoles: string[];
+  availablePermissions: string[];
 };
 
 export function RolesFilterBar({
   onFiltersChangeAction,
-  availableStatuses,
-  availableRoles,
+  availablePermissions,
 }: RolesFilterBarProps) {
   const t = useTranslations('Roles');
   const [filters, setFilters] = useState<RolesFilters>({
     search: '',
-    status: 'all',
-    role: 'all',
+    permission: 'all',
   });
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,57 +38,17 @@ export function RolesFilterBar({
     onFiltersChangeAction(newFilters);
   };
 
-  const handleStatusChange = (value: string) => {
-    const newFilters = { ...filters, status: value };
+  const handlePermissionChange = (value: string) => {
+    const newFilters = { ...filters, permission: value };
     setFilters(newFilters);
     onFiltersChangeAction(newFilters);
   };
 
-  const handleRoleChange = (value: string) => {
-    const newFilters = { ...filters, role: value };
-    setFilters(newFilters);
-    onFiltersChangeAction(newFilters);
-  };
-
-  const getStatusLabel = (status: string): string => {
-    switch (status) {
-      case 'Active':
-        return t('status_active');
-      case 'Inactive':
-        return t('status_inactive');
-      case 'Invitation sent':
-        return t('status_invitation_sent');
-      default:
-        return status;
-    }
-  };
-
-  const getRoleLabel = (role: string): string => {
-    switch (role) {
-      case 'Owner':
-        return t('role_owner');
-      case 'Admin':
-        return t('role_admin');
-      case 'Coach':
-        return t('role_coach');
-      default:
-        return role;
-    }
-  };
-
-  const statusOptions = [
-    { value: 'all', label: t('all_statuses_filter') },
-    ...availableStatuses.map(status => ({
-      value: status,
-      label: getStatusLabel(status),
-    })),
-  ];
-
-  const roleOptions = [
-    { value: 'all', label: t('all_roles_filter') },
-    ...availableRoles.map(role => ({
-      value: role,
-      label: getRoleLabel(role),
+  const permissionOptions = [
+    { value: 'all', label: t('all_permissions_filter') },
+    ...availablePermissions.map(permission => ({
+      value: permission,
+      label: permission,
     })),
   ];
 
@@ -103,34 +59,20 @@ export function RolesFilterBar({
         <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           type="text"
-          placeholder={t('search_placeholder')}
+          placeholder={t('search_roles_placeholder')}
           value={filters.search}
           onChange={handleSearchChange}
           className="pl-9"
         />
       </div>
 
-      {/* Status Filter */}
-      <Select value={filters.status} onValueChange={handleStatusChange}>
-        <SelectTrigger className="w-full sm:w-40">
-          <SelectValue placeholder={t('all_statuses_filter')} />
+      {/* Permission Filter */}
+      <Select value={filters.permission} onValueChange={handlePermissionChange}>
+        <SelectTrigger className="w-full sm:w-48">
+          <SelectValue placeholder={t('all_permissions_filter')} />
         </SelectTrigger>
         <SelectContent>
-          {statusOptions.map(option => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      {/* Role Filter */}
-      <Select value={filters.role} onValueChange={handleRoleChange}>
-        <SelectTrigger className="w-full sm:w-40">
-          <SelectValue placeholder={t('all_roles_filter')} />
-        </SelectTrigger>
-        <SelectContent>
-          {roleOptions.map(option => (
+          {permissionOptions.map(option => (
             <SelectItem key={option.value} value={option.value}>
               {option.label}
             </SelectItem>

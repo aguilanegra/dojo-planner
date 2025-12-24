@@ -1,405 +1,321 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
-import { page, userEvent } from 'vitest/browser';
-import { RolesPage } from './RolesPage';
+import { page } from 'vitest/browser';
+import { RolesPageClient } from './RolesPageClient';
 
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => {
     const translations: Record<string, string> = {
       title: 'Roles',
-      total_users_label: 'Total users',
-      total_admins_label: 'Total admins',
-      total_coaches_label: 'Total coaches',
+      total_roles_label: 'Total Roles',
+      total_permissions_label: 'Total Permissions',
+      total_members_label: 'Total Members',
       add_role_button: 'Add Role',
-      search_placeholder: 'Search users...',
-      all_statuses_filter: 'All Statuses',
-      all_roles_filter: 'All Roles',
-      status_active: 'Active',
-      status_inactive: 'Inactive',
-      status_invitation_sent: 'Invitation sent',
-      role_owner: 'Owner',
-      role_admin: 'Admin',
-      role_coach: 'Coach',
-      user_name_column: 'User name',
-      user_title_column: 'User title',
-      roles_column: 'Roles',
-      status_column: 'Status',
-      recent_activity_column: 'Recent activity',
-      last_logged_in_column: 'Last logged in',
-      showing_label: 'Showing {start}-{end} of {total} entries',
-      permission_types_title: 'Permission Types',
+      search_roles_placeholder: 'Search roles...',
+      all_permissions_filter: 'All Permissions',
+      permissions_by_role_title: 'Permissions by Role',
+      no_roles_found: 'No roles found',
+      access_denied_title: 'Access Denied',
+      access_denied_message: 'You do not have permission to view the roles list.',
+      error_title: 'Error Loading Roles',
+      error_message: 'Failed to load roles and permissions.',
+      system_role_badge: 'System',
+      permissions_label: 'Permissions',
+      no_permissions: 'No permissions assigned',
+      member_singular: 'Member',
+      member_plural: 'Members',
+      edit_button_aria_label: 'Edit role',
+      delete_button_aria_label: 'Delete role',
     };
     return translations[key] || key;
   },
 }));
 
+const mockPermissions = [
+  { id: 'perm-1', key: 'org:manage_all', name: 'Full Access', description: 'Complete access to all features' },
+  { id: 'perm-2', key: 'org:manage_billing', name: 'Manage Billing', description: 'Can manage billing and subscriptions' },
+  { id: 'perm-3', key: 'org:manage_roles', name: 'Manage Roles', description: 'Can manage all roles and permissions' },
+  { id: 'perm-4', key: 'org:manage_members', name: 'Manage Members', description: 'Can add, edit, and remove members' },
+  { id: 'perm-5', key: 'org:manage_classes', name: 'Manage Classes', description: 'Can create and manage class schedules' },
+  { id: 'perm-6', key: 'org:view_members', name: 'View Members', description: 'Can view member information' },
+  { id: 'perm-7', key: 'org:check_in', name: 'Check In Members', description: 'Can check in members for classes' },
+];
+
+const mockRoles = [
+  {
+    id: 'role-admin',
+    key: 'org:admin',
+    name: 'Admin',
+    description: 'Full system access. Can manage all aspects of the organization including billing, subscriptions, and all user management.',
+    permissions: [
+      { id: 'perm-1', key: 'org:manage_all', name: 'Full Access', description: 'Complete access to all features' },
+      { id: 'perm-2', key: 'org:manage_billing', name: 'Manage Billing', description: 'Can manage billing and subscriptions' },
+      { id: 'perm-3', key: 'org:manage_roles', name: 'Manage Roles', description: 'Can manage all roles and permissions' },
+    ],
+    memberCount: 1,
+    isSystemRole: true,
+  },
+  {
+    id: 'role-academy-owner',
+    key: 'org:academy_owner',
+    name: 'Academy Owner',
+    description: 'Can manage academy operations including members, classes, staff scheduling, and view reports.',
+    permissions: [
+      { id: 'perm-4', key: 'org:manage_members', name: 'Manage Members', description: 'Can add, edit, and remove members' },
+      { id: 'perm-5', key: 'org:manage_classes', name: 'Manage Classes', description: 'Can create and manage class schedules' },
+    ],
+    memberCount: 2,
+    isSystemRole: true,
+  },
+  {
+    id: 'role-front-desk',
+    key: 'org:front_desk',
+    name: 'Front Desk',
+    description: 'Can check in members, view schedules, and handle basic member inquiries.',
+    permissions: [
+      { id: 'perm-6', key: 'org:view_members', name: 'View Members', description: 'Can view member information' },
+      { id: 'perm-7', key: 'org:check_in', name: 'Check In Members', description: 'Can check in members for classes' },
+    ],
+    memberCount: 10,
+    isSystemRole: false,
+  },
+];
+
+// Default props for RolesPageClient - non-admin user
+const defaultProps = {
+  roles: mockRoles,
+  totalPermissions: 7,
+  availablePermissions: mockPermissions,
+  currentUserRole: 'org:academy_owner',
+};
+
+// Props for admin user
+const adminProps = {
+  ...defaultProps,
+  currentUserRole: 'org:admin',
+};
+
 describe('RolesPage', () => {
   describe('Page Header', () => {
     it('should render the page title', () => {
-      render(<RolesPage />);
+      render(<RolesPageClient {...defaultProps} />);
 
       expect(page.getByText('Roles')).toBeDefined();
+    });
+
+    it('should render permissions by role section title', () => {
+      render(<RolesPageClient {...defaultProps} />);
+
+      expect(page.getByText('Permissions by Role')).toBeDefined();
     });
   });
 
   describe('Summary Stats', () => {
     it('should render summary stat cards', () => {
-      render(<RolesPage />);
+      render(<RolesPageClient {...defaultProps} />);
 
-      expect(page.getByText('Total users')).toBeDefined();
-      expect(page.getByText('Total admins')).toBeDefined();
-      expect(page.getByText('Total coaches')).toBeDefined();
+      expect(page.getByText('Total Roles')).toBeDefined();
+      expect(page.getByText('Total Permissions')).toBeDefined();
+      expect(page.getByText('Total Members')).toBeDefined();
     });
 
-    it('should display correct user count', () => {
-      render(<RolesPage />);
+    it('should display correct roles count', () => {
+      render(<RolesPageClient {...defaultProps} />);
 
-      // 13 total users in mock data
-      expect(page.getByText('13')).toBeDefined();
-    });
-
-    it('should display correct admin count', () => {
-      render(<RolesPage />);
-
-      // 3 admins in mock data (Charlie Baptista, Hanna Septimus, Jessica Smith)
+      // 3 roles in mock data
       const threeElements = page.getByText('3', { exact: true }).elements();
 
       expect(threeElements.length).toBeGreaterThan(0);
     });
 
-    it('should display correct coach count', () => {
-      render(<RolesPage />);
+    it('should display correct permissions count', () => {
+      render(<RolesPageClient {...defaultProps} />);
 
-      // 12 coaches in mock data
-      const twelveElements = page.getByText('12', { exact: true }).elements();
+      // 7 total permissions
+      const sevenElements = page.getByText('7', { exact: true }).elements();
 
-      expect(twelveElements.length).toBeGreaterThan(0);
+      expect(sevenElements.length).toBeGreaterThan(0);
+    });
+
+    it('should display correct total members count', () => {
+      render(<RolesPageClient {...defaultProps} />);
+
+      // 1 + 2 + 10 = 13 members
+      const thirteenElements = page.getByText('13', { exact: true }).elements();
+
+      expect(thirteenElements.length).toBeGreaterThan(0);
     });
   });
 
   describe('Filter Bar', () => {
     it('should render search input', () => {
-      render(<RolesPage />);
+      render(<RolesPageClient {...defaultProps} />);
 
-      const searchInput = page.getByPlaceholder(/search users/i);
+      const searchInput = page.getByPlaceholder(/search roles/i);
 
       expect(searchInput).toBeDefined();
     });
 
-    it('should render status filter dropdown', () => {
-      render(<RolesPage />);
+    it('should render permission filter dropdown', () => {
+      render(<RolesPageClient {...defaultProps} />);
 
-      const statusSelect = page.getByRole('combobox').elements();
+      const comboboxes = page.getByRole('combobox').elements();
 
-      expect(statusSelect.length).toBeGreaterThanOrEqual(2);
+      expect(comboboxes.length).toBeGreaterThanOrEqual(1);
     });
 
     it('should render add role button', () => {
-      render(<RolesPage />);
+      render(<RolesPageClient {...defaultProps} />);
 
       const addRoleButton = page.getByRole('button', { name: /add role/i });
 
       expect(addRoleButton).toBeDefined();
     });
-
-    it('should filter users by search term', async () => {
-      render(<RolesPage />);
-
-      const searchInput = page.getByPlaceholder(/search users/i);
-      await userEvent.fill(searchInput, 'Charlie');
-
-      expect(page.getByText('Charlie Baptista')).toBeDefined();
-    });
-
-    it('should filter users by name search', async () => {
-      render(<RolesPage />);
-
-      const searchInput = page.getByPlaceholder(/search users/i);
-      await userEvent.fill(searchInput, 'Hanna');
-
-      expect(page.getByText('Hanna Septimus')).toBeDefined();
-    });
-
-    it('should filter users by title search', async () => {
-      render(<RolesPage />);
-
-      const searchInput = page.getByPlaceholder(/search users/i);
-      await userEvent.fill(searchInput, 'Account Owner');
-
-      expect(page.getByText('Charlie Baptista')).toBeDefined();
-    });
   });
 
-  describe('Users Table', () => {
-    it('should render users table headers', () => {
-      render(<RolesPage />);
-
-      expect(page.getByText('User name')).toBeDefined();
-      expect(page.getByText('User title')).toBeDefined();
-
-      const rolesElements = page.getByText('Roles').elements();
-
-      expect(rolesElements.length).toBeGreaterThan(0);
-      expect(page.getByText('Status')).toBeDefined();
-      expect(page.getByText('Recent activity')).toBeDefined();
-      expect(page.getByText('Last logged in')).toBeDefined();
-    });
-
-    it('should render users in the table', () => {
-      render(<RolesPage />);
-
-      expect(page.getByText('Charlie Baptista')).toBeDefined();
-      expect(page.getByText('Hanna Septimus')).toBeDefined();
-    });
-
-    it('should render user status badges', () => {
-      render(<RolesPage />);
-
-      // All mock users have Active status
-      const activeBadges = page.getByText('Active', { exact: true }).elements();
-
-      expect(activeBadges.length).toBeGreaterThan(0);
-    });
-
-    it('should not render action column header', () => {
-      render(<RolesPage />);
-
-      // Action column header should be removed - check for exact column header text
-      const table = page.getByRole('table');
-      const tableHeaders = table.getByRole('columnheader').elements();
-      const actionHeaderExists = tableHeaders.some(
-        header => header.textContent?.trim() === 'Action',
-      );
-
-      expect(actionHeaderExists).toBe(false);
-    });
-
-    it('should not render view details button', () => {
-      render(<RolesPage />);
-
-      // View details button should be removed
-      const viewDetailsButtons = page.getByRole('button', { name: /view details/i }).elements();
-
-      expect(viewDetailsButtons.length).toBe(0);
-    });
-  });
-
-  describe('Sorting', () => {
-    it('should sort by name when clicking User name header', async () => {
-      render(<RolesPage />);
-
-      const nameHeader = page.getByRole('button', { name: /user name/i });
-      await userEvent.click(nameHeader);
-
-      // Click again to change direction
-      await userEvent.click(nameHeader);
-
-      // Should still render users
-      expect(page.getByText('Charlie Baptista')).toBeDefined();
-    });
-
-    it('should sort by title when clicking User title header', async () => {
-      render(<RolesPage />);
-
-      const titleHeader = page.getByRole('button', { name: /user title/i });
-      await userEvent.click(titleHeader);
-
-      // Should render users sorted by title
-      expect(page.getByRole('table')).toBeDefined();
-    });
-
-    it('should sort by roles when clicking Roles header', async () => {
-      render(<RolesPage />);
-
-      const rolesHeader = page.getByRole('button', { name: /^roles$/i });
-      await userEvent.click(rolesHeader);
-
-      expect(page.getByRole('table')).toBeDefined();
-    });
-
-    it('should sort by status when clicking Status header', async () => {
-      render(<RolesPage />);
-
-      const table = page.getByRole('table');
-      const statusHeader = table.getByRole('button', { name: /status/i });
-      await userEvent.click(statusHeader);
-
-      expect(page.getByRole('table')).toBeDefined();
-    });
-
-    it('should sort by recent activity when clicking Recent activity header', async () => {
-      render(<RolesPage />);
-
-      const table = page.getByRole('table');
-      const activityHeader = table.getByRole('button', { name: /recent activity/i });
-      await userEvent.click(activityHeader);
-
-      expect(page.getByRole('table')).toBeDefined();
-    });
-
-    it('should sort by last logged in when clicking Last logged in header', async () => {
-      render(<RolesPage />);
-
-      const table = page.getByRole('table');
-      const lastLoggedInHeader = table.getByRole('button', { name: /last logged in/i });
-      await userEvent.click(lastLoggedInHeader);
-
-      expect(page.getByRole('table')).toBeDefined();
-    });
-
-    it('should toggle sort direction when clicking same column twice', async () => {
-      render(<RolesPage />);
-
-      const titleHeader = page.getByRole('button', { name: /user title/i });
-
-      // First click - sort ascending
-      await userEvent.click(titleHeader);
-
-      // Second click - sort descending
-      await userEvent.click(titleHeader);
-
-      expect(page.getByRole('table')).toBeDefined();
-    });
-  });
-
-  describe('Permission Types Section', () => {
-    it('should render permission types section title', () => {
-      render(<RolesPage />);
-
-      expect(page.getByText('Permission Types')).toBeDefined();
-    });
-
-    it('should render Owner permission type card', () => {
-      render(<RolesPage />);
-
-      expect(page.getByText('Owner')).toBeDefined();
-    });
-
-    it('should render Admin permission type card', () => {
-      render(<RolesPage />);
+  describe('Role Cards', () => {
+    it('should render all role cards', () => {
+      render(<RolesPageClient {...defaultProps} />);
 
       expect(page.getByText('Admin')).toBeDefined();
+      expect(page.getByText('Academy Owner')).toBeDefined();
+      expect(page.getByText('Front Desk')).toBeDefined();
     });
 
-    it('should render Coach permission type card', () => {
-      render(<RolesPage />);
+    it('should render role descriptions', () => {
+      render(<RolesPageClient {...defaultProps} />);
 
-      expect(page.getByText('Coach')).toBeDefined();
+      expect(page.getByText(/Full system access/)).toBeDefined();
+      expect(page.getByText(/Can manage academy operations/)).toBeDefined();
+      expect(page.getByText(/Can check in members/)).toBeDefined();
     });
 
-    it('should render permission type descriptions', () => {
-      render(<RolesPage />);
+    it('should render permission badges', () => {
+      render(<RolesPageClient {...defaultProps} />);
 
-      expect(page.getByText(/Can do anything any other user type can do/)).toBeDefined();
-    });
-  });
-
-  describe('Pagination', () => {
-    it('should render pagination info', () => {
-      render(<RolesPage />);
-
-      expect(page.getByText(/showing/i)).toBeDefined();
+      expect(page.getByText('Manage Members')).toBeDefined();
+      expect(page.getByText('View Members')).toBeDefined();
+      expect(page.getByText('Check In Members')).toBeDefined();
     });
 
-    it('should show correct pagination for 13 users', () => {
-      render(<RolesPage />);
+    it('should render system role badges for system roles', () => {
+      render(<RolesPageClient {...defaultProps} />);
 
-      // With 10 per page and 13 total, should show 2 pages
-      const pagination = page.getByText(/showing/i);
+      // Admin and Academy Owner are system roles
+      const systemBadges = page.getByText('System', { exact: true }).elements();
 
-      expect(pagination).toBeDefined();
+      expect(systemBadges.length).toBe(2);
     });
   });
 
-  describe('User Avatars', () => {
-    it('should render user initials in avatars', () => {
-      render(<RolesPage />);
+  describe('No Users Table', () => {
+    it('should not render users table', () => {
+      render(<RolesPageClient {...defaultProps} />);
 
-      // Charlie Baptista -> CB
-      expect(page.getByText('CB')).toBeDefined();
+      const tables = page.getByRole('table').elements();
+
+      expect(tables.length).toBe(0);
+    });
+
+    it('should not render user name column', () => {
+      render(<RolesPageClient {...defaultProps} />);
+
+      const userNameColumns = page.getByText('User name').elements();
+
+      expect(userNameColumns.length).toBe(0);
     });
   });
 
-  describe('Clickable Rows', () => {
-    it('should have cursor-pointer class on table rows', () => {
-      render(<RolesPage />);
+  describe('Action Buttons', () => {
+    it('should render edit buttons on role cards', () => {
+      render(<RolesPageClient {...defaultProps} />);
 
-      const table = page.getByRole('table');
+      const editButtons = page.getByRole('button', { name: /edit role/i }).elements();
 
-      expect(table).toBeDefined();
+      expect(editButtons.length).toBe(3);
     });
 
-    it('should render table with clickable rows styling', () => {
-      render(<RolesPage />);
+    it('should render delete button only on non-system roles for non-admin users', () => {
+      render(<RolesPageClient {...defaultProps} />);
 
-      // Table should exist with proper structure
-      expect(page.getByRole('table')).toBeDefined();
-    });
-  });
+      const deleteButtons = page.getByRole('button', { name: /delete role/i }).elements();
 
-  describe('Filter Functionality', () => {
-    it('should show all users by default', () => {
-      render(<RolesPage />);
-
-      expect(page.getByText('Charlie Baptista')).toBeDefined();
-      expect(page.getByText('Zain Dokidis')).toBeDefined();
+      // Only Front Desk is non-system role (non-admin cannot delete system roles)
+      expect(deleteButtons.length).toBe(1);
     });
 
-    it('should filter users when searching for coach role', async () => {
-      render(<RolesPage />);
+    it('should render delete buttons on non-admin roles for admin users', () => {
+      render(<RolesPageClient {...adminProps} />);
 
-      const searchInput = page.getByPlaceholder(/search users/i);
-      await userEvent.fill(searchInput, 'Coach');
+      const deleteButtons = page.getByRole('button', { name: /delete role/i }).elements();
 
-      // Should show users with Coach role
-      const table = page.getByRole('table');
-
-      expect(table).toBeDefined();
+      // Admin can delete Academy Owner and Front Desk (2 buttons), but not Admin role
+      expect(deleteButtons.length).toBe(2);
     });
-  });
 
-  describe('No My Users Header', () => {
-    it('should not render My Users header', () => {
-      render(<RolesPage />);
+    it('should not render delete button on Admin role even for admin users', () => {
+      // Only include Admin role
+      const adminOnlyRoles = [mockRoles[0]!];
+      render(<RolesPageClient {...adminProps} roles={adminOnlyRoles} />);
 
-      const myUsersHeaders = page.getByText('My Users').elements();
+      const deleteButtons = page.getByRole('button', { name: /delete role/i }).elements();
 
-      expect(myUsersHeaders.length).toBe(0);
+      // Admin role cannot be deleted even by admins
+      expect(deleteButtons.length).toBe(0);
     });
   });
 
-  describe('No Tabs', () => {
-    it('should not render All tab', () => {
-      render(<RolesPage />);
+  describe('Member Counts on Cards', () => {
+    it('should display member counts', () => {
+      render(<RolesPageClient {...defaultProps} />);
 
-      // Check that the old tab buttons don't exist as tabs (not counting 'All Statuses' or 'All Roles')
-      const allTabElements = page.getByRole('button', { name: /^all$/i }).elements();
-
-      expect(allTabElements.length).toBe(0);
+      // Member counts are displayed as "X Member(s)" text
+      expect(page.getByText(/1\s*Member\b/)).toBeDefined();
+      expect(page.getByText(/2\s*Members/)).toBeDefined();
+      expect(page.getByText(/10\s*Members/)).toBeDefined();
     });
+  });
 
-    it('should not render Admins tab', () => {
-      render(<RolesPage />);
+  describe('Empty State', () => {
+    it('should render no roles found when roles is empty', () => {
+      render(<RolesPageClient {...defaultProps} roles={[]} totalPermissions={0} />);
 
-      const adminsTabElements = page.getByRole('button', { name: /^admins$/i }).elements();
-
-      expect(adminsTabElements.length).toBe(0);
+      expect(page.getByText('No roles found')).toBeDefined();
     });
+  });
 
-    it('should not render Coaches tab', () => {
-      render(<RolesPage />);
+  describe('Responsive Grid Layout', () => {
+    it('should render cards in a grid', () => {
+      render(<RolesPageClient {...defaultProps} />);
 
-      const coachesTabElements = page.getByRole('button', { name: /^coaches$/i }).elements();
-
-      expect(coachesTabElements.length).toBe(0);
+      // All roles should be visible
+      expect(page.getByText('Admin')).toBeDefined();
+      expect(page.getByText('Academy Owner')).toBeDefined();
+      expect(page.getByText('Front Desk')).toBeDefined();
     });
+  });
 
-    it('should not render Others tab', () => {
-      render(<RolesPage />);
+  describe('No Pagination', () => {
+    it('should not render pagination since we display all roles', () => {
+      render(<RolesPageClient {...defaultProps} />);
 
-      const othersTabElements = page.getByRole('button', { name: /^others$/i }).elements();
+      // No pagination expected for role cards
+      const paginationElements = page.getByText(/showing/i).elements();
 
-      expect(othersTabElements.length).toBe(0);
+      expect(paginationElements.length).toBe(0);
+    });
+  });
+
+  describe('Permissions Label', () => {
+    it('should render permissions label on each card', () => {
+      render(<RolesPageClient {...defaultProps} />);
+
+      // Each card should have a "Permissions" label with a count
+      // Using regex to match "Permissions (X)" pattern
+      const permissionsLabels = page.getByText(/^Permissions\s+\(\d+\)$/).elements();
+
+      // 3 role cards should each have a Permissions label
+      expect(permissionsLabels.length).toBe(3);
     });
   });
 });
