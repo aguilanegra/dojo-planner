@@ -47,7 +47,11 @@ export function StatsCards({
   fullWidth = true,
 }: StatsCardsProps) {
   const containerClass = fullWidth ? 'w-full space-y-6' : 'space-y-6';
-  const gridClass = `grid grid-cols-1 gap-4 md:grid-cols-${columns}`;
+
+  // Use explicit class names to ensure they're included in Tailwind's CSS bundle
+  const gridClass = columns === 3
+    ? 'grid grid-cols-1 gap-4 md:grid-cols-3'
+    : 'grid grid-cols-1 gap-4 md:grid-cols-4';
 
   return (
     <div className={`${containerClass} ${className}`.trim()}>
