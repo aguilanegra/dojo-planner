@@ -6,7 +6,7 @@
  */
 
 // Types matching Clerk's API response structure
-export type ClerkPermission = {
+type ClerkPermission = {
   id: string;
   key: string;
   name: string;
@@ -16,7 +16,7 @@ export type ClerkPermission = {
   updated_at: number;
 };
 
-export type ClerkRole = {
+type ClerkRole = {
   id: string;
   key: string;
   name: string;

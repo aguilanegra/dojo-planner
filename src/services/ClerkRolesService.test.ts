@@ -10,12 +10,15 @@ import {
 const mockFetch = vi.fn();
 globalThis.fetch = mockFetch;
 
+// Test-only mock secret key (not a real credential)
+const TEST_SECRET_KEY = 'test_secret_key'; // gitleaks:allow
+
 describe('ClerkRolesService', () => {
   const originalEnv = process.env;
 
   beforeEach(() => {
     vi.resetAllMocks();
-    process.env = { ...originalEnv, CLERK_SECRET_KEY: 'test_secret_key' };
+    process.env = { ...originalEnv, CLERK_SECRET_KEY: TEST_SECRET_KEY };
   });
 
   afterEach(() => {
@@ -40,7 +43,7 @@ describe('ClerkRolesService', () => {
         'https://api.clerk.com/v1/organization_permissions?limit=100',
         {
           headers: {
-            'Authorization': 'Bearer test_secret_key',
+            'Authorization': `Bearer ${TEST_SECRET_KEY}`,
             'Content-Type': 'application/json',
           },
         },
@@ -91,7 +94,7 @@ describe('ClerkRolesService', () => {
         'https://api.clerk.com/v1/organization_roles?limit=100',
         {
           headers: {
-            'Authorization': 'Bearer test_secret_key',
+            'Authorization': `Bearer ${TEST_SECRET_KEY}`,
             'Content-Type': 'application/json',
           },
         },
@@ -134,7 +137,7 @@ describe('ClerkRolesService', () => {
         'https://api.clerk.com/v1/organization_roles/role-123',
         {
           headers: {
-            'Authorization': 'Bearer test_secret_key',
+            'Authorization': `Bearer ${TEST_SECRET_KEY}`,
             'Content-Type': 'application/json',
           },
         },
@@ -176,7 +179,7 @@ describe('ClerkRolesService', () => {
         'https://api.clerk.com/v1/organization_permissions/perm-123',
         {
           headers: {
-            'Authorization': 'Bearer test_secret_key',
+            'Authorization': `Bearer ${TEST_SECRET_KEY}`,
             'Content-Type': 'application/json',
           },
         },
