@@ -7,15 +7,8 @@ import { RolesFilterBar } from './RolesFilterBar';
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => {
     const translations: Record<string, string> = {
-      search_placeholder: 'Search users...',
-      all_statuses_filter: 'All Statuses',
-      all_roles_filter: 'All Roles',
-      status_active: 'Active',
-      status_inactive: 'Inactive',
-      status_invitation_sent: 'Invitation sent',
-      role_owner: 'Owner',
-      role_admin: 'Admin',
-      role_coach: 'Coach',
+      search_roles_placeholder: 'Search roles...',
+      all_permissions_filter: 'All Permissions',
     };
     return translations[key] || key;
   },
@@ -23,8 +16,7 @@ vi.mock('next-intl', () => ({
 
 describe('RolesFilterBar', () => {
   const mockOnFiltersChange = vi.fn();
-  const availableStatuses = ['Active', 'Inactive', 'Invitation sent'];
-  const availableRoles = ['Owner', 'Admin', 'Coach'];
+  const availablePermissions = ['View Members', 'Edit Members', 'Manage Billing'];
 
   beforeEach(() => {
     mockOnFiltersChange.mockClear();
@@ -35,12 +27,11 @@ describe('RolesFilterBar', () => {
       render(
         <RolesFilterBar
           onFiltersChangeAction={mockOnFiltersChange}
-          availableStatuses={availableStatuses}
-          availableRoles={availableRoles}
+          availablePermissions={availablePermissions}
         />,
       );
 
-      const searchInput = page.getByPlaceholder(/search users/i);
+      const searchInput = page.getByPlaceholder(/search roles/i);
 
       expect(searchInput).toBeDefined();
     });
@@ -49,19 +40,18 @@ describe('RolesFilterBar', () => {
       render(
         <RolesFilterBar
           onFiltersChangeAction={mockOnFiltersChange}
-          availableStatuses={availableStatuses}
-          availableRoles={availableRoles}
+          availablePermissions={availablePermissions}
         />,
       );
 
-      const searchInput = page.getByPlaceholder(/search users/i);
-      await userEvent.fill(searchInput, 'Charlie');
+      const searchInput = page.getByPlaceholder(/search roles/i);
+      await userEvent.fill(searchInput, 'Admin');
 
       expect(mockOnFiltersChange).toHaveBeenCalled();
     });
 
     it('should pass search value in filters', async () => {
-      let capturedFilters: RolesFilters = { search: '', status: 'all', role: 'all' };
+      let capturedFilters: RolesFilters = { search: '', permission: 'all' };
       const captureFilters = (filters: RolesFilters) => {
         capturedFilters = filters;
       };
@@ -69,148 +59,81 @@ describe('RolesFilterBar', () => {
       render(
         <RolesFilterBar
           onFiltersChangeAction={captureFilters}
-          availableStatuses={availableStatuses}
-          availableRoles={availableRoles}
+          availablePermissions={availablePermissions}
         />,
       );
 
-      const searchInput = page.getByPlaceholder(/search users/i);
+      const searchInput = page.getByPlaceholder(/search roles/i);
       await userEvent.fill(searchInput, 'Test');
 
       expect(capturedFilters.search).toBe('Test');
     });
   });
 
-  describe('Status Filter', () => {
-    it('should render status filter dropdown', () => {
+  describe('Permission Filter', () => {
+    it('should render permission filter dropdown', () => {
       render(
         <RolesFilterBar
           onFiltersChangeAction={mockOnFiltersChange}
-          availableStatuses={availableStatuses}
-          availableRoles={availableRoles}
+          availablePermissions={availablePermissions}
         />,
       );
 
       const comboboxes = page.getByRole('combobox').elements();
 
-      expect(comboboxes.length).toBeGreaterThanOrEqual(2);
+      expect(comboboxes.length).toBeGreaterThanOrEqual(1);
     });
 
-    it('should show All Statuses as default', () => {
+    it('should show All Permissions as default', () => {
       render(
         <RolesFilterBar
           onFiltersChangeAction={mockOnFiltersChange}
-          availableStatuses={availableStatuses}
-          availableRoles={availableRoles}
+          availablePermissions={availablePermissions}
         />,
       );
 
-      expect(page.getByText('All Statuses')).toBeDefined();
+      expect(page.getByText('All Permissions')).toBeDefined();
     });
 
-    it('should call onFiltersChangeAction when status changes', async () => {
+    it('should call onFiltersChangeAction when permission changes', async () => {
       render(
         <RolesFilterBar
           onFiltersChangeAction={mockOnFiltersChange}
-          availableStatuses={availableStatuses}
-          availableRoles={availableRoles}
+          availablePermissions={availablePermissions}
         />,
       );
 
-      const statusTrigger = page.getByText('All Statuses');
-      await userEvent.click(statusTrigger);
+      const permissionTrigger = page.getByText('All Permissions');
+      await userEvent.click(permissionTrigger);
 
-      // Wait for dropdown to open and click Active option
-      const activeOption = page.getByRole('option', { name: 'Active' }).first();
-      await userEvent.click(activeOption);
-
-      expect(mockOnFiltersChange).toHaveBeenCalled();
-    });
-  });
-
-  describe('Role Filter', () => {
-    it('should render role filter dropdown', () => {
-      render(
-        <RolesFilterBar
-          onFiltersChangeAction={mockOnFiltersChange}
-          availableStatuses={availableStatuses}
-          availableRoles={availableRoles}
-        />,
-      );
-
-      expect(page.getByText('All Roles')).toBeDefined();
-    });
-
-    it('should show All Roles as default', () => {
-      render(
-        <RolesFilterBar
-          onFiltersChangeAction={mockOnFiltersChange}
-          availableStatuses={availableStatuses}
-          availableRoles={availableRoles}
-        />,
-      );
-
-      expect(page.getByText('All Roles')).toBeDefined();
-    });
-
-    it('should call onFiltersChangeAction when role changes', async () => {
-      render(
-        <RolesFilterBar
-          onFiltersChangeAction={mockOnFiltersChange}
-          availableStatuses={availableStatuses}
-          availableRoles={availableRoles}
-        />,
-      );
-
-      const roleTrigger = page.getByText('All Roles');
-      await userEvent.click(roleTrigger);
-
-      const adminOption = page.getByRole('option', { name: 'Admin' });
-      await userEvent.click(adminOption);
+      const viewMembersOption = page.getByRole('option', { name: 'View Members' });
+      await userEvent.click(viewMembersOption);
 
       expect(mockOnFiltersChange).toHaveBeenCalled();
     });
   });
 
   describe('Filter Options', () => {
-    it('should render available status options', async () => {
+    it('should render available permission options', async () => {
       render(
         <RolesFilterBar
           onFiltersChangeAction={mockOnFiltersChange}
-          availableStatuses={availableStatuses}
-          availableRoles={availableRoles}
+          availablePermissions={availablePermissions}
         />,
       );
 
-      const statusTrigger = page.getByText('All Statuses');
-      await userEvent.click(statusTrigger);
+      const permissionTrigger = page.getByText('All Permissions');
+      await userEvent.click(permissionTrigger);
 
-      expect(page.getByRole('option', { name: 'Active' })).toBeDefined();
-      expect(page.getByRole('option', { name: 'Inactive' })).toBeDefined();
-      expect(page.getByRole('option', { name: 'Invitation sent' })).toBeDefined();
-    });
-
-    it('should render available role options', async () => {
-      render(
-        <RolesFilterBar
-          onFiltersChangeAction={mockOnFiltersChange}
-          availableStatuses={availableStatuses}
-          availableRoles={availableRoles}
-        />,
-      );
-
-      const roleTrigger = page.getByText('All Roles');
-      await userEvent.click(roleTrigger);
-
-      expect(page.getByRole('option', { name: 'Owner' })).toBeDefined();
-      expect(page.getByRole('option', { name: 'Admin' })).toBeDefined();
-      expect(page.getByRole('option', { name: 'Coach' })).toBeDefined();
+      expect(page.getByRole('option', { name: 'View Members' })).toBeDefined();
+      expect(page.getByRole('option', { name: 'Edit Members' })).toBeDefined();
+      expect(page.getByRole('option', { name: 'Manage Billing' })).toBeDefined();
     });
   });
 
   describe('Combined Filters', () => {
     it('should maintain filter state across multiple changes', async () => {
-      let lastFilters: RolesFilters = { search: '', status: 'all', role: 'all' };
+      let lastFilters: RolesFilters = { search: '', permission: 'all' };
       const captureFilters = (filters: RolesFilters) => {
         lastFilters = filters;
       };
@@ -218,18 +141,37 @@ describe('RolesFilterBar', () => {
       render(
         <RolesFilterBar
           onFiltersChangeAction={captureFilters}
-          availableStatuses={availableStatuses}
-          availableRoles={availableRoles}
+          availablePermissions={availablePermissions}
         />,
       );
 
-      // First, type in search
-      const searchInput = page.getByPlaceholder(/search users/i);
+      const searchInput = page.getByPlaceholder(/search roles/i);
       await userEvent.fill(searchInput, 'Test');
 
       expect(lastFilters.search).toBe('Test');
-      expect(lastFilters.status).toBe('all');
-      expect(lastFilters.role).toBe('all');
+      expect(lastFilters.permission).toBe('all');
+    });
+
+    it('should update permission filter correctly', async () => {
+      let lastFilters: RolesFilters = { search: '', permission: 'all' };
+      const captureFilters = (filters: RolesFilters) => {
+        lastFilters = filters;
+      };
+
+      render(
+        <RolesFilterBar
+          onFiltersChangeAction={captureFilters}
+          availablePermissions={availablePermissions}
+        />,
+      );
+
+      const permissionTrigger = page.getByText('All Permissions');
+      await userEvent.click(permissionTrigger);
+
+      const viewMembersOption = page.getByRole('option', { name: 'View Members' });
+      await userEvent.click(viewMembersOption);
+
+      expect(lastFilters.permission).toBe('View Members');
     });
   });
 
@@ -238,13 +180,11 @@ describe('RolesFilterBar', () => {
       render(
         <RolesFilterBar
           onFiltersChangeAction={mockOnFiltersChange}
-          availableStatuses={availableStatuses}
-          availableRoles={availableRoles}
+          availablePermissions={availablePermissions}
         />,
       );
 
-      // Search input should be present
-      const searchInput = page.getByPlaceholder(/search users/i);
+      const searchInput = page.getByPlaceholder(/search roles/i);
 
       expect(searchInput).toBeDefined();
     });
@@ -255,41 +195,25 @@ describe('RolesFilterBar', () => {
       render(
         <RolesFilterBar
           onFiltersChangeAction={mockOnFiltersChange}
-          availableStatuses={availableStatuses}
-          availableRoles={availableRoles}
+          availablePermissions={availablePermissions}
         />,
       );
 
-      // Component should render all elements
-      expect(page.getByPlaceholder(/search users/i)).toBeDefined();
-      expect(page.getByText('All Statuses')).toBeDefined();
-      expect(page.getByText('All Roles')).toBeDefined();
+      expect(page.getByPlaceholder(/search roles/i)).toBeDefined();
+      expect(page.getByText('All Permissions')).toBeDefined();
     });
   });
 
   describe('Empty States', () => {
-    it('should handle empty status array', () => {
+    it('should handle empty permissions array', () => {
       render(
         <RolesFilterBar
           onFiltersChangeAction={mockOnFiltersChange}
-          availableStatuses={[]}
-          availableRoles={availableRoles}
+          availablePermissions={[]}
         />,
       );
 
-      expect(page.getByText('All Statuses')).toBeDefined();
-    });
-
-    it('should handle empty roles array', () => {
-      render(
-        <RolesFilterBar
-          onFiltersChangeAction={mockOnFiltersChange}
-          availableStatuses={availableStatuses}
-          availableRoles={[]}
-        />,
-      );
-
-      expect(page.getByText('All Roles')).toBeDefined();
+      expect(page.getByText('All Permissions')).toBeDefined();
     });
   });
 });
