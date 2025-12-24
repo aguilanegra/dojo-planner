@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 export type MemberType = 'individual' | 'family-member' | 'head-of-household';
-export type SubscriptionPlan = 'free-trial' | 'monthly' | 'annual';
+type SubscriptionPlan = 'free-trial' | 'monthly' | 'annual';
 export type PaymentMethod = 'card' | 'ach';
 
 export type AddMemberWizardData = {
@@ -26,8 +26,10 @@ export type AddMemberWizardData = {
   photoFile?: File | null;
   photoUrl?: string;
 
-  // Step 4: Subscription
-  subscriptionPlan: SubscriptionPlan | null;
+  // Step 4: Membership
+  membershipPlanId: string | null;
+  // Legacy fields (kept for backwards compatibility)
+  subscriptionPlan?: SubscriptionPlan | null;
   subscriptionId?: string;
 
   // Step 5: Payment (only for monthly/annual plans)
@@ -51,7 +53,7 @@ export const useAddMemberWizard = () => {
     lastName: '',
     email: '',
     phone: '',
-    subscriptionPlan: null,
+    membershipPlanId: null,
   });
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -104,7 +106,7 @@ export const useAddMemberWizard = () => {
       lastName: '',
       email: '',
       phone: '',
-      subscriptionPlan: null,
+      membershipPlanId: null,
       paymentMethod: undefined,
       cardholderName: undefined,
       cardNumber: undefined,

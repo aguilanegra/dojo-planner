@@ -41,7 +41,7 @@ export const MemberPaymentStep = ({
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   const paymentMethod = data.paymentMethod || 'card';
-  const paymentAmount = getPaymentAmount(data.subscriptionPlan);
+  const paymentAmount = getPaymentAmount(data.subscriptionPlan ?? null);
 
   const handleInputChange = (field: string, value: string) => {
     onUpdate({ [field]: value });

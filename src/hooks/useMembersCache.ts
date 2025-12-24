@@ -1,7 +1,33 @@
 import { useCallback, useEffect, useReducer } from 'react';
 import { client } from '@/libs/Orpc';
 
-type Member = {
+type MembershipPlan = {
+  id: string;
+  name: string;
+  slug: string;
+  category: string;
+  program: string;
+  price: number;
+  signupFee: number;
+  frequency: string;
+  contractLength: string;
+  accessLevel: string;
+  description: string | null;
+  isTrial: boolean | null;
+  isActive: boolean | null;
+};
+
+type MemberMembership = {
+  id: string;
+  membershipPlanId: string;
+  membershipPlan?: MembershipPlan | null;
+  status: string;
+  startDate: Date;
+  endDate: Date | null;
+  createdAt: Date;
+};
+
+export type Member = {
   id: string;
   firstName: string | null;
   lastName: string | null;
@@ -17,6 +43,16 @@ type Member = {
   membershipType?: 'free' | 'free-trial' | 'monthly' | 'annual';
   amountDue?: string;
   nextPayment?: Date;
+  address?: {
+    street: string;
+    apartment?: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    country: string;
+  };
+  currentMembership?: MemberMembership | null;
+  membershipHistory?: MemberMembership[];
 };
 
 type CacheEntry = {

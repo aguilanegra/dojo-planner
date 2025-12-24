@@ -1,15 +1,18 @@
 'use client';
 
 import type { MemberNote } from '@/features/members/details/MemberDetailNotes';
+import type { Member } from '@/hooks/useMembersCache';
 import { useOrganization } from '@clerk/nextjs';
 import { Plus, Trash2 } from 'lucide-react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useReducer } from 'react';
+import { useCallback, useEffect, useReducer, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { MemberBreadcrumb } from '@/components/ui/breadcrumb/MemberBreadcrumb';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { ChangeMembershipModal } from '@/features/members/details/ChangeMembershipModal';
+import { EditContactInfoModal } from '@/features/members/details/EditContactInfoModal';
 import { MemberDetailFinancial } from '@/features/members/details/MemberDetailFinancial';
 import { MemberDetailNotes } from '@/features/members/details/MemberDetailNotes';
 import { useMembersCache } from '@/hooks/useMembersCache';
@@ -139,62 +142,58 @@ const BASE_MOCK_DATA = {
   billingHistory: [] as BillingHistoryItem[],
 };
 
-// Build MemberData from API member data
-type MemberType = {
-  id: string;
-  firstName: string | null;
-  lastName: string | null;
-  email: string;
-  phone: string | null;
-  photoUrl?: string | null;
-  membershipType?: 'free' | 'free_trial' | 'monthly' | 'annual';
-  status?: string;
-  program?: string;
-  amountDue?: string;
-  address?: {
-    street: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    country: string;
-  };
-  [key: string]: unknown;
-};
+// Build MemberData from API member data - use Member type from cache
 
-function getMembershipBadgeText(membershipType?: string): string {
+function getMembershipBadgeText(membershipType?: string, planName?: string | null): string {
+  // If we have an actual plan name, use it
+  if (planName) {
+    return planName;
+  }
+  // Fallback to legacy membership type mapping
   switch (membershipType) {
     case 'free':
       return 'Free Member';
-    case 'free_trial':
+    case 'free-trial':
       return 'Free Trial';
     case 'annual':
       return 'Annual Member';
     case 'monthly':
-    default:
       return 'Monthly Member';
+    default:
+      return 'No Membership';
   }
 }
 
-function getSubscriptionMembershipType(membershipType?: string): string {
+function getSubscriptionMembershipType(membershipType?: string, planName?: string | null): string {
+  // If we have an actual plan name, use it
+  if (planName) {
+    return planName;
+  }
+  // Fallback to legacy membership type mapping
   switch (membershipType) {
     case 'free':
       return 'Free Membership';
-    case 'free_trial':
+    case 'free-trial':
       return 'Free Trial Membership';
     case 'annual':
       return 'Annual Membership';
     case 'monthly':
-    default:
       return 'Monthly Membership';
+    default:
+      return 'No Membership';
   }
 }
 
-function getSubscriptionAmount(membershipType?: string): number {
-  // Free and free trial memberships have no payment amount
-  if (membershipType === 'free' || membershipType === 'free_trial') {
+function getSubscriptionAmount(membershipType?: string, planPrice?: number | null): number {
+  // If we have an actual plan price, use it
+  if (planPrice !== undefined && planPrice !== null) {
+    return planPrice;
+  }
+  // Fallback to legacy membership type pricing
+  if (membershipType === 'free' || membershipType === 'free-trial') {
     return 0;
   }
-  // Default monthly amount (will be replaced with real data when API provides it)
+  // Default monthly amount
   return 160;
 }
 
@@ -210,15 +209,29 @@ function getMemberStatus(status?: string): 'active' | 'on-hold' | 'cancelled' {
   }
 }
 
-function buildMembershipDetails(membershipType?: string, status?: string, program?: string): MembershipDetailsData {
+type MembershipPlanInfo = {
+  name?: string;
+  price?: number;
+  frequency?: string;
+  contractLength?: string;
+  isTrial?: boolean | null;
+};
+
+function buildMembershipDetails(
+  membershipType?: string,
+  status?: string,
+  program?: string,
+  plan?: MembershipPlanInfo | null,
+): MembershipDetailsData {
   const memberStatus = getMemberStatus(status);
-  const isFreeOrTrial = membershipType === 'free' || membershipType === 'free_trial';
+  const isFreeOrTrial = plan?.isTrial || membershipType === 'free' || membershipType === 'free-trial' || plan?.price === 0;
 
   // Use actual program from member data, or N/A if not set
   const displayProgram = program || 'N/A';
   // Use N/A for dates if not set
-  const registrationDate = membershipType ? 'Sep 01, 2025' : 'N/A';
-  const startDate = membershipType ? 'Sep 01, 2025' : 'N/A';
+  const hasMembership = plan?.name || membershipType;
+  const registrationDate = hasMembership ? 'Sep 01, 2025' : 'N/A';
+  const startDate = hasMembership ? 'Sep 01, 2025' : 'N/A';
 
   // Base membership details
   const baseDetails = {
@@ -227,6 +240,19 @@ function buildMembershipDetails(membershipType?: string, status?: string, progra
     registrationDate,
     startDate,
   };
+
+  // If we have actual plan data, use it
+  if (plan?.name) {
+    const isPaid = plan.price && plan.price > 0;
+    return {
+      ...baseDetails,
+      membershipType: plan.name,
+      membershipFee: plan.price || 0,
+      paymentFrequency: plan.frequency || 'N/A',
+      nextPaymentDate: isPaid ? 'Oct 01, 2025' : 'N/A',
+      nextPaymentAmount: plan.price || 0,
+    };
+  }
 
   // For free and free trial, no membership fee or payment information
   if (isFreeOrTrial) {
@@ -252,7 +278,7 @@ function buildMembershipDetails(membershipType?: string, status?: string, progra
     };
   }
 
-  // For paid memberships, include fee and payment details
+  // Fallback for legacy paid memberships
   return {
     ...baseDetails,
     membershipType: membershipType === 'annual' ? 'Annual' : 'Month-to-Month',
@@ -263,10 +289,20 @@ function buildMembershipDetails(membershipType?: string, status?: string, progra
   };
 }
 
-function buildMemberDataFromAPI(apiMember: MemberType): MemberData {
+function buildMemberDataFromAPI(apiMember: Member & { membershipType?: string; program?: string }): MemberData {
   const memberName = `${apiMember.firstName || ''} ${apiMember.lastName || ''}`.trim() || 'Member';
   const memberStatus = getMemberStatus(apiMember.status);
-  const isFreeOrTrial = apiMember.membershipType === 'free' || apiMember.membershipType === 'free_trial';
+  const membershipTypeStr = apiMember.membershipType || '';
+
+  // Get membership plan details from currentMembership if available
+  const currentPlan = apiMember.currentMembership?.membershipPlan;
+  const planName = currentPlan?.name || null;
+  const planPrice = currentPlan?.price ?? null;
+  const planProgram = currentPlan?.program || apiMember.program;
+  const planIsTrial = currentPlan?.isTrial;
+
+  // Check if it's a free/trial membership
+  const isFreeOrTrial = planIsTrial || membershipTypeStr === 'free' || membershipTypeStr === 'free-trial' || planPrice === 0;
 
   return {
     memberName,
@@ -274,7 +310,7 @@ function buildMemberDataFromAPI(apiMember: MemberType): MemberData {
     lastName: apiMember.lastName || '',
     photoUrl: apiMember.photoUrl || undefined,
     billingContactRole: 'Billing Contact',
-    membershipBadge: getMembershipBadgeText(apiMember.membershipType),
+    membershipBadge: getMembershipBadgeText(membershipTypeStr, planName),
     amountOverdue: '$0',
     contactInfo: {
       phone: apiMember.phone || '',
@@ -286,14 +322,14 @@ function buildMemberDataFromAPI(apiMember: MemberType): MemberData {
       country: apiMember.address?.country || 'US',
     },
     subscriptionDetails: {
-      membershipType: getSubscriptionMembershipType(apiMember.membershipType),
+      membershipType: getSubscriptionMembershipType(membershipTypeStr, planName),
       status: memberStatus,
-      amount: getSubscriptionAmount(apiMember.membershipType),
+      amount: getSubscriptionAmount(membershipTypeStr, planPrice),
       pastDuePayments: 0,
       lastPayment: isFreeOrTrial ? undefined : 'Last payment: N/A',
     },
     familyMembers: BASE_MOCK_DATA.familyMembers,
-    membershipDetails: buildMembershipDetails(apiMember.membershipType, apiMember.status, apiMember.program),
+    membershipDetails: buildMembershipDetails(membershipTypeStr, apiMember.status, planProgram, currentPlan),
     paymentMethod: BASE_MOCK_DATA.paymentMethod,
     agreement: BASE_MOCK_DATA.agreement,
     billingHistory: BASE_MOCK_DATA.billingHistory,
@@ -409,6 +445,23 @@ export default function EditMemberPage() {
     subscriptionType: null,
   });
 
+  // State for edit contact info modal
+  const [isEditContactModalOpen, setIsEditContactModalOpen] = useState(false);
+
+  // State for change membership modal
+  const [isChangeMembershipModalOpen, setIsChangeMembershipModalOpen] = useState(false);
+  const [membershipModalMode, setMembershipModalMode] = useState<'add' | 'change'>('add');
+
+  // Get the current member from cache for membership info
+  const currentMember: Member | undefined = members?.find(m => m.id === memberId);
+  const currentMembership = currentMember?.currentMembership;
+  const hasActiveMembership = currentMembership?.status === 'active';
+
+  const handleOpenMembershipModal = (mode: 'add' | 'change') => {
+    setMembershipModalMode(mode);
+    setIsChangeMembershipModalOpen(true);
+  };
+
   // Handler to sync tab from URL
   const syncTabFromUrl = useCallback(() => {
     const tabParam = searchParams.get('tab');
@@ -448,7 +501,7 @@ export default function EditMemberPage() {
         const member = members.find(m => m.id === memberId);
         if (member) {
           // Use organization subscription type if available, otherwise use member's individual type
-          const membershipTypeToUse = (state.subscriptionType || member.membershipType) as 'free' | 'free_trial' | 'monthly' | 'annual' | undefined;
+          const membershipTypeToUse = (state.subscriptionType || member.membershipType) as 'free' | 'free-trial' | 'monthly' | 'annual' | undefined;
           const memberWithType = { ...member, membershipType: membershipTypeToUse };
           const memberData = buildMemberDataFromAPI(memberWithType);
           dispatch({ type: 'SET_MEMBER_DATA', payload: memberData });
@@ -554,8 +607,12 @@ export default function EditMemberPage() {
           <h1 className="text-2xl font-bold text-foreground">{state.currentData.memberName}</h1>
           <div className="flex flex-wrap gap-2">
             <Badge variant="secondary">{state.currentData.billingContactRole}</Badge>
-            <Badge variant="default">{state.currentData.membershipBadge}</Badge>
-            <Badge variant="destructive">{state.currentData.amountOverdue}</Badge>
+            {hasActiveMembership && state.currentData.membershipBadge && (
+              <Badge variant="default">{state.currentData.membershipBadge}</Badge>
+            )}
+            {state.currentData.subscriptionDetails.pastDuePayments > 0 && (
+              <Badge variant="destructive">{state.currentData.amountOverdue}</Badge>
+            )}
           </div>
         </div>
       </div>
@@ -629,63 +686,123 @@ export default function EditMemberPage() {
                 </div>
               </div>
               <div className="mt-auto flex justify-end pt-6">
-                <Button className="w-fit bg-foreground text-background hover:bg-foreground/90">
+                <Button
+                  className="w-fit bg-foreground text-background hover:bg-foreground/90"
+                  onClick={() => setIsEditContactModalOpen(true)}
+                >
                   Edit Details
                 </Button>
               </div>
             </Card>
 
-            {/* Subscription Details - Read Only */}
+            {/* Edit Contact Info Modal */}
+            <EditContactInfoModal
+              isOpen={isEditContactModalOpen}
+              onClose={() => setIsEditContactModalOpen(false)}
+              memberId={memberId}
+              initialEmail={state.currentData.contactInfo.email || ''}
+              initialPhone={state.currentData.contactInfo.phone || ''}
+              initialAddress={
+                state.currentData.contactInfo.street
+                  ? {
+                      street: state.currentData.contactInfo.street,
+                      apartment: undefined,
+                      city: state.currentData.contactInfo.city || '',
+                      state: state.currentData.contactInfo.state || '',
+                      zipCode: state.currentData.contactInfo.zipCode || '',
+                      country: state.currentData.contactInfo.country || 'US',
+                    }
+                  : undefined
+              }
+            />
+
+            {/* Membership Details - Read Only */}
             <Card className="flex flex-col p-6">
               <div>
-                <h2 className="mb-6 text-lg font-semibold text-foreground">Subscription Details</h2>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold text-foreground">{state.currentData.subscriptionDetails.membershipType}</h3>
-                      <Badge variant={getStatusColor(state.currentData.subscriptionDetails.status)} className="mt-2">
-                        {getStatusLabel(state.currentData.subscriptionDetails.status)}
-                      </Badge>
-                    </div>
-                    {state.currentData.subscriptionDetails.amount > 0 && (
-                      <div className="text-right">
-                        <p className="text-2xl font-bold text-primary">
-                          $
-                          {state.currentData.subscriptionDetails.amount}
-                        </p>
+                <h2 className="mb-6 text-lg font-semibold text-foreground">Membership Details</h2>
+                {hasActiveMembership
+                  ? (
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="font-semibold text-foreground">
+                              {currentMembership?.membershipPlan?.name || state.currentData.subscriptionDetails.membershipType}
+                            </h3>
+                            <Badge variant={getStatusColor(state.currentData.subscriptionDetails.status)} className="mt-2">
+                              {getStatusLabel(state.currentData.subscriptionDetails.status)}
+                            </Badge>
+                          </div>
+                          {(currentMembership?.membershipPlan?.price || state.currentData.subscriptionDetails.amount) > 0 && (
+                            <div className="text-right">
+                              <p className="text-2xl font-bold text-primary">
+                                $
+                                {currentMembership?.membershipPlan?.price || state.currentData.subscriptionDetails.amount}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                        {state.currentData.subscriptionDetails.pastDuePayments > 0 && (
+                          <div className="border-t border-border pt-4">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <h3 className="font-semibold text-foreground">Past Due Payments</h3>
+                                <p className="mt-1 text-sm text-muted-foreground">{state.currentData.subscriptionDetails.lastPayment}</p>
+                              </div>
+                              <p className="text-2xl font-bold text-destructive">
+                                $
+                                {state.currentData.subscriptionDetails.pastDuePayments.toFixed(2)}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                        {state.currentData.subscriptionDetails.pastDuePayments === 0 && (
+                          <div className="border-t border-border pt-4">
+                            <p className="text-sm text-muted-foreground">No payments due</p>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  : (
+                      <div className="flex flex-col items-center justify-center py-6 text-center">
+                        <p className="text-muted-foreground">No membership assigned</p>
+                        <p className="mt-1 text-sm text-muted-foreground">Add a membership plan for this member</p>
                       </div>
                     )}
-                  </div>
-                  {state.currentData.subscriptionDetails.pastDuePayments > 0 && (
-                    <div className="border-t border-border pt-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="font-semibold text-foreground">Past Due Payments</h3>
-                          <p className="mt-1 text-sm text-muted-foreground">{state.currentData.subscriptionDetails.lastPayment}</p>
-                        </div>
-                        <p className="text-2xl font-bold text-destructive">
-                          $
-                          {state.currentData.subscriptionDetails.pastDuePayments.toFixed(2)}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                  {state.currentData.subscriptionDetails.pastDuePayments === 0 && (
-                    <div className="border-t border-border pt-4">
-                      <p className="text-sm text-muted-foreground">No payments due</p>
-                    </div>
-                  )}
-                </div>
               </div>
               <div className="mt-auto flex justify-end gap-3 pt-6">
-                <Button className="w-fit bg-foreground text-background hover:bg-foreground/90">
-                  Change Membership
-                </Button>
-                <Button variant="destructive" className="w-fit">
-                  Hold
-                </Button>
+                {hasActiveMembership
+                  ? (
+                      <>
+                        <Button
+                          className="w-fit bg-foreground text-background hover:bg-foreground/90"
+                          onClick={() => handleOpenMembershipModal('change')}
+                        >
+                          Change Membership
+                        </Button>
+                        <Button variant="destructive" className="w-fit">
+                          Hold
+                        </Button>
+                      </>
+                    )
+                  : (
+                      <Button
+                        className="w-fit bg-foreground text-background hover:bg-foreground/90"
+                        onClick={() => handleOpenMembershipModal('add')}
+                      >
+                        Add Membership
+                      </Button>
+                    )}
               </div>
             </Card>
+
+            {/* Change Membership Modal */}
+            <ChangeMembershipModal
+              isOpen={isChangeMembershipModalOpen}
+              onClose={() => setIsChangeMembershipModalOpen(false)}
+              memberId={memberId}
+              currentMembershipPlanId={currentMembership?.membershipPlanId}
+              mode={membershipModalMode}
+            />
           </div>
 
           {/* Family Members Section - With Remove Buttons */}

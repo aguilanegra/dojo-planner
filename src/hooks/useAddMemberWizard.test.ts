@@ -11,6 +11,7 @@ describe('useAddMemberWizard types and exports', () => {
       lastName: 'Doe',
       email: 'john@example.com',
       phone: '1234567890',
+      membershipPlanId: null,
       subscriptionPlan: 'monthly',
     };
 
@@ -65,6 +66,7 @@ describe('useAddMemberWizard types and exports', () => {
       lastName: 'Doe',
       email: 'john@example.com',
       phone: '1234567890',
+      membershipPlanId: null,
       subscriptionPlan: 'monthly',
       address: {
         street: '123 Main St',
@@ -88,6 +90,7 @@ describe('useAddMemberWizard types and exports', () => {
       lastName: 'Doe',
       email: 'john@example.com',
       phone: '1234567890',
+      membershipPlanId: null,
       subscriptionPlan: 'monthly',
       photoFile: mockFile,
     };
@@ -103,11 +106,11 @@ describe('useAddMemberWizard types and exports', () => {
       lastName: '',
       email: '',
       phone: '',
-      subscriptionPlan: null,
+      membershipPlanId: null,
     };
 
     expect(minimalData.memberType).toBeNull();
-    expect(minimalData.subscriptionPlan).toBeNull();
+    expect(minimalData.membershipPlanId).toBeNull();
     expect(minimalData.firstName).toBe('');
     expect(minimalData.email).toBe('');
   });

@@ -6,9 +6,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { useAddMemberWizard } from '@/hooks/useAddMemberWizard';
 import { client } from '@/libs/Orpc';
 import { MemberDetailsStep } from './MemberDetailsStep';
+import { MemberMembershipStep } from './MemberMembershipStep';
 import { MemberPaymentStep } from './MemberPaymentStep';
 import { MemberPhotoStep } from './MemberPhotoStep';
-import { MemberSubscriptionStep } from './MemberSubscriptionStep';
 import { MemberSuccessStep } from './MemberSuccessStep';
 import { MemberTypeStep } from './MemberTypeStep';
 
@@ -98,7 +98,7 @@ export const AddMemberModal = ({ isOpen, onCloseAction }: AddMemberModalProps) =
         lastName: wizard.data.lastName,
         phone: wizard.data.phone,
         ...(wizard.data.memberType && { memberType: wizard.data.memberType }),
-        ...(wizard.data.subscriptionPlan && { subscriptionPlan: wizard.data.subscriptionPlan }),
+        ...(wizard.data.membershipPlanId && { membershipPlanId: wizard.data.membershipPlanId }),
         ...(addressPayload && { address: addressPayload }),
         ...(photoUrl && { photoUrl }),
       };
@@ -141,14 +141,9 @@ export const AddMemberModal = ({ isOpen, onCloseAction }: AddMemberModalProps) =
   };
 
   const handleSubscriptionNext = async () => {
-    // Only require payment for monthly/annual plans
-    if (wizard.data.subscriptionPlan === 'free-trial') {
-      // For free trial, create member directly without payment step
-      await handleFinalNext();
-    } else {
-      // Go to payment step for monthly/annual
-      wizard.nextStep();
-    }
+    // For now, all membership plans go directly to member creation
+    // Payment step can be added later for paid plans if needed
+    await handleFinalNext();
   };
 
   return (
@@ -197,7 +192,7 @@ export const AddMemberModal = ({ isOpen, onCloseAction }: AddMemberModalProps) =
           )}
 
           {wizard.step === 'subscription' && (
-            <MemberSubscriptionStep
+            <MemberMembershipStep
               data={wizard.data}
               onUpdate={wizard.updateData}
               onNext={handleSubscriptionNext}

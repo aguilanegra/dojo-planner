@@ -53,7 +53,7 @@ describe('MemberDetailsStep', () => {
     lastName: '',
     email: '',
     phone: '',
-    subscriptionPlan: null,
+    membershipPlanId: null,
   };
 
   const mockHandlers = {
@@ -131,7 +131,7 @@ describe('MemberDetailsStep', () => {
       lastName: 'Doe',
       email: 'john@example.com',
       phone: '1234567890',
-      subscriptionPlan: null,
+      membershipPlanId: null,
     };
 
     render(
@@ -212,7 +212,7 @@ describe('MemberDetailsStep', () => {
       lastName: 'Doe',
       email: 'john@example.com',
       phone: '1234567890',
-      subscriptionPlan: null,
+      membershipPlanId: null,
     };
 
     render(
@@ -242,7 +242,7 @@ describe('MemberDetailsStep', () => {
       lastName: 'Doe',
       email: 'john@example.com',
       phone: '1234567890',
-      subscriptionPlan: null,
+      membershipPlanId: null,
       address: {
         street: '123 Main St',
         city: 'San Francisco',
