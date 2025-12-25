@@ -1,11 +1,15 @@
 'use client';
 
+import type { StaffFilters } from './StaffFilterBar';
+import type { StaffMemberData } from '@/hooks/useInviteStaffForm';
 import { ArrowDownAZ, ArrowUpZA, Edit, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useTranslations } from 'next-intl';
+import { useMemo, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { StaffCard } from '@/templates/StaffCard';
+import { StaffFilterBar } from './StaffFilterBar';
 
 type StaffMember = {
   id: string;
@@ -16,11 +20,14 @@ type StaffMember = {
   emailAddress: string;
   role: string;
   status: 'Active' | 'Invitation sent' | 'Inactive';
+  phone?: string | null;
 };
 
 type StaffTableProps = {
   staffMembers: StaffMember[];
   headerActions?: React.ReactNode;
+  onEditStaff?: (staffMember: StaffMemberData) => void;
+  onRemoveStaff?: (staffId: string) => void;
 };
 
 type SortField = 'firstName' | 'role';
@@ -29,19 +36,74 @@ type SortDirection = 'asc' | 'desc';
 export function StaffTable({
   staffMembers,
   headerActions,
+  onEditStaff,
+  onRemoveStaff,
 }: StaffTableProps) {
+  const t = useTranslations('Staff');
   const [sortField, setSortField] = useState<SortField>('firstName');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [filters, setFilters] = useState<StaffFilters>({
+    search: '',
+    role: 'all',
+  });
 
-  const handleEditStaff = (staffId: string) => {
-    console.warn('[Staff] Edit staff action triggered for staff ID:', staffId);
+  // Compute available roles from actual staff data
+  const availableRoles = useMemo(() => {
+    const roles = new Set<string>();
+    staffMembers.forEach((member) => {
+      if (member.role) {
+        roles.add(member.role);
+      }
+    });
+    return Array.from(roles).sort();
+  }, [staffMembers]);
+
+  const handleFiltersChange = (newFilters: StaffFilters) => {
+    setFilters(newFilters);
+  };
+
+  // Filter staff members based on search and role
+  const filteredStaff = useMemo(() => {
+    return staffMembers.filter((member) => {
+      // Search filter - checks multiple fields
+      const searchLower = filters.search.toLowerCase();
+      const matchesSearch = filters.search === ''
+        || (member.firstName?.toLowerCase().includes(searchLower))
+        || (member.lastName?.toLowerCase().includes(searchLower))
+        || member.email.toLowerCase().includes(searchLower)
+        || (member.phone?.toLowerCase().includes(searchLower));
+
+      // Role filter
+      const matchesRole = filters.role === 'all' || member.role === filters.role;
+
+      return matchesSearch && matchesRole;
+    });
+  }, [staffMembers, filters]);
+
+  const handleEditStaff = (staff: StaffMember) => {
+    if (onEditStaff) {
+      onEditStaff({
+        id: staff.id,
+        firstName: staff.firstName || '',
+        lastName: staff.lastName || '',
+        email: staff.email,
+        roleKey: staff.role,
+        phone: staff.phone || '',
+      });
+    } else {
+      console.warn('[Staff] Edit staff action triggered for staff ID:', staff.id);
+    }
   };
 
   const handleRemoveStaff = (staffId: string) => {
-    console.warn('[Staff] Remove staff action triggered for staff ID:', staffId);
+    if (onRemoveStaff) {
+      onRemoveStaff(staffId);
+    } else {
+      console.warn('[Staff] Remove staff action triggered for staff ID:', staffId);
+    }
   };
 
-  const sortedStaff = [...staffMembers].sort((a, b) => {
+  const sortedStaff = [...filteredStaff].sort((a, b) => {
     let aValue: string;
     let bValue: string;
 
@@ -95,21 +157,30 @@ export function StaffTable({
     return 'outline';
   };
 
+  // Determine if we should show "no results" vs "no staff members"
+  const hasFiltersApplied = filters.search !== '' || filters.role !== 'all';
+  const showNoResults = hasFiltersApplied && filteredStaff.length === 0 && staffMembers.length > 0;
+
   return (
     <div className="w-full space-y-6">
-      {/* Header */}
+      {/* Search and Filter Bar */}
       <div className="space-y-4">
-        <div className="flex items-end justify-between gap-4">
-          <h2 className="text-lg font-semibold text-foreground">Staff Members</h2>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+          <div className="flex-1">
+            <StaffFilterBar
+              onFiltersChangeAction={handleFiltersChange}
+              availableRoles={availableRoles}
+            />
+          </div>
           {headerActions}
         </div>
 
         {/* Staff Table - Desktop View */}
         <div className="hidden rounded-lg border border-border bg-background lg:block">
-          {staffMembers.length === 0
+          {filteredStaff.length === 0
             ? (
                 <div className="p-8 text-center text-muted-foreground">
-                  No staff members found
+                  {showNoResults ? t('no_results_found') : t('no_staff_members')}
                 </div>
               )
             : (
@@ -191,7 +262,7 @@ export function StaffTable({
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleEditStaff(staff.id)}
+                                onClick={() => handleEditStaff(staff)}
                                 aria-label={`Edit ${staff.firstName} ${staff.lastName}`}
                                 title={`Edit ${staff.firstName} ${staff.lastName}`}
                               >
@@ -218,10 +289,10 @@ export function StaffTable({
 
         {/* Staff Cards - Mobile View */}
         <div className="space-y-4 lg:hidden">
-          {staffMembers.length === 0
+          {filteredStaff.length === 0
             ? (
                 <div className="p-8 text-center text-muted-foreground">
-                  No staff members found
+                  {showNoResults ? t('no_results_found') : t('no_staff_members')}
                 </div>
               )
             : (
@@ -236,7 +307,7 @@ export function StaffTable({
                     emailAddress={staff.emailAddress}
                     role={staff.role}
                     status={staff.status}
-                    onEdit={handleEditStaff}
+                    onEdit={() => handleEditStaff(staff)}
                     onRemove={handleRemoveStaff}
                   />
                 ))

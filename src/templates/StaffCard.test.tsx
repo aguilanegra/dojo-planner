@@ -109,7 +109,7 @@ describe('StaffCard', () => {
     expect(buttons.length).toBe(0);
   });
 
-  it('calls onEdit with correct id when edit button is clicked', async () => {
+  it('calls onEdit when edit button is clicked', async () => {
     const onEdit = vi.fn();
 
     render(<StaffCard {...defaultProps} onEdit={onEdit} />);
@@ -117,7 +117,7 @@ describe('StaffCard', () => {
     const editButton = page.getByRole('button', { name: /Edit John Doe/i });
     await userEvent.click(editButton);
 
-    expect(onEdit).toHaveBeenCalledWith('1');
+    expect(onEdit).toHaveBeenCalled();
   });
 
   it('calls onRemove with correct id when remove button is clicked', async () => {
@@ -201,5 +201,86 @@ describe('StaffCard', () => {
     const fallback = page.getByText('J', { exact: true }).first();
 
     expect(fallback).toBeInTheDocument();
+  });
+
+  it('calls onEdit with id when onEdit accepts an argument', async () => {
+    const onEdit = vi.fn((id: string) => id);
+
+    render(<StaffCard {...defaultProps} onEdit={onEdit} />);
+
+    const editButton = page.getByRole('button', { name: /Edit John Doe/i });
+    await userEvent.click(editButton);
+
+    expect(onEdit).toHaveBeenCalledWith('1');
+  });
+
+  it('calls onEdit without id when onEdit has no parameters', async () => {
+    const onEdit = vi.fn();
+
+    render(<StaffCard {...defaultProps} onEdit={onEdit} />);
+
+    const editButton = page.getByRole('button', { name: /Edit John Doe/i });
+    await userEvent.click(editButton);
+
+    expect(onEdit).toHaveBeenCalledWith();
+  });
+
+  it('renders role without formatting when formatText is false', () => {
+    // eslint-disable-next-line jsx-a11y/aria-role
+    render(<StaffCard {...defaultProps} role="org:admin" formatText={false} />);
+
+    const roleBadge = page.getByText('org:admin');
+
+    expect(roleBadge).toBeInTheDocument();
+  });
+
+  it('renders status without formatting when formatText is false', () => {
+    render(<StaffCard {...defaultProps} status="Invitation sent" formatText={false} />);
+
+    const statusBadge = page.getByText('Invitation sent');
+
+    expect(statusBadge).toBeInTheDocument();
+  });
+
+  it('renders avatar image when photoUrl is provided', async () => {
+    render(<StaffCard {...defaultProps} />);
+
+    const avatar = page.getByRole('img', { name: /John Doe/i });
+
+    await expect.element(avatar).toBeVisible();
+  });
+
+  it('applies destructive variant for inactive status', () => {
+    render(<StaffCard {...defaultProps} status="Inactive" />);
+
+    const statusBadge = page.getByText('Inactive');
+
+    expect(statusBadge).toBeInTheDocument();
+  });
+
+  it('applies secondary variant for invitation sent status', () => {
+    render(<StaffCard {...defaultProps} status="Invitation sent" />);
+
+    const statusBadge = page.getByText('Invitation Sent');
+
+    expect(statusBadge).toBeInTheDocument();
+  });
+
+  it('applies outline variant for non-admin roles', () => {
+    // eslint-disable-next-line jsx-a11y/aria-role
+    render(<StaffCard {...defaultProps} role="instructor" />);
+
+    const roleBadge = page.getByText('Instructor');
+
+    expect(roleBadge).toBeInTheDocument();
+  });
+
+  it('formats hyphenated roles correctly', () => {
+    // eslint-disable-next-line jsx-a11y/aria-role
+    render(<StaffCard {...defaultProps} role="academy-owner" />);
+
+    const roleBadge = page.getByText('Academy Owner');
+
+    expect(roleBadge).toBeInTheDocument();
   });
 });

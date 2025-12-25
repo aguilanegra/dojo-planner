@@ -1,7 +1,6 @@
 import { auth, clerkClient } from '@clerk/nextjs/server';
 import { getTranslations } from 'next-intl/server';
-import { StaffHeaderActions } from './StaffHeaderActions';
-import { StaffTable } from './StaffTable';
+import { StaffPageClient } from './StaffPageClient';
 
 type ClerkStaffMember = {
   id: string;
@@ -12,6 +11,7 @@ type ClerkStaffMember = {
   emailAddress: string;
   role: string;
   status: 'Active' | 'Invitation sent' | 'Inactive';
+  phone?: string | null;
 };
 
 export async function CustomStaffPage() {
@@ -72,17 +72,13 @@ export async function CustomStaffPage() {
           emailAddress: membership.publicUserData?.identifier || '',
           role: membership.role,
           status,
+          phone: null,
         };
       });
 
-    // Render the staff table
+    // Render the staff table with client-side modal management
     return (
-      <StaffTable
-        staffMembers={staffMembers}
-        headerActions={(
-          <StaffHeaderActions />
-        )}
-      />
+      <StaffPageClient staffMembers={staffMembers} />
     );
   } catch (error) {
     console.warn('CustomStaffPage - Failed to fetch staff members:', error);

@@ -1,70 +1,527 @@
-import type { InviteStaffFormData, StaffPermissions, StaffRole } from './useInviteStaffForm';
-import { describe, expect, it } from 'vitest';
+import type { InviteStaffFormData } from './useInviteStaffForm';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { renderHook } from 'vitest-browser-react';
+import { useInviteStaffForm } from './useInviteStaffForm';
 
-describe('useInviteStaffForm types and exports', () => {
+// Mock the server action
+vi.mock('@/actions/staff', () => ({
+  fetchStaffRoles: vi.fn(() => Promise.resolve({
+    success: true,
+    roles: [
+      { id: 'role_1', key: 'org:admin', name: 'Admin', description: 'Full access to all features' },
+      { id: 'role_2', key: 'org:instructor', name: 'Instructor', description: 'Can manage classes' },
+      { id: 'role_3', key: 'org:front_desk', name: 'Front Desk', description: 'Reception duties' },
+    ],
+  })),
+}));
+
+describe('useInviteStaffForm', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe('Initial state', () => {
+    it('should have default empty form data', async () => {
+      const { result } = await renderHook(() => useInviteStaffForm());
+
+      expect(result.current.data.firstName).toBe('');
+      expect(result.current.data.lastName).toBe('');
+      expect(result.current.data.email).toBe('');
+      expect(result.current.data.roleKey).toBeNull();
+      expect(result.current.data.phone).toBe('');
+    });
+
+    it('should have no error initially', async () => {
+      const { result } = await renderHook(() => useInviteStaffForm());
+
+      expect(result.current.error).toBeNull();
+    });
+
+    it('should not be loading initially after roles load', async () => {
+      const { result } = await renderHook(() => useInviteStaffForm());
+
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    it('should fetch roles on mount', async () => {
+      const { result } = await renderHook(() => useInviteStaffForm());
+
+      expect(result.current.roles).toHaveLength(3);
+      expect(result.current.roles[0]?.key).toBe('org:admin');
+    });
+  });
+
+  describe('updateData', () => {
+    it('should update firstName', async () => {
+      const { result, act } = await renderHook(() => useInviteStaffForm());
+
+      act(() => {
+        result.current.updateData({ firstName: 'John' });
+      });
+
+      expect(result.current.data.firstName).toBe('John');
+    });
+
+    it('should update lastName', async () => {
+      const { result, act } = await renderHook(() => useInviteStaffForm());
+
+      act(() => {
+        result.current.updateData({ lastName: 'Doe' });
+      });
+
+      expect(result.current.data.lastName).toBe('Doe');
+    });
+
+    it('should update email', async () => {
+      const { result, act } = await renderHook(() => useInviteStaffForm());
+
+      act(() => {
+        result.current.updateData({ email: 'john@example.com' });
+      });
+
+      expect(result.current.data.email).toBe('john@example.com');
+    });
+
+    it('should update roleKey', async () => {
+      const { result, act } = await renderHook(() => useInviteStaffForm());
+
+      act(() => {
+        result.current.updateData({ roleKey: 'org:admin' });
+      });
+
+      expect(result.current.data.roleKey).toBe('org:admin');
+    });
+
+    it('should update phone', async () => {
+      const { result, act } = await renderHook(() => useInviteStaffForm());
+
+      act(() => {
+        result.current.updateData({ phone: '555-123-4567' });
+      });
+
+      expect(result.current.data.phone).toBe('555-123-4567');
+    });
+
+    it('should update multiple fields at once', async () => {
+      const { result, act } = await renderHook(() => useInviteStaffForm());
+
+      act(() => {
+        result.current.updateData({
+          firstName: 'Jane',
+          lastName: 'Smith',
+          email: 'jane@example.com',
+        });
+      });
+
+      expect(result.current.data.firstName).toBe('Jane');
+      expect(result.current.data.lastName).toBe('Smith');
+      expect(result.current.data.email).toBe('jane@example.com');
+    });
+
+    it('should clear error when updating data', async () => {
+      const { result, act } = await renderHook(() => useInviteStaffForm());
+
+      act(() => {
+        result.current.setError('Some error');
+      });
+
+      expect(result.current.error).toBe('Some error');
+
+      act(() => {
+        result.current.updateData({ firstName: 'John' });
+      });
+
+      expect(result.current.error).toBeNull();
+    });
+  });
+
+  describe('isValid', () => {
+    it('should return false for empty form', async () => {
+      const { result } = await renderHook(() => useInviteStaffForm());
+
+      expect(result.current.isValid()).toBe(false);
+    });
+
+    it('should return false if firstName is missing', async () => {
+      const { result, act } = await renderHook(() => useInviteStaffForm());
+
+      act(() => {
+        result.current.updateData({
+          lastName: 'Doe',
+          email: 'john@example.com',
+          roleKey: 'org:admin',
+          phone: '555-123-4567',
+        });
+      });
+
+      expect(result.current.isValid()).toBe(false);
+    });
+
+    it('should return false if lastName is missing', async () => {
+      const { result, act } = await renderHook(() => useInviteStaffForm());
+
+      act(() => {
+        result.current.updateData({
+          firstName: 'John',
+          email: 'john@example.com',
+          roleKey: 'org:admin',
+          phone: '555-123-4567',
+        });
+      });
+
+      expect(result.current.isValid()).toBe(false);
+    });
+
+    it('should return false if email is invalid', async () => {
+      const { result, act } = await renderHook(() => useInviteStaffForm());
+
+      act(() => {
+        result.current.updateData({
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'invalid-email',
+          roleKey: 'org:admin',
+          phone: '555-123-4567',
+        });
+      });
+
+      expect(result.current.isValid()).toBe(false);
+    });
+
+    it('should return false if roleKey is null', async () => {
+      const { result, act } = await renderHook(() => useInviteStaffForm());
+
+      act(() => {
+        result.current.updateData({
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john@example.com',
+          phone: '555-123-4567',
+        });
+      });
+
+      expect(result.current.isValid()).toBe(false);
+    });
+
+    it('should return false if phone is missing', async () => {
+      const { result, act } = await renderHook(() => useInviteStaffForm());
+
+      act(() => {
+        result.current.updateData({
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john@example.com',
+          roleKey: 'org:admin',
+        });
+      });
+
+      expect(result.current.isValid()).toBe(false);
+    });
+
+    it('should return true for valid complete form', async () => {
+      const { result, act } = await renderHook(() => useInviteStaffForm());
+
+      act(() => {
+        result.current.updateData({
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john@example.com',
+          roleKey: 'org:admin',
+          phone: '555-123-4567',
+        });
+      });
+
+      expect(result.current.isValid()).toBe(true);
+    });
+
+    it('should validate email format correctly', async () => {
+      const { result, act } = await renderHook(() => useInviteStaffForm());
+
+      const baseData = {
+        firstName: 'John',
+        lastName: 'Doe',
+        roleKey: 'org:admin',
+        phone: '555-123-4567',
+      };
+
+      // Invalid emails
+      const invalidEmails = ['notanemail', 'missing@', '@nodomain.com', 'spaces in@email.com'];
+      for (const email of invalidEmails) {
+        act(() => {
+          result.current.updateData({ ...baseData, email });
+        });
+
+        expect(result.current.isValid()).toBe(false);
+      }
+
+      // Valid emails
+      const validEmails = ['valid@example.com', 'user.name@domain.org', 'test+tag@mail.co'];
+      for (const email of validEmails) {
+        act(() => {
+          result.current.updateData({ ...baseData, email });
+        });
+
+        expect(result.current.isValid()).toBe(true);
+      }
+    });
+  });
+
+  describe('reset', () => {
+    it('should reset form to default values', async () => {
+      const { result, act } = await renderHook(() => useInviteStaffForm());
+
+      act(() => {
+        result.current.updateData({
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john@example.com',
+          roleKey: 'org:admin',
+          phone: '555-123-4567',
+        });
+      });
+
+      act(() => {
+        result.current.reset();
+      });
+
+      expect(result.current.data.firstName).toBe('');
+      expect(result.current.data.lastName).toBe('');
+      expect(result.current.data.email).toBe('');
+      expect(result.current.data.roleKey).toBeNull();
+      expect(result.current.data.phone).toBe('');
+    });
+
+    it('should clear error on reset', async () => {
+      const { result, act } = await renderHook(() => useInviteStaffForm());
+
+      act(() => {
+        result.current.setError('Some error');
+      });
+
+      act(() => {
+        result.current.reset();
+      });
+
+      expect(result.current.error).toBeNull();
+    });
+
+    it('should reset loading state on reset', async () => {
+      const { result, act } = await renderHook(() => useInviteStaffForm());
+
+      act(() => {
+        result.current.setIsLoading(true);
+      });
+
+      act(() => {
+        result.current.reset();
+      });
+
+      expect(result.current.isLoading).toBe(false);
+    });
+  });
+
+  describe('error handling', () => {
+    it('should set error', async () => {
+      const { result, act } = await renderHook(() => useInviteStaffForm());
+
+      act(() => {
+        result.current.setError('Validation error');
+      });
+
+      expect(result.current.error).toBe('Validation error');
+    });
+
+    it('should clear error', async () => {
+      const { result, act } = await renderHook(() => useInviteStaffForm());
+
+      act(() => {
+        result.current.setError('Some error');
+      });
+
+      act(() => {
+        result.current.clearError();
+      });
+
+      expect(result.current.error).toBeNull();
+    });
+  });
+
+  describe('loading state', () => {
+    it('should set loading state', async () => {
+      const { result, act } = await renderHook(() => useInviteStaffForm());
+
+      act(() => {
+        result.current.setIsLoading(true);
+      });
+
+      expect(result.current.isLoading).toBe(true);
+
+      act(() => {
+        result.current.setIsLoading(false);
+      });
+
+      expect(result.current.isLoading).toBe(false);
+    });
+  });
+
+  describe('roles management', () => {
+    it('should have roles after loading', async () => {
+      const { result } = await renderHook(() => useInviteStaffForm());
+
+      expect(result.current.roles).toHaveLength(3);
+      expect(result.current.roles[0]).toEqual({
+        id: 'role_1',
+        key: 'org:admin',
+        name: 'Admin',
+        description: 'Full access to all features',
+      });
+    });
+
+    it('should expose reloadRoles function', async () => {
+      const { result } = await renderHook(() => useInviteStaffForm());
+
+      expect(typeof result.current.reloadRoles).toBe('function');
+    });
+  });
+
+  describe('touched state management', () => {
+    it('should have all fields untouched initially', async () => {
+      const { result } = await renderHook(() => useInviteStaffForm());
+
+      expect(result.current.touched.firstName).toBe(false);
+      expect(result.current.touched.lastName).toBe(false);
+      expect(result.current.touched.email).toBe(false);
+      expect(result.current.touched.roleKey).toBe(false);
+      expect(result.current.touched.phone).toBe(false);
+    });
+
+    it('should set field as touched', async () => {
+      const { result, act } = await renderHook(() => useInviteStaffForm());
+
+      act(() => {
+        result.current.setFieldTouched('firstName');
+      });
+
+      expect(result.current.touched.firstName).toBe(true);
+      expect(result.current.touched.lastName).toBe(false);
+    });
+
+    it('should reset touched state on reset', async () => {
+      const { result, act } = await renderHook(() => useInviteStaffForm());
+
+      act(() => {
+        result.current.setFieldTouched('firstName');
+        result.current.setFieldTouched('email');
+      });
+
+      act(() => {
+        result.current.reset();
+      });
+
+      expect(result.current.touched.firstName).toBe(false);
+      expect(result.current.touched.email).toBe(false);
+    });
+  });
+
+  describe('field errors', () => {
+    it('should show error for empty touched firstName', async () => {
+      const { result, act } = await renderHook(() => useInviteStaffForm());
+
+      act(() => {
+        result.current.setFieldTouched('firstName');
+      });
+
+      expect(result.current.fieldErrors.firstName).toBe(true);
+    });
+
+    it('should not show error for filled touched firstName', async () => {
+      const { result, act } = await renderHook(() => useInviteStaffForm());
+
+      act(() => {
+        result.current.updateData({ firstName: 'John' });
+        result.current.setFieldTouched('firstName');
+      });
+
+      expect(result.current.fieldErrors.firstName).toBe(false);
+    });
+
+    it('should show error for invalid email when touched', async () => {
+      const { result, act } = await renderHook(() => useInviteStaffForm());
+
+      act(() => {
+        result.current.updateData({ email: 'invalid' });
+        result.current.setFieldTouched('email');
+      });
+
+      expect(result.current.fieldErrors.email).toBe(true);
+    });
+
+    it('should not show error for valid email when touched', async () => {
+      const { result, act } = await renderHook(() => useInviteStaffForm());
+
+      act(() => {
+        result.current.updateData({ email: 'valid@example.com' });
+        result.current.setFieldTouched('email');
+      });
+
+      expect(result.current.fieldErrors.email).toBe(false);
+    });
+  });
+
+  describe('edit mode', () => {
+    it('should not be in edit mode initially', async () => {
+      const { result } = await renderHook(() => useInviteStaffForm());
+
+      expect(result.current.isEditMode).toBe(false);
+    });
+
+    it('should be in edit mode when initial data has id', async () => {
+      const initialData = {
+        id: 'user_123',
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'john@example.com',
+        roleKey: 'org:admin',
+        phone: '555-123-4567',
+      };
+
+      const { result } = await renderHook(() => useInviteStaffForm(initialData));
+
+      expect(result.current.isEditMode).toBe(true);
+      expect(result.current.data.firstName).toBe('John');
+      expect(result.current.data.lastName).toBe('Doe');
+      expect(result.current.data.email).toBe('john@example.com');
+    });
+  });
+});
+
+describe('InviteStaffFormData type', () => {
   it('should export InviteStaffFormData type', () => {
     const testData: InviteStaffFormData = {
       firstName: 'John',
       lastName: 'Doe',
       email: 'john@example.com',
-      role: 'admin',
+      roleKey: 'org:admin',
       phone: '555-123-4567',
-      permissions: {
-        canManageClassSchedules: true,
-        canViewMemberInformation: false,
-        canAccessBillingInformation: false,
-        canGenerateReports: false,
-        canModifyLocationSettings: false,
-      },
     };
 
     expect(testData.firstName).toBe('John');
     expect(testData.lastName).toBe('Doe');
     expect(testData.email).toBe('john@example.com');
+    expect(testData.roleKey).toBe('org:admin');
+    expect(testData.phone).toBe('555-123-4567');
   });
 
-  it('should support all staff roles', () => {
-    const roles: StaffRole[] = ['admin', 'instructor', 'front-desk'];
-
-    expect(roles).toHaveLength(3);
-    expect(roles[0]).toBe('admin');
-    expect(roles[1]).toBe('instructor');
-    expect(roles[2]).toBe('front-desk');
-  });
-
-  it('should have all expected permission fields', () => {
-    const permissions: StaffPermissions = {
-      canManageClassSchedules: true,
-      canViewMemberInformation: true,
-      canAccessBillingInformation: true,
-      canGenerateReports: true,
-      canModifyLocationSettings: true,
-    };
-
-    expect(permissions.canManageClassSchedules).toBe(true);
-    expect(permissions.canViewMemberInformation).toBe(true);
-    expect(permissions.canAccessBillingInformation).toBe(true);
-    expect(permissions.canGenerateReports).toBe(true);
-    expect(permissions.canModifyLocationSettings).toBe(true);
-  });
-
-  it('should allow null role', () => {
+  it('should allow null roleKey', () => {
     const testData: InviteStaffFormData = {
       firstName: '',
       lastName: '',
       email: '',
-      role: null,
+      roleKey: null,
       phone: '',
-      permissions: {
-        canManageClassSchedules: false,
-        canViewMemberInformation: false,
-        canAccessBillingInformation: false,
-        canGenerateReports: false,
-        canModifyLocationSettings: false,
-      },
     };
 
-    expect(testData.role).toBeNull();
+    expect(testData.roleKey).toBeNull();
   });
 
   it('should allow empty strings for text fields', () => {
@@ -72,95 +529,13 @@ describe('useInviteStaffForm types and exports', () => {
       firstName: '',
       lastName: '',
       email: '',
-      role: null,
+      roleKey: null,
       phone: '',
-      permissions: {
-        canManageClassSchedules: false,
-        canViewMemberInformation: false,
-        canAccessBillingInformation: false,
-        canGenerateReports: false,
-        canModifyLocationSettings: false,
-      },
     };
 
     expect(testData.firstName).toBe('');
     expect(testData.lastName).toBe('');
     expect(testData.email).toBe('');
     expect(testData.phone).toBe('');
-  });
-
-  it('should support admin role', () => {
-    const role: StaffRole = 'admin';
-
-    expect(role).toBe('admin');
-  });
-
-  it('should support instructor role', () => {
-    const role: StaffRole = 'instructor';
-
-    expect(role).toBe('instructor');
-  });
-
-  it('should support front-desk role', () => {
-    const role: StaffRole = 'front-desk';
-
-    expect(role).toBe('front-desk');
-  });
-
-  it('should allow all permissions to be false', () => {
-    const permissions: StaffPermissions = {
-      canManageClassSchedules: false,
-      canViewMemberInformation: false,
-      canAccessBillingInformation: false,
-      canGenerateReports: false,
-      canModifyLocationSettings: false,
-    };
-
-    expect(permissions.canManageClassSchedules).toBe(false);
-    expect(permissions.canViewMemberInformation).toBe(false);
-    expect(permissions.canAccessBillingInformation).toBe(false);
-    expect(permissions.canGenerateReports).toBe(false);
-    expect(permissions.canModifyLocationSettings).toBe(false);
-  });
-
-  it('should allow mixed permission values', () => {
-    const permissions: StaffPermissions = {
-      canManageClassSchedules: true,
-      canViewMemberInformation: false,
-      canAccessBillingInformation: true,
-      canGenerateReports: false,
-      canModifyLocationSettings: true,
-    };
-
-    expect(permissions.canManageClassSchedules).toBe(true);
-    expect(permissions.canViewMemberInformation).toBe(false);
-    expect(permissions.canAccessBillingInformation).toBe(true);
-    expect(permissions.canGenerateReports).toBe(false);
-    expect(permissions.canModifyLocationSettings).toBe(true);
-  });
-
-  it('should create a valid form data structure', () => {
-    const formData: InviteStaffFormData = {
-      firstName: 'Jane',
-      lastName: 'Smith',
-      email: 'jane.smith@example.com',
-      role: 'instructor',
-      phone: '(555) 987-6543',
-      permissions: {
-        canManageClassSchedules: true,
-        canViewMemberInformation: true,
-        canAccessBillingInformation: false,
-        canGenerateReports: false,
-        canModifyLocationSettings: false,
-      },
-    };
-
-    expect(formData.firstName).toBe('Jane');
-    expect(formData.lastName).toBe('Smith');
-    expect(formData.email).toBe('jane.smith@example.com');
-    expect(formData.role).toBe('instructor');
-    expect(formData.phone).toBe('(555) 987-6543');
-    expect(formData.permissions.canManageClassSchedules).toBe(true);
-    expect(formData.permissions.canViewMemberInformation).toBe(true);
   });
 });

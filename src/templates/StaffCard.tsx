@@ -16,7 +16,7 @@ type StaffCardProps = {
   role: string;
   status: 'Active' | 'Invitation sent' | 'Inactive';
   formatText?: boolean;
-  onEdit?: (id: string) => void;
+  onEdit?: (() => void) | ((id: string) => void);
   onRemove?: (id: string) => void;
 };
 
@@ -145,7 +145,14 @@ export function StaffCard({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => onEdit(id)}
+                onClick={() => {
+                  // Handle both signature types: () => void or (id: string) => void
+                  if (onEdit.length === 0) {
+                    (onEdit as () => void)();
+                  } else {
+                    (onEdit as (id: string) => void)(id);
+                  }
+                }}
                 aria-label={`Edit ${firstName} ${lastName}`}
                 title={`Edit ${firstName} ${lastName}`}
               >
