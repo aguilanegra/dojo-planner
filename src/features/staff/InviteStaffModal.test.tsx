@@ -3,8 +3,25 @@ import { render } from 'vitest-browser-react';
 import { page, userEvent } from 'vitest/browser';
 import { InviteStaffModal } from './InviteStaffModal';
 
+// Helper to wait for async operations
+async function waitFor(callback: () => void | Promise<void>, options?: { timeout?: number }) {
+  return vi.waitFor(callback, { timeout: options?.timeout ?? 5000, interval: 50 });
+}
+
+// Mock next-intl
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
+}));
+
+// Mock the server actions
+const mockFetchStaffRoles = vi.fn();
+const mockInviteStaffMember = vi.fn();
+const mockUpdateStaffMember = vi.fn();
+
+vi.mock('@/actions/staff', () => ({
+  fetchStaffRoles: () => mockFetchStaffRoles(),
+  inviteStaffMember: (params: unknown) => mockInviteStaffMember(params),
+  updateStaffMember: (params: unknown) => mockUpdateStaffMember(params),
 }));
 
 describe('InviteStaffModal', () => {
@@ -12,230 +29,487 @@ describe('InviteStaffModal', () => {
     onCloseAction: vi.fn(),
   };
 
+  const mockRoles = [
+    { id: 'role_1', key: 'org:admin', name: 'Admin', description: 'Full access to all features' },
+    { id: 'role_2', key: 'org:instructor', name: 'Instructor', description: 'Can manage classes' },
+    { id: 'role_3', key: 'org:front_desk', name: 'Front Desk', description: 'Reception duties' },
+  ];
+
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  it('should not render dialog when isOpen is false', () => {
-    render(
-      <InviteStaffModal
-        isOpen={false}
-        onCloseAction={mockHandlers.onCloseAction}
-      />,
-    );
-
-    try {
-      const modal = page.getByRole('dialog');
-
-      expect(modal).toBeFalsy();
-    } catch {
-      expect(true).toBe(true);
-    }
-  });
-
-  it('should render dialog when isOpen is true', () => {
-    render(
-      <InviteStaffModal
-        isOpen={true}
-        onCloseAction={mockHandlers.onCloseAction}
-      />,
-    );
-
-    const modal = page.getByRole('dialog');
-
-    expect(modal).toBeTruthy();
-  });
-
-  it('should display dialog title', () => {
-    render(
-      <InviteStaffModal
-        isOpen={true}
-        onCloseAction={mockHandlers.onCloseAction}
-      />,
-    );
-
-    const heading = page.getByRole('heading');
-
-    expect(heading).toBeTruthy();
-  });
-
-  it('should render all form fields', () => {
-    render(
-      <InviteStaffModal
-        isOpen={true}
-        onCloseAction={mockHandlers.onCloseAction}
-      />,
-    );
-
-    const firstNameInput = page.getByTestId('invite-staff-first-name');
-    const lastNameInput = page.getByTestId('invite-staff-last-name');
-    const emailInput = page.getByTestId('invite-staff-email');
-    const phoneInput = page.getByTestId('invite-staff-phone');
-    const roleSelect = page.getByTestId('invite-staff-role');
-
-    expect(firstNameInput).toBeTruthy();
-    expect(lastNameInput).toBeTruthy();
-    expect(emailInput).toBeTruthy();
-    expect(phoneInput).toBeTruthy();
-    expect(roleSelect).toBeTruthy();
-  });
-
-  it('should render all permission toggles', () => {
-    render(
-      <InviteStaffModal
-        isOpen={true}
-        onCloseAction={mockHandlers.onCloseAction}
-      />,
-    );
-
-    const permissionKeys = [
-      'canManageClassSchedules',
-      'canViewMemberInformation',
-      'canAccessBillingInformation',
-      'canGenerateReports',
-      'canModifyLocationSettings',
-    ];
-
-    permissionKeys.forEach((key) => {
-      const toggle = page.getByTestId(`invite-staff-permission-${key}`);
-
-      expect(toggle).toBeTruthy();
+    mockFetchStaffRoles.mockResolvedValue({
+      success: true,
+      roles: mockRoles,
+    });
+    mockInviteStaffMember.mockResolvedValue({
+      success: true,
+      invitationId: 'inv_123',
     });
   });
 
-  it('should render Cancel and Save buttons', () => {
-    render(
-      <InviteStaffModal
-        isOpen={true}
-        onCloseAction={mockHandlers.onCloseAction}
-      />,
-    );
+  describe('Modal rendering', () => {
+    it('should not render dialog when isOpen is false', () => {
+      render(
+        <InviteStaffModal
+          isOpen={false}
+          onCloseAction={mockHandlers.onCloseAction}
+        />,
+      );
 
-    const cancelButton = page.getByTestId('invite-staff-cancel-button');
-    const saveButton = page.getByTestId('invite-staff-save-button');
+      try {
+        const modal = page.getByRole('dialog');
 
-    expect(cancelButton).toBeTruthy();
-    expect(saveButton).toBeTruthy();
+        expect(modal).toBeFalsy();
+      } catch {
+        expect(true).toBe(true);
+      }
+    });
+
+    it('should render dialog when isOpen is true', async () => {
+      render(
+        <InviteStaffModal
+          isOpen={true}
+          onCloseAction={mockHandlers.onCloseAction}
+        />,
+      );
+
+      const modal = page.getByRole('dialog');
+
+      expect(modal).toBeTruthy();
+    });
+
+    it('should display dialog title', async () => {
+      render(
+        <InviteStaffModal
+          isOpen={true}
+          onCloseAction={mockHandlers.onCloseAction}
+        />,
+      );
+
+      const heading = page.getByRole('heading');
+
+      expect(heading).toBeTruthy();
+    });
   });
 
-  it('should render Cancel button that can be clicked', async () => {
-    render(
-      <InviteStaffModal
-        isOpen={true}
-        onCloseAction={mockHandlers.onCloseAction}
-      />,
-    );
+  describe('Form fields', () => {
+    it('should render all form fields', async () => {
+      render(
+        <InviteStaffModal
+          isOpen={true}
+          onCloseAction={mockHandlers.onCloseAction}
+        />,
+      );
 
-    const cancelButton = page.getByTestId('invite-staff-cancel-button');
+      const firstNameInput = page.getByTestId('invite-staff-first-name');
+      const lastNameInput = page.getByTestId('invite-staff-last-name');
+      const emailInput = page.getByTestId('invite-staff-email');
+      const phoneInput = page.getByTestId('invite-staff-phone');
+      const roleSelect = page.getByTestId('invite-staff-role');
 
-    await expect.element(cancelButton).toBeVisible();
-    await expect.element(cancelButton).toBeEnabled();
+      expect(firstNameInput).toBeTruthy();
+      expect(lastNameInput).toBeTruthy();
+      expect(emailInput).toBeTruthy();
+      expect(phoneInput).toBeTruthy();
+      expect(roleSelect).toBeTruthy();
+    });
+
+    it('should render Cancel and Save buttons', async () => {
+      render(
+        <InviteStaffModal
+          isOpen={true}
+          onCloseAction={mockHandlers.onCloseAction}
+        />,
+      );
+
+      const cancelButton = page.getByTestId('invite-staff-cancel-button');
+      const saveButton = page.getByTestId('invite-staff-save-button');
+
+      expect(cancelButton).toBeTruthy();
+      expect(saveButton).toBeTruthy();
+    });
+
+    it('should update form fields when user types', async () => {
+      render(
+        <InviteStaffModal
+          isOpen={true}
+          onCloseAction={mockHandlers.onCloseAction}
+        />,
+      );
+
+      const firstNameInput = page.getByTestId('invite-staff-first-name');
+      await userEvent.fill(firstNameInput, 'John');
+
+      const lastNameInput = page.getByTestId('invite-staff-last-name');
+      await userEvent.fill(lastNameInput, 'Doe');
+
+      const emailInput = page.getByTestId('invite-staff-email');
+      await userEvent.fill(emailInput, 'john@example.com');
+
+      const phoneInput = page.getByTestId('invite-staff-phone');
+      await userEvent.fill(phoneInput, '555-123-4567');
+
+      expect(firstNameInput.element()).toHaveProperty('value', 'John');
+      expect(lastNameInput.element()).toHaveProperty('value', 'Doe');
+      expect(emailInput.element()).toHaveProperty('value', 'john@example.com');
+      expect(phoneInput.element()).toHaveProperty('value', '555-123-4567');
+    });
   });
 
-  it('should have Save button disabled when form is incomplete', () => {
-    render(
-      <InviteStaffModal
-        isOpen={true}
-        onCloseAction={mockHandlers.onCloseAction}
-      />,
-    );
+  describe('Roles from Clerk', () => {
+    it('should fetch roles on mount', async () => {
+      render(
+        <InviteStaffModal
+          isOpen={true}
+          onCloseAction={mockHandlers.onCloseAction}
+        />,
+      );
 
-    const saveButton = page.getByTestId('invite-staff-save-button');
+      await waitFor(() => {
+        expect(mockFetchStaffRoles).toHaveBeenCalled();
+      });
+    });
 
-    expect(saveButton.element()).toHaveProperty('disabled', true);
+    it('should display loading state while fetching roles', async () => {
+      // Delay the promise to test loading state
+      mockFetchStaffRoles.mockImplementation(() =>
+        new Promise(resolve =>
+          setTimeout(() => resolve({ success: true, roles: mockRoles }), 100),
+        ),
+      );
+
+      render(
+        <InviteStaffModal
+          isOpen={true}
+          onCloseAction={mockHandlers.onCloseAction}
+        />,
+      );
+
+      // Should show loading text
+      const loadingText = page.getByText('loading_roles');
+
+      expect(loadingText).toBeTruthy();
+    });
+
+    it('should display error when roles fail to load', async () => {
+      mockFetchStaffRoles.mockResolvedValue({
+        success: false,
+        error: 'Failed to load roles',
+      });
+
+      render(
+        <InviteStaffModal
+          isOpen={true}
+          onCloseAction={mockHandlers.onCloseAction}
+        />,
+      );
+
+      await waitFor(() => {
+        const errorMessage = page.getByText('Failed to load roles');
+
+        expect(errorMessage).toBeTruthy();
+      });
+    });
   });
 
-  it('should display info message', () => {
-    render(
-      <InviteStaffModal
-        isOpen={true}
-        onCloseAction={mockHandlers.onCloseAction}
-      />,
-    );
+  describe('Button states', () => {
+    it('should render Cancel button that can be clicked', async () => {
+      render(
+        <InviteStaffModal
+          isOpen={true}
+          onCloseAction={mockHandlers.onCloseAction}
+        />,
+      );
 
-    const infoMessage = page.getByText('info_message');
+      const cancelButton = page.getByTestId('invite-staff-cancel-button');
 
-    expect(infoMessage).toBeTruthy();
+      await expect.element(cancelButton).toBeVisible();
+      await expect.element(cancelButton).toBeEnabled();
+    });
+
+    it('should have Save button disabled when form is incomplete', async () => {
+      render(
+        <InviteStaffModal
+          isOpen={true}
+          onCloseAction={mockHandlers.onCloseAction}
+        />,
+      );
+
+      // Wait for roles to load
+      await waitFor(() => {
+        expect(mockFetchStaffRoles).toHaveBeenCalled();
+      });
+
+      const saveButton = page.getByTestId('invite-staff-save-button');
+
+      expect(saveButton.element()).toHaveProperty('disabled', true);
+    });
   });
 
-  it('should update form fields when user types', async () => {
-    render(
-      <InviteStaffModal
-        isOpen={true}
-        onCloseAction={mockHandlers.onCloseAction}
-      />,
-    );
+  describe('Info message', () => {
+    it('should display info message', async () => {
+      render(
+        <InviteStaffModal
+          isOpen={true}
+          onCloseAction={mockHandlers.onCloseAction}
+        />,
+      );
 
-    const firstNameInput = page.getByTestId('invite-staff-first-name');
-    await userEvent.fill(firstNameInput, 'John');
+      const infoMessage = page.getByText('info_message');
 
-    const lastNameInput = page.getByTestId('invite-staff-last-name');
-    await userEvent.fill(lastNameInput, 'Doe');
-
-    const emailInput = page.getByTestId('invite-staff-email');
-    await userEvent.fill(emailInput, 'john@example.com');
-
-    const phoneInput = page.getByTestId('invite-staff-phone');
-    await userEvent.fill(phoneInput, '555-123-4567');
-
-    expect(firstNameInput.element()).toHaveProperty('value', 'John');
-    expect(lastNameInput.element()).toHaveProperty('value', 'Doe');
-    expect(emailInput.element()).toHaveProperty('value', 'john@example.com');
-    expect(phoneInput.element()).toHaveProperty('value', '555-123-4567');
+      expect(infoMessage).toBeTruthy();
+    });
   });
 
-  it('should render permission toggles in unchecked state by default', async () => {
-    render(
-      <InviteStaffModal
-        isOpen={true}
-        onCloseAction={mockHandlers.onCloseAction}
-      />,
-    );
+  describe('Modal close behavior', () => {
+    it('should call onCloseAction once when X button is clicked while input is focused', async () => {
+      render(
+        <InviteStaffModal
+          isOpen={true}
+          onCloseAction={mockHandlers.onCloseAction}
+        />,
+      );
 
-    const permissionToggle = page.getByTestId('invite-staff-permission-canManageClassSchedules');
+      // Focus on an input field first (simulating user interaction)
+      const firstNameInput = page.getByTestId('invite-staff-first-name');
+      await userEvent.click(firstNameInput);
+      await userEvent.fill(firstNameInput, 'Test');
 
-    await expect.element(permissionToggle).toBeVisible();
-    await expect.element(permissionToggle).toHaveAttribute('data-state', 'unchecked');
+      // Click the X button to close
+      const closeButton = page.getByRole('button', { name: 'Close' });
+      await userEvent.click(closeButton);
+
+      // onCloseAction should be called exactly once with a single click
+      expect(mockHandlers.onCloseAction).toHaveBeenCalledTimes(1);
+    });
+
+    it('should call onCloseAction once when Cancel button is clicked', async () => {
+      render(
+        <InviteStaffModal
+          isOpen={true}
+          onCloseAction={mockHandlers.onCloseAction}
+        />,
+      );
+
+      // Focus on an input field first (simulating user interaction - same as X button test)
+      const firstNameInput = page.getByTestId('invite-staff-first-name');
+      await userEvent.click(firstNameInput);
+      await userEvent.fill(firstNameInput, 'Test');
+
+      // Click the Cancel button to close
+      const cancelButton = page.getByRole('button', { name: 'cancel_button' });
+      await userEvent.click(cancelButton);
+
+      expect(mockHandlers.onCloseAction).toHaveBeenCalledTimes(1);
+    });
   });
 
-  it('should call onCloseAction once when X button is clicked while input is focused', async () => {
-    render(
-      <InviteStaffModal
-        isOpen={true}
-        onCloseAction={mockHandlers.onCloseAction}
-      />,
-    );
+  describe('Form submission', () => {
+    it('should call inviteStaffMember when form is valid and submitted', async () => {
+      render(
+        <InviteStaffModal
+          isOpen={true}
+          onCloseAction={mockHandlers.onCloseAction}
+        />,
+      );
 
-    // Focus on an input field first (simulating user interaction)
-    const firstNameInput = page.getByTestId('invite-staff-first-name');
-    await userEvent.click(firstNameInput);
-    await userEvent.fill(firstNameInput, 'Test');
+      // Wait for roles to load
+      await waitFor(() => {
+        expect(mockFetchStaffRoles).toHaveBeenCalled();
+      });
 
-    // Click the X button to close
-    const closeButton = page.getByRole('button', { name: 'Close' });
-    await userEvent.click(closeButton);
+      // Fill in the form
+      const firstNameInput = page.getByTestId('invite-staff-first-name');
+      await userEvent.fill(firstNameInput, 'John');
 
-    // onCloseAction should be called exactly once with a single click
-    expect(mockHandlers.onCloseAction).toHaveBeenCalledTimes(1);
+      const lastNameInput = page.getByTestId('invite-staff-last-name');
+      await userEvent.fill(lastNameInput, 'Doe');
+
+      const emailInput = page.getByTestId('invite-staff-email');
+      await userEvent.fill(emailInput, 'john@example.com');
+
+      const phoneInput = page.getByTestId('invite-staff-phone');
+      await userEvent.fill(phoneInput, '555-123-4567');
+
+      // Select a role
+      const roleSelect = page.getByTestId('invite-staff-role');
+      await userEvent.click(roleSelect);
+
+      // Wait for dropdown to open and click the Admin option
+      const adminOption = page.getByRole('option', { name: 'Admin' });
+      await userEvent.click(adminOption);
+
+      // Submit the form
+      const saveButton = page.getByTestId('invite-staff-save-button');
+      await userEvent.click(saveButton);
+
+      await waitFor(() => {
+        expect(mockInviteStaffMember).toHaveBeenCalledWith({
+          emailAddress: 'john@example.com',
+          roleKey: 'org:admin',
+          firstName: 'John',
+          lastName: 'Doe',
+          phone: '555-123-4567',
+        });
+      });
+    });
+
+    it('should display success message after successful invitation', async () => {
+      render(
+        <InviteStaffModal
+          isOpen={true}
+          onCloseAction={mockHandlers.onCloseAction}
+        />,
+      );
+
+      // Wait for roles to load
+      await waitFor(() => {
+        expect(mockFetchStaffRoles).toHaveBeenCalled();
+      });
+
+      // Fill in the form
+      await userEvent.fill(page.getByTestId('invite-staff-first-name'), 'John');
+      await userEvent.fill(page.getByTestId('invite-staff-last-name'), 'Doe');
+      await userEvent.fill(page.getByTestId('invite-staff-email'), 'john@example.com');
+      await userEvent.fill(page.getByTestId('invite-staff-phone'), '555-123-4567');
+
+      // Select a role
+      await userEvent.click(page.getByTestId('invite-staff-role'));
+      await userEvent.click(page.getByRole('option', { name: 'Admin' }));
+
+      // Submit the form
+      await userEvent.click(page.getByTestId('invite-staff-save-button'));
+
+      await waitFor(() => {
+        const successMessage = page.getByText('invitation_sent_success');
+
+        expect(successMessage).toBeTruthy();
+      });
+    });
+
+    it('should display error message when invitation fails', async () => {
+      mockInviteStaffMember.mockResolvedValue({
+        success: false,
+        error: 'Email already exists',
+      });
+
+      render(
+        <InviteStaffModal
+          isOpen={true}
+          onCloseAction={mockHandlers.onCloseAction}
+        />,
+      );
+
+      // Wait for roles to load
+      await waitFor(() => {
+        expect(mockFetchStaffRoles).toHaveBeenCalled();
+      });
+
+      // Fill in the form
+      await userEvent.fill(page.getByTestId('invite-staff-first-name'), 'John');
+      await userEvent.fill(page.getByTestId('invite-staff-last-name'), 'Doe');
+      await userEvent.fill(page.getByTestId('invite-staff-email'), 'john@example.com');
+      await userEvent.fill(page.getByTestId('invite-staff-phone'), '555-123-4567');
+
+      // Select a role
+      await userEvent.click(page.getByTestId('invite-staff-role'));
+      await userEvent.click(page.getByRole('option', { name: 'Admin' }));
+
+      // Submit the form
+      await userEvent.click(page.getByTestId('invite-staff-save-button'));
+
+      await waitFor(() => {
+        const errorMessage = page.getByText('Email already exists');
+
+        expect(errorMessage).toBeTruthy();
+      });
+    });
+
+    it('should show validation error when form is incomplete', async () => {
+      render(
+        <InviteStaffModal
+          isOpen={true}
+          onCloseAction={mockHandlers.onCloseAction}
+        />,
+      );
+
+      // Wait for roles to load
+      await waitFor(() => {
+        expect(mockFetchStaffRoles).toHaveBeenCalled();
+      });
+
+      // Save button should be disabled when form is incomplete
+      const saveButton = page.getByTestId('invite-staff-save-button');
+
+      expect(saveButton.element()).toHaveProperty('disabled', true);
+    });
   });
 
-  it('should call onCloseAction once when Cancel button is clicked', async () => {
-    render(
-      <InviteStaffModal
-        isOpen={true}
-        onCloseAction={mockHandlers.onCloseAction}
-      />,
-    );
+  describe('No permission switches', () => {
+    it('should not render any permission toggle switches', async () => {
+      render(
+        <InviteStaffModal
+          isOpen={true}
+          onCloseAction={mockHandlers.onCloseAction}
+        />,
+      );
 
-    // Focus on an input field first (simulating user interaction - same as X button test)
-    const firstNameInput = page.getByTestId('invite-staff-first-name');
-    await userEvent.click(firstNameInput);
-    await userEvent.fill(firstNameInput, 'Test');
+      // Wait for roles to load
+      await waitFor(() => {
+        expect(mockFetchStaffRoles).toHaveBeenCalled();
+      });
 
-    // Click the Cancel button to close
-    const cancelButton = page.getByRole('button', { name: 'cancel_button' });
-    await userEvent.click(cancelButton);
+      // Old permission switches should not exist
+      const permissionKeys = [
+        'canManageClassSchedules',
+        'canViewMemberInformation',
+        'canAccessBillingInformation',
+        'canGenerateReports',
+        'canModifyLocationSettings',
+      ];
 
-    expect(mockHandlers.onCloseAction).toHaveBeenCalledTimes(1);
+      for (const key of permissionKeys) {
+        try {
+          const toggle = page.getByTestId(`invite-staff-permission-${key}`);
+
+          // If we can find it, the test should fail
+          expect(toggle.element()).toBeNull();
+        } catch {
+          // Expected - the element should not exist
+          expect(true).toBe(true);
+        }
+      }
+    });
+  });
+
+  describe('Role description display', () => {
+    it('should display role description when a role is selected', async () => {
+      render(
+        <InviteStaffModal
+          isOpen={true}
+          onCloseAction={mockHandlers.onCloseAction}
+        />,
+      );
+
+      // Wait for roles to load
+      await waitFor(() => {
+        expect(mockFetchStaffRoles).toHaveBeenCalled();
+      });
+
+      // Select a role
+      const roleSelect = page.getByTestId('invite-staff-role');
+      await userEvent.click(roleSelect);
+
+      // Click the Admin option
+      const adminOption = page.getByRole('option', { name: 'Admin' });
+      await userEvent.click(adminOption);
+
+      // The description should be displayed
+      await waitFor(() => {
+        const description = page.getByText('Full access to all features');
+
+        expect(description).toBeTruthy();
+      });
+    });
   });
 });

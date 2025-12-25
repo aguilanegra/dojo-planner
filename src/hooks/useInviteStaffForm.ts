@@ -1,93 +1,171 @@
 'use client';
 
-import { useState } from 'react';
+import type { StaffRole } from '@/actions/staff';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { fetchStaffRoles } from '@/actions/staff';
 
-export type StaffRole = 'admin' | 'instructor' | 'front-desk';
-
-export type StaffPermissions = {
-  canManageClassSchedules: boolean;
-  canViewMemberInformation: boolean;
-  canAccessBillingInformation: boolean;
-  canGenerateReports: boolean;
-  canModifyLocationSettings: boolean;
-};
-
-export type InviteStaffFormData = {
+export type StaffMemberData = {
+  id?: string;
   firstName: string;
   lastName: string;
   email: string;
-  role: StaffRole | null;
+  roleKey: string | null;
   phone: string;
-  permissions: StaffPermissions;
 };
 
-const defaultPermissions: StaffPermissions = {
-  canManageClassSchedules: false,
-  canViewMemberInformation: false,
-  canAccessBillingInformation: false,
-  canGenerateReports: false,
-  canModifyLocationSettings: false,
+export type InviteStaffFormData = StaffMemberData;
+
+export type TouchedFields = {
+  firstName: boolean;
+  lastName: boolean;
+  email: boolean;
+  roleKey: boolean;
+  phone: boolean;
 };
 
 const defaultFormData: InviteStaffFormData = {
   firstName: '',
   lastName: '',
   email: '',
-  role: null,
+  roleKey: null,
   phone: '',
-  permissions: defaultPermissions,
+};
+
+const defaultTouched: TouchedFields = {
+  firstName: false,
+  lastName: false,
+  email: false,
+  roleKey: false,
+  phone: false,
 };
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/;
 
-const isValidEmail = (email: string): boolean => {
+export const isValidEmail = (email: string): boolean => {
   return EMAIL_REGEX.test(email);
 };
 
-export const useInviteStaffForm = () => {
-  const [data, setData] = useState<InviteStaffFormData>(defaultFormData);
+// Helper to create form data from staff member
+const createFormDataFromStaffMember = (staffMember: StaffMemberData): InviteStaffFormData => ({
+  id: staffMember.id,
+  firstName: staffMember.firstName,
+  lastName: staffMember.lastName,
+  email: staffMember.email,
+  roleKey: staffMember.roleKey,
+  phone: staffMember.phone,
+});
+
+export const useInviteStaffForm = (initialData?: StaffMemberData | null) => {
+  // Track the previous initialData to detect changes
+  const prevInitialDataRef = useRef<StaffMemberData | null | undefined>(initialData);
+
+  // Initialize form data based on initial data (for edit mode)
+  const initialFormData = useMemo((): InviteStaffFormData => {
+    if (initialData) {
+      return createFormDataFromStaffMember(initialData);
+    }
+    return defaultFormData;
+  }, [initialData]);
+
+  const [data, setData] = useState<InviteStaffFormData>(initialFormData);
+  const [touched, setTouched] = useState<TouchedFields>(defaultTouched);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [roles, setRoles] = useState<StaffRole[]>([]);
+  const [rolesLoading, setRolesLoading] = useState(true);
+  const [rolesError, setRolesError] = useState<string | null>(null);
+
+  // Determine if we're in edit mode
+  const isEditMode = !!initialData?.id;
+
+  // Fetch roles from Clerk on mount
+  const loadRoles = useCallback(async () => {
+    setRolesLoading(true);
+    setRolesError(null);
+    try {
+      const result = await fetchStaffRoles();
+      if (result.success && result.roles) {
+        setRoles(result.roles);
+      } else {
+        setRolesError(result.error || 'Failed to load roles');
+      }
+    } catch (err) {
+      console.error('[useInviteStaffForm] Failed to fetch roles:', err);
+      setRolesError('Failed to load roles. Please try again.');
+    } finally {
+      setRolesLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadRoles();
+  }, [loadRoles]);
+
+  // Re-initialize form data when initialData changes (for opening edit modal)
+  // Using ref comparison during render to avoid useEffect setState warnings
+  if (prevInitialDataRef.current !== initialData) {
+    prevInitialDataRef.current = initialData;
+    if (initialData) {
+      setData(createFormDataFromStaffMember(initialData));
+      // Don't reset touched in edit mode - we want to show validation after save attempt
+    } else {
+      setData(defaultFormData);
+      setTouched(defaultTouched);
+    }
+  }
 
   const updateData = (updates: Partial<InviteStaffFormData>) => {
     setData(prev => ({ ...prev, ...updates }));
     setError(null);
   };
 
-  const updatePermission = (key: keyof StaffPermissions, value: boolean) => {
-    setData(prev => ({
-      ...prev,
-      permissions: {
-        ...prev.permissions,
-        [key]: value,
-      },
-    }));
-  };
+  const setFieldTouched = useCallback((field: keyof TouchedFields) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+  }, []);
 
-  const reset = () => {
+  const setAllTouched = useCallback(() => {
+    setTouched({
+      firstName: true,
+      lastName: true,
+      email: true,
+      roleKey: true,
+      phone: true,
+    });
+  }, []);
+
+  const reset = useCallback(() => {
     setData(defaultFormData);
+    setTouched(defaultTouched);
     setError(null);
     setIsLoading(false);
-  };
+  }, []);
 
   const clearError = () => {
     setError(null);
   };
 
-  const isValid = () => {
+  // Field-level validation
+  const fieldErrors = useMemo(() => ({
+    firstName: data.firstName.trim() === '',
+    lastName: data.lastName.trim() === '',
+    email: !isValidEmail(data.email),
+    roleKey: data.roleKey === null,
+    phone: data.phone.trim() === '',
+  }), [data]);
+
+  const isValid = useCallback(() => {
     return (
       data.firstName.trim() !== ''
       && data.lastName.trim() !== ''
       && isValidEmail(data.email)
-      && data.role !== null
+      && data.roleKey !== null
       && data.phone.trim() !== ''
     );
-  };
+  }, [data]);
 
   return {
     data,
     updateData,
-    updatePermission,
     reset,
     error,
     setError,
@@ -95,5 +173,14 @@ export const useInviteStaffForm = () => {
     isLoading,
     setIsLoading,
     isValid,
+    roles,
+    rolesLoading,
+    rolesError,
+    reloadRoles: loadRoles,
+    touched,
+    setFieldTouched,
+    setAllTouched,
+    fieldErrors,
+    isEditMode,
   };
 };
