@@ -590,20 +590,19 @@
   },
   "FinancesPage": {
     "title": "Finances",
-    "transactions_heading": "Transactions",
     "import_transactions_button": "Import Transactions",
     "new_transaction_button": "New Transaction",
-    "tab_all": "All",
-    "tab_membership_dues": "Membership Dues",
-    "tab_purchases": "Purchases",
-    "tab_manually_added": "Manually Added",
+    "search_placeholder": "Search transactions...",
+    "all_purposes_filter": "All Purposes",
     "table_date": "Date",
     "table_amount": "Amount",
     "table_purpose": "Purpose",
     "table_method": "Method",
     "table_payment_id": "Payment ID",
     "table_notes": "Notes",
-    "table_actions": "Actions"
+    "no_transactions": "No transactions found",
+    "no_results_found": "No transactions match your search",
+    "loading_transactions": "Loading transactions..."
   },
   "MarketingPage": {
     "title": "Marketing",
