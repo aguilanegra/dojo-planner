@@ -1,7 +1,7 @@
 'use client';
 
 import { useClerk } from '@clerk/nextjs';
-import { BookMarked, Briefcase, CircleUser, HelpCircle, Home, LogOut, Mail, Map, Megaphone, Settings, Users, Users2 } from 'lucide-react';
+import { BookMarked, Briefcase, Building, CircleUser, HelpCircle, Home, LogOut, Mail, Map, Megaphone, Settings, Users, Users2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Badge } from '@/components/ui/badge';
 import { Sidebar, SidebarContent, SidebarHeader, SidebarRail } from '@/components/ui/sidebar';
@@ -90,9 +90,9 @@ export const AppSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
           label={t('settings_section_label')}
           items={[
             {
-              title: t('account_settings'),
-              url: '/dashboard/account-settings',
-              icon: Settings,
+              title: t('location'),
+              url: '/dashboard/location-settings',
+              icon: Building,
             },
             {
               title: t('preferences'),
