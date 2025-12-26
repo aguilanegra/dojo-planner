@@ -39,7 +39,7 @@ describe('AppSidebar', () => {
       expect(dashboardLayout.settings_section_label).toBe('Settings');
 
       // Check Settings items exist and have correct values
-      expect(dashboardLayout.account_settings).toBe('Account Settings');
+      expect(dashboardLayout.location).toBe('Location');
       expect(dashboardLayout.preferences).toBe('Preferences');
       expect(dashboardLayout.help).toBe('Help');
     });
@@ -68,7 +68,7 @@ describe('AppSidebar', () => {
         'memberships',
         'programs',
         'marketing',
-        'account_settings',
+        'location',
         'preferences',
         'help',
         'log_out',
