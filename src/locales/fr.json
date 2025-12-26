@@ -618,8 +618,7 @@
     "times_used_label": "Fois utilisé",
     "status_filter": "Tous les statuts",
     "type_filter": "Tous les types",
-    "apply_filter": "Tous",
-    "reset_filters_button": "Réinitialiser les filtres",
+    "search_placeholder": "Rechercher des coupons...",
     "table_code": "Code",
     "table_type": "Type",
     "table_amount": "Montant",
@@ -627,7 +626,37 @@
     "table_usage_limit": "Utilisation / Limite",
     "table_expiry": "Expiration",
     "table_status": "Statut",
-    "table_actions": "Actions"
+    "table_actions": "Actions",
+    "AddEditCouponModal": {
+      "add_title": "Ajouter un coupon",
+      "edit_title": "Modifier le coupon",
+      "code_label": "Code du coupon",
+      "code_placeholder": "Ex: SUMMER25",
+      "code_error": "Le code du coupon est requis",
+      "description_label": "Description",
+      "description_placeholder": "Ex: Réduction d'été",
+      "description_error": "La description est requise",
+      "type_label": "Type",
+      "type_placeholder": "Sélectionner le type",
+      "amount_label": "Montant",
+      "amount_error": "Le montant est requis",
+      "apply_to_label": "S'applique à",
+      "apply_to_placeholder": "Sélectionner",
+      "status_label": "Statut",
+      "status_placeholder": "Sélectionner le statut",
+      "usage_limit_label": "Limite d'utilisation",
+      "usage_limit_placeholder": "Illimité",
+      "usage_limit_help": "Laisser vide pour illimité",
+      "expiry_label": "Date d'expiration",
+      "expiry_placeholder": "Ex: Dec 31 24",
+      "expiry_error": "La date d'expiration est requise",
+      "cancel_button": "Annuler",
+      "add_button": "Ajouter le coupon",
+      "save_changes_button": "Enregistrer les modifications",
+      "saving_button": "Enregistrement...",
+      "create_success": "Coupon créé avec succès",
+      "update_success": "Coupon mis à jour avec succès"
+    }
   },
   "MembershipsPage": {
     "title": "Adhésions",
@@ -711,6 +740,12 @@
   "DeleteProgramAlertDialog": {
     "title": "Êtes-vous absolument sûr?",
     "description": "Cette action est irréversible. Cela supprimera définitivement votre programme et supprimera les données des serveurs.",
+    "cancel_button": "Annuler",
+    "delete_button": "Supprimer"
+  },
+  "DeleteCouponAlertDialog": {
+    "title": "Êtes-vous absolument sûr?",
+    "description": "Cette action est irréversible. Cela supprimera définitivement le coupon « {couponCode} » et supprimera les données des serveurs.",
     "cancel_button": "Annuler",
     "delete_button": "Supprimer"
   },
