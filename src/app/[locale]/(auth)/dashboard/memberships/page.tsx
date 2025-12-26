@@ -4,10 +4,12 @@ import type { AvailableTag, MembershipFilters } from '@/features/memberships/Mem
 import type { MembershipCardProps, MembershipStatus } from '@/templates/MembershipCard';
 import { Plus, Tags } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useCallback, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { MembershipFilterBar } from '@/features/memberships/MembershipFilterBar';
 import { MembershipTagsManagement } from '@/features/memberships/MembershipTagsManagement';
+import { AddMembershipModal } from '@/features/memberships/wizard/AddMembershipModal';
 import { MembershipCard } from '@/templates/MembershipCard';
 import { StatsCards } from '@/templates/StatsCards';
 
@@ -138,30 +140,53 @@ const mockMemberships: Membership[] = [
   },
 ];
 
-function handleEditMembership(_id: string) {
-  // Placeholder for edit functionality - will be implemented when edit modal is added
-}
-
 export default function MembershipsPage() {
   const t = useTranslations('MembershipsPage');
+  const router = useRouter();
   const [isTagsSheetOpen, setIsTagsSheetOpen] = useState(false);
+  const [isAddMembershipModalOpen, setIsAddMembershipModalOpen] = useState(false);
+  const [memberships, setMemberships] = useState<Membership[]>(mockMemberships);
   const [filters, setFilters] = useState<MembershipFilters>({
     search: '',
     tag: 'all',
     program: 'all',
   });
 
-  // Get unique programs from mockMemberships
+  const handleEditMembership = useCallback((id: string) => {
+    router.push(`/dashboard/memberships/${id}`);
+  }, [router]);
+
+  const handleMembershipCreated = useCallback((newMembership: MembershipCardProps) => {
+    const membership: Membership = {
+      id: newMembership.id,
+      name: newMembership.name,
+      category: newMembership.category,
+      program: 'Adult', // Default program for new memberships
+      status: newMembership.status,
+      isTrial: newMembership.isTrial,
+      isMonthly: newMembership.isMonthly,
+      price: newMembership.price,
+      signupFee: newMembership.signupFee,
+      frequency: newMembership.frequency,
+      contract: newMembership.contract,
+      access: newMembership.access,
+      activeCount: newMembership.activeCount,
+      revenue: newMembership.revenue,
+    };
+    setMemberships(prev => [membership, ...prev]);
+  }, []);
+
+  // Get unique programs from memberships
   const allPrograms = Array.from(
-    new Set(mockMemberships.map(m => m.program)),
+    new Set(memberships.map(m => m.program)),
   );
 
   const stats = useMemo(() => ({
-    totalMemberships: mockMemberships.length,
-    active: mockMemberships.filter(m => m.status === 'Active' && !m.isTrial).length,
-    trialOptions: mockMemberships.filter(m => m.isTrial).length,
-    totalMembers: mockMemberships.reduce((sum, m) => sum + m.activeCount, 0),
-  }), []);
+    totalMemberships: memberships.length,
+    active: memberships.filter(m => m.status === 'Active' && !m.isTrial).length,
+    trialOptions: memberships.filter(m => m.isTrial).length,
+    totalMembers: memberships.reduce((sum, m) => sum + m.activeCount, 0),
+  }), [memberships]);
 
   // Helper function to get all tags for a membership
   const getMembershipTags = (membership: Membership): AvailableTag[] => {
@@ -217,17 +242,17 @@ export default function MembershipsPage() {
   };
 
   const filteredMemberships = useMemo(() => {
-    return mockMemberships.filter((membership) => {
+    return memberships.filter((membership) => {
       const matchesSearch = matchesSearchFilter(membership, filters.search);
       const matchesTag = matchesTagFilter(membership, filters.tag);
       const matchesProgram = matchesProgramFilter(membership, filters.program);
       return matchesSearch && matchesTag && matchesProgram;
     });
-  }, [filters]);
+  }, [filters, memberships]);
 
   // Compute available tags based on memberships that match current search and program filters
   const availableTags = useMemo((): AvailableTag[] => {
-    const membershipsMatchingOtherFilters = mockMemberships.filter((membership) => {
+    const membershipsMatchingOtherFilters = memberships.filter((membership) => {
       const matchesSearch = matchesSearchFilter(membership, filters.search);
       const matchesProgram = matchesProgramFilter(membership, filters.program);
       return matchesSearch && matchesProgram;
@@ -239,11 +264,11 @@ export default function MembershipsPage() {
     });
 
     return Array.from(tagsInResults);
-  }, [filters.search, filters.program]);
+  }, [filters.search, filters.program, memberships]);
 
   // Compute available programs based on memberships that match current search and tag filters
   const availablePrograms = useMemo((): string[] => {
-    const membershipsMatchingOtherFilters = mockMemberships.filter((membership) => {
+    const membershipsMatchingOtherFilters = memberships.filter((membership) => {
       const matchesSearch = matchesSearchFilter(membership, filters.search);
       const matchesTag = matchesTagFilter(membership, filters.tag);
       return matchesSearch && matchesTag;
@@ -255,7 +280,7 @@ export default function MembershipsPage() {
     });
 
     return Array.from(programsInResults);
-  }, [filters.search, filters.tag]);
+  }, [filters.search, filters.tag, memberships]);
 
   const statsData = useMemo(() => [
     { id: 'memberships', label: t('total_memberships_label'), value: stats.totalMemberships },
@@ -292,7 +317,7 @@ export default function MembershipsPage() {
           </div>
 
           {/* Add New Membership Button */}
-          <Button>
+          <Button onClick={() => setIsAddMembershipModalOpen(true)}>
             <Plus className="h-4 w-4" />
             <span className="ml-1 hidden sm:inline">{t('add_new_membership_button')}</span>
           </Button>
@@ -335,6 +360,13 @@ export default function MembershipsPage() {
       <MembershipTagsManagement
         open={isTagsSheetOpen}
         onOpenChange={setIsTagsSheetOpen}
+      />
+
+      {/* Add Membership Modal */}
+      <AddMembershipModal
+        isOpen={isAddMembershipModalOpen}
+        onCloseAction={() => setIsAddMembershipModalOpen(false)}
+        onMembershipCreated={handleMembershipCreated}
       />
     </div>
   );

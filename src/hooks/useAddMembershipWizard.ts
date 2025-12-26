@@ -1,0 +1,130 @@
+import { useState } from 'react';
+
+export type MembershipType = 'standard' | 'trial';
+export type MembershipStatus = 'active' | 'inactive';
+export type ClassLimitType = 'unlimited' | 'limited';
+export type ChargeSignUpFeeOption = 'at-registration' | 'first-payment';
+export type PaymentFrequency = 'monthly' | 'weekly' | 'annually';
+export type MembershipStartDateOption = 'same-as-registration' | 'custom';
+export type ContractLength = 'month-to-month' | '3-months' | '6-months' | '12-months';
+export type AutoRenewalOption = 'none' | 'month-to-month' | 'same-term';
+
+export type AddMembershipWizardData = {
+  // Step 1: Membership Basics
+  membershipName: string;
+  status: MembershipStatus;
+  membershipType: MembershipType;
+  description: string;
+
+  // Step 2: Class Access
+  classLimitType: ClassLimitType;
+  classLimitCount: number | null;
+  availableClasses: string[];
+
+  // Step 3: Payment Details
+  signUpFee: number | null;
+  chargeSignUpFee: ChargeSignUpFeeOption;
+  monthlyFee: number | null;
+  paymentFrequency: PaymentFrequency;
+  membershipStartDate: MembershipStartDateOption;
+  customStartDate: string;
+  proRateFirstPayment: boolean;
+
+  // Step 4: Contract Terms
+  contractLength: ContractLength;
+  autoRenewal: AutoRenewalOption;
+  cancellationFee: number | null;
+  holdLimitPerYear: number | null;
+};
+
+export type MembershipWizardStep = 'basics' | 'class-access' | 'payment-details' | 'contract-terms' | 'success';
+
+const initialData: AddMembershipWizardData = {
+  membershipName: '',
+  status: 'active',
+  membershipType: 'standard',
+  description: '',
+  classLimitType: 'unlimited',
+  classLimitCount: null,
+  availableClasses: [],
+  signUpFee: null,
+  chargeSignUpFee: 'at-registration',
+  monthlyFee: null,
+  paymentFrequency: 'monthly',
+  membershipStartDate: 'same-as-registration',
+  customStartDate: '',
+  proRateFirstPayment: false,
+  contractLength: 'month-to-month',
+  autoRenewal: 'none',
+  cancellationFee: null,
+  holdLimitPerYear: null,
+};
+
+export const useAddMembershipWizard = () => {
+  const [step, setStep] = useState<MembershipWizardStep>('basics');
+  const [data, setData] = useState<AddMembershipWizardData>(initialData);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const updateData = (updates: Partial<AddMembershipWizardData>) => {
+    setData((prev) => {
+      const newData = { ...prev, ...updates };
+      return newData;
+    });
+    setError(null);
+  };
+
+  const nextStep = () => {
+    const steps: MembershipWizardStep[] = ['basics', 'class-access', 'payment-details', 'contract-terms', 'success'];
+    const currentIndex = steps.indexOf(step);
+    if (currentIndex < steps.length - 1 && currentIndex !== -1) {
+      const nextStepValue = steps[currentIndex + 1];
+      if (nextStepValue) {
+        setStep(nextStepValue);
+        setError(null);
+      }
+    }
+  };
+
+  const previousStep = () => {
+    const steps: MembershipWizardStep[] = ['basics', 'class-access', 'payment-details', 'contract-terms', 'success'];
+    const currentIndex = steps.indexOf(step);
+    if (currentIndex > 0) {
+      const prevStepValue = steps[currentIndex - 1];
+      if (prevStepValue) {
+        setStep(prevStepValue);
+        setError(null);
+      }
+    }
+  };
+
+  const setErrorMessage = (message: string) => {
+    setError(message);
+  };
+
+  const clearError = () => {
+    setError(null);
+  };
+
+  const reset = () => {
+    setStep('basics');
+    setData(initialData);
+    setError(null);
+    setIsLoading(false);
+  };
+
+  return {
+    step,
+    setStep,
+    data,
+    updateData,
+    nextStep,
+    previousStep,
+    reset,
+    error,
+    setError: setErrorMessage,
+    clearError,
+    isLoading,
+    setIsLoading,
+  };
+};
