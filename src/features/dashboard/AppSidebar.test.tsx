@@ -41,7 +41,6 @@ describe('AppSidebar', () => {
       // Check Settings items exist and have correct values
       expect(dashboardLayout.location).toBe('Location');
       expect(dashboardLayout.preferences).toBe('Preferences');
-      expect(dashboardLayout.help).toBe('Help');
     });
 
     it('should have Log Out option', () => {
@@ -54,6 +53,7 @@ describe('AppSidebar', () => {
     it('should have all required localization keys for navigation', () => {
       const dashboardLayout = messages.DashboardLayout;
       // Note: subscription was moved to user menu dropdown
+      // Note: help was moved to floating HelpButton component
       const requiredKeys = [
         'academy_section_label',
         'business_section_label',
@@ -70,7 +70,6 @@ describe('AppSidebar', () => {
         'marketing',
         'location',
         'preferences',
-        'help',
         'log_out',
       ];
 

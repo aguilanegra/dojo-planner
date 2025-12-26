@@ -5,6 +5,7 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { client } from '@/libs/Orpc';
 import { AppSidebar } from './AppSidebar';
 import { AppSidebarHeader } from './AppSidebarHeader';
+import { HelpButton } from './HelpButton';
 
 type DashboardLayoutClientProps = {
   children: React.ReactNode;
@@ -36,6 +37,7 @@ export function DashboardLayoutClient({ children, defaultOpen }: DashboardLayout
           {children}
         </div>
       </SidebarInset>
+      <HelpButton />
     </SidebarProvider>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useClerk } from '@clerk/nextjs';
-import { BookMarked, Briefcase, Building, CircleUser, HelpCircle, Home, LogOut, Mail, Map, Megaphone, Settings, Users, Users2 } from 'lucide-react';
+import { BookMarked, Briefcase, Building, CircleUser, Home, LogOut, Mail, Map, Megaphone, Settings, Users, Users2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Badge } from '@/components/ui/badge';
 import { Sidebar, SidebarContent, SidebarHeader, SidebarRail } from '@/components/ui/sidebar';
@@ -99,11 +99,6 @@ export const AppSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
               url: '/dashboard/preferences',
               icon: Settings,
               disabled: true,
-            },
-            {
-              title: t('help'),
-              url: '/dashboard/help',
-              icon: HelpCircle,
             },
           ]}
         />
