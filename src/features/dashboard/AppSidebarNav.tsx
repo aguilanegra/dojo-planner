@@ -19,6 +19,7 @@ export const AppSidebarNav = (props: {
     onSwitchChange?: (checked: boolean) => void;
     onClick?: () => void | Promise<void>;
     disabled?: boolean;
+    hidden?: boolean;
   }[];
 } & ComponentPropsWithoutRef<typeof SidebarGroup>) => {
   const { toggleSidebar, isMobile } = useSidebar();
@@ -52,7 +53,7 @@ export const AppSidebarNav = (props: {
       <SidebarGroupContent>
         {props.label && (<SidebarGroupLabel>{props.label}</SidebarGroupLabel>)}
         <SidebarMenu>
-          {props.items.map(item => (
+          {props.items.filter(item => !item.hidden).map(item => (
             <SidebarMenuItem key={item.title}>
               {item.isSwitchItem
                 ? (

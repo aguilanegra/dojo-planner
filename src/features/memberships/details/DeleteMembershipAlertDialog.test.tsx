@@ -1,0 +1,215 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { render } from 'vitest-browser-react';
+import { page, userEvent } from 'vitest/browser';
+import { I18nWrapper } from '@/lib/test-utils';
+import { DeleteMembershipAlertDialog } from './DeleteMembershipAlertDialog';
+
+describe('DeleteMembershipAlertDialog', () => {
+  const defaultProps = {
+    isOpen: true,
+    membershipName: 'Test Membership',
+    onCloseAction: vi.fn(),
+    onConfirmAction: vi.fn(),
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe('Dialog Content', () => {
+    it('renders the dialog title', () => {
+      render(
+        <I18nWrapper>
+          <DeleteMembershipAlertDialog {...defaultProps} />
+        </I18nWrapper>,
+      );
+
+      const title = page.getByRole('heading', { name: 'Are you absolutely sure?' });
+
+      expect(title).toBeInTheDocument();
+    });
+
+    it('renders the dialog description with membership name', () => {
+      render(
+        <I18nWrapper>
+          <DeleteMembershipAlertDialog {...defaultProps} />
+        </I18nWrapper>,
+      );
+
+      const description = page.getByText(/Test Membership/i);
+
+      expect(description).toBeInTheDocument();
+    });
+
+    it('renders the full warning message', () => {
+      render(
+        <I18nWrapper>
+          <DeleteMembershipAlertDialog {...defaultProps} />
+        </I18nWrapper>,
+      );
+
+      const description = page.getByText(/This action cannot be undone/i);
+
+      expect(description).toBeInTheDocument();
+    });
+
+    it('renders the cancel button', () => {
+      render(
+        <I18nWrapper>
+          <DeleteMembershipAlertDialog {...defaultProps} />
+        </I18nWrapper>,
+      );
+
+      const cancelButton = page.getByRole('button', { name: 'Cancel' });
+
+      expect(cancelButton).toBeInTheDocument();
+    });
+
+    it('renders the delete button', () => {
+      render(
+        <I18nWrapper>
+          <DeleteMembershipAlertDialog {...defaultProps} />
+        </I18nWrapper>,
+      );
+
+      const deleteButton = page.getByRole('button', { name: 'Delete' });
+
+      expect(deleteButton).toBeInTheDocument();
+    });
+  });
+
+  describe('Dialog Visibility', () => {
+    it('does not render content when isOpen is false', () => {
+      render(
+        <I18nWrapper>
+          <DeleteMembershipAlertDialog {...defaultProps} isOpen={false} />
+        </I18nWrapper>,
+      );
+
+      const titles = page.getByRole('heading', { name: 'Are you absolutely sure?' }).elements();
+
+      expect(titles.length).toBe(0);
+    });
+
+    it('renders content when isOpen is true', () => {
+      render(
+        <I18nWrapper>
+          <DeleteMembershipAlertDialog {...defaultProps} isOpen />
+        </I18nWrapper>,
+      );
+
+      const title = page.getByRole('heading', { name: 'Are you absolutely sure?' });
+
+      expect(title).toBeInTheDocument();
+    });
+  });
+
+  describe('Cancel Action', () => {
+    it('calls onCloseAction when cancel button is clicked', async () => {
+      const onCloseAction = vi.fn();
+
+      render(
+        <I18nWrapper>
+          <DeleteMembershipAlertDialog {...defaultProps} onCloseAction={onCloseAction} />
+        </I18nWrapper>,
+      );
+
+      const cancelButton = page.getByRole('button', { name: 'Cancel' });
+      await userEvent.click(cancelButton);
+
+      expect(onCloseAction).toHaveBeenCalled();
+    });
+  });
+
+  describe('Confirm Action', () => {
+    it('calls onConfirmAction when delete button is clicked', async () => {
+      const onConfirmAction = vi.fn();
+
+      render(
+        <I18nWrapper>
+          <DeleteMembershipAlertDialog {...defaultProps} onConfirmAction={onConfirmAction} />
+        </I18nWrapper>,
+      );
+
+      const deleteButton = page.getByRole('button', { name: 'Delete' });
+      await userEvent.click(deleteButton);
+
+      expect(onConfirmAction).toHaveBeenCalled();
+    });
+
+    it('calls both onConfirmAction and onCloseAction when delete button is clicked', async () => {
+      const onCloseAction = vi.fn();
+      const onConfirmAction = vi.fn();
+
+      render(
+        <I18nWrapper>
+          <DeleteMembershipAlertDialog
+            {...defaultProps}
+            onCloseAction={onCloseAction}
+            onConfirmAction={onConfirmAction}
+          />
+        </I18nWrapper>,
+      );
+
+      const deleteButton = page.getByRole('button', { name: 'Delete' });
+      await userEvent.click(deleteButton);
+
+      // Both callbacks are called: onConfirmAction from click handler,
+      // onCloseAction from dialog closing (onOpenChange with false)
+      expect(onConfirmAction).toHaveBeenCalled();
+      expect(onCloseAction).toHaveBeenCalled();
+    });
+  });
+
+  describe('Button Styles', () => {
+    it('delete button has destructive styling', () => {
+      render(
+        <I18nWrapper>
+          <DeleteMembershipAlertDialog {...defaultProps} />
+        </I18nWrapper>,
+      );
+
+      const deleteButton = page.getByRole('button', { name: 'Delete' });
+
+      expect(deleteButton).toHaveClass('bg-destructive');
+    });
+
+    it('cancel button has outline styling', () => {
+      render(
+        <I18nWrapper>
+          <DeleteMembershipAlertDialog {...defaultProps} />
+        </I18nWrapper>,
+      );
+
+      const cancelButton = page.getByRole('button', { name: 'Cancel' });
+
+      expect(cancelButton).toHaveClass('border');
+    });
+  });
+
+  describe('Accessibility', () => {
+    it('has accessible dialog title', () => {
+      render(
+        <I18nWrapper>
+          <DeleteMembershipAlertDialog {...defaultProps} />
+        </I18nWrapper>,
+      );
+
+      const alertDialog = page.getByRole('alertdialog');
+
+      expect(alertDialog).toBeInTheDocument();
+    });
+
+    it('has accessible dialog description', () => {
+      render(
+        <I18nWrapper>
+          <DeleteMembershipAlertDialog {...defaultProps} />
+        </I18nWrapper>,
+      );
+
+      const alertDialog = page.getByRole('alertdialog');
+
+      expect(alertDialog).toHaveAccessibleDescription();
+    });
+  });
+});

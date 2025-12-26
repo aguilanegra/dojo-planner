@@ -62,6 +62,7 @@ export const AppSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
               icon: Mail,
               badge: <Badge variant="default">40</Badge>,
               disabled: true,
+              hidden: true,
             },
           ]}
         />
