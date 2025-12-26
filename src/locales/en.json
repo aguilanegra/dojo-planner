@@ -60,7 +60,6 @@
     "marketing": "Marketing",
     "location": "Location",
     "preferences": "Preferences",
-    "help": "Help",
     "log_out": "Log Out"
   },
   "Dashboard": {
@@ -463,12 +462,6 @@
   },
   "ManageProfileDialog": {
     "title": "Manage Profile"
-  },
-  "Help": {
-    "title": "Help",
-    "featured_articles_title": "Featured articles",
-    "read_article_button": "Read article",
-    "see_all_articles_button": "See all articles"
   },
   "Preferences": {
     "title": "Preferences",
@@ -1074,5 +1067,32 @@
       "per_year": "per year",
       "done_button": "Done"
     }
+  },
+  "HelpButton": {
+    "button_aria_label": "Get help",
+    "popover_title": "Need help?",
+    "email_option": "Email support",
+    "phone_option": "Call support"
+  },
+  "EmailSupportModal": {
+    "title": "Email Support",
+    "description": "Send us a message and we'll get back to you as soon as possible.",
+    "subject_label": "Subject",
+    "subject_placeholder": "What do you need help with?",
+    "subject_error": "Please enter a subject.",
+    "message_label": "Message",
+    "message_placeholder": "Describe your issue or question in detail...",
+    "message_error": "Please enter a message.",
+    "cancel_button": "Cancel",
+    "send_button": "Send Message",
+    "sending_button": "Sending..."
+  },
+  "PhoneSupportModal": {
+    "title": "Call Support",
+    "description": "Speak with a support representative.",
+    "phone_label": "Support Phone Number",
+    "availability_message": "Available Monday - Friday, 9am - 5pm EST",
+    "call_button": "Call Now",
+    "close_button": "Close"
   }
 }

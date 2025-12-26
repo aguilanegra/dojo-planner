@@ -60,7 +60,6 @@
     "marketing": "Marketing",
     "location": "Localisation",
     "preferences": "Préférences",
-    "help": "Aide",
     "log_out": "Se déconnecter"
   },
   "Dashboard": {
@@ -466,12 +465,6 @@
   },
   "ManageProfileDialog": {
     "title": "Gérer le profil"
-  },
-  "Help": {
-    "title": "Aide",
-    "featured_articles_title": "Articles en vedette",
-    "read_article_button": "Lire l'article",
-    "see_all_articles_button": "Voir tous les articles"
   },
   "Preferences": {
     "title": "Préférences",
@@ -1082,5 +1075,32 @@
       "per_year": "par an",
       "done_button": "Terminé"
     }
+  },
+  "HelpButton": {
+    "button_aria_label": "Obtenir de l'aide",
+    "popover_title": "Besoin d'aide ?",
+    "email_option": "Support par email",
+    "phone_option": "Support téléphonique"
+  },
+  "EmailSupportModal": {
+    "title": "Support par email",
+    "description": "Envoyez-nous un message et nous vous répondrons dès que possible.",
+    "subject_label": "Sujet",
+    "subject_placeholder": "De quoi avez-vous besoin ?",
+    "subject_error": "Veuillez entrer un sujet.",
+    "message_label": "Message",
+    "message_placeholder": "Décrivez votre problème ou question en détail...",
+    "message_error": "Veuillez entrer un message.",
+    "cancel_button": "Annuler",
+    "send_button": "Envoyer le message",
+    "sending_button": "Envoi en cours..."
+  },
+  "PhoneSupportModal": {
+    "title": "Support téléphonique",
+    "description": "Parlez avec un représentant du support.",
+    "phone_label": "Numéro de téléphone du support",
+    "availability_message": "Disponible du lundi au vendredi, 9h - 17h HNE",
+    "call_button": "Appeler maintenant",
+    "close_button": "Fermer"
   }
 }
