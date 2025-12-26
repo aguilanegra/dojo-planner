@@ -593,20 +593,19 @@
   },
   "FinancesPage": {
     "title": "Finances",
-    "transactions_heading": "Transactions",
     "import_transactions_button": "Importer les transactions",
     "new_transaction_button": "Nouvelle transaction",
-    "tab_all": "Tous",
-    "tab_membership_dues": "Cotisations d'adhésion",
-    "tab_purchases": "Achats",
-    "tab_manually_added": "Ajouté manuellement",
+    "search_placeholder": "Rechercher des transactions...",
+    "all_purposes_filter": "Tous les objectifs",
     "table_date": "Date",
     "table_amount": "Montant",
     "table_purpose": "Objectif",
     "table_method": "Méthode",
     "table_payment_id": "ID de paiement",
     "table_notes": "Remarques",
-    "table_actions": "Actions"
+    "no_transactions": "Aucune transaction trouvée",
+    "no_results_found": "Aucune transaction ne correspond à votre recherche",
+    "loading_transactions": "Chargement des transactions..."
   },
   "MarketingPage": {
     "title": "Marketing",
