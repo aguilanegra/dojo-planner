@@ -31,10 +31,10 @@ export function HelpButton() {
           <Button
             variant="default"
             size="icon"
-            className="fixed right-6 bottom-6 z-50 size-12 rounded-full shadow-lg"
+            className="fixed right-6 bottom-6 z-50 h-[30px] w-[30px] rounded-full shadow-lg"
             aria-label={t('button_aria_label')}
           >
-            <HelpCircle className="size-6" />
+            <HelpCircle className="size-5" />
           </Button>
         </PopoverTrigger>
         <PopoverContent

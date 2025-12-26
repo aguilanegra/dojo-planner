@@ -1,18 +1,23 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { page, userEvent } from 'vitest/browser';
 import { I18nWrapper } from '@/lib/test-utils';
 import { ClassesPage } from './ClassesPage';
 
-// Mock next/navigation for AddClassModal
+// Mock next/navigation for AddClassModal and edit navigation
+const mockPush = vi.fn();
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
     refresh: vi.fn(),
-    push: vi.fn(),
+    push: mockPush,
   }),
 }));
 
 describe('ClassesPage', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe('Summary Cards', () => {
     it('should render total classes stat card', () => {
       render(
@@ -511,6 +516,65 @@ describe('ClassesPage', () => {
       const womensBjj = page.getByRole('heading', { name: /Women's BJJ/ });
 
       expect(womensBjj).toBeInTheDocument();
+    });
+  });
+
+  describe('Edit Functionality', () => {
+    it('should render edit buttons on class cards', () => {
+      render(
+        <I18nWrapper>
+          <ClassesPage />
+        </I18nWrapper>,
+      );
+
+      const editButtons = page.getByRole('button', { name: /Edit class/i }).elements();
+
+      // Should have edit buttons for all 9 classes
+      expect(editButtons.length).toBe(9);
+    });
+
+    it('should navigate to class detail page when edit button is clicked', async () => {
+      render(
+        <I18nWrapper>
+          <ClassesPage />
+        </I18nWrapper>,
+      );
+
+      // Get the first edit button
+      const editButtons = page.getByRole('button', { name: /Edit class/i }).elements();
+      await userEvent.click(editButtons[0] as HTMLElement);
+
+      // Should navigate to the class detail page
+      expect(mockPush).toHaveBeenCalledWith('/dashboard/classes/1');
+    });
+
+    it('should have edit buttons visible in grid view', () => {
+      render(
+        <I18nWrapper>
+          <ClassesPage />
+        </I18nWrapper>,
+      );
+
+      const editButtons = page.getByRole('button', { name: /Edit class/i }).elements();
+
+      // All edit buttons should be visible
+      expect(editButtons.length).toBeGreaterThan(0);
+    });
+
+    it('should have edit buttons visible in list view', async () => {
+      render(
+        <I18nWrapper>
+          <ClassesPage />
+        </I18nWrapper>,
+      );
+
+      const listButton = page.getByTitle('List view');
+      await userEvent.click(listButton);
+
+      const editButtons = page.getByRole('button', { name: /Edit class/i }).elements();
+
+      // All edit buttons should be visible in list view
+      expect(editButtons.length).toBe(9);
     });
   });
 });

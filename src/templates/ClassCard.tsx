@@ -1,7 +1,10 @@
 'use client';
 
+import { Edit } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
 export type ClassCardProps = {
@@ -17,6 +20,7 @@ export type ClassCardProps = {
     name: string;
     photoUrl: string;
   }>;
+  onEdit?: (id: string) => void;
 };
 
 function getLevelColor(level: string): 'default' | 'secondary' | 'destructive' | 'outline' {
@@ -40,7 +44,8 @@ function getInitials(name: string) {
 }
 
 export const ClassCard = (props: ClassCardProps) => {
-  const { name, description, level, type, style, schedule, location, instructors } = props;
+  const { id, name, description, level, type, style, schedule, location, instructors, onEdit } = props;
+  const t = useTranslations('ClassCard');
 
   return (
     <Card className="overflow-hidden p-6">
@@ -82,6 +87,21 @@ export const ClassCard = (props: ClassCardProps) => {
               ))}
             </div>
           </div>
+
+          {/* Edit Button */}
+          {onEdit && (
+            <div className="flex justify-end pt-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onEdit(id)}
+                aria-label={t('edit_button_aria_label')}
+                title={t('edit_button_aria_label')}
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </Card>
