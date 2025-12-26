@@ -1,0 +1,297 @@
+import type { Coupon } from './types';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { render } from 'vitest-browser-react';
+import { page, userEvent } from 'vitest/browser';
+import { CouponCard } from './CouponCard';
+
+// Mock next-intl
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string) => key,
+}));
+
+describe('CouponCard', () => {
+  const mockOnEdit = vi.fn();
+  const mockOnDelete = vi.fn();
+
+  const mockCoupon: Coupon = {
+    id: '1',
+    code: 'TEST_COUPON',
+    description: 'Test Coupon Description',
+    type: 'Percentage',
+    amount: '15%',
+    applyTo: 'Memberships',
+    usage: '23/100',
+    expiry: '2024-12-31T12:00:00',
+    status: 'Active',
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe('Rendering', () => {
+    it('should render coupon code and description', async () => {
+      render(
+        <CouponCard
+          coupon={mockCoupon}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />,
+      );
+
+      await expect.element(page.getByText('TEST_COUPON')).toBeVisible();
+      await expect.element(page.getByText('Test Coupon Description')).toBeVisible();
+    });
+
+    it('should render coupon type', async () => {
+      render(
+        <CouponCard
+          coupon={mockCoupon}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />,
+      );
+
+      await expect.element(page.getByText('Percentage')).toBeVisible();
+    });
+
+    it('should render coupon amount', async () => {
+      render(
+        <CouponCard
+          coupon={mockCoupon}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />,
+      );
+
+      await expect.element(page.getByText('15%')).toBeVisible();
+    });
+
+    it('should render apply to field', async () => {
+      render(
+        <CouponCard
+          coupon={mockCoupon}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />,
+      );
+
+      await expect.element(page.getByText('Memberships')).toBeVisible();
+    });
+
+    it('should render usage information', async () => {
+      render(
+        <CouponCard
+          coupon={mockCoupon}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />,
+      );
+
+      await expect.element(page.getByText('23/100')).toBeVisible();
+    });
+
+    it('should render expiry date', async () => {
+      render(
+        <CouponCard
+          coupon={mockCoupon}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />,
+      );
+
+      await expect.element(page.getByText('Dec 31, 2024')).toBeVisible();
+    });
+
+    it('should render status badge', async () => {
+      render(
+        <CouponCard
+          coupon={mockCoupon}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />,
+      );
+
+      await expect.element(page.getByText('Active')).toBeVisible();
+    });
+
+    it('should render edit and delete buttons', async () => {
+      render(
+        <CouponCard
+          coupon={mockCoupon}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />,
+      );
+
+      await expect.element(page.getByRole('button', { name: 'Edit TEST_COUPON' })).toBeVisible();
+      await expect.element(page.getByRole('button', { name: 'Delete TEST_COUPON' })).toBeVisible();
+    });
+  });
+
+  describe('Status badge variants', () => {
+    it('should render Active status with default variant', async () => {
+      render(
+        <CouponCard
+          coupon={{ ...mockCoupon, status: 'Active' }}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />,
+      );
+
+      await expect.element(page.getByText('Active')).toBeVisible();
+    });
+
+    it('should render Expired status', async () => {
+      render(
+        <CouponCard
+          coupon={{ ...mockCoupon, status: 'Expired' }}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />,
+      );
+
+      await expect.element(page.getByText('Expired')).toBeVisible();
+    });
+
+    it('should render Inactive status', async () => {
+      render(
+        <CouponCard
+          coupon={{ ...mockCoupon, status: 'Inactive' }}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />,
+      );
+
+      await expect.element(page.getByText('Inactive')).toBeVisible();
+    });
+  });
+
+  describe('Edit functionality', () => {
+    it('should call onEdit with coupon when edit button is clicked', async () => {
+      render(
+        <CouponCard
+          coupon={mockCoupon}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />,
+      );
+
+      const editButton = page.getByRole('button', { name: 'Edit TEST_COUPON' });
+      await userEvent.click(editButton);
+
+      expect(mockOnEdit).toHaveBeenCalledTimes(1);
+      expect(mockOnEdit).toHaveBeenCalledWith(mockCoupon);
+    });
+  });
+
+  describe('Delete functionality', () => {
+    it('should call onDelete with coupon id when delete button is clicked', async () => {
+      render(
+        <CouponCard
+          coupon={mockCoupon}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />,
+      );
+
+      const deleteButton = page.getByRole('button', { name: 'Delete TEST_COUPON' });
+      await userEvent.click(deleteButton);
+
+      expect(mockOnDelete).toHaveBeenCalledTimes(1);
+      expect(mockOnDelete).toHaveBeenCalledWith('1');
+    });
+  });
+
+  describe('Usage percentage display', () => {
+    it('should handle infinity symbol in usage', async () => {
+      render(
+        <CouponCard
+          coupon={{ ...mockCoupon, usage: '45/\u221E' }}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />,
+      );
+
+      await expect.element(page.getByText('45/\u221E')).toBeVisible();
+    });
+
+    it('should handle zero usage', async () => {
+      render(
+        <CouponCard
+          coupon={{ ...mockCoupon, usage: '0/100' }}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />,
+      );
+
+      await expect.element(page.getByText('0/100')).toBeVisible();
+    });
+
+    it('should handle full usage', async () => {
+      render(
+        <CouponCard
+          coupon={{ ...mockCoupon, usage: '100/100' }}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />,
+      );
+
+      await expect.element(page.getByText('100/100')).toBeVisible();
+    });
+  });
+
+  describe('Different coupon types', () => {
+    it('should render Fixed Amount type', async () => {
+      render(
+        <CouponCard
+          coupon={{ ...mockCoupon, type: 'Fixed Amount', amount: '$50' }}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />,
+      );
+
+      await expect.element(page.getByText('Fixed Amount')).toBeVisible();
+      await expect.element(page.getByText('$50')).toBeVisible();
+    });
+
+    it('should render Free Trial type', async () => {
+      render(
+        <CouponCard
+          coupon={{ ...mockCoupon, type: 'Free Trial', amount: '7 Days' }}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />,
+      );
+
+      await expect.element(page.getByText('Free Trial')).toBeVisible();
+      await expect.element(page.getByText('7 Days')).toBeVisible();
+    });
+  });
+
+  describe('Different applyTo values', () => {
+    it('should render Products applyTo', async () => {
+      render(
+        <CouponCard
+          coupon={{ ...mockCoupon, applyTo: 'Products' }}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />,
+      );
+
+      await expect.element(page.getByText('Products')).toBeVisible();
+    });
+
+    it('should render Both applyTo', async () => {
+      render(
+        <CouponCard
+          coupon={{ ...mockCoupon, applyTo: 'Both' }}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />,
+      );
+
+      await expect.element(page.getByText('Both')).toBeVisible();
+    });
+  });
+});

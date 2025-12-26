@@ -615,8 +615,7 @@
     "times_used_label": "Times Used",
     "status_filter": "All Statuses",
     "type_filter": "All Types",
-    "apply_filter": "All",
-    "reset_filters_button": "Reset Filters",
+    "search_placeholder": "Search coupons...",
     "table_code": "Code",
     "table_type": "Type",
     "table_amount": "Amount",
@@ -624,7 +623,37 @@
     "table_usage_limit": "Usage / Limit",
     "table_expiry": "Expiry",
     "table_status": "Status",
-    "table_actions": "Actions"
+    "table_actions": "Actions",
+    "AddEditCouponModal": {
+      "add_title": "Add New Coupon",
+      "edit_title": "Edit Coupon",
+      "code_label": "Coupon Code",
+      "code_placeholder": "e.g., SUMMER2024",
+      "code_error": "Please enter a coupon code.",
+      "description_label": "Description",
+      "description_placeholder": "e.g., Summer Promotion",
+      "description_error": "Please enter a description.",
+      "type_label": "Discount Type",
+      "type_placeholder": "Select type...",
+      "amount_label": "Amount",
+      "amount_error": "Please enter an amount.",
+      "apply_to_label": "Apply To",
+      "apply_to_placeholder": "Select...",
+      "status_label": "Status",
+      "status_placeholder": "Select status...",
+      "usage_limit_label": "Usage Limit",
+      "usage_limit_placeholder": "e.g., 100",
+      "usage_limit_help": "Leave empty for unlimited usage",
+      "expiry_label": "Expiry Date",
+      "expiry_placeholder": "e.g., Dec 31 24",
+      "expiry_error": "Please enter an expiry date.",
+      "cancel_button": "Cancel",
+      "add_button": "Add Coupon",
+      "save_changes_button": "Save Changes",
+      "saving_button": "Saving...",
+      "create_success": "Coupon created successfully!",
+      "update_success": "Coupon updated successfully!"
+    }
   },
   "MembershipsPage": {
     "title": "Memberships",
@@ -708,6 +737,12 @@
   "DeleteProgramAlertDialog": {
     "title": "Are you absolutely sure?",
     "description": "This action cannot be undone. This will permanently delete your program and remove the data from the servers.",
+    "cancel_button": "Cancel",
+    "delete_button": "Delete"
+  },
+  "DeleteCouponAlertDialog": {
+    "title": "Are you absolutely sure?",
+    "description": "This action cannot be undone. This will permanently delete the \"{couponCode}\" coupon and remove the data from the servers.",
     "cancel_button": "Cancel",
     "delete_button": "Delete"
   },
