@@ -4,7 +4,8 @@ import type { ClassFilters } from './ClassFilterBar';
 import type { ClassCardProps } from '@/templates/ClassCard';
 import { Grid3x3, List, Plus, Tags } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useCallback, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ButtonGroupItem, ButtonGroupRoot } from '@/components/ui/button-group';
 import { ClassCard } from '@/templates/ClassCard';
@@ -18,6 +19,7 @@ import { AddClassModal } from './wizard';
 
 export function ClassesPage() {
   const t = useTranslations('ClassesPage');
+  const router = useRouter();
   const [viewType, setViewType] = useState('grid');
   const [isTagsSheetOpen, setIsTagsSheetOpen] = useState(false);
   const [isAddClassModalOpen, setIsAddClassModalOpen] = useState(false);
@@ -27,6 +29,11 @@ export function ClassesPage() {
     tag: 'all',
     instructor: 'all',
   });
+
+  // Handle edit class navigation
+  const handleEditClass = useCallback((id: string) => {
+    router.push(`/dashboard/classes/${id}`);
+  }, [router]);
 
   // Handle new class creation
   const handleClassCreated = (newClass: ClassCardProps) => {
@@ -133,7 +140,7 @@ export function ClassesPage() {
       {(viewType === 'grid' || viewType === 'list') && (
         <div className={viewType === 'grid' ? 'grid gap-6 md:grid-cols-2 lg:grid-cols-3' : 'flex flex-col gap-4'}>
           {filteredClasses.map(classItem => (
-            <ClassCard key={classItem.id} {...classItem} />
+            <ClassCard key={classItem.id} {...classItem} onEdit={handleEditClass} />
           ))}
         </div>
       )}

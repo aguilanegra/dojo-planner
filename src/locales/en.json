@@ -698,6 +698,9 @@
     "active_trials": "Active Trials",
     "edit_button_aria_label": "Edit membership"
   },
+  "ClassCard": {
+    "edit_button_aria_label": "Edit class"
+  },
   "ProgramsPage": {
     "title": "Programs Management",
     "total_programs_label": "Total Programs",
@@ -751,6 +754,128 @@
     "description": "This action cannot be undone. This will permanently delete the \"{membershipName}\" membership and remove the data from the servers.",
     "cancel_button": "Cancel",
     "delete_button": "Delete"
+  },
+  "DeleteClassAlertDialog": {
+    "title": "Are you absolutely sure?",
+    "description": "This action cannot be undone. This will permanently delete the \"{className}\" class and remove the data from the servers.",
+    "cancel_button": "Cancel",
+    "delete_button": "Delete"
+  },
+  "ClassDetailPage": {
+    "not_found": "Class not found",
+    "back_to_classes": "Back to Classes",
+    "delete_button": "Delete Class",
+    "StatsCard": {
+      "active_enrollments": "Active Enrollments",
+      "average_attendance": "Avg. Attendance",
+      "total_sessions": "Total Sessions"
+    },
+    "BasicsCard": {
+      "title": "Class Basics",
+      "name_label": "Name",
+      "program_label": "Program",
+      "level_label": "Level",
+      "type_label": "Type",
+      "style_label": "Style",
+      "description_label": "Description"
+    },
+    "ScheduleCard": {
+      "title": "Schedule",
+      "days_label": "Days",
+      "time_label": "Time",
+      "duration_label": "Duration",
+      "location_label": "Location",
+      "calendar_color_label": "Calendar Color",
+      "no_days": "No days selected",
+      "no_location": "No location set"
+    },
+    "InstructorsCard": {
+      "title": "Instructors",
+      "no_instructors": "No instructors assigned",
+      "role_primary": "Primary",
+      "role_assistant": "Assistant"
+    },
+    "SettingsCard": {
+      "title": "Class Settings",
+      "max_capacity_label": "Maximum Capacity",
+      "min_age_label": "Minimum Age",
+      "allow_walkins_label": "Allow Walk-ins",
+      "no_limit": "No limit",
+      "no_minimum": "No minimum",
+      "age_years": "{age} years",
+      "walkins_yes": "Yes",
+      "walkins_no": "No"
+    },
+    "EditBasicsModal": {
+      "title": "Edit Class Basics",
+      "name_label": "Class Name",
+      "name_placeholder": "e.g., BJJ Fundamentals I",
+      "name_error": "Please enter a class name.",
+      "program_label": "Program",
+      "program_placeholder": "Select a program",
+      "program_error": "Please select a program.",
+      "level_label": "Level",
+      "type_label": "Type",
+      "style_label": "Style",
+      "description_label": "Description",
+      "description_placeholder": "Describe what students will learn in this class...",
+      "description_error": "Please enter a description.",
+      "description_character_count": "{count} of {max} characters used",
+      "cancel_button": "Cancel",
+      "save_button": "Save Changes",
+      "saving_button": "Saving..."
+    },
+    "EditScheduleModal": {
+      "title": "Edit Schedule",
+      "days_label": "Days of Week",
+      "day_monday": "Monday",
+      "day_tuesday": "Tuesday",
+      "day_wednesday": "Wednesday",
+      "day_thursday": "Thursday",
+      "day_friday": "Friday",
+      "day_saturday": "Saturday",
+      "day_sunday": "Sunday",
+      "days_error": "Please select at least one day.",
+      "time_label": "Time of Day",
+      "duration_label": "Duration",
+      "duration_hr": "hr",
+      "duration_min": "min",
+      "duration_error": "Duration must be greater than 0.",
+      "location_label": "Location",
+      "location_placeholder": "e.g., Downtown HQ",
+      "calendar_color_label": "Calendar Color",
+      "calendar_color_select": "Choose a color",
+      "cancel_button": "Cancel",
+      "save_button": "Save Changes",
+      "saving_button": "Saving..."
+    },
+    "EditInstructorsModal": {
+      "title": "Edit Instructors",
+      "selected_label": "Selected Instructors",
+      "available_label": "Available Staff",
+      "role_primary": "Primary",
+      "role_assistant": "Assistant",
+      "help_text": "Select staff members to assign as instructors for this class.",
+      "cancel_button": "Cancel",
+      "save_button": "Save Changes",
+      "saving_button": "Saving..."
+    },
+    "EditSettingsModal": {
+      "title": "Edit Class Settings",
+      "max_capacity_label": "Maximum Capacity",
+      "max_capacity_placeholder": "e.g., 20",
+      "max_capacity_help": "Leave empty for no limit",
+      "min_age_label": "Minimum Age",
+      "min_age_placeholder": "e.g., 16",
+      "min_age_help": "Leave empty for no minimum",
+      "allow_walkins_label": "Allow Walk-ins",
+      "walkins_yes": "Yes",
+      "walkins_no": "No",
+      "allow_walkins_help": "Allow students without a reservation to attend",
+      "cancel_button": "Cancel",
+      "save_button": "Save Changes",
+      "saving_button": "Saving..."
+    }
   },
   "SubscriptionPage": {
     "title": "Subscription",

@@ -701,6 +701,9 @@
     "active_trials": "Essais actifs",
     "edit_button_aria_label": "Modifier l'adhésion"
   },
+  "ClassCard": {
+    "edit_button_aria_label": "Modifier le cours"
+  },
   "ProgramsPage": {
     "title": "Gestion des programmes",
     "total_programs_label": "Total des programmes",
@@ -754,6 +757,128 @@
     "description": "Cette action est irréversible. Cela supprimera définitivement l'adhésion « {membershipName} » et supprimera les données des serveurs.",
     "cancel_button": "Annuler",
     "delete_button": "Supprimer"
+  },
+  "DeleteClassAlertDialog": {
+    "title": "Êtes-vous absolument sûr?",
+    "description": "Cette action est irréversible. Cela supprimera définitivement le cours « {className} » et supprimera les données des serveurs.",
+    "cancel_button": "Annuler",
+    "delete_button": "Supprimer"
+  },
+  "ClassDetailPage": {
+    "not_found": "Cours introuvable",
+    "back_to_classes": "Retour aux cours",
+    "delete_button": "Supprimer le cours",
+    "StatsCard": {
+      "active_enrollments": "Inscriptions actives",
+      "average_attendance": "Présence moyenne",
+      "total_sessions": "Sessions totales"
+    },
+    "BasicsCard": {
+      "title": "Informations de base",
+      "name_label": "Nom",
+      "program_label": "Programme",
+      "level_label": "Niveau",
+      "type_label": "Type",
+      "style_label": "Style",
+      "description_label": "Description"
+    },
+    "ScheduleCard": {
+      "title": "Horaire",
+      "days_label": "Jours",
+      "time_label": "Heure",
+      "duration_label": "Durée",
+      "location_label": "Lieu",
+      "calendar_color_label": "Couleur du calendrier",
+      "no_days": "Aucun jour sélectionné",
+      "no_location": "Aucun lieu défini"
+    },
+    "InstructorsCard": {
+      "title": "Instructeurs",
+      "no_instructors": "Aucun instructeur assigné",
+      "role_primary": "Principal",
+      "role_assistant": "Assistant"
+    },
+    "SettingsCard": {
+      "title": "Paramètres du cours",
+      "max_capacity_label": "Capacité maximale",
+      "min_age_label": "Âge minimum",
+      "allow_walkins_label": "Sans rendez-vous",
+      "no_limit": "Pas de limite",
+      "no_minimum": "Pas de minimum",
+      "age_years": "{age} ans",
+      "walkins_yes": "Oui",
+      "walkins_no": "Non"
+    },
+    "EditBasicsModal": {
+      "title": "Modifier les informations de base",
+      "name_label": "Nom du cours",
+      "name_placeholder": "ex., BJJ Fondamentaux I",
+      "name_error": "Veuillez entrer un nom de cours.",
+      "program_label": "Programme",
+      "program_placeholder": "Sélectionnez un programme",
+      "program_error": "Veuillez sélectionner un programme.",
+      "level_label": "Niveau",
+      "type_label": "Type",
+      "style_label": "Style",
+      "description_label": "Description",
+      "description_placeholder": "Décrivez ce que les étudiants apprendront dans ce cours...",
+      "description_error": "Veuillez entrer une description.",
+      "description_character_count": "{count} sur {max} caractères utilisés",
+      "cancel_button": "Annuler",
+      "save_button": "Enregistrer les modifications",
+      "saving_button": "Enregistrement..."
+    },
+    "EditScheduleModal": {
+      "title": "Modifier l'horaire",
+      "days_label": "Jours de la semaine",
+      "day_monday": "Lundi",
+      "day_tuesday": "Mardi",
+      "day_wednesday": "Mercredi",
+      "day_thursday": "Jeudi",
+      "day_friday": "Vendredi",
+      "day_saturday": "Samedi",
+      "day_sunday": "Dimanche",
+      "days_error": "Veuillez sélectionner au moins un jour.",
+      "time_label": "Heure du jour",
+      "duration_label": "Durée",
+      "duration_hr": "h",
+      "duration_min": "min",
+      "duration_error": "La durée doit être supérieure à 0.",
+      "location_label": "Lieu",
+      "location_placeholder": "ex., Siège du centre-ville",
+      "calendar_color_label": "Couleur du calendrier",
+      "calendar_color_select": "Choisissez une couleur",
+      "cancel_button": "Annuler",
+      "save_button": "Enregistrer les modifications",
+      "saving_button": "Enregistrement..."
+    },
+    "EditInstructorsModal": {
+      "title": "Modifier les instructeurs",
+      "selected_label": "Instructeurs sélectionnés",
+      "available_label": "Personnel disponible",
+      "role_primary": "Principal",
+      "role_assistant": "Assistant",
+      "help_text": "Sélectionnez les membres du personnel à assigner comme instructeurs pour ce cours.",
+      "cancel_button": "Annuler",
+      "save_button": "Enregistrer les modifications",
+      "saving_button": "Enregistrement..."
+    },
+    "EditSettingsModal": {
+      "title": "Modifier les paramètres du cours",
+      "max_capacity_label": "Capacité maximale",
+      "max_capacity_placeholder": "ex., 20",
+      "max_capacity_help": "Laisser vide pour aucune limite",
+      "min_age_label": "Âge minimum",
+      "min_age_placeholder": "ex., 16",
+      "min_age_help": "Laisser vide pour aucun minimum",
+      "allow_walkins_label": "Sans rendez-vous",
+      "walkins_yes": "Oui",
+      "walkins_no": "Non",
+      "allow_walkins_help": "Autoriser les étudiants sans réservation à assister",
+      "cancel_button": "Annuler",
+      "save_button": "Enregistrer les modifications",
+      "saving_button": "Enregistrement..."
+    }
   },
   "SubscriptionPage": {
     "title": "Abonnement",
