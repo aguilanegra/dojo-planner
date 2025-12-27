@@ -1,3 +1,4 @@
+import type { Transaction, TransactionStatus } from './FinancesTable';
 import { describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { page, userEvent } from 'vitest/browser';
@@ -9,14 +10,16 @@ vi.mock('next-intl', () => ({
 }));
 
 // Helper to create mock transactions
-const createMockTransaction = (overrides = {}) => ({
+const createMockTransaction = (overrides: Partial<Transaction> = {}): Transaction => ({
   id: '1',
   date: 'April 15, 2025',
   amount: '$160.00',
   purpose: 'Membership Dues',
   method: 'Saved Card Ending ****1234',
-  paymentId: '71MC01ANQ130',
-  notes: '',
+  transactionId: 'TXN71MC01ANQ130',
+  memberName: 'John Smith',
+  memberId: 'M001',
+  status: 'paid' as TransactionStatus,
   ...overrides,
 });
 
@@ -109,7 +112,7 @@ describe('FinancesTable', () => {
       expect(table.getByText('$100.00')).toBeInTheDocument();
     });
 
-    it('should sort transactions by purpose column', async () => {
+    it('should sort transactions by origin column', async () => {
       const mockTransactions = [
         createMockTransaction({ id: '1', purpose: 'Merchandise' }),
         createMockTransaction({ id: '2', purpose: 'Membership Dues' }),
@@ -117,8 +120,8 @@ describe('FinancesTable', () => {
 
       render(<FinancesTable transactions={mockTransactions} />);
 
-      const purposeHeader = page.getByRole('button', { name: /table_purpose/i });
-      await purposeHeader.click();
+      const originHeader = page.getByRole('button', { name: /table_origin/i });
+      await originHeader.click();
 
       const table = page.getByRole('table');
 
@@ -184,7 +187,7 @@ describe('FinancesTable', () => {
       expect(table.getByText('Merchandise')).toBeInTheDocument();
     });
 
-    it('should have purpose filter dropdown', async () => {
+    it('should have origin filter dropdown', async () => {
       const mockTransactions = [
         createMockTransaction({ id: '1', purpose: 'Membership Dues' }),
         createMockTransaction({ id: '2', purpose: 'Merchandise' }),
@@ -192,30 +195,31 @@ describe('FinancesTable', () => {
 
       render(<FinancesTable transactions={mockTransactions} />);
 
-      const purposeTrigger = page.getByRole('combobox');
-      await purposeTrigger.click();
+      const originFilter = page.getByTestId('finances-origin-filter');
+      await originFilter.click();
 
       expect(page.getByRole('option', { name: 'Membership Dues' })).toBeInTheDocument();
       expect(page.getByRole('option', { name: 'Merchandise' })).toBeInTheDocument();
     });
 
-    it('should filter by purpose when selecting from dropdown', async () => {
+    it('should filter by origin when selecting from dropdown', async () => {
       const mockTransactions = [
-        createMockTransaction({ id: '1', purpose: 'Membership Dues' }),
-        createMockTransaction({ id: '2', purpose: 'Merchandise', notes: 'Gi purchase' }),
+        createMockTransaction({ id: '1', purpose: 'Membership Dues', memberName: 'John Smith' }),
+        createMockTransaction({ id: '2', purpose: 'Merchandise', memberName: 'Jane Doe' }),
       ];
 
       render(<FinancesTable transactions={mockTransactions} />);
 
-      const purposeTrigger = page.getByRole('combobox');
-      await purposeTrigger.click();
+      const originFilter = page.getByTestId('finances-origin-filter');
+      await originFilter.click();
 
       const merchandiseOption = page.getByRole('option', { name: 'Merchandise' });
       await merchandiseOption.click();
 
       const table = page.getByRole('table');
 
-      expect(table.getByText('Gi purchase')).toBeInTheDocument();
+      expect(table.getByText('Jane Doe')).toBeInTheDocument();
+      expect(table.getByText('John Smith').elements()).toHaveLength(0);
     });
 
     it('should show no results message when filter has no matches', async () => {
@@ -243,20 +247,20 @@ describe('FinancesTable', () => {
 
     it('should only show first 10 transactions on first page', () => {
       const mockTransactions = Array.from({ length: 15 }, (_, i) =>
-        createMockTransaction({ id: `${i}`, paymentId: `PAY${String(i).padStart(2, '0')}` }));
+        createMockTransaction({ id: `${i}`, transactionId: `TXN${String(i).padStart(2, '0')}` }));
 
       render(<FinancesTable transactions={mockTransactions} />);
 
       const table = page.getByRole('table');
 
-      expect(table.getByText('PAY00')).toBeInTheDocument();
-      expect(table.getByText('PAY09')).toBeInTheDocument();
-      expect(table.getByText('PAY10').elements()).toHaveLength(0);
+      expect(table.getByText('TXN00')).toBeInTheDocument();
+      expect(table.getByText('TXN09')).toBeInTheDocument();
+      expect(table.getByText('TXN10').elements()).toHaveLength(0);
     });
 
     it('should navigate to second page when clicking next', async () => {
       const mockTransactions = Array.from({ length: 15 }, (_, i) =>
-        createMockTransaction({ id: `${i}`, paymentId: `PAY${String(i).padStart(2, '0')}` }));
+        createMockTransaction({ id: `${i}`, transactionId: `TXN${String(i).padStart(2, '0')}` }));
 
       render(<FinancesTable transactions={mockTransactions} />);
 
@@ -265,12 +269,12 @@ describe('FinancesTable', () => {
 
       const table = page.getByRole('table');
 
-      expect(table.getByText('PAY10')).toBeInTheDocument();
+      expect(table.getByText('TXN10')).toBeInTheDocument();
     });
 
     it('should reset page when filtering', async () => {
       const mockTransactions = Array.from({ length: 15 }, (_, i) =>
-        createMockTransaction({ id: `${i}`, paymentId: `PAY${String(i).padStart(2, '0')}` }));
+        createMockTransaction({ id: `${i}`, transactionId: `TXN${String(i).padStart(2, '0')}` }));
 
       render(<FinancesTable transactions={mockTransactions} />);
 
@@ -278,52 +282,170 @@ describe('FinancesTable', () => {
       await nextButton.click();
 
       const searchInput = page.getByPlaceholder('search_placeholder');
-      await userEvent.fill(searchInput.element() as HTMLInputElement, 'PAY01');
+      await userEvent.fill(searchInput.element() as HTMLInputElement, 'TXN01');
 
       const table = page.getByRole('table');
 
-      expect(table.getByText('PAY01')).toBeInTheDocument();
+      expect(table.getByText('TXN01')).toBeInTheDocument();
     });
   });
 
-  describe('Notes display', () => {
-    it('should display notes when present', () => {
-      const mockTransactions = [createMockTransaction({ notes: 'Test note' })];
+  describe('Member column', () => {
+    it('should display member name in table', () => {
+      const mockTransactions = [createMockTransaction({ memberName: 'Jane Doe' })];
 
       render(<FinancesTable transactions={mockTransactions} />);
 
       const table = page.getByRole('table');
 
-      expect(table.getByText('Test note')).toBeInTheDocument();
+      expect(table.getByText('Jane Doe')).toBeInTheDocument();
     });
 
-    it('should display dash for empty notes', () => {
-      const mockTransactions = [createMockTransaction({ notes: '' })];
+    it('should sort by member name when clicking member header', async () => {
+      const mockTransactions = [
+        createMockTransaction({ id: '1', memberName: 'Zack Williams' }),
+        createMockTransaction({ id: '2', memberName: 'Alice Brown' }),
+      ];
+
+      render(<FinancesTable transactions={mockTransactions} />);
+
+      const memberHeader = page.getByRole('button', { name: /table_member/i });
+      await memberHeader.click();
+
+      const table = page.getByRole('table');
+
+      expect(table.getByText('Alice Brown')).toBeInTheDocument();
+      expect(table.getByText('Zack Williams')).toBeInTheDocument();
+    });
+  });
+
+  describe('Status column', () => {
+    it('should display status badge for paid transactions', () => {
+      const mockTransactions = [createMockTransaction({ status: 'paid' })];
 
       render(<FinancesTable transactions={mockTransactions} />);
 
       const table = page.getByRole('table');
 
-      expect(table.getByText('-').first()).toBeInTheDocument();
+      expect(table.getByText('status_paid')).toBeInTheDocument();
+    });
+
+    it('should display status badge for declined transactions', () => {
+      const mockTransactions = [createMockTransaction({ status: 'declined' })];
+
+      render(<FinancesTable transactions={mockTransactions} />);
+
+      const table = page.getByRole('table');
+
+      expect(table.getByText('status_declined')).toBeInTheDocument();
+    });
+
+    it('should display status badge for pending transactions', () => {
+      const mockTransactions = [createMockTransaction({ status: 'pending' })];
+
+      render(<FinancesTable transactions={mockTransactions} />);
+
+      const table = page.getByRole('table');
+
+      expect(table.getByText('status_pending')).toBeInTheDocument();
+    });
+
+    it('should display status badge for refunded transactions', () => {
+      const mockTransactions = [createMockTransaction({ status: 'refunded' })];
+
+      render(<FinancesTable transactions={mockTransactions} />);
+
+      const table = page.getByRole('table');
+
+      expect(table.getByText('status_refunded')).toBeInTheDocument();
+    });
+
+    it('should display status badge for processing transactions', () => {
+      const mockTransactions = [createMockTransaction({ status: 'processing' })];
+
+      render(<FinancesTable transactions={mockTransactions} />);
+
+      const table = page.getByRole('table');
+
+      expect(table.getByText('status_processing')).toBeInTheDocument();
+    });
+
+    it('should sort by status when clicking status header', async () => {
+      const mockTransactions = [
+        createMockTransaction({ id: '1', status: 'paid' }),
+        createMockTransaction({ id: '2', status: 'declined' }),
+      ];
+
+      render(<FinancesTable transactions={mockTransactions} />);
+
+      const statusHeader = page.getByRole('button', { name: /table_status/i });
+      await statusHeader.click();
+
+      const table = page.getByRole('table');
+
+      expect(table.getByText('status_paid')).toBeInTheDocument();
+      expect(table.getByText('status_declined')).toBeInTheDocument();
+    });
+  });
+
+  describe('Row click interaction', () => {
+    it('should open transaction detail modal when clicking a row', async () => {
+      const mockTransactions = [createMockTransaction()];
+
+      render(<FinancesTable transactions={mockTransactions} />);
+
+      // Click the table row (which has role="button" and contains the member name)
+      // Use first() since there's both a table row and mobile card with the same name
+      const dataRow = page.getByRole('button', { name: /John Smith/i }).first();
+      await dataRow.click();
+
+      expect(page.getByRole('dialog')).toBeInTheDocument();
+    });
+
+    it('should have accessible row with tabIndex', () => {
+      const mockTransactions = [createMockTransaction()];
+
+      render(<FinancesTable transactions={mockTransactions} />);
+
+      // Verify the row is rendered with button role (making it keyboard accessible)
+      const dataRow = page.getByRole('button', { name: /John Smith/i }).first();
+
+      expect(dataRow).toBeInTheDocument();
+    });
+
+    it('should close modal when clicking close button', async () => {
+      const mockTransactions = [createMockTransaction()];
+
+      render(<FinancesTable transactions={mockTransactions} />);
+
+      // Click the table row (which has role="button" and contains the member name)
+      // Use first() since there's both a table row and mobile card with the same name
+      const dataRow = page.getByRole('button', { name: /John Smith/i }).first();
+      await dataRow.click();
+
+      const closeButton = page.getByRole('button', { name: 'close_button' });
+      await closeButton.click();
+
+      expect(page.getByRole('dialog').elements()).toHaveLength(0);
     });
   });
 
   describe('Search by different fields', () => {
-    it('should filter by payment ID', async () => {
+    it('should filter by transaction ID', async () => {
       const mockTransactions = [
-        createMockTransaction({ id: '1', paymentId: 'PAY001' }),
-        createMockTransaction({ id: '2', paymentId: 'PAY002' }),
+        createMockTransaction({ id: '1', transactionId: 'TXN001' }),
+        createMockTransaction({ id: '2', transactionId: 'TXN002' }),
       ];
 
       render(<FinancesTable transactions={mockTransactions} />);
 
       const searchInput = page.getByPlaceholder('search_placeholder');
-      await userEvent.fill(searchInput.element() as HTMLInputElement, 'PAY001');
+      await userEvent.fill(searchInput.element() as HTMLInputElement, 'TXN001');
 
       const table = page.getByRole('table');
 
-      expect(table.getByText('PAY001')).toBeInTheDocument();
-      expect(table.getByText('PAY002').elements()).toHaveLength(0);
+      expect(table.getByText('TXN001')).toBeInTheDocument();
+      expect(table.getByText('TXN002').elements()).toHaveLength(0);
     });
 
     it('should filter by method', async () => {
@@ -342,25 +464,41 @@ describe('FinancesTable', () => {
       expect(table.getByText('Cash')).toBeInTheDocument();
     });
 
-    it('should filter by notes', async () => {
+    it('should filter by member name', async () => {
       const mockTransactions = [
-        createMockTransaction({ id: '1', notes: 'Gi purchase' }),
-        createMockTransaction({ id: '2', notes: 'Belt upgrade' }),
+        createMockTransaction({ id: '1', memberName: 'John Smith' }),
+        createMockTransaction({ id: '2', memberName: 'Jane Doe' }),
       ];
 
       render(<FinancesTable transactions={mockTransactions} />);
 
       const searchInput = page.getByPlaceholder('search_placeholder');
-      await userEvent.fill(searchInput.element() as HTMLInputElement, 'Belt');
+      await userEvent.fill(searchInput.element() as HTMLInputElement, 'Jane');
 
       const table = page.getByRole('table');
 
-      expect(table.getByText('Belt upgrade')).toBeInTheDocument();
+      expect(table.getByText('Jane Doe')).toBeInTheDocument();
+    });
+
+    it('should filter by status', async () => {
+      const mockTransactions = [
+        createMockTransaction({ id: '1', status: 'paid' }),
+        createMockTransaction({ id: '2', status: 'declined' }),
+      ];
+
+      render(<FinancesTable transactions={mockTransactions} />);
+
+      const searchInput = page.getByPlaceholder('search_placeholder');
+      await userEvent.fill(searchInput.element() as HTMLInputElement, 'declined');
+
+      const table = page.getByRole('table');
+
+      expect(table.getByText('status_declined')).toBeInTheDocument();
     });
   });
 
   describe('Dynamic filter options', () => {
-    it('should only show available purposes in filter', async () => {
+    it('should only show available origins in filter', async () => {
       const mockTransactions = [
         createMockTransaction({ id: '1', purpose: 'Membership Dues' }),
         createMockTransaction({ id: '2', purpose: 'Merchandise' }),
@@ -368,12 +506,60 @@ describe('FinancesTable', () => {
 
       render(<FinancesTable transactions={mockTransactions} />);
 
-      const purposeTrigger = page.getByRole('combobox');
-      await purposeTrigger.click();
+      const originFilter = page.getByTestId('finances-origin-filter');
+      await originFilter.click();
 
       expect(page.getByRole('option', { name: 'Membership Dues' })).toBeInTheDocument();
       expect(page.getByRole('option', { name: 'Merchandise' })).toBeInTheDocument();
       expect(page.getByRole('option', { name: 'Seminar' }).elements()).toHaveLength(0);
+    });
+
+    it('should update origin options based on selected status', async () => {
+      const mockTransactions = [
+        createMockTransaction({ id: '1', purpose: 'Membership Dues', status: 'paid' }),
+        createMockTransaction({ id: '2', purpose: 'Merchandise', status: 'declined' }),
+        createMockTransaction({ id: '3', purpose: 'Seminar', status: 'paid' }),
+      ];
+
+      render(<FinancesTable transactions={mockTransactions} />);
+
+      // Select 'paid' status
+      const statusFilter = page.getByTestId('finances-status-filter');
+      await statusFilter.click();
+      const paidOption = page.getByRole('option', { name: 'status_paid' });
+      await paidOption.click();
+
+      // Now check origin filter - should only show origins with paid status
+      const originFilter = page.getByTestId('finances-origin-filter');
+      await originFilter.click();
+
+      expect(page.getByRole('option', { name: 'Membership Dues' })).toBeInTheDocument();
+      expect(page.getByRole('option', { name: 'Seminar' })).toBeInTheDocument();
+      expect(page.getByRole('option', { name: 'Merchandise' }).elements()).toHaveLength(0);
+    });
+
+    it('should update status options based on selected origin', async () => {
+      const mockTransactions = [
+        createMockTransaction({ id: '1', purpose: 'Membership Dues', status: 'paid' }),
+        createMockTransaction({ id: '2', purpose: 'Membership Dues', status: 'pending' }),
+        createMockTransaction({ id: '3', purpose: 'Merchandise', status: 'declined' }),
+      ];
+
+      render(<FinancesTable transactions={mockTransactions} />);
+
+      // Select 'Membership Dues' origin
+      const originFilter = page.getByTestId('finances-origin-filter');
+      await originFilter.click();
+      const membershipOption = page.getByRole('option', { name: 'Membership Dues' });
+      await membershipOption.click();
+
+      // Now check status filter - should only show statuses for Membership Dues
+      const statusFilter = page.getByTestId('finances-status-filter');
+      await statusFilter.click();
+
+      expect(page.getByRole('option', { name: 'status_paid' })).toBeInTheDocument();
+      expect(page.getByRole('option', { name: 'status_pending' })).toBeInTheDocument();
+      expect(page.getByRole('option', { name: 'status_declined' }).elements()).toHaveLength(0);
     });
   });
 });

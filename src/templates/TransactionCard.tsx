@@ -1,6 +1,8 @@
 'use client';
 
+import type { TransactionStatus } from '@/features/finances/FinancesTable';
 import { useTranslations } from 'next-intl';
+import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 
 type TransactionCardProps = {
@@ -9,8 +11,18 @@ type TransactionCardProps = {
   amount: string;
   purpose: string;
   method: string;
-  paymentId: string;
-  notes: string;
+  transactionId: string;
+  memberName: string;
+  status: TransactionStatus;
+  onClickAction?: () => void;
+};
+
+const statusVariantMap: Record<TransactionStatus, 'default' | 'secondary' | 'destructive' | 'outline' | 'warning'> = {
+  paid: 'default',
+  pending: 'outline',
+  declined: 'destructive',
+  refunded: 'warning',
+  processing: 'outline',
 };
 
 export function TransactionCard({
@@ -18,23 +30,40 @@ export function TransactionCard({
   amount,
   purpose,
   method,
-  paymentId,
-  notes,
+  transactionId,
+  memberName,
+  status,
+  onClickAction,
 }: TransactionCardProps) {
   const t = useTranslations('FinancesPage');
 
   return (
-    <Card className="p-4">
+    <Card
+      className="cursor-pointer p-4 transition-colors hover:bg-secondary/30"
+      onClick={onClickAction}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClickAction?.();
+        }
+      }}
+    >
       <div className="space-y-4">
-        {/* Header - Date and Amount */}
+        {/* Header - Date, Member and Amount */}
         <div className="flex items-center justify-between border-b border-border pb-4">
           <div>
             <div className="font-medium text-foreground">{date}</div>
-            <div className="text-xs text-muted-foreground">{paymentId}</div>
+            <div className="text-sm text-muted-foreground">{memberName}</div>
+            <div className="text-xs text-muted-foreground">{transactionId}</div>
           </div>
           <div className="text-right">
             <div className="font-semibold text-foreground">{amount}</div>
             <div className="text-xs text-muted-foreground">{purpose}</div>
+            <Badge variant={statusVariantMap[status]} className="mt-1">
+              {t(`status_${status}`)}
+            </Badge>
           </div>
         </div>
 
@@ -44,12 +73,6 @@ export function TransactionCard({
             <div className="text-xs font-semibold text-muted-foreground">{t('table_method')}</div>
             <div className="mt-1 text-sm text-foreground">{method}</div>
           </div>
-          {notes && (
-            <div>
-              <div className="text-xs font-semibold text-muted-foreground">{t('table_notes')}</div>
-              <div className="mt-1 text-sm text-foreground">{notes}</div>
-            </div>
-          )}
         </div>
       </div>
     </Card>

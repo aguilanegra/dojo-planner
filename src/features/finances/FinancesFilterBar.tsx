@@ -1,5 +1,6 @@
 'use client';
 
+import type { TransactionStatus } from './FinancesTable';
 import { Search } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
@@ -14,22 +15,34 @@ import {
 
 export type FinancesFilters = {
   search: string;
-  purpose: string;
+  origin: string;
+  status: string;
 };
 
 type FinancesFilterBarProps = {
   onFiltersChangeAction: (filters: FinancesFilters) => void;
-  availablePurposes: string[];
+  availableOrigins: string[];
+  availableStatuses: TransactionStatus[];
 };
+
+const STATUS_OPTIONS: Array<{ value: string; labelKey: TransactionStatus }> = [
+  { value: 'paid', labelKey: 'paid' },
+  { value: 'pending', labelKey: 'pending' },
+  { value: 'declined', labelKey: 'declined' },
+  { value: 'refunded', labelKey: 'refunded' },
+  { value: 'processing', labelKey: 'processing' },
+];
 
 export function FinancesFilterBar({
   onFiltersChangeAction,
-  availablePurposes,
+  availableOrigins,
+  availableStatuses,
 }: FinancesFilterBarProps) {
   const t = useTranslations('FinancesPage');
   const [filters, setFilters] = useState<FinancesFilters>({
     search: '',
-    purpose: 'all',
+    origin: 'all',
+    status: 'all',
   });
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -38,18 +51,34 @@ export function FinancesFilterBar({
     onFiltersChangeAction(newFilters);
   };
 
-  const handlePurposeChange = (value: string) => {
-    const newFilters = { ...filters, purpose: value };
+  const handleOriginChange = (value: string) => {
+    const newFilters = { ...filters, origin: value };
     setFilters(newFilters);
     onFiltersChangeAction(newFilters);
   };
 
-  const purposeOptions = [
-    { value: 'all', label: t('all_purposes_filter') },
-    ...availablePurposes.map(purpose => ({
-      value: purpose,
-      label: purpose,
+  const handleStatusChange = (value: string) => {
+    const newFilters = { ...filters, status: value };
+    setFilters(newFilters);
+    onFiltersChangeAction(newFilters);
+  };
+
+  const originOptions = [
+    { value: 'all', label: t('all_origins_filter') },
+    ...availableOrigins.map(origin => ({
+      value: origin,
+      label: origin,
     })),
+  ];
+
+  const statusOptions = [
+    { value: 'all', label: t('all_statuses_filter') },
+    ...STATUS_OPTIONS
+      .filter(option => availableStatuses.includes(option.labelKey))
+      .map(option => ({
+        value: option.value,
+        label: t(`status_${option.labelKey}`),
+      })),
   ];
 
   return (
@@ -67,13 +96,27 @@ export function FinancesFilterBar({
         />
       </div>
 
-      {/* Purpose Filter */}
-      <Select value={filters.purpose} onValueChange={handlePurposeChange}>
-        <SelectTrigger className="w-full sm:w-48" data-testid="finances-purpose-filter">
-          <SelectValue placeholder={t('all_purposes_filter')} />
+      {/* Status Filter */}
+      <Select value={filters.status} onValueChange={handleStatusChange}>
+        <SelectTrigger className="w-full sm:w-40" data-testid="finances-status-filter">
+          <SelectValue placeholder={t('all_statuses_filter')} />
         </SelectTrigger>
         <SelectContent>
-          {purposeOptions.map(option => (
+          {statusOptions.map(option => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      {/* Origin Filter */}
+      <Select value={filters.origin} onValueChange={handleOriginChange}>
+        <SelectTrigger className="w-full sm:w-48" data-testid="finances-origin-filter">
+          <SelectValue placeholder={t('all_origins_filter')} />
+        </SelectTrigger>
+        <SelectContent>
+          {originOptions.map(option => (
             <SelectItem key={option.value} value={option.value}>
               {option.label}
             </SelectItem>

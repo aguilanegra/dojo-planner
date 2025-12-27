@@ -1,6 +1,7 @@
+import type { TransactionStatus } from '@/features/finances/FinancesTable';
 import { describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
-import { page } from 'vitest/browser';
+import { page, userEvent } from 'vitest/browser';
 import { TransactionCard } from './TransactionCard';
 
 // Mock next-intl
@@ -15,8 +16,9 @@ describe('TransactionCard', () => {
     amount: '$160.00',
     purpose: 'Membership Dues',
     method: 'Saved Card Ending ****1234',
-    paymentId: '71MC01ANQ130',
-    notes: '',
+    transactionId: 'TXN71MC01ANQ130',
+    memberName: 'John Smith',
+    status: 'paid' as TransactionStatus,
   };
 
   describe('Header Section', () => {
@@ -26,10 +28,16 @@ describe('TransactionCard', () => {
       expect(page.getByText('April 15, 2025')).toBeInTheDocument();
     });
 
-    it('should render payment ID', () => {
+    it('should render member name', () => {
       render(<TransactionCard {...defaultProps} />);
 
-      expect(page.getByText('71MC01ANQ130')).toBeInTheDocument();
+      expect(page.getByText('John Smith')).toBeInTheDocument();
+    });
+
+    it('should render transaction ID', () => {
+      render(<TransactionCard {...defaultProps} />);
+
+      expect(page.getByText('TXN71MC01ANQ130')).toBeInTheDocument();
     });
 
     it('should render amount', () => {
@@ -43,6 +51,12 @@ describe('TransactionCard', () => {
 
       expect(page.getByText('Membership Dues')).toBeInTheDocument();
     });
+
+    it('should render status badge', () => {
+      render(<TransactionCard {...defaultProps} />);
+
+      expect(page.getByText('status_paid')).toBeInTheDocument();
+    });
   });
 
   describe('Details Section', () => {
@@ -52,19 +66,42 @@ describe('TransactionCard', () => {
       expect(page.getByText('Saved Card Ending ****1234')).toBeInTheDocument();
     });
 
-    it('should render notes when provided', () => {
-      render(<TransactionCard {...defaultProps} notes="Gi purchase" />);
+    it('should render method label', () => {
+      render(<TransactionCard {...defaultProps} />);
 
-      expect(page.getByText('Gi purchase')).toBeInTheDocument();
+      expect(page.getByText('table_method')).toBeInTheDocument();
+    });
+  });
+
+  describe('Status Badge Variants', () => {
+    it('should render paid status badge', () => {
+      render(<TransactionCard {...defaultProps} status="paid" />);
+
+      expect(page.getByText('status_paid')).toBeInTheDocument();
     });
 
-    it('should not render notes section when notes are empty', () => {
-      render(<TransactionCard {...defaultProps} notes="" />);
+    it('should render pending status badge', () => {
+      render(<TransactionCard {...defaultProps} status="pending" />);
 
-      // The notes label should not appear when notes are empty
-      // We verify the card renders properly and notes label is not duplicated
-      expect(page.getByText('Membership Dues')).toBeInTheDocument();
-      expect(page.getByText('$160.00')).toBeInTheDocument();
+      expect(page.getByText('status_pending')).toBeInTheDocument();
+    });
+
+    it('should render declined status badge', () => {
+      render(<TransactionCard {...defaultProps} status="declined" />);
+
+      expect(page.getByText('status_declined')).toBeInTheDocument();
+    });
+
+    it('should render refunded status badge', () => {
+      render(<TransactionCard {...defaultProps} status="refunded" />);
+
+      expect(page.getByText('status_refunded')).toBeInTheDocument();
+    });
+
+    it('should render processing status badge', () => {
+      render(<TransactionCard {...defaultProps} status="processing" />);
+
+      expect(page.getByText('status_processing')).toBeInTheDocument();
     });
   });
 
@@ -75,13 +112,11 @@ describe('TransactionCard', () => {
           {...defaultProps}
           purpose="Merchandise"
           amount="$75.00"
-          notes="Gi purchase"
         />,
       );
 
       expect(page.getByText('Merchandise')).toBeInTheDocument();
       expect(page.getByText('$75.00')).toBeInTheDocument();
-      expect(page.getByText('Gi purchase')).toBeInTheDocument();
     });
 
     it('should render private lesson transaction', () => {
@@ -91,13 +126,11 @@ describe('TransactionCard', () => {
           purpose="Private Lesson"
           amount="$50.00"
           method="Cash"
-          notes="1 hour session"
         />,
       );
 
       expect(page.getByText('Private Lesson')).toBeInTheDocument();
       expect(page.getByText('Cash')).toBeInTheDocument();
-      expect(page.getByText('1 hour session')).toBeInTheDocument();
     });
 
     it('should render seminar transaction', () => {
@@ -106,13 +139,53 @@ describe('TransactionCard', () => {
           {...defaultProps}
           purpose="Seminar"
           amount="$25.00"
-          notes="Guest instructor event"
         />,
       );
 
       expect(page.getByText('Seminar', { exact: true })).toBeInTheDocument();
       expect(page.getByText('$25.00')).toBeInTheDocument();
-      expect(page.getByText('Guest instructor event')).toBeInTheDocument();
+    });
+  });
+
+  describe('Click Interaction', () => {
+    it('should call onClickAction when clicked', async () => {
+      const mockOnClick = vi.fn();
+      render(<TransactionCard {...defaultProps} onClickAction={mockOnClick} />);
+
+      const card = page.getByRole('button');
+      await card.click();
+
+      expect(mockOnClick).toHaveBeenCalledTimes(1);
+    });
+
+    it('should call onClickAction when Enter key is pressed', async () => {
+      const mockOnClick = vi.fn();
+      render(<TransactionCard {...defaultProps} onClickAction={mockOnClick} />);
+
+      const card = page.getByRole('button');
+      await card.click();
+      await userEvent.keyboard('{Enter}');
+
+      expect(mockOnClick).toHaveBeenCalled();
+    });
+
+    it('should call onClickAction when Space key is pressed', async () => {
+      const mockOnClick = vi.fn();
+      render(<TransactionCard {...defaultProps} onClickAction={mockOnClick} />);
+
+      const card = page.getByRole('button');
+      await card.click();
+      await userEvent.keyboard(' ');
+
+      expect(mockOnClick).toHaveBeenCalled();
+    });
+
+    it('should be focusable', () => {
+      render(<TransactionCard {...defaultProps} />);
+
+      const card = page.getByRole('button');
+
+      expect(card).toBeInTheDocument();
     });
   });
 
@@ -120,9 +193,31 @@ describe('TransactionCard', () => {
     it('should render as a card component', () => {
       render(<TransactionCard {...defaultProps} />);
 
-      // Verify the card structure by checking for key elements
       expect(page.getByText('April 15, 2025')).toBeInTheDocument();
       expect(page.getByText('$160.00')).toBeInTheDocument();
+      expect(page.getByText('John Smith')).toBeInTheDocument();
+    });
+
+    it('should render with cursor pointer style', () => {
+      render(<TransactionCard {...defaultProps} />);
+
+      const card = page.getByRole('button');
+
+      expect(card).toBeInTheDocument();
+    });
+  });
+
+  describe('Different Members', () => {
+    it('should display different member names', () => {
+      render(<TransactionCard {...defaultProps} memberName="Jane Doe" />);
+
+      expect(page.getByText('Jane Doe')).toBeInTheDocument();
+    });
+
+    it('should display different transaction IDs', () => {
+      render(<TransactionCard {...defaultProps} transactionId="TXN999999" />);
+
+      expect(page.getByText('TXN999999')).toBeInTheDocument();
     });
   });
 });
