@@ -13,6 +13,8 @@ export const badgeVariants = cva(
           'border-transparent bg-red-500 text-neutral-100 focus-visible:ring-red-500/20 [a&]:hover:bg-red-500/90',
         outline:
           'border-neutral-600 bg-transparent text-neutral-1500 dark:border-neutral-950 dark:text-neutral-100 [a&]:hover:bg-neutral-500 [a&]:hover:text-neutral-1500 [a&]:dark:hover:bg-neutral-1400 [a&]:dark:hover:text-neutral-100',
+        warning:
+          'border-yellow-600 bg-yellow-100 text-yellow-800 dark:border-yellow-500 dark:bg-yellow-900/30 dark:text-yellow-300',
       },
     },
     defaultVariants: {

@@ -1,7 +1,10 @@
+import type { TransactionStatus } from './FinancesTable';
 import { describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { page, userEvent } from 'vitest/browser';
 import { FinancesFilterBar } from './FinancesFilterBar';
+
+const ALL_STATUSES: TransactionStatus[] = ['paid', 'pending', 'declined', 'refunded', 'processing'];
 
 // Mock next-intl
 vi.mock('next-intl', () => ({
@@ -16,7 +19,8 @@ describe('FinancesFilterBar', () => {
       render(
         <FinancesFilterBar
           onFiltersChangeAction={mockOnFiltersChange}
-          availablePurposes={[]}
+          availableOrigins={[]}
+          availableStatuses={ALL_STATUSES}
         />,
       );
 
@@ -31,7 +35,8 @@ describe('FinancesFilterBar', () => {
       render(
         <FinancesFilterBar
           onFiltersChangeAction={mockOnFiltersChange}
-          availablePurposes={[]}
+          availableOrigins={[]}
+          availableStatuses={ALL_STATUSES}
         />,
       );
 
@@ -40,7 +45,8 @@ describe('FinancesFilterBar', () => {
 
       expect(mockOnFiltersChange).toHaveBeenCalledWith({
         search: 'test',
-        purpose: 'all',
+        origin: 'all',
+        status: 'all',
       });
     });
 
@@ -50,7 +56,8 @@ describe('FinancesFilterBar', () => {
       render(
         <FinancesFilterBar
           onFiltersChangeAction={mockOnFiltersChange}
-          availablePurposes={[]}
+          availableOrigins={[]}
+          availableStatuses={ALL_STATUSES}
         />,
       );
 
@@ -60,87 +67,173 @@ describe('FinancesFilterBar', () => {
     });
   });
 
-  describe('Purpose Filter', () => {
-    it('should render purpose filter dropdown', () => {
+  describe('Status Filter', () => {
+    it('should render status filter dropdown', () => {
       const mockOnFiltersChange = vi.fn();
 
       render(
         <FinancesFilterBar
           onFiltersChangeAction={mockOnFiltersChange}
-          availablePurposes={['Membership Dues', 'Merchandise']}
+          availableOrigins={[]}
+          availableStatuses={ALL_STATUSES}
         />,
       );
 
-      const purposeFilter = page.getByTestId('finances-purpose-filter');
+      const statusFilter = page.getByTestId('finances-status-filter');
 
-      expect(purposeFilter).toBeInTheDocument();
+      expect(statusFilter).toBeInTheDocument();
     });
 
-    it('should show All Purposes option', async () => {
+    it('should show All Statuses option', async () => {
       const mockOnFiltersChange = vi.fn();
 
       render(
         <FinancesFilterBar
           onFiltersChangeAction={mockOnFiltersChange}
-          availablePurposes={['Membership Dues']}
+          availableOrigins={[]}
+          availableStatuses={ALL_STATUSES}
         />,
       );
 
-      const purposeFilter = page.getByRole('combobox');
-      await purposeFilter.click();
+      const statusFilter = page.getByTestId('finances-status-filter');
+      await statusFilter.click();
 
-      expect(page.getByRole('option', { name: 'all_purposes_filter' })).toBeInTheDocument();
+      expect(page.getByRole('option', { name: 'all_statuses_filter' })).toBeInTheDocument();
     });
 
-    it('should show available purpose options', async () => {
+    it('should show status options', async () => {
       const mockOnFiltersChange = vi.fn();
 
       render(
         <FinancesFilterBar
           onFiltersChangeAction={mockOnFiltersChange}
-          availablePurposes={['Membership Dues', 'Merchandise', 'Private Lesson']}
+          availableOrigins={[]}
+          availableStatuses={ALL_STATUSES}
         />,
       );
 
-      const purposeFilter = page.getByRole('combobox');
-      await purposeFilter.click();
+      const statusFilter = page.getByTestId('finances-status-filter');
+      await statusFilter.click();
+
+      expect(page.getByRole('option', { name: 'status_paid' })).toBeInTheDocument();
+      expect(page.getByRole('option', { name: 'status_pending' })).toBeInTheDocument();
+      expect(page.getByRole('option', { name: 'status_declined' })).toBeInTheDocument();
+      expect(page.getByRole('option', { name: 'status_refunded' })).toBeInTheDocument();
+      expect(page.getByRole('option', { name: 'status_processing' })).toBeInTheDocument();
+    });
+
+    it('should call onFiltersChangeAction when selecting status', async () => {
+      const mockOnFiltersChange = vi.fn();
+
+      render(
+        <FinancesFilterBar
+          onFiltersChangeAction={mockOnFiltersChange}
+          availableOrigins={[]}
+          availableStatuses={ALL_STATUSES}
+        />,
+      );
+
+      const statusFilter = page.getByTestId('finances-status-filter');
+      await statusFilter.click();
+
+      const paidOption = page.getByRole('option', { name: 'status_paid' });
+      await paidOption.click();
+
+      expect(mockOnFiltersChange).toHaveBeenCalledWith({
+        search: '',
+        origin: 'all',
+        status: 'paid',
+      });
+    });
+  });
+
+  describe('Origin Filter', () => {
+    it('should render origin filter dropdown', () => {
+      const mockOnFiltersChange = vi.fn();
+
+      render(
+        <FinancesFilterBar
+          onFiltersChangeAction={mockOnFiltersChange}
+          availableOrigins={['Membership Dues', 'Merchandise']}
+          availableStatuses={ALL_STATUSES}
+        />,
+      );
+
+      const originFilter = page.getByTestId('finances-origin-filter');
+
+      expect(originFilter).toBeInTheDocument();
+    });
+
+    it('should show All Origins option', async () => {
+      const mockOnFiltersChange = vi.fn();
+
+      render(
+        <FinancesFilterBar
+          onFiltersChangeAction={mockOnFiltersChange}
+          availableOrigins={['Membership Dues']}
+          availableStatuses={ALL_STATUSES}
+        />,
+      );
+
+      const originFilter = page.getByTestId('finances-origin-filter');
+      await originFilter.click();
+
+      expect(page.getByRole('option', { name: 'all_origins_filter' })).toBeInTheDocument();
+    });
+
+    it('should show available origin options', async () => {
+      const mockOnFiltersChange = vi.fn();
+
+      render(
+        <FinancesFilterBar
+          onFiltersChangeAction={mockOnFiltersChange}
+          availableOrigins={['Membership Dues', 'Merchandise', 'Private Lesson']}
+          availableStatuses={ALL_STATUSES}
+        />,
+      );
+
+      const originFilter = page.getByTestId('finances-origin-filter');
+      await originFilter.click();
 
       expect(page.getByRole('option', { name: 'Membership Dues' })).toBeInTheDocument();
       expect(page.getByRole('option', { name: 'Merchandise' })).toBeInTheDocument();
       expect(page.getByRole('option', { name: 'Private Lesson' })).toBeInTheDocument();
     });
 
-    it('should call onFiltersChangeAction when selecting purpose', async () => {
+    it('should call onFiltersChangeAction when selecting origin', async () => {
       const mockOnFiltersChange = vi.fn();
 
       render(
         <FinancesFilterBar
           onFiltersChangeAction={mockOnFiltersChange}
-          availablePurposes={['Membership Dues', 'Merchandise']}
+          availableOrigins={['Membership Dues', 'Merchandise']}
+          availableStatuses={ALL_STATUSES}
         />,
       );
 
-      const purposeFilter = page.getByRole('combobox');
-      await purposeFilter.click();
+      const originFilter = page.getByTestId('finances-origin-filter');
+      await originFilter.click();
 
       const merchandiseOption = page.getByRole('option', { name: 'Merchandise' });
       await merchandiseOption.click();
 
       expect(mockOnFiltersChange).toHaveBeenCalledWith({
         search: '',
-        purpose: 'Merchandise',
+        origin: 'Merchandise',
+        status: 'all',
       });
     });
   });
 
   describe('Combined Filters', () => {
-    it('should maintain search when changing purpose', async () => {
+    it('should maintain search when changing origin', async () => {
       const mockOnFiltersChange = vi.fn();
 
       render(
         <FinancesFilterBar
           onFiltersChangeAction={mockOnFiltersChange}
-          availablePurposes={['Membership Dues', 'Merchandise']}
+          availableOrigins={['Membership Dues', 'Merchandise']}
+          availableStatuses={ALL_STATUSES}
         />,
       );
 
@@ -148,31 +241,33 @@ describe('FinancesFilterBar', () => {
       const searchInput = page.getByPlaceholder('search_placeholder');
       await userEvent.fill(searchInput.element() as HTMLInputElement, 'test');
 
-      // Change purpose
-      const purposeFilter = page.getByRole('combobox');
-      await purposeFilter.click();
+      // Change origin
+      const originFilter = page.getByTestId('finances-origin-filter');
+      await originFilter.click();
       const merchandiseOption = page.getByRole('option', { name: 'Merchandise' });
       await merchandiseOption.click();
 
       expect(mockOnFiltersChange).toHaveBeenLastCalledWith({
         search: 'test',
-        purpose: 'Merchandise',
+        origin: 'Merchandise',
+        status: 'all',
       });
     });
 
-    it('should maintain purpose when typing in search', async () => {
+    it('should maintain origin when typing in search', async () => {
       const mockOnFiltersChange = vi.fn();
 
       render(
         <FinancesFilterBar
           onFiltersChangeAction={mockOnFiltersChange}
-          availablePurposes={['Membership Dues', 'Merchandise']}
+          availableOrigins={['Membership Dues', 'Merchandise']}
+          availableStatuses={ALL_STATUSES}
         />,
       );
 
-      // Change purpose first
-      const purposeFilter = page.getByRole('combobox');
-      await purposeFilter.click();
+      // Change origin first
+      const originFilter = page.getByTestId('finances-origin-filter');
+      await originFilter.click();
       const merchandiseOption = page.getByRole('option', { name: 'Merchandise' });
       await merchandiseOption.click();
 
@@ -182,44 +277,121 @@ describe('FinancesFilterBar', () => {
 
       expect(mockOnFiltersChange).toHaveBeenLastCalledWith({
         search: 'test',
-        purpose: 'Merchandise',
+        origin: 'Merchandise',
+        status: 'all',
+      });
+    });
+
+    it('should maintain all filters when changing status', async () => {
+      const mockOnFiltersChange = vi.fn();
+
+      render(
+        <FinancesFilterBar
+          onFiltersChangeAction={mockOnFiltersChange}
+          availableOrigins={['Membership Dues', 'Merchandise']}
+          availableStatuses={ALL_STATUSES}
+        />,
+      );
+
+      // Type in search
+      const searchInput = page.getByPlaceholder('search_placeholder');
+      await userEvent.fill(searchInput.element() as HTMLInputElement, 'test');
+
+      // Change origin
+      const originFilter = page.getByTestId('finances-origin-filter');
+      await originFilter.click();
+      const merchandiseOption = page.getByRole('option', { name: 'Merchandise' });
+      await merchandiseOption.click();
+
+      // Change status
+      const statusFilter = page.getByTestId('finances-status-filter');
+      await statusFilter.click();
+      const paidOption = page.getByRole('option', { name: 'status_paid' });
+      await paidOption.click();
+
+      expect(mockOnFiltersChange).toHaveBeenLastCalledWith({
+        search: 'test',
+        origin: 'Merchandise',
+        status: 'paid',
       });
     });
   });
 
   describe('Empty State', () => {
-    it('should render with empty available purposes', () => {
+    it('should render with empty available origins', () => {
       const mockOnFiltersChange = vi.fn();
 
       render(
         <FinancesFilterBar
           onFiltersChangeAction={mockOnFiltersChange}
-          availablePurposes={[]}
+          availableOrigins={[]}
+          availableStatuses={ALL_STATUSES}
         />,
       );
 
-      const purposeFilter = page.getByRole('combobox');
+      const originFilter = page.getByTestId('finances-origin-filter');
 
-      expect(purposeFilter).toBeInTheDocument();
+      expect(originFilter).toBeInTheDocument();
     });
 
-    it('should only show All Purposes when no purposes available', async () => {
+    it('should only show All Origins when no origins available', async () => {
       const mockOnFiltersChange = vi.fn();
 
       render(
         <FinancesFilterBar
           onFiltersChangeAction={mockOnFiltersChange}
-          availablePurposes={[]}
+          availableOrigins={[]}
+          availableStatuses={ALL_STATUSES}
         />,
       );
 
-      const purposeFilter = page.getByRole('combobox');
-      await purposeFilter.click();
+      const originFilter = page.getByTestId('finances-origin-filter');
+      await originFilter.click();
 
-      const options = page.getByRole('option').elements();
+      expect(page.getByRole('option', { name: 'all_origins_filter' })).toBeInTheDocument();
+    });
+  });
 
-      expect(options.length).toBe(1);
-      expect(page.getByRole('option', { name: 'all_purposes_filter' })).toBeInTheDocument();
+  describe('Dynamic Filter Options', () => {
+    it('should only show available statuses in dropdown', async () => {
+      const mockOnFiltersChange = vi.fn();
+      const limitedStatuses: TransactionStatus[] = ['paid', 'pending'];
+
+      render(
+        <FinancesFilterBar
+          onFiltersChangeAction={mockOnFiltersChange}
+          availableOrigins={[]}
+          availableStatuses={limitedStatuses}
+        />,
+      );
+
+      const statusFilter = page.getByTestId('finances-status-filter');
+      await statusFilter.click();
+
+      expect(page.getByRole('option', { name: 'status_paid' })).toBeInTheDocument();
+      expect(page.getByRole('option', { name: 'status_pending' })).toBeInTheDocument();
+      expect(page.getByRole('option', { name: 'status_declined' }).elements()).toHaveLength(0);
+      expect(page.getByRole('option', { name: 'status_refunded' }).elements()).toHaveLength(0);
+      expect(page.getByRole('option', { name: 'status_processing' }).elements()).toHaveLength(0);
+    });
+
+    it('should show All Statuses even when limited statuses available', async () => {
+      const mockOnFiltersChange = vi.fn();
+      const limitedStatuses: TransactionStatus[] = ['paid'];
+
+      render(
+        <FinancesFilterBar
+          onFiltersChangeAction={mockOnFiltersChange}
+          availableOrigins={[]}
+          availableStatuses={limitedStatuses}
+        />,
+      );
+
+      const statusFilter = page.getByTestId('finances-status-filter');
+      await statusFilter.click();
+
+      expect(page.getByRole('option', { name: 'all_statuses_filter' })).toBeInTheDocument();
+      expect(page.getByRole('option', { name: 'status_paid' })).toBeInTheDocument();
     });
   });
 });
