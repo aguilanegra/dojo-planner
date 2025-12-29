@@ -40,7 +40,11 @@ export const Default: Story = {
     level: 'Beginner',
     type: 'Adults',
     style: 'Gi',
-    schedule: 'M/W/F • 6-7:30 PM',
+    schedule: [
+      { day: 'Monday', time: '6:00 PM - 7:30 PM' },
+      { day: 'Wednesday', time: '6:00 PM - 7:30 PM' },
+      { day: 'Friday', time: '6:00 PM - 7:30 PM' },
+    ],
     location: 'Main Training Area',
     instructors: [
       {
@@ -59,7 +63,10 @@ export const Advanced: Story = {
     level: 'Advanced',
     type: 'Adults',
     style: 'No Gi',
-    schedule: 'Sa/Su • 12-1 PM',
+    schedule: [
+      { day: 'Saturday', time: '12:00 PM - 1:00 PM' },
+      { day: 'Sunday', time: '12:00 PM - 1:00 PM' },
+    ],
     location: 'Competition Area',
     instructors: [
       {
@@ -78,7 +85,10 @@ export const KidsClass: Story = {
     level: 'Beginner',
     type: 'Kids',
     style: 'Gi',
-    schedule: 'T/Th • 4-5 PM',
+    schedule: [
+      { day: 'Tuesday', time: '4:00 PM - 5:00 PM' },
+      { day: 'Thursday', time: '4:00 PM - 5:00 PM' },
+    ],
     location: 'Kids Area',
     instructors: [
       {
@@ -97,7 +107,9 @@ export const WomensClass: Story = {
     level: 'All Levels',
     type: 'Women',
     style: 'Gi',
-    schedule: 'T • 5-6 PM',
+    schedule: [
+      { day: 'Tuesday', time: '5:00 PM - 6:00 PM' },
+    ],
     location: 'Main Training Area',
     instructors: [
       {
@@ -116,7 +128,11 @@ export const MultipleInstructors: Story = {
     level: 'Advanced',
     type: 'Competition',
     style: 'Gi',
-    schedule: 'M/W/F • 8-9 PM',
+    schedule: [
+      { day: 'Monday', time: '8:00 PM - 9:00 PM' },
+      { day: 'Wednesday', time: '8:00 PM - 9:00 PM' },
+      { day: 'Friday', time: '8:00 PM - 9:00 PM' },
+    ],
     location: 'Competition Area',
     instructors: [
       {
@@ -143,7 +159,10 @@ export const OpenMat: Story = {
     level: 'All Levels',
     type: 'Open',
     style: 'Gi',
-    schedule: 'Sa/Su • 10 AM-12 PM',
+    schedule: [
+      { day: 'Saturday', time: '10:00 AM - 12:00 PM' },
+      { day: 'Sunday', time: '10:00 AM - 12:00 PM' },
+    ],
     location: 'Main Training Area',
     instructors: [],
   },

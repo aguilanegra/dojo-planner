@@ -1,58 +1,51 @@
 'use client';
 
-import type { DayOfWeek } from '@/hooks/useAddClassWizard';
+import type { DayOfWeek, ScheduleInstance } from '@/hooks/useAddClassWizard';
 import { Edit } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
 type ClassScheduleCardProps = {
-  daysOfWeek: DayOfWeek[];
-  timeHour: number;
-  timeMinute: number;
-  timeAmPm: 'AM' | 'PM';
-  durationHours: number;
-  durationMinutes: number;
+  scheduleInstances: ScheduleInstance[];
   location: string;
   calendarColor: string;
   onEdit: () => void;
 };
 
+const MOCK_STAFF: Record<string, string> = {
+  'collin-grayson': 'Collin Grayson',
+  'coach-alex': 'Coach Alex',
+  'professor-jessica': 'Professor Jessica',
+  'professor-joao': 'Professor Joao',
+  'coach-liza': 'Coach Liza',
+  'professor-ivan': 'Professor Ivan',
+};
+
 export function ClassScheduleCard({
-  daysOfWeek,
-  timeHour,
-  timeMinute,
-  timeAmPm,
-  durationHours,
-  durationMinutes,
+  scheduleInstances,
   location,
   calendarColor,
   onEdit,
 }: ClassScheduleCardProps) {
   const t = useTranslations('ClassDetailPage.ScheduleCard');
 
-  const formatTime = (): string => {
-    const hour = timeHour.toString().padStart(2, '0');
-    const minute = timeMinute.toString().padStart(2, '0');
-    return `${hour}:${minute} ${timeAmPm}`;
+  const formatTime = (hour: number, minute: number, amPm: 'AM' | 'PM'): string => {
+    return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')} ${amPm}`;
   };
 
-  const formatDuration = (): string => {
+  const formatDuration = (hours: number, minutes: number): string => {
     const parts: string[] = [];
-    if (durationHours > 0) {
-      parts.push(`${durationHours}h`);
+    if (hours > 0) {
+      parts.push(`${hours}h`);
     }
-    if (durationMinutes > 0) {
-      parts.push(`${durationMinutes}m`);
+    if (minutes > 0) {
+      parts.push(`${minutes}m`);
     }
     return parts.join(' ') || '0m';
   };
 
-  const formatDays = (): string => {
-    if (daysOfWeek.length === 0) {
-      return t('no_days');
-    }
-    // Abbreviate day names
+  const getDayAbbreviation = (day: DayOfWeek): string => {
     const abbreviations: Record<DayOfWeek, string> = {
       Monday: 'Mon',
       Tuesday: 'Tue',
@@ -62,28 +55,61 @@ export function ClassScheduleCard({
       Saturday: 'Sat',
       Sunday: 'Sun',
     };
-    return daysOfWeek.map(day => abbreviations[day]).join(', ');
+    return abbreviations[day];
+  };
+
+  const getStaffName = (staffValue: string): string => {
+    return MOCK_STAFF[staffValue] || staffValue;
   };
 
   return (
-    <Card className="flex flex-col p-6">
+    <Card className="flex h-full flex-col p-6">
       <h2 className="text-lg font-semibold text-foreground">{t('title')}</h2>
 
       <div className="mt-6 flex-1 space-y-4">
+        {/* Schedule Instances Table */}
         <div>
-          <span className="text-sm font-medium text-muted-foreground">{t('days_label')}</span>
-          <p className="mt-1 text-foreground">{formatDays()}</p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <span className="text-sm font-medium text-muted-foreground">{t('time_label')}</span>
-            <p className="mt-1 text-foreground">{formatTime()}</p>
-          </div>
-          <div>
-            <span className="text-sm font-medium text-muted-foreground">{t('duration_label')}</span>
-            <p className="mt-1 text-foreground">{formatDuration()}</p>
-          </div>
+          <span className="text-sm font-medium text-muted-foreground">{t('schedule_label')}</span>
+          {scheduleInstances.length > 0
+            ? (
+                <div className="mt-2 overflow-x-auto rounded-lg border border-border bg-background">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-border bg-secondary">
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('column_day')}</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('column_time')}</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('column_duration')}</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('column_instructor')}</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">{t('column_assistant')}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {scheduleInstances.map(instance => (
+                        <tr key={instance.id} className="border-b border-border last:border-b-0" data-testid={`schedule-instance-${instance.id}`}>
+                          <td className="px-4 py-3 font-medium text-foreground">
+                            {getDayAbbreviation(instance.dayOfWeek)}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-muted-foreground">
+                            {formatTime(instance.timeHour, instance.timeMinute, instance.timeAmPm)}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-muted-foreground">
+                            {formatDuration(instance.durationHours, instance.durationMinutes)}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-muted-foreground">
+                            {instance.staffMember ? getStaffName(instance.staffMember) : '-'}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-muted-foreground">
+                            {instance.assistantStaff ? getStaffName(instance.assistantStaff) : '-'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )
+            : (
+                <p className="mt-1 text-foreground">{t('no_schedule')}</p>
+              )}
         </div>
 
         <div>

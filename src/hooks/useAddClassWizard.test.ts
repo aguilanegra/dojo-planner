@@ -1,7 +1,19 @@
-import type { AddClassWizardData, ClassSchedule, DayOfWeek } from './useAddClassWizard';
+import type { AddClassWizardData, ClassSchedule, DayOfWeek, ScheduleInstance } from './useAddClassWizard';
 import { describe, expect, it } from 'vitest';
 
 describe('useAddClassWizard types and exports', () => {
+  const mockInstance: ScheduleInstance = {
+    id: 'test-instance-1',
+    dayOfWeek: 'Monday',
+    timeHour: 6,
+    timeMinute: 0,
+    timeAmPm: 'PM',
+    durationHours: 1,
+    durationMinutes: 0,
+    staffMember: 'coach-alex',
+    assistantStaff: '',
+  };
+
   it('should export AddClassWizardData type', () => {
     const testData: AddClassWizardData = {
       className: 'Test Class',
@@ -11,15 +23,11 @@ describe('useAddClassWizard types and exports', () => {
       allowWalkIns: 'Yes',
       description: 'Test description',
       schedule: {
-        daysOfWeek: ['Monday', 'Wednesday'],
-        timeHour: 6,
-        timeMinute: 0,
-        timeAmPm: 'AM',
-        durationHours: 1,
-        durationMinutes: 0,
+        instances: [
+          { ...mockInstance, dayOfWeek: 'Monday' },
+          { ...mockInstance, id: 'test-2', dayOfWeek: 'Wednesday' },
+        ],
         location: 'cta-irving',
-        staffMember: 'coach-alex',
-        assistantStaff: '',
       },
       calendarColor: '#000000',
       tags: ['tag1', 'tag2'],
@@ -30,22 +38,38 @@ describe('useAddClassWizard types and exports', () => {
     expect(testData.maximumCapacity).toBe(20);
   });
 
-  it('should support ClassSchedule type', () => {
+  it('should support ClassSchedule type with instances', () => {
     const schedule: ClassSchedule = {
-      daysOfWeek: ['Monday', 'Wednesday', 'Friday'],
+      instances: [
+        { ...mockInstance, dayOfWeek: 'Monday' },
+        { ...mockInstance, id: 'test-2', dayOfWeek: 'Wednesday' },
+        { ...mockInstance, id: 'test-3', dayOfWeek: 'Friday' },
+      ],
+      location: 'downtown-hq',
+    };
+
+    expect(schedule.instances).toHaveLength(3);
+    expect(schedule.instances[0]?.dayOfWeek).toBe('Monday');
+    expect(schedule.location).toBe('downtown-hq');
+  });
+
+  it('should support ScheduleInstance type', () => {
+    const instance: ScheduleInstance = {
+      id: 'instance-1',
+      dayOfWeek: 'Monday',
       timeHour: 6,
       timeMinute: 30,
       timeAmPm: 'PM',
       durationHours: 1,
       durationMinutes: 30,
-      location: 'downtown-hq',
       staffMember: 'professor-jessica',
       assistantStaff: 'coach-liza',
     };
 
-    expect(schedule.daysOfWeek).toHaveLength(3);
-    expect(schedule.timeHour).toBe(6);
-    expect(schedule.timeAmPm).toBe('PM');
+    expect(instance.dayOfWeek).toBe('Monday');
+    expect(instance.timeHour).toBe(6);
+    expect(instance.timeAmPm).toBe('PM');
+    expect(instance.staffMember).toBe('professor-jessica');
   });
 
   it('should support all days of week', () => {
@@ -96,15 +120,8 @@ describe('useAddClassWizard types and exports', () => {
       allowWalkIns: 'Yes',
       description: '',
       schedule: {
-        daysOfWeek: [],
-        timeHour: 6,
-        timeMinute: 0,
-        timeAmPm: 'AM',
-        durationHours: 1,
-        durationMinutes: 0,
+        instances: [],
         location: '',
-        staffMember: '',
-        assistantStaff: '',
       },
       calendarColor: '#000000',
       tags: [],
@@ -115,35 +132,35 @@ describe('useAddClassWizard types and exports', () => {
     expect(minimalData.className).toBe('');
   });
 
-  it('should allow creating schedule with all time options', () => {
-    const morningSchedule: ClassSchedule = {
-      daysOfWeek: ['Monday'],
+  it('should allow creating schedule instances with all time options', () => {
+    const morningInstance: ScheduleInstance = {
+      id: 'morning-1',
+      dayOfWeek: 'Monday',
       timeHour: 6,
       timeMinute: 0,
       timeAmPm: 'AM',
       durationHours: 1,
       durationMinutes: 0,
-      location: 'test',
       staffMember: 'test',
       assistantStaff: '',
     };
 
-    const eveningSchedule: ClassSchedule = {
-      daysOfWeek: ['Friday'],
+    const eveningInstance: ScheduleInstance = {
+      id: 'evening-1',
+      dayOfWeek: 'Friday',
       timeHour: 7,
       timeMinute: 30,
       timeAmPm: 'PM',
       durationHours: 2,
       durationMinutes: 30,
-      location: 'test',
       staffMember: 'test',
       assistantStaff: '',
     };
 
-    expect(morningSchedule.timeAmPm).toBe('AM');
-    expect(eveningSchedule.timeAmPm).toBe('PM');
-    expect(eveningSchedule.durationHours).toBe(2);
-    expect(eveningSchedule.durationMinutes).toBe(30);
+    expect(morningInstance.timeAmPm).toBe('AM');
+    expect(eveningInstance.timeAmPm).toBe('PM');
+    expect(eveningInstance.durationHours).toBe(2);
+    expect(eveningInstance.durationMinutes).toBe(30);
   });
 
   it('should allow tags to be an array of strings', () => {
@@ -155,15 +172,8 @@ describe('useAddClassWizard types and exports', () => {
       allowWalkIns: 'Yes',
       description: 'Test',
       schedule: {
-        daysOfWeek: [],
-        timeHour: 6,
-        timeMinute: 0,
-        timeAmPm: 'AM',
-        durationHours: 1,
-        durationMinutes: 0,
+        instances: [],
         location: '',
-        staffMember: '',
-        assistantStaff: '',
       },
       calendarColor: '#000000',
       tags: ['beginner', 'adults', 'gi'],
@@ -184,15 +194,8 @@ describe('useAddClassWizard types and exports', () => {
       allowWalkIns: 'Yes',
       description: 'Test',
       schedule: {
-        daysOfWeek: [],
-        timeHour: 6,
-        timeMinute: 0,
-        timeAmPm: 'AM',
-        durationHours: 1,
-        durationMinutes: 0,
+        instances: [],
         location: '',
-        staffMember: '',
-        assistantStaff: '',
       },
       calendarColor: '#ff0000',
       tags: [],
@@ -200,5 +203,21 @@ describe('useAddClassWizard types and exports', () => {
 
     expect(testData.calendarColor).toBe('#ff0000');
     expect(testData.calendarColor).toMatch(/^#[0-9a-f]{6}$/i);
+  });
+
+  it('should allow multiple instances on the same day with different instructors', () => {
+    const schedule: ClassSchedule = {
+      instances: [
+        { ...mockInstance, id: 'mon-am', dayOfWeek: 'Monday', timeAmPm: 'AM', staffMember: 'coach-alex' },
+        { ...mockInstance, id: 'mon-pm', dayOfWeek: 'Monday', timeAmPm: 'PM', staffMember: 'professor-jessica' },
+      ],
+      location: 'downtown-hq',
+    };
+
+    expect(schedule.instances).toHaveLength(2);
+    expect(schedule.instances[0]?.staffMember).toBe('coach-alex');
+    expect(schedule.instances[1]?.staffMember).toBe('professor-jessica');
+    expect(schedule.instances[0]?.dayOfWeek).toBe('Monday');
+    expect(schedule.instances[1]?.dayOfWeek).toBe('Monday');
   });
 });

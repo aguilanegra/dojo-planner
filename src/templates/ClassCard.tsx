@@ -7,6 +7,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
+export type ScheduleItem = {
+  day: string;
+  time: string;
+};
+
 export type ClassCardProps = {
   id: string;
   name: string;
@@ -14,7 +19,7 @@ export type ClassCardProps = {
   level: string;
   type: string;
   style: string;
-  schedule: string;
+  schedule: ScheduleItem[];
   location: string;
   instructors: Array<{
     name: string;
@@ -67,7 +72,17 @@ export const ClassCard = (props: ClassCardProps) => {
         <div className="space-y-2 border-t border-border pt-4">
           <div className="text-sm">
             <p className="text-muted-foreground">Schedule</p>
-            <p className="font-medium text-foreground">{schedule}</p>
+            <div className="mt-1 space-y-1">
+              {schedule.map(item => (
+                <p key={`${item.day}-${item.time}`} className="font-medium text-foreground">
+                  {item.day}
+                  {' '}
+                  •
+                  {' '}
+                  {item.time}
+                </p>
+              ))}
+            </div>
           </div>
           <div className="text-sm">
             <p className="text-muted-foreground">Location</p>

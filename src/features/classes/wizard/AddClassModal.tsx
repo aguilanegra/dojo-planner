@@ -1,6 +1,6 @@
 'use client';
 
-import type { ClassCardProps } from '@/templates/ClassCard';
+import type { ClassCardProps, ScheduleItem } from '@/templates/ClassCard';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -69,17 +69,27 @@ export const AddClassModal = ({ isOpen, onCloseAction, onClassCreated }: AddClas
       await new Promise(resolve => setTimeout(resolve, 500));
 
       // Create the mock class object
-      const formatSchedule = () => {
-        const days = wizard.data.schedule.daysOfWeek.map(d => d.substring(0, 3).toUpperCase()).join('/');
-        const hour = wizard.data.schedule.timeHour;
-        const minute = wizard.data.schedule.timeMinute.toString().padStart(2, '0');
-        return `${days} ${hour}:${minute} ${wizard.data.schedule.timeAmPm}`;
+      const formatSchedule = (): ScheduleItem[] => {
+        const instances = wizard.data.schedule.instances;
+        return instances.map((instance) => {
+          const hour = instance.timeHour;
+          const minute = instance.timeMinute.toString().padStart(2, '0');
+          const endHour = hour + instance.durationHours + Math.floor((instance.timeMinute + instance.durationMinutes) / 60);
+          const endMinute = (instance.timeMinute + instance.durationMinutes) % 60;
+          const endAmPm = instance.timeAmPm === 'AM' && endHour >= 12 ? 'PM' : instance.timeAmPm;
+          const displayEndHour = endHour > 12 ? endHour - 12 : endHour;
+          return {
+            day: instance.dayOfWeek,
+            time: `${hour}:${minute} ${instance.timeAmPm} - ${displayEndHour}:${endMinute.toString().padStart(2, '0')} ${endAmPm}`,
+          };
+        });
       };
 
-      const staffMember = MOCK_STAFF[wizard.data.schedule.staffMember];
-      const assistantStaff = wizard.data.schedule.assistantStaff
-        ? MOCK_STAFF[wizard.data.schedule.assistantStaff]
-        : null;
+      // Get unique staff members from all instances
+      const uniqueStaffIds = [...new Set(wizard.data.schedule.instances.flatMap(i => [i.staffMember, i.assistantStaff].filter(Boolean)))];
+      const classInstructors = uniqueStaffIds
+        .map(id => MOCK_STAFF[id])
+        .filter((staff): staff is { name: string; photoUrl: string } => staff !== undefined);
 
       const newClass: ClassCardProps = {
         id: `class-${Date.now()}`,
@@ -90,10 +100,7 @@ export const AddClassModal = ({ isOpen, onCloseAction, onClassCreated }: AddClas
         style: 'Gi', // Default
         schedule: formatSchedule(),
         location: 'Current Location', // Uses the selected location from app context
-        instructors: [
-          ...(staffMember ? [staffMember] : []),
-          ...(assistantStaff ? [assistantStaff] : []),
-        ],
+        instructors: classInstructors,
       };
 
       console.info('[Add Class Wizard] Class created successfully:', {
@@ -136,12 +143,12 @@ export const AddClassModal = ({ isOpen, onCloseAction, onClassCreated }: AddClas
 
   return (
     <Dialog open={isOpen} onOpenChange={isOpen => !isOpen && handleCancel()}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[90vh] max-w-5xl flex-col overflow-hidden">
+        <DialogHeader className="shrink-0">
           <DialogTitle>{getDialogTitle()}</DialogTitle>
         </DialogHeader>
 
-        <div className="py-6">
+        <div className="min-h-0 flex-1 overflow-y-auto py-6">
           {wizard.step === 'class-basics' && (
             <ClassBasicsStep
               data={wizard.data}

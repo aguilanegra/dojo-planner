@@ -3,16 +3,21 @@ import { useState } from 'react';
 type AllowWalkIns = 'Yes' | 'No';
 export type DayOfWeek = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
 
-export type ClassSchedule = {
-  daysOfWeek: DayOfWeek[];
+export type ScheduleInstance = {
+  id: string;
+  dayOfWeek: DayOfWeek;
   timeHour: number;
   timeMinute: number;
   timeAmPm: 'AM' | 'PM';
   durationHours: number;
   durationMinutes: number;
-  location: string;
   staffMember: string;
   assistantStaff: string;
+};
+
+export type ClassSchedule = {
+  instances: ScheduleInstance[];
+  location: string;
 };
 
 export type AddClassWizardData = {
@@ -35,15 +40,8 @@ export type AddClassWizardData = {
 type ClassWizardStep = 'class-basics' | 'schedule' | 'tags' | 'success';
 
 const initialSchedule: ClassSchedule = {
-  daysOfWeek: [],
-  timeHour: 6,
-  timeMinute: 0,
-  timeAmPm: 'AM',
-  durationHours: 1,
-  durationMinutes: 0,
+  instances: [],
   location: '',
-  staffMember: '',
-  assistantStaff: '',
 };
 
 const initialData: AddClassWizardData = {

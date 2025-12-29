@@ -1,6 +1,6 @@
 'use client';
 
-import type { DayOfWeek } from '@/hooks/useAddClassWizard';
+import type { ScheduleInstance } from '@/hooks/useAddClassWizard';
 import { ArrowLeft, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
@@ -8,13 +8,11 @@ import { useRouter } from 'next/navigation';
 import { use, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ClassBasicsCard } from '@/features/classes/details/ClassBasicsCard';
-import { ClassInstructorsCard } from '@/features/classes/details/ClassInstructorsCard';
 import { ClassScheduleCard } from '@/features/classes/details/ClassScheduleCard';
 import { ClassSettingsCard } from '@/features/classes/details/ClassSettingsCard';
 import { ClassStatsCard } from '@/features/classes/details/ClassStatsCard';
 import { DeleteClassAlertDialog } from '@/features/classes/details/DeleteClassAlertDialog';
 import { EditClassBasicsModal } from '@/features/classes/details/EditClassBasicsModal';
-import { EditClassInstructorsModal } from '@/features/classes/details/EditClassInstructorsModal';
 import { EditClassScheduleModal } from '@/features/classes/details/EditClassScheduleModal';
 import { EditClassSettingsModal } from '@/features/classes/details/EditClassSettingsModal';
 
@@ -40,12 +38,7 @@ export type ClassDetailData = {
   type: ClassType;
   style: ClassStyle;
   // Schedule
-  daysOfWeek: DayOfWeek[];
-  timeHour: number;
-  timeMinute: number;
-  timeAmPm: 'AM' | 'PM';
-  durationHours: number;
-  durationMinutes: number;
+  scheduleInstances: ScheduleInstance[];
   location: string;
   calendarColor: string;
   // Instructors
@@ -70,12 +63,11 @@ const mockClassDetails: Record<string, ClassDetailData> = {
     level: 'Beginner',
     type: 'Adults',
     style: 'Gi',
-    daysOfWeek: ['Monday', 'Wednesday', 'Friday'],
-    timeHour: 6,
-    timeMinute: 0,
-    timeAmPm: 'PM',
-    durationHours: 1,
-    durationMinutes: 0,
+    scheduleInstances: [
+      { id: 'si-1-1', dayOfWeek: 'Monday', timeHour: 6, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'coach-alex', assistantStaff: 'professor-jessica' },
+      { id: 'si-1-2', dayOfWeek: 'Wednesday', timeHour: 6, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'coach-alex', assistantStaff: '' },
+      { id: 'si-1-3', dayOfWeek: 'Friday', timeHour: 6, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'professor-jessica', assistantStaff: '' },
+    ],
     location: 'Downtown HQ',
     calendarColor: '#22c55e',
     instructors: [
@@ -97,12 +89,10 @@ const mockClassDetails: Record<string, ClassDetailData> = {
     level: 'Beginner',
     type: 'Adults',
     style: 'Gi',
-    daysOfWeek: ['Tuesday', 'Thursday'],
-    timeHour: 6,
-    timeMinute: 0,
-    timeAmPm: 'PM',
-    durationHours: 1,
-    durationMinutes: 30,
+    scheduleInstances: [
+      { id: 'si-2-1', dayOfWeek: 'Tuesday', timeHour: 6, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 30, staffMember: 'professor-ivan', assistantStaff: '' },
+      { id: 'si-2-2', dayOfWeek: 'Thursday', timeHour: 6, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 30, staffMember: 'professor-ivan', assistantStaff: '' },
+    ],
     location: 'Downtown HQ',
     calendarColor: '#22c55e',
     instructors: [
@@ -123,12 +113,10 @@ const mockClassDetails: Record<string, ClassDetailData> = {
     level: 'Intermediate',
     type: 'Adults',
     style: 'Gi',
-    daysOfWeek: ['Monday', 'Wednesday'],
-    timeHour: 7,
-    timeMinute: 0,
-    timeAmPm: 'PM',
-    durationHours: 1,
-    durationMinutes: 0,
+    scheduleInstances: [
+      { id: 'si-3-1', dayOfWeek: 'Monday', timeHour: 7, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'professor-joao', assistantStaff: '' },
+      { id: 'si-3-2', dayOfWeek: 'Wednesday', timeHour: 7, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'professor-joao', assistantStaff: '' },
+    ],
     location: 'Downtown HQ',
     calendarColor: '#6b7280',
     instructors: [
@@ -149,12 +137,10 @@ const mockClassDetails: Record<string, ClassDetailData> = {
     level: 'Advanced',
     type: 'Adults',
     style: 'No Gi',
-    daysOfWeek: ['Wednesday', 'Friday'],
-    timeHour: 7,
-    timeMinute: 0,
-    timeAmPm: 'PM',
-    durationHours: 1,
-    durationMinutes: 0,
+    scheduleInstances: [
+      { id: 'si-4-1', dayOfWeek: 'Wednesday', timeHour: 7, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'coach-alex', assistantStaff: '' },
+      { id: 'si-4-2', dayOfWeek: 'Friday', timeHour: 7, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'coach-alex', assistantStaff: '' },
+    ],
     location: 'Downtown HQ',
     calendarColor: '#a855f7',
     instructors: [
@@ -175,12 +161,10 @@ const mockClassDetails: Record<string, ClassDetailData> = {
     level: 'Beginner',
     type: 'Kids',
     style: 'Gi',
-    daysOfWeek: ['Tuesday', 'Thursday'],
-    timeHour: 4,
-    timeMinute: 0,
-    timeAmPm: 'PM',
-    durationHours: 1,
-    durationMinutes: 0,
+    scheduleInstances: [
+      { id: 'si-5-1', dayOfWeek: 'Tuesday', timeHour: 4, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'coach-liza', assistantStaff: '' },
+      { id: 'si-5-2', dayOfWeek: 'Thursday', timeHour: 4, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'coach-liza', assistantStaff: '' },
+    ],
     location: 'Downtown HQ',
     calendarColor: '#06b6d4',
     instructors: [
@@ -201,12 +185,10 @@ const mockClassDetails: Record<string, ClassDetailData> = {
     level: 'Advanced',
     type: 'Adults',
     style: 'No Gi',
-    daysOfWeek: ['Saturday', 'Sunday'],
-    timeHour: 12,
-    timeMinute: 0,
-    timeAmPm: 'PM',
-    durationHours: 1,
-    durationMinutes: 0,
+    scheduleInstances: [
+      { id: 'si-6-1', dayOfWeek: 'Saturday', timeHour: 12, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'professor-joao', assistantStaff: '' },
+      { id: 'si-6-2', dayOfWeek: 'Sunday', timeHour: 12, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'professor-joao', assistantStaff: '' },
+    ],
     location: 'Downtown HQ',
     calendarColor: '#a855f7',
     instructors: [
@@ -227,12 +209,9 @@ const mockClassDetails: Record<string, ClassDetailData> = {
     level: 'All Levels',
     type: 'Women',
     style: 'Gi',
-    daysOfWeek: ['Tuesday'],
-    timeHour: 5,
-    timeMinute: 0,
-    timeAmPm: 'PM',
-    durationHours: 1,
-    durationMinutes: 0,
+    scheduleInstances: [
+      { id: 'si-7-1', dayOfWeek: 'Tuesday', timeHour: 5, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'professor-jessica', assistantStaff: '' },
+    ],
     location: 'Downtown HQ',
     calendarColor: '#ec4899',
     instructors: [
@@ -253,12 +232,10 @@ const mockClassDetails: Record<string, ClassDetailData> = {
     level: 'All Levels',
     type: 'Open',
     style: 'Gi',
-    daysOfWeek: ['Saturday', 'Sunday'],
-    timeHour: 10,
-    timeMinute: 0,
-    timeAmPm: 'AM',
-    durationHours: 2,
-    durationMinutes: 0,
+    scheduleInstances: [
+      { id: 'si-8-1', dayOfWeek: 'Saturday', timeHour: 10, timeMinute: 0, timeAmPm: 'AM', durationHours: 2, durationMinutes: 0, staffMember: '', assistantStaff: '' },
+      { id: 'si-8-2', dayOfWeek: 'Sunday', timeHour: 10, timeMinute: 0, timeAmPm: 'AM', durationHours: 2, durationMinutes: 0, staffMember: '', assistantStaff: '' },
+    ],
     location: 'Downtown HQ',
     calendarColor: '#ef4444',
     instructors: [],
@@ -277,12 +254,11 @@ const mockClassDetails: Record<string, ClassDetailData> = {
     level: 'Advanced',
     type: 'Competition',
     style: 'Gi',
-    daysOfWeek: ['Monday', 'Wednesday', 'Friday'],
-    timeHour: 8,
-    timeMinute: 0,
-    timeAmPm: 'PM',
-    durationHours: 1,
-    durationMinutes: 0,
+    scheduleInstances: [
+      { id: 'si-9-1', dayOfWeek: 'Monday', timeHour: 8, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'coach-alex', assistantStaff: '' },
+      { id: 'si-9-2', dayOfWeek: 'Wednesday', timeHour: 8, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'coach-alex', assistantStaff: '' },
+      { id: 'si-9-3', dayOfWeek: 'Friday', timeHour: 8, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'coach-alex', assistantStaff: '' },
+    ],
     location: 'Downtown HQ',
     calendarColor: '#a855f7',
     instructors: [
@@ -309,7 +285,6 @@ export default function ClassDetailPage({ params }: { params: Promise<PageParams
   // Modal states
   const [isEditBasicsOpen, setIsEditBasicsOpen] = useState(false);
   const [isEditScheduleOpen, setIsEditScheduleOpen] = useState(false);
-  const [isEditInstructorsOpen, setIsEditInstructorsOpen] = useState(false);
   const [isEditSettingsOpen, setIsEditSettingsOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
@@ -367,42 +342,34 @@ export default function ClassDetailPage({ params }: { params: Promise<PageParams
 
       {/* Detail Cards Grid */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Class Basics Card */}
-        <ClassBasicsCard
-          className={classData.className}
-          program={classData.program}
-          description={classData.description}
-          level={classData.level}
-          type={classData.type}
-          style={classData.style}
-          onEdit={() => setIsEditBasicsOpen(true)}
-        />
+        {/* Left Column: Basics + Settings */}
+        <div className="flex flex-col gap-6">
+          {/* Class Basics Card */}
+          <ClassBasicsCard
+            className={classData.className}
+            program={classData.program}
+            description={classData.description}
+            level={classData.level}
+            type={classData.type}
+            style={classData.style}
+            onEdit={() => setIsEditBasicsOpen(true)}
+          />
 
-        {/* Schedule Card */}
+          {/* Settings Card */}
+          <ClassSettingsCard
+            maximumCapacity={classData.maximumCapacity}
+            minimumAge={classData.minimumAge}
+            allowWalkIns={classData.allowWalkIns}
+            onEdit={() => setIsEditSettingsOpen(true)}
+          />
+        </div>
+
+        {/* Right Column: Schedule Card spanning full height */}
         <ClassScheduleCard
-          daysOfWeek={classData.daysOfWeek}
-          timeHour={classData.timeHour}
-          timeMinute={classData.timeMinute}
-          timeAmPm={classData.timeAmPm}
-          durationHours={classData.durationHours}
-          durationMinutes={classData.durationMinutes}
+          scheduleInstances={classData.scheduleInstances}
           location={classData.location}
           calendarColor={classData.calendarColor}
           onEdit={() => setIsEditScheduleOpen(true)}
-        />
-
-        {/* Instructors Card */}
-        <ClassInstructorsCard
-          instructors={classData.instructors}
-          onEdit={() => setIsEditInstructorsOpen(true)}
-        />
-
-        {/* Settings Card */}
-        <ClassSettingsCard
-          maximumCapacity={classData.maximumCapacity}
-          minimumAge={classData.minimumAge}
-          allowWalkIns={classData.allowWalkIns}
-          onEdit={() => setIsEditSettingsOpen(true)}
         />
       </div>
 
@@ -425,27 +392,12 @@ export default function ClassDetailPage({ params }: { params: Promise<PageParams
       <EditClassScheduleModal
         isOpen={isEditScheduleOpen}
         onClose={() => setIsEditScheduleOpen(false)}
-        daysOfWeek={classData.daysOfWeek}
-        timeHour={classData.timeHour}
-        timeMinute={classData.timeMinute}
-        timeAmPm={classData.timeAmPm}
-        durationHours={classData.durationHours}
-        durationMinutes={classData.durationMinutes}
+        scheduleInstances={classData.scheduleInstances}
         location={classData.location}
         calendarColor={classData.calendarColor}
         onSave={(data) => {
           handleUpdateClass(data);
           setIsEditScheduleOpen(false);
-        }}
-      />
-
-      <EditClassInstructorsModal
-        isOpen={isEditInstructorsOpen}
-        onClose={() => setIsEditInstructorsOpen(false)}
-        instructors={classData.instructors}
-        onSave={(data) => {
-          handleUpdateClass(data);
-          setIsEditInstructorsOpen(false);
         }}
       />
 

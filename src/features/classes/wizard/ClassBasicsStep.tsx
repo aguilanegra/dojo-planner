@@ -95,8 +95,9 @@ export const ClassBasicsStep = ({ data, onUpdate, onNext, onCancel, error }: Cla
               <SelectTrigger
                 aria-invalid={isProgramInvalid}
                 onBlur={() => handleInputBlur('program')}
+                className="w-full truncate"
               >
-                <SelectValue placeholder={t('program_placeholder')} />
+                <SelectValue placeholder={t('program_placeholder')} className="truncate" />
               </SelectTrigger>
               <SelectContent>
                 {MOCK_PROGRAMS.map(program => (

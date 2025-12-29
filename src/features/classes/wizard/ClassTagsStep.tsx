@@ -4,7 +4,38 @@ import type { AddClassWizardData } from '@/hooks/useAddClassWizard';
 import { X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { mockClassTags } from '../classTagsData';
+
+// Colors that are already used in the calendar (from classesData)
+const USED_CALENDAR_COLORS = ['#22c55e', '#a855f7', '#06b6d4', '#ec4899', '#ef4444', '#6b7280'];
+
+// Available colors for new classes (excluding used ones)
+const AVAILABLE_COLORS = [
+  { value: '#000000', label: 'Black' },
+  { value: '#3b82f6', label: 'Blue' },
+  { value: '#f97316', label: 'Orange' },
+  { value: '#eab308', label: 'Yellow' },
+  { value: '#14b8a6', label: 'Teal' },
+  { value: '#8b5cf6', label: 'Violet' },
+  { value: '#f43f5e', label: 'Rose' },
+  { value: '#84cc16', label: 'Lime' },
+].filter(color => !USED_CALENDAR_COLORS.includes(color.value));
+
+// Also include colors from existing tags that aren't used
+const TAG_COLORS = mockClassTags.map(tag => tag.color);
+const ALL_AVAILABLE_COLORS = [
+  ...AVAILABLE_COLORS,
+  ...TAG_COLORS.filter(c => !AVAILABLE_COLORS.some(ac => ac.value === c) && !USED_CALENDAR_COLORS.includes(c))
+    .map(c => ({ value: c, label: c })),
+];
 
 type ClassTagsStepProps = {
   data: AddClassWizardData;
@@ -121,6 +152,46 @@ export const ClassTagsStep = ({
                 )}
           </div>
           <p className="text-xs text-muted-foreground">{t('tags_help')}</p>
+        </div>
+
+        {/* Calendar Color */}
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-foreground">{t('calendar_color_label')}</label>
+          <div className="flex items-center gap-3">
+            <div
+              className="size-10 rounded border border-border"
+              style={{ backgroundColor: data.calendarColor }}
+            />
+            <Input
+              type="text"
+              value={data.calendarColor}
+              onChange={e => onUpdate({ calendarColor: e.target.value })}
+              placeholder="#000000"
+              className="w-32"
+            />
+            <Select
+              value={data.calendarColor}
+              onValueChange={value => onUpdate({ calendarColor: value })}
+            >
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder={t('calendar_color_select')} />
+              </SelectTrigger>
+              <SelectContent>
+                {ALL_AVAILABLE_COLORS.map(color => (
+                  <SelectItem key={color.value} value={color.value}>
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="size-4 rounded"
+                        style={{ backgroundColor: color.value }}
+                      />
+                      {color.label}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <p className="text-xs text-muted-foreground">{t('calendar_color_help')}</p>
         </div>
       </div>
 

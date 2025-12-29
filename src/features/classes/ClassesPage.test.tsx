@@ -368,7 +368,7 @@ describe('ClassesPage', () => {
       );
 
       const scheduleLabel = page.getByText('Schedule').first();
-      const scheduleTime = page.getByText(/M\/W\/F • 6-7 PM/);
+      const scheduleTime = page.getByText(/Monday • 6:00 AM - 7:00 AM/);
 
       expect(scheduleLabel).toBeInTheDocument();
       expect(scheduleTime).toBeInTheDocument();

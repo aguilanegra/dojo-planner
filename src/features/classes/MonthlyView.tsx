@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ButtonGroupItem, ButtonGroupRoot } from '@/components/ui/button-group';
 import { generateMonthlySchedule, mockClasses } from './classesData';
+import { ClassEventHoverCard } from './ClassEventHoverCard';
 import { ClassFilterBar } from './ClassFilterBar';
 
 const DAYS_OF_WEEK = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
@@ -181,13 +182,14 @@ export function MonthlyView({ withFilters }: MonthlyViewProps = {}) {
                     <div className="mb-1 text-sm font-semibold text-foreground">{day}</div>
                     <div className="flex flex-col gap-1">
                       {monthlyEvents[day.toString()]?.slice(0, 3).map(event => (
-                        <div
-                          key={event.classId}
-                          className="truncate rounded px-1.5 py-1 text-xs font-medium text-white sm:text-sm"
-                          style={{ backgroundColor: event.color }}
+                        <ClassEventHoverCard
+                          key={`${event.classId}-${day}`}
+                          classId={event.classId}
+                          className={event.className}
+                          color={event.color}
                         >
-                          {event.className}
-                        </div>
+                          <span className="truncate">{event.className}</span>
+                        </ClassEventHoverCard>
                       ))}
                       {(monthlyEvents[day.toString()]?.length ?? 0) > 3 && (
                         <div className="text-xs text-muted-foreground">

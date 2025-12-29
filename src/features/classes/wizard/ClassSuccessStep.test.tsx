@@ -40,15 +40,42 @@ describe('ClassSuccessStep', () => {
     allowWalkIns: 'Yes',
     description: 'A great class for adults',
     schedule: {
-      daysOfWeek: ['Monday', 'Wednesday', 'Friday'],
-      timeHour: 6,
-      timeMinute: 30,
-      timeAmPm: 'AM',
-      durationHours: 1,
-      durationMinutes: 30,
+      instances: [
+        {
+          id: 'instance-1',
+          dayOfWeek: 'Monday',
+          timeHour: 6,
+          timeMinute: 30,
+          timeAmPm: 'AM',
+          durationHours: 1,
+          durationMinutes: 30,
+          staffMember: 'coach-alex',
+          assistantStaff: '',
+        },
+        {
+          id: 'instance-2',
+          dayOfWeek: 'Wednesday',
+          timeHour: 6,
+          timeMinute: 30,
+          timeAmPm: 'AM',
+          durationHours: 1,
+          durationMinutes: 30,
+          staffMember: 'coach-alex',
+          assistantStaff: '',
+        },
+        {
+          id: 'instance-3',
+          dayOfWeek: 'Friday',
+          timeHour: 6,
+          timeMinute: 30,
+          timeAmPm: 'AM',
+          durationHours: 1,
+          durationMinutes: 30,
+          staffMember: 'coach-alex',
+          assistantStaff: '',
+        },
+      ],
       location: '',
-      staffMember: 'coach-alex',
-      assistantStaff: '',
     },
     calendarColor: '#3b82f6',
     tags: [],
@@ -112,23 +139,15 @@ describe('ClassSuccessStep', () => {
   it('should display schedule in summary', () => {
     render(<ClassSuccessStep data={mockData} onDone={mockOnDone} />);
 
-    const schedule = page.getByText(/Monday, Wednesday, Friday/);
+    const schedule = page.getByText(/Monday, Wednesday, Friday \(3 time slots\)/);
 
     expect(schedule).toBeTruthy();
-  });
-
-  it('should display formatted time in schedule', () => {
-    render(<ClassSuccessStep data={mockData} onDone={mockOnDone} />);
-
-    const time = page.getByText(/6:30 AM/);
-
-    expect(time).toBeTruthy();
   });
 
   it('should display duration with hours and minutes', () => {
     render(<ClassSuccessStep data={mockData} onDone={mockOnDone} />);
 
-    const duration = page.getByText('1 hr 30 min');
+    const duration = page.getByText('1h 30m');
 
     expect(duration).toBeTruthy();
   });
@@ -138,14 +157,17 @@ describe('ClassSuccessStep', () => {
       ...mockData,
       schedule: {
         ...mockData.schedule,
-        durationHours: 2,
-        durationMinutes: 0,
+        instances: mockData.schedule.instances.map(inst => ({
+          ...inst,
+          durationHours: 2,
+          durationMinutes: 0,
+        })),
       },
     };
 
     render(<ClassSuccessStep data={dataWithOnlyHours} onDone={mockOnDone} />);
 
-    const duration = page.getByText('2 hr');
+    const duration = page.getByText('2h');
 
     expect(duration).toBeTruthy();
   });
@@ -155,14 +177,17 @@ describe('ClassSuccessStep', () => {
       ...mockData,
       schedule: {
         ...mockData.schedule,
-        durationHours: 0,
-        durationMinutes: 45,
+        instances: mockData.schedule.instances.map(inst => ({
+          ...inst,
+          durationHours: 0,
+          durationMinutes: 45,
+        })),
       },
     };
 
     render(<ClassSuccessStep data={dataWithOnlyMinutes} onDone={mockOnDone} />);
 
-    const duration = page.getByText('45 min');
+    const duration = page.getByText('45m');
 
     expect(duration).toBeTruthy();
   });
@@ -240,7 +265,10 @@ describe('ClassSuccessStep', () => {
       ...mockData,
       schedule: {
         ...mockData.schedule,
-        staffMember: 'unknown-coach',
+        instances: mockData.schedule.instances.map(inst => ({
+          ...inst,
+          staffMember: 'unknown-coach',
+        })),
       },
     };
 
@@ -251,21 +279,12 @@ describe('ClassSuccessStep', () => {
     expect(instructor).toBeTruthy();
   });
 
-  it('should display time with padded minutes', () => {
-    const dataWithPaddedMinutes: AddClassWizardData = {
-      ...mockData,
-      schedule: {
-        ...mockData.schedule,
-        timeHour: 9,
-        timeMinute: 0,
-        timeAmPm: 'PM',
-      },
-    };
+  it('should display schedule summary with days and time slots', () => {
+    render(<ClassSuccessStep data={mockData} onDone={mockOnDone} />);
 
-    render(<ClassSuccessStep data={dataWithPaddedMinutes} onDone={mockOnDone} />);
+    // Should show days and time slot count
+    const schedule = page.getByText(/Monday, Wednesday, Friday \(3 time slots\)/);
 
-    const time = page.getByText(/9:00 PM/);
-
-    expect(time).toBeTruthy();
+    expect(schedule).toBeTruthy();
   });
 });

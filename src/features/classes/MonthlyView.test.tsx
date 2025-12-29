@@ -1,8 +1,16 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { page } from 'vitest/browser';
 import { I18nWrapper } from '@/lib/test-utils';
 import { MonthlyView } from './MonthlyView';
+
+// Mock next/navigation for ClassEventHoverCard
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    refresh: vi.fn(),
+    push: vi.fn(),
+  }),
+}));
 
 describe('MonthlyView', () => {
   describe('Page Header', () => {
