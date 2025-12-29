@@ -33,25 +33,43 @@ export const ClassSuccessStep = ({ data, onDone }: ClassSuccessStepProps) => {
 
   const selectedTags = mockClassTags.filter(tag => data.tags.includes(tag.id));
   const programName = MOCK_PROGRAMS[data.program] || data.program;
-  const staffName = MOCK_STAFF[data.schedule.staffMember] || data.schedule.staffMember;
 
-  const formatTime = () => {
-    const hour = data.schedule.timeHour;
-    const minute = data.schedule.timeMinute.toString().padStart(2, '0');
-    return `${hour}:${minute} ${data.schedule.timeAmPm}`;
+  // Get unique instructors from all schedule instances
+  const getUniqueInstructors = () => {
+    const staffIds = [...new Set(data.schedule.instances.flatMap(i => [i.staffMember, i.assistantStaff].filter(Boolean)))];
+    return staffIds.map(id => MOCK_STAFF[id] || id).filter(Boolean);
   };
 
-  const formatDuration = () => {
-    const hours = data.schedule.durationHours;
-    const minutes = data.schedule.durationMinutes;
-    if (hours > 0 && minutes > 0) {
-      return `${hours} hr ${minutes} min`;
+  const formatScheduleSummary = () => {
+    const instances = data.schedule.instances;
+    if (instances.length === 0) {
+      return 'No schedule set';
     }
-    if (hours > 0) {
-      return `${hours} hr`;
-    }
-    return `${minutes} min`;
+    const days = [...new Set(instances.map(i => i.dayOfWeek))];
+    return `${days.join(', ')} (${instances.length} time slot${instances.length > 1 ? 's' : ''})`;
   };
+
+  const formatDurationRange = () => {
+    const instances = data.schedule.instances;
+    if (instances.length === 0) {
+      return 'N/A';
+    }
+    const durations = instances.map((i) => {
+      const hours = i.durationHours;
+      const minutes = i.durationMinutes;
+      if (hours > 0 && minutes > 0) {
+        return `${hours}h ${minutes}m`;
+      }
+      if (hours > 0) {
+        return `${hours}h`;
+      }
+      return `${minutes}m`;
+    });
+    const uniqueDurations = [...new Set(durations)];
+    return uniqueDurations.join(', ');
+  };
+
+  const instructors = getUniqueInstructors();
 
   return (
     <div className="space-y-6 text-center">
@@ -87,19 +105,18 @@ export const ClassSuccessStep = ({ data, onDone }: ClassSuccessStepProps) => {
           <div className="flex justify-between">
             <span className="text-muted-foreground">{t('summary_schedule')}</span>
             <span className="font-medium text-foreground">
-              {data.schedule.daysOfWeek.join(', ')}
-              {' '}
-              @
-              {formatTime()}
+              {formatScheduleSummary()}
             </span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">{t('summary_duration')}</span>
-            <span className="font-medium text-foreground">{formatDuration()}</span>
+            <span className="font-medium text-foreground">{formatDurationRange()}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">{t('summary_instructor')}</span>
-            <span className="font-medium text-foreground">{staffName}</span>
+            <span className="font-medium text-foreground">
+              {instructors.length > 0 ? instructors.join(', ') : 'Not assigned'}
+            </span>
           </div>
           {selectedTags.length > 0 && (
             <div className="flex items-center justify-between">

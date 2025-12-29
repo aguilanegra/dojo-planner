@@ -14,6 +14,9 @@ const translationKeys: Record<string, string> = {
   all_tags_selected: 'All available tags have been selected.',
   remove_tag_aria: 'Remove {tag} tag',
   tags_help: 'Tags help members find classes and organize your schedule.',
+  calendar_color_label: 'Calendar Color',
+  calendar_color_select: 'Choose a color',
+  calendar_color_help: 'Use the color picker or enter a hex code, e.g., #ff0000 = red',
   back_button: 'Back',
   cancel_button: 'Cancel',
   finish_button: 'Create Class',
@@ -41,15 +44,20 @@ describe('ClassTagsStep', () => {
     allowWalkIns: 'Yes',
     description: 'Test description',
     schedule: {
-      daysOfWeek: ['Monday'],
-      timeHour: 6,
-      timeMinute: 0,
-      timeAmPm: 'AM',
-      durationHours: 1,
-      durationMinutes: 0,
+      instances: [
+        {
+          id: 'test-instance-1',
+          dayOfWeek: 'Monday',
+          timeHour: 6,
+          timeMinute: 0,
+          timeAmPm: 'AM',
+          durationHours: 1,
+          durationMinutes: 0,
+          staffMember: 'coach-alex',
+          assistantStaff: '',
+        },
+      ],
       location: '',
-      staffMember: 'coach-alex',
-      assistantStaff: '',
     },
     calendarColor: '#000000',
     tags: [],
@@ -292,5 +300,39 @@ describe('ClassTagsStep', () => {
     const helpText = page.getByText('Tags help members find classes and organize your schedule.');
 
     expect(helpText).toBeTruthy();
+  });
+
+  it('should render calendar color picker', () => {
+    render(
+      <ClassTagsStep
+        data={mockData}
+        onUpdate={mockHandlers.onUpdate}
+        onNext={mockHandlers.onNext}
+        onBack={mockHandlers.onBack}
+        onCancel={mockHandlers.onCancel}
+        isLoading={false}
+      />,
+    );
+
+    const colorLabel = page.getByText('Calendar Color');
+
+    expect(colorLabel).toBeTruthy();
+  });
+
+  it('should render calendar color help text', () => {
+    render(
+      <ClassTagsStep
+        data={mockData}
+        onUpdate={mockHandlers.onUpdate}
+        onNext={mockHandlers.onNext}
+        onBack={mockHandlers.onBack}
+        onCancel={mockHandlers.onCancel}
+        isLoading={false}
+      />,
+    );
+
+    const colorHelp = page.getByText('Use the color picker or enter a hex code, e.g., #ff0000 = red');
+
+    expect(colorHelp).toBeTruthy();
   });
 });

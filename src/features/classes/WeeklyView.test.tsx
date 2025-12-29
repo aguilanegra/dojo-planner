@@ -1,8 +1,16 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { page } from 'vitest/browser';
 import { I18nWrapper } from '@/lib/test-utils';
 import { WeeklyView } from './WeeklyView';
+
+// Mock next/navigation for ClassEventHoverCard
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    refresh: vi.fn(),
+    push: vi.fn(),
+  }),
+}));
 
 describe('WeeklyView', () => {
   describe('Page Header', () => {
@@ -101,7 +109,8 @@ describe('WeeklyView', () => {
         </I18nWrapper>,
       );
 
-      const dateText = page.getByText(/September/i);
+      // Week of September 15, 2025 starts on Sunday the 14th and ends on Saturday the 20th
+      const dateText = page.getByText(/September 14 - 20/i);
 
       expect(dateText).toBeInTheDocument();
     });

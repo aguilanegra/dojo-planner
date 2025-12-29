@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ButtonGroupItem, ButtonGroupRoot } from '@/components/ui/button-group';
 import { generateWeeklySchedule, mockClasses } from './classesData';
+import { ClassEventHoverCard } from './ClassEventHoverCard';
 import { ClassFilterBar } from './ClassFilterBar';
 
 const DAYS_OF_WEEK = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
@@ -62,8 +63,18 @@ export function WeeklyView({ withFilters }: WeeklyViewProps = {}) {
     setCurrentDate(new Date());
   };
 
-  const monthName = currentDate.toLocaleString('default', { month: 'long' });
-  const dateDisplay = `${monthName} ${currentDate.getDate()}-${currentDate.getFullYear()} (day:${currentDate.getDate()})`;
+  // Calculate week end date (Saturday)
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
+
+  // Format date range display
+  const startMonth = weekStart.toLocaleString('default', { month: 'long' });
+  const endMonth = weekEnd.toLocaleString('default', { month: 'long' });
+
+  // If week spans two months, show both month names
+  const dateDisplay = startMonth === endMonth
+    ? `${startMonth} ${weekStart.getDate()} - ${weekEnd.getDate()}`
+    : `${startMonth} ${weekStart.getDate()} - ${endMonth} ${weekEnd.getDate()}`;
 
   const weeklyEvents = generateWeeklySchedule(currentDate, filteredClasses.length > 0 ? filteredClasses : mockClasses);
 
@@ -207,13 +218,17 @@ export function WeeklyView({ withFilters }: WeeklyViewProps = {}) {
                       style={{ minHeight: '60px' }}
                     >
                       {events.map(event => (
-                        <div
-                          key={event.classId}
-                          className="mb-1 rounded px-2 py-1 text-xs font-medium text-white sm:text-sm"
-                          style={{ backgroundColor: event.color }}
+                        <ClassEventHoverCard
+                          key={`${event.classId}-${event.hour}-${event.minute}`}
+                          classId={event.classId}
+                          className={event.className}
+                          color={event.color}
+                          hour={event.hour}
+                          minute={event.minute}
+                          duration={event.duration}
                         >
                           {event.className}
-                        </div>
+                        </ClassEventHoverCard>
                       ))}
                     </div>
                   );

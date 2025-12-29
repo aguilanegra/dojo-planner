@@ -1,4 +1,4 @@
-import type { DayOfWeek } from '@/hooks/useAddClassWizard';
+import type { ScheduleInstance } from '@/hooks/useAddClassWizard';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { page, userEvent } from 'vitest/browser';
@@ -7,7 +7,24 @@ import { EditClassScheduleModal } from './EditClassScheduleModal';
 // Mock next-intl with proper translations
 const translationKeys: Record<string, string> = {
   title: 'Edit Schedule',
-  days_label: 'Days of Week',
+  schedule_instances_label: 'Schedule Instances',
+  add_instance_button: 'Add Time Slot',
+  add_first_instance_button: 'Add First Time Slot',
+  instance_number: 'Time Slot {number}',
+  remove_button: 'Remove',
+  column_day: 'Day',
+  column_time: 'Time',
+  column_duration: 'Duration',
+  column_instructor: 'Instructor',
+  column_assistant: 'Assistant',
+  column_actions: 'Actions',
+  remove_instance_aria: 'Remove time slot',
+  no_instances_message: 'No schedule instances. Click "Add Time Slot" to create one.',
+  instances_error: 'Please add at least one schedule instance.',
+  duration_hr: 'hr',
+  duration_min: 'min',
+  staff_placeholder: 'Select instructor',
+  assistant_none: 'None',
   day_monday: 'Monday',
   day_tuesday: 'Tuesday',
   day_wednesday: 'Wednesday',
@@ -15,12 +32,6 @@ const translationKeys: Record<string, string> = {
   day_friday: 'Friday',
   day_saturday: 'Saturday',
   day_sunday: 'Sunday',
-  days_error: 'Please select at least one day.',
-  time_label: 'Time of Day',
-  duration_label: 'Duration',
-  duration_hr: 'hr',
-  duration_min: 'min',
-  duration_error: 'Duration must be greater than 0.',
   location_label: 'Location',
   location_placeholder: 'e.g., Downtown HQ',
   calendar_color_label: 'Calendar Color',
@@ -31,22 +42,41 @@ const translationKeys: Record<string, string> = {
 };
 
 vi.mock('next-intl', () => ({
-  useTranslations: () => (key: string) => translationKeys[key] || key,
+  useTranslations: () => (key: string, params?: Record<string, string | number>) => {
+    let result = translationKeys[key] || key;
+    if (params) {
+      Object.entries(params).forEach(([paramKey, paramValue]) => {
+        result = result.replace(`{${paramKey}}`, String(paramValue));
+      });
+    }
+    return result;
+  },
 }));
 
 describe('EditClassScheduleModal', () => {
   const mockOnClose = vi.fn();
   const mockOnSave = vi.fn();
 
+  const mockInstance: ScheduleInstance = {
+    id: 'test-instance-1',
+    dayOfWeek: 'Monday',
+    timeHour: 6,
+    timeMinute: 0,
+    timeAmPm: 'PM',
+    durationHours: 1,
+    durationMinutes: 0,
+    staffMember: 'coach-alex',
+    assistantStaff: '',
+  };
+
   const defaultProps = {
     isOpen: true,
     onClose: mockOnClose,
-    daysOfWeek: ['Monday', 'Wednesday', 'Friday'] as DayOfWeek[],
-    timeHour: 6,
-    timeMinute: 0,
-    timeAmPm: 'PM' as const,
-    durationHours: 1,
-    durationMinutes: 0,
+    scheduleInstances: [
+      mockInstance,
+      { ...mockInstance, id: 'test-instance-2', dayOfWeek: 'Wednesday' as const },
+      { ...mockInstance, id: 'test-instance-3', dayOfWeek: 'Friday' as const },
+    ],
     location: 'Downtown HQ',
     calendarColor: '#22c55e',
     onSave: mockOnSave,
@@ -72,12 +102,12 @@ describe('EditClassScheduleModal', () => {
     expect(heading).toBe(false);
   });
 
-  it('should render days of week label', () => {
+  it('should render schedule instances label', () => {
     render(<EditClassScheduleModal {...defaultProps} />);
 
-    const daysLabel = page.getByText('Days of Week');
+    const instancesLabel = page.getByText('Schedule Instances');
 
-    expect(daysLabel).toBeTruthy();
+    expect(instancesLabel).toBeTruthy();
   });
 
   it('should render Cancel button', () => {
@@ -96,20 +126,16 @@ describe('EditClassScheduleModal', () => {
     expect(saveButton).toBeTruthy();
   });
 
-  it('should render time label', () => {
+  it('should render field labels in schedule cards', () => {
     render(<EditClassScheduleModal {...defaultProps} />);
 
-    const timeLabel = page.getByText('Time of Day');
+    // Labels are now inside cards, not table headers
+    const dayLabels = document.querySelectorAll('label');
+    const labelTexts = Array.from(dayLabels).map(l => l.textContent);
 
-    expect(timeLabel).toBeTruthy();
-  });
-
-  it('should render duration label', () => {
-    render(<EditClassScheduleModal {...defaultProps} />);
-
-    const durationLabel = page.getByText('Duration');
-
-    expect(durationLabel).toBeTruthy();
+    expect(labelTexts).toContain('Day');
+    expect(labelTexts).toContain('Time');
+    expect(labelTexts).toContain('Duration');
   });
 
   it('should render location input', () => {
@@ -146,16 +172,13 @@ describe('EditClassScheduleModal', () => {
     expect(saveButton?.disabled).toBe(false);
   });
 
-  it('should render day checkboxes', () => {
+  it('should render schedule instances', () => {
     render(<EditClassScheduleModal {...defaultProps} />);
 
-    const monday = page.getByText('Monday');
-    const tuesday = page.getByText('Tuesday');
-    const wednesday = page.getByText('Wednesday');
+    // Should have 3 instances
+    const rows = document.querySelectorAll('[data-testid^="schedule-row-"]');
 
-    expect(monday).toBeTruthy();
-    expect(tuesday).toBeTruthy();
-    expect(wednesday).toBeTruthy();
+    expect(rows.length).toBe(3);
   });
 
   it('should call onSave with updated values when Save button is clicked', async () => {
@@ -168,12 +191,11 @@ describe('EditClassScheduleModal', () => {
     await new Promise(resolve => setTimeout(resolve, 600));
 
     expect(mockOnSave).toHaveBeenCalledWith({
-      daysOfWeek: defaultProps.daysOfWeek,
-      timeHour: defaultProps.timeHour,
-      timeMinute: defaultProps.timeMinute,
-      timeAmPm: defaultProps.timeAmPm,
-      durationHours: defaultProps.durationHours,
-      durationMinutes: defaultProps.durationMinutes,
+      scheduleInstances: expect.arrayContaining([
+        expect.objectContaining({ dayOfWeek: 'Monday' }),
+        expect.objectContaining({ dayOfWeek: 'Wednesday' }),
+        expect.objectContaining({ dayOfWeek: 'Friday' }),
+      ]),
       location: defaultProps.location,
       calendarColor: defaultProps.calendarColor,
     });
@@ -191,21 +213,12 @@ describe('EditClassScheduleModal', () => {
     expect(savingButton).toBeTruthy();
   });
 
-  it('should toggle day selection when clicking a day checkbox', async () => {
+  it('should render Add Time Slot button', () => {
     render(<EditClassScheduleModal {...defaultProps} />);
 
-    // Click Tuesday to add it
-    const tuesdayLabel = page.getByText('Tuesday');
-    await userEvent.click(tuesdayLabel);
+    const addButton = document.querySelector('[data-testid="add-schedule-instance"]');
 
-    const saveButton = page.getByText('Save Changes');
-    await userEvent.click(saveButton);
-
-    await new Promise(resolve => setTimeout(resolve, 600));
-
-    expect(mockOnSave).toHaveBeenCalledWith(expect.objectContaining({
-      daysOfWeek: expect.arrayContaining(['Monday', 'Wednesday', 'Friday', 'Tuesday']),
-    }));
+    expect(addButton).toBeTruthy();
   });
 
   it('should update location when input changes', async () => {
@@ -225,16 +238,16 @@ describe('EditClassScheduleModal', () => {
     }));
   });
 
-  it('should render with empty days of week', () => {
-    render(<EditClassScheduleModal {...defaultProps} daysOfWeek={[]} />);
+  it('should render with empty schedule instances', () => {
+    render(<EditClassScheduleModal {...defaultProps} scheduleInstances={[]} />);
 
-    const daysLabel = page.getByText('Days of Week');
+    const noInstancesMsg = page.getByText('No schedule instances. Click "Add Time Slot" to create one.');
 
-    expect(daysLabel).toBeTruthy();
+    expect(noInstancesMsg).toBeTruthy();
   });
 
-  it('should disable Save button when no days are selected', () => {
-    render(<EditClassScheduleModal {...defaultProps} daysOfWeek={[]} />);
+  it('should disable Save button when no instances exist', () => {
+    render(<EditClassScheduleModal {...defaultProps} scheduleInstances={[]} />);
 
     const buttons = Array.from(document.querySelectorAll('button'));
     const saveButton = buttons.find(btn => btn.textContent?.includes('Save Changes'));

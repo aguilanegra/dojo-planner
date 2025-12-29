@@ -40,7 +40,7 @@ describe('Classes Page', () => {
   it('displays class details', () => {
     render(<I18nWrapper><ClassesPage /></I18nWrapper>);
 
-    const schedule = page.getByText(/M\/W\/F • 6-7 PM/);
+    const schedule = page.getByText(/Monday • 6:00 AM - 7:00 AM/);
     const location = page.getByText(/Downtown HQ/).first();
 
     expect(schedule).toBeInTheDocument();
