@@ -10,6 +10,7 @@ import { Switch } from '@/components/ui/switch';
 
 export const AppSidebarNav = (props: {
   label?: string;
+  hidden?: boolean;
   items: {
     title: string;
     url: string;
@@ -47,6 +48,10 @@ export const AppSidebarNav = (props: {
 
     return false;
   };
+
+  if (props.hidden) {
+    return null;
+  }
 
   return (
     <SidebarGroup {...props}>

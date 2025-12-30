@@ -14,7 +14,6 @@ type LocationData = {
   address: string;
   phone: string;
   email: string;
-  activeMembers: number;
 };
 
 const mockLocation: LocationData = {
@@ -23,7 +22,6 @@ const mockLocation: LocationData = {
   address: '123 Main St. San Francisco. CA',
   phone: '(415) 555-0123',
   email: 'downtown@example.com',
-  activeMembers: 247,
 };
 
 export function LocationSettingsPage() {
@@ -56,7 +54,7 @@ export function LocationSettingsPage() {
 
       {/* Location Information Card */}
       <Card className="relative p-6">
-        <h3 className="text-lg font-semibold text-foreground">{t('location_information_title')}</h3>
+        <h3 className="text-lg font-semibold text-foreground">{t('location_title')}</h3>
         <div className="mt-4 space-y-4">
           <div>
             <label className="text-sm text-muted-foreground">{t('address_label')}</label>
@@ -69,12 +67,6 @@ export function LocationSettingsPage() {
           <div>
             <label className="text-sm text-muted-foreground">{t('email_label')}</label>
             <p className="mt-1 text-foreground">{location.email}</p>
-          </div>
-          <div>
-            <label className="text-sm text-muted-foreground">{t('active_members_label')}</label>
-            <p className="mt-1 text-foreground">
-              {location.activeMembers.toString()}
-            </p>
           </div>
           <div>
             <label className="text-sm text-muted-foreground">{t('status_label')}</label>

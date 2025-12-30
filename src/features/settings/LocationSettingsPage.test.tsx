@@ -8,11 +8,10 @@ vi.mock('next-intl', () => ({
     const translations: Record<string, Record<string, string>> = {
       'LocationSettings': {
         title: 'Location Settings',
-        location_information_title: 'Location Information',
+        location_title: 'Location',
         address_label: 'Address:',
         phone_label: 'Phone:',
         email_label: 'Email:',
-        active_members_label: 'Active Members:',
         status_label: 'Status:',
         active_status: 'Active',
       },
@@ -46,10 +45,10 @@ describe('LocationSettingsPage', () => {
     expect(page.getByText('Location Settings')).toBeDefined();
   });
 
-  it('should render location information section header', () => {
+  it('should render location section header', () => {
     render(<LocationSettingsPage />);
 
-    expect(page.getByText('Location Information')).toBeDefined();
+    expect(page.getByText('Location')).toBeDefined();
   });
 
   it('should render location address', () => {
@@ -68,12 +67,6 @@ describe('LocationSettingsPage', () => {
     render(<LocationSettingsPage />);
 
     expect(page.getByText('downtown@example.com')).toBeDefined();
-  });
-
-  it('should render active members count', () => {
-    render(<LocationSettingsPage />);
-
-    expect(page.getByText('247')).toBeDefined();
   });
 
   it('should render active status badge', () => {
@@ -105,7 +98,6 @@ describe('LocationSettingsPage', () => {
     expect(page.getByText('Address:')).toBeDefined();
     expect(page.getByText('Phone:')).toBeDefined();
     expect(page.getByText('Email:')).toBeDefined();
-    expect(page.getByText('Active Members:')).toBeDefined();
     expect(page.getByText('Status:')).toBeDefined();
   });
 
