@@ -37,6 +37,11 @@ export const AppSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
               icon: Map,
             },
             {
+              title: t('memberships'),
+              url: '/dashboard/memberships',
+              icon: Users2,
+            },
+            {
               title: t('classes'),
               url: '/dashboard/classes',
               icon: BookMarked,
@@ -73,11 +78,6 @@ export const AppSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
               title: t('finances'),
               url: '/dashboard/finances',
               icon: Briefcase,
-            },
-            {
-              title: t('memberships'),
-              url: '/dashboard/memberships',
-              icon: Users2,
             },
             {
               title: t('marketing'),

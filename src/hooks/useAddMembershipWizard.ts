@@ -2,7 +2,6 @@ import { useState } from 'react';
 
 export type MembershipType = 'standard' | 'trial';
 export type MembershipStatus = 'active' | 'inactive';
-export type ClassLimitType = 'unlimited' | 'limited';
 export type ChargeSignUpFeeOption = 'at-registration' | 'first-payment';
 export type PaymentFrequency = 'monthly' | 'weekly' | 'annually';
 export type MembershipStartDateOption = 'same-as-registration' | 'custom';
@@ -16,10 +15,9 @@ export type AddMembershipWizardData = {
   membershipType: MembershipType;
   description: string;
 
-  // Step 2: Class Access
-  classLimitType: ClassLimitType;
-  classLimitCount: number | null;
-  availableClasses: string[];
+  // Step 2: Program Association
+  associatedProgramId: string | null;
+  associatedProgramName: string | null;
 
   // Step 3: Payment Details
   signUpFee: number | null;
@@ -37,16 +35,15 @@ export type AddMembershipWizardData = {
   holdLimitPerYear: number | null;
 };
 
-export type MembershipWizardStep = 'basics' | 'class-access' | 'payment-details' | 'contract-terms' | 'success';
+export type MembershipWizardStep = 'basics' | 'program-association' | 'payment-details' | 'contract-terms' | 'success';
 
 const initialData: AddMembershipWizardData = {
   membershipName: '',
   status: 'active',
   membershipType: 'standard',
   description: '',
-  classLimitType: 'unlimited',
-  classLimitCount: null,
-  availableClasses: [],
+  associatedProgramId: null,
+  associatedProgramName: null,
   signUpFee: null,
   chargeSignUpFee: 'at-registration',
   monthlyFee: null,
@@ -75,7 +72,7 @@ export const useAddMembershipWizard = () => {
   };
 
   const nextStep = () => {
-    const steps: MembershipWizardStep[] = ['basics', 'class-access', 'payment-details', 'contract-terms', 'success'];
+    const steps: MembershipWizardStep[] = ['basics', 'program-association', 'payment-details', 'contract-terms', 'success'];
     const currentIndex = steps.indexOf(step);
     if (currentIndex < steps.length - 1 && currentIndex !== -1) {
       const nextStepValue = steps[currentIndex + 1];
@@ -87,7 +84,7 @@ export const useAddMembershipWizard = () => {
   };
 
   const previousStep = () => {
-    const steps: MembershipWizardStep[] = ['basics', 'class-access', 'payment-details', 'contract-terms', 'success'];
+    const steps: MembershipWizardStep[] = ['basics', 'program-association', 'payment-details', 'contract-terms', 'success'];
     const currentIndex = steps.indexOf(step);
     if (currentIndex > 0) {
       const prevStepValue = steps[currentIndex - 1];

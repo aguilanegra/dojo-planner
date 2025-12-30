@@ -92,7 +92,11 @@ export function MembershipCard({
         <div className="flex items-start justify-between gap-4">
           <div>
             <h3 className="text-lg font-semibold text-foreground">{name}</h3>
-            <p className="mt-1 text-sm text-muted-foreground">{category}</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              <span className="font-bold">{t('program_prefix')}</span>
+              {' '}
+              {category}
+            </p>
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2">
             <StatusBadge status={status} />

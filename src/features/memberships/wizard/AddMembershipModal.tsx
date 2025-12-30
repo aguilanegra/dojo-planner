@@ -6,9 +6,9 @@ import { useRouter } from 'next/navigation';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAddMembershipWizard } from '@/hooks/useAddMembershipWizard';
 import { MembershipBasicsStep } from './MembershipBasicsStep';
-import { MembershipClassAccessStep } from './MembershipClassAccessStep';
 import { MembershipContractStep } from './MembershipContractStep';
 import { MembershipPaymentStep } from './MembershipPaymentStep';
+import { MembershipProgramAssociationStep } from './MembershipProgramAssociationStep';
 import { MembershipSuccessStep } from './MembershipSuccessStep';
 
 type AddMembershipModalProps = {
@@ -94,17 +94,10 @@ export const AddMembershipModal = ({ isOpen, onCloseAction, onMembershipCreated 
         }
       };
 
-      const getAccess = () => {
-        if (wizard.data.classLimitType === 'unlimited') {
-          return 'Unlimited';
-        }
-        return `${wizard.data.classLimitCount} Classes/mo`;
-      };
-
       const newMembership: MembershipCardProps = {
         id: `membership-${Date.now()}`,
         name: wizard.data.membershipName,
-        category: wizard.data.membershipType === 'trial' ? 'Trial Membership' : 'Standard Membership',
+        category: wizard.data.associatedProgramName ?? 'No Program',
         status: wizard.data.status === 'active' ? 'Active' : 'Inactive',
         isTrial: wizard.data.membershipType === 'trial',
         isMonthly: wizard.data.paymentFrequency === 'monthly',
@@ -112,7 +105,7 @@ export const AddMembershipModal = ({ isOpen, onCloseAction, onMembershipCreated 
         signupFee: formatSignupFee(),
         frequency: getFrequency(),
         contract: getContract(),
-        access: getAccess(),
+        access: 'Full Access',
         activeCount: 0,
         revenue: '$0/mo revenue',
       };
@@ -144,8 +137,8 @@ export const AddMembershipModal = ({ isOpen, onCloseAction, onMembershipCreated 
     switch (wizard.step) {
       case 'basics':
         return t('step_basics_title');
-      case 'class-access':
-        return t('step_class_access_title');
+      case 'program-association':
+        return t('step_program_association_title');
       case 'payment-details':
         return t('step_payment_details_title');
       case 'contract-terms':
@@ -175,8 +168,8 @@ export const AddMembershipModal = ({ isOpen, onCloseAction, onMembershipCreated 
             />
           )}
 
-          {wizard.step === 'class-access' && (
-            <MembershipClassAccessStep
+          {wizard.step === 'program-association' && (
+            <MembershipProgramAssociationStep
               data={wizard.data}
               onUpdate={wizard.updateData}
               onNext={wizard.nextStep}

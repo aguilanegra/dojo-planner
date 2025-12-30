@@ -1,0 +1,174 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { render } from 'vitest-browser-react';
+import { page, userEvent } from 'vitest/browser';
+import { MembershipAssociatedProgramCard } from './MembershipAssociatedProgramCard';
+
+// Mock next-intl with proper translations
+const translationKeys: Record<string, string> = {
+  title: 'Associated Program',
+  program_label: 'Program',
+  no_program: 'No program assigned',
+};
+
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string, params?: Record<string, string | number>) => {
+    let result = translationKeys[key] || key;
+    if (params) {
+      Object.entries(params).forEach(([paramKey, paramValue]) => {
+        result = result.replace(`{${paramKey}}`, String(paramValue));
+      });
+    }
+    return result;
+  },
+}));
+
+describe('MembershipAssociatedProgramCard', () => {
+  const mockOnEdit = vi.fn();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should render card with title', () => {
+    render(
+      <MembershipAssociatedProgramCard
+        associatedProgramId="1"
+        associatedProgramName="Adult Brazilian Jiu-jitsu"
+        onEdit={mockOnEdit}
+      />,
+    );
+
+    const title = page.getByText('Associated Program');
+
+    expect(title).toBeTruthy();
+  });
+
+  it('should display program name when program is associated', () => {
+    render(
+      <MembershipAssociatedProgramCard
+        associatedProgramId="1"
+        associatedProgramName="Adult Brazilian Jiu-jitsu"
+        onEdit={mockOnEdit}
+      />,
+    );
+
+    const programName = page.getByText('Adult Brazilian Jiu-jitsu');
+
+    expect(programName).toBeTruthy();
+  });
+
+  it('should display no program message when no program is associated', () => {
+    render(
+      <MembershipAssociatedProgramCard
+        associatedProgramId={null}
+        associatedProgramName={null}
+        onEdit={mockOnEdit}
+      />,
+    );
+
+    const noProgram = page.getByText('No program assigned');
+
+    expect(noProgram).toBeTruthy();
+  });
+
+  it('should display no program message when program ID is null but name exists', () => {
+    render(
+      <MembershipAssociatedProgramCard
+        associatedProgramId={null}
+        associatedProgramName="Some Program"
+        onEdit={mockOnEdit}
+      />,
+    );
+
+    const noProgram = page.getByText('No program assigned');
+
+    expect(noProgram).toBeTruthy();
+  });
+
+  it('should display program label', () => {
+    render(
+      <MembershipAssociatedProgramCard
+        associatedProgramId="1"
+        associatedProgramName="Adult Brazilian Jiu-jitsu"
+        onEdit={mockOnEdit}
+      />,
+    );
+
+    const label = page.getByText('Program');
+
+    expect(label).toBeTruthy();
+  });
+
+  it('should render edit button', () => {
+    render(
+      <MembershipAssociatedProgramCard
+        associatedProgramId="1"
+        associatedProgramName="Adult Brazilian Jiu-jitsu"
+        onEdit={mockOnEdit}
+      />,
+    );
+
+    const buttons = Array.from(document.querySelectorAll('button'));
+
+    expect(buttons.length).toBe(1);
+  });
+
+  it('should call onEdit when edit button is clicked', async () => {
+    render(
+      <MembershipAssociatedProgramCard
+        associatedProgramId="1"
+        associatedProgramName="Adult Brazilian Jiu-jitsu"
+        onEdit={mockOnEdit}
+      />,
+    );
+
+    const editButton = document.querySelector('button');
+    if (editButton) {
+      await userEvent.click(editButton);
+
+      expect(mockOnEdit).toHaveBeenCalled();
+    }
+  });
+
+  it('should render different program names correctly', () => {
+    render(
+      <MembershipAssociatedProgramCard
+        associatedProgramId="2"
+        associatedProgramName="Kids Program"
+        onEdit={mockOnEdit}
+      />,
+    );
+
+    const programName = page.getByText('Kids Program');
+
+    expect(programName).toBeTruthy();
+  });
+
+  it('should render Competition Team program', () => {
+    render(
+      <MembershipAssociatedProgramCard
+        associatedProgramId="3"
+        associatedProgramName="Competition Team"
+        onEdit={mockOnEdit}
+      />,
+    );
+
+    const programName = page.getByText('Competition Team');
+
+    expect(programName).toBeTruthy();
+  });
+
+  it('should be wrapped in a Card component', () => {
+    render(
+      <MembershipAssociatedProgramCard
+        associatedProgramId="1"
+        associatedProgramName="Adult Brazilian Jiu-jitsu"
+        onEdit={mockOnEdit}
+      />,
+    );
+
+    const card = document.querySelector('.p-6');
+
+    expect(card).toBeTruthy();
+  });
+});

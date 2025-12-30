@@ -2,7 +2,6 @@ import type {
   AddMembershipWizardData,
   AutoRenewalOption,
   ChargeSignUpFeeOption,
-  ClassLimitType,
   ContractLength,
   MembershipStatus,
   MembershipType,
@@ -18,9 +17,8 @@ describe('useAddMembershipWizard types and exports', () => {
       status: 'active',
       membershipType: 'standard',
       description: 'A great membership option',
-      classLimitType: 'unlimited',
-      classLimitCount: null,
-      availableClasses: ['fundamentals', 'intro-bjj'],
+      associatedProgramId: '1',
+      associatedProgramName: 'Adult Brazilian Jiu-jitsu',
       signUpFee: 35,
       chargeSignUpFee: 'at-registration',
       monthlyFee: 150,
@@ -53,14 +51,6 @@ describe('useAddMembershipWizard types and exports', () => {
     expect(statuses).toHaveLength(2);
     expect(statuses[0]).toBe('active');
     expect(statuses[1]).toBe('inactive');
-  });
-
-  it('should support all ClassLimitType options', () => {
-    const limitTypes: ClassLimitType[] = ['unlimited', 'limited'];
-
-    expect(limitTypes).toHaveLength(2);
-    expect(limitTypes[0]).toBe('unlimited');
-    expect(limitTypes[1]).toBe('limited');
   });
 
   it('should support all ChargeSignUpFeeOption options', () => {
@@ -102,7 +92,7 @@ describe('useAddMembershipWizard types and exports', () => {
   it('should support all MembershipWizardStep steps', () => {
     const steps: MembershipWizardStep[] = [
       'basics',
-      'class-access',
+      'program-association',
       'payment-details',
       'contract-terms',
       'success',
@@ -110,7 +100,7 @@ describe('useAddMembershipWizard types and exports', () => {
 
     expect(steps).toHaveLength(5);
     expect(steps[0]).toBe('basics');
-    expect(steps[1]).toBe('class-access');
+    expect(steps[1]).toBe('program-association');
     expect(steps[2]).toBe('payment-details');
     expect(steps[3]).toBe('contract-terms');
     expect(steps[4]).toBe('success');
@@ -122,9 +112,8 @@ describe('useAddMembershipWizard types and exports', () => {
       status: 'active',
       membershipType: 'standard',
       description: '',
-      classLimitType: 'unlimited',
-      classLimitCount: null,
-      availableClasses: [],
+      associatedProgramId: null,
+      associatedProgramName: null,
       signUpFee: null,
       chargeSignUpFee: 'at-registration',
       monthlyFee: null,
@@ -140,20 +129,19 @@ describe('useAddMembershipWizard types and exports', () => {
 
     expect(minimalData.signUpFee).toBeNull();
     expect(minimalData.monthlyFee).toBeNull();
-    expect(minimalData.classLimitCount).toBeNull();
+    expect(minimalData.associatedProgramId).toBeNull();
     expect(minimalData.cancellationFee).toBeNull();
     expect(minimalData.holdLimitPerYear).toBeNull();
   });
 
-  it('should allow creating membership with limited classes', () => {
-    const limitedData: AddMembershipWizardData = {
-      membershipName: 'Limited Access',
+  it('should allow creating membership with associated program', () => {
+    const programData: AddMembershipWizardData = {
+      membershipName: 'Kids Monthly',
       status: 'active',
       membershipType: 'standard',
-      description: 'Limited class access',
-      classLimitType: 'limited',
-      classLimitCount: 8,
-      availableClasses: ['fundamentals'],
+      description: 'Kids program membership',
+      associatedProgramId: '2',
+      associatedProgramName: 'Kids Program',
       signUpFee: 25,
       chargeSignUpFee: 'at-registration',
       monthlyFee: 95,
@@ -167,8 +155,8 @@ describe('useAddMembershipWizard types and exports', () => {
       holdLimitPerYear: null,
     };
 
-    expect(limitedData.classLimitType).toBe('limited');
-    expect(limitedData.classLimitCount).toBe(8);
+    expect(programData.associatedProgramId).toBe('2');
+    expect(programData.associatedProgramName).toBe('Kids Program');
   });
 
   it('should allow creating trial membership', () => {
@@ -177,9 +165,8 @@ describe('useAddMembershipWizard types and exports', () => {
       status: 'active',
       membershipType: 'trial',
       description: 'Free trial for new students',
-      classLimitType: 'limited',
-      classLimitCount: 3,
-      availableClasses: ['fundamentals', 'intro-bjj'],
+      associatedProgramId: '1',
+      associatedProgramName: 'Adult Brazilian Jiu-jitsu',
       signUpFee: null,
       chargeSignUpFee: 'at-registration',
       monthlyFee: null,
@@ -204,9 +191,8 @@ describe('useAddMembershipWizard types and exports', () => {
       status: 'active',
       membershipType: 'standard',
       description: 'With custom start date',
-      classLimitType: 'unlimited',
-      classLimitCount: null,
-      availableClasses: ['fundamentals'],
+      associatedProgramId: '1',
+      associatedProgramName: 'Adult Brazilian Jiu-jitsu',
       signUpFee: 35,
       chargeSignUpFee: 'at-registration',
       monthlyFee: 150,
@@ -225,42 +211,14 @@ describe('useAddMembershipWizard types and exports', () => {
     expect(customDateData.proRateFirstPayment).toBe(true);
   });
 
-  it('should allow availableClasses to be an array of strings', () => {
-    const testData: AddMembershipWizardData = {
-      membershipName: 'Full Access',
-      status: 'active',
-      membershipType: 'standard',
-      description: 'Access to all classes',
-      classLimitType: 'unlimited',
-      classLimitCount: null,
-      availableClasses: ['fundamentals', 'intro-bjj', 'no-gi', 'advanced', 'open-mat', 'competition-team'],
-      signUpFee: 35,
-      chargeSignUpFee: 'at-registration',
-      monthlyFee: 150,
-      paymentFrequency: 'monthly',
-      membershipStartDate: 'same-as-registration',
-      customStartDate: '',
-      proRateFirstPayment: false,
-      contractLength: '12-months',
-      autoRenewal: 'month-to-month',
-      cancellationFee: 300,
-      holdLimitPerYear: 2,
-    };
-
-    expect(testData.availableClasses).toHaveLength(6);
-    expect(testData.availableClasses[0]).toBe('fundamentals');
-    expect(testData.availableClasses[5]).toBe('competition-team');
-  });
-
   it('should support weekly payment frequency', () => {
     const weeklyData: AddMembershipWizardData = {
       membershipName: 'Weekly Plan',
       status: 'active',
       membershipType: 'standard',
       description: 'Weekly payments',
-      classLimitType: 'unlimited',
-      classLimitCount: null,
-      availableClasses: ['fundamentals'],
+      associatedProgramId: '1',
+      associatedProgramName: 'Adult Brazilian Jiu-jitsu',
       signUpFee: null,
       chargeSignUpFee: 'at-registration',
       monthlyFee: 40,
@@ -283,9 +241,8 @@ describe('useAddMembershipWizard types and exports', () => {
       status: 'active',
       membershipType: 'standard',
       description: 'Annual payments',
-      classLimitType: 'unlimited',
-      classLimitCount: null,
-      availableClasses: ['fundamentals'],
+      associatedProgramId: '1',
+      associatedProgramName: 'Adult Brazilian Jiu-jitsu',
       signUpFee: null,
       chargeSignUpFee: 'at-registration',
       monthlyFee: 1200,
@@ -309,9 +266,8 @@ describe('useAddMembershipWizard types and exports', () => {
       status: 'inactive',
       membershipType: 'standard',
       description: 'No longer available',
-      classLimitType: 'unlimited',
-      classLimitCount: null,
-      availableClasses: ['fundamentals'],
+      associatedProgramId: '1',
+      associatedProgramName: 'Adult Brazilian Jiu-jitsu',
       signUpFee: 35,
       chargeSignUpFee: 'at-registration',
       monthlyFee: 165,
@@ -335,9 +291,8 @@ describe('useAddMembershipWizard types and exports', () => {
       status: 'active',
       membershipType: 'standard',
       description: 'Fee charged with first payment',
-      classLimitType: 'unlimited',
-      classLimitCount: null,
-      availableClasses: ['fundamentals'],
+      associatedProgramId: '1',
+      associatedProgramName: 'Adult Brazilian Jiu-jitsu',
       signUpFee: 35,
       chargeSignUpFee: 'first-payment',
       monthlyFee: 150,
