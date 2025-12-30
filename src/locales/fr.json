@@ -741,7 +741,8 @@
     "access_label": "Accès",
     "active_members": "Membres actifs",
     "active_trials": "Essais actifs",
-    "edit_button_aria_label": "Modifier l'adhésion"
+    "edit_button_aria_label": "Modifier l'adhésion",
+    "program_prefix": "Programme :"
   },
   "ClassCard": {
     "edit_button_aria_label": "Modifier le cours"
@@ -1018,13 +1019,19 @@
       "type_trial": "Essai",
       "description_label": "Description"
     },
-    "ClassAccessCard": {
-      "title": "Accès aux cours",
-      "class_limit_label": "Limite de cours",
-      "access_unlimited": "Cours illimités",
-      "access_limited": "{count} cours par mois",
-      "available_classes_label": "Cours disponibles",
-      "no_classes": "Aucun cours assigné"
+    "AssociatedProgramCard": {
+      "title": "Programme associé",
+      "program_label": "Programme",
+      "no_program": "Aucun programme assigné"
+    },
+    "EditAssociatedProgramModal": {
+      "title": "Modifier le programme associé",
+      "program_label": "Programme associé",
+      "program_placeholder": "Sélectionnez un programme",
+      "program_help": "Les membres avec cette adhésion auront accès à ce programme",
+      "cancel_button": "Annuler",
+      "save_button": "Enregistrer les modifications",
+      "saving_button": "Enregistrement..."
     },
     "PaymentDetailsCard": {
       "title": "Détails de paiement",
@@ -1082,22 +1089,6 @@
       "save_button": "Enregistrer les modifications",
       "saving_button": "Enregistrement..."
     },
-    "EditClassAccessModal": {
-      "title": "Modifier l'accès aux cours",
-      "class_limits_label": "Limites de cours",
-      "class_limits_unlimited": "Cours illimités",
-      "class_limits_limited": "Cours limités",
-      "class_limit_count_label": "Cours par mois",
-      "class_limit_count_placeholder": "ex., 8",
-      "class_limit_count_error": "Veuillez entrer un nombre valide de cours.",
-      "available_classes_label": "Cours disponibles",
-      "available_classes_error": "Veuillez sélectionner au moins un cours.",
-      "select_all_button": "Tout sélectionner",
-      "deselect_all_button": "Tout désélectionner",
-      "cancel_button": "Annuler",
-      "save_button": "Enregistrer les modifications",
-      "saving_button": "Enregistrement..."
-    },
     "EditPaymentDetailsModal": {
       "title": "Modifier les détails de paiement",
       "signup_fee_label": "Frais d'inscription",
@@ -1145,7 +1136,7 @@
   "AddMembershipWizard": {
     "modal_title": "Ajouter une nouvelle adhésion",
     "step_basics_title": "Informations de base",
-    "step_class_access_title": "Accès aux cours",
+    "step_program_association_title": "Association au programme",
     "step_payment_details_title": "Détails de paiement",
     "step_contract_terms_title": "Conditions du contrat",
     "step_success_title": "Succès",
@@ -1170,20 +1161,12 @@
       "cancel_button": "Annuler",
       "next_button": "Suivant"
     },
-    "MembershipClassAccessStep": {
-      "title": "Accès aux cours",
-      "subtitle": "Définissez les cours auxquels les membres peuvent accéder avec cette adhésion",
-      "class_limits_label": "Limites de cours",
-      "class_limits_placeholder": "Sélectionnez le type de limite",
-      "class_limits_unlimited": "Cours illimités",
-      "class_limits_limited": "Cours limités",
-      "class_limit_count_label": "Cours par mois",
-      "class_limit_count_placeholder": "ex., 8",
-      "class_limit_count_error": "Veuillez entrer un nombre valide de cours.",
-      "available_classes_label": "Cours disponibles",
-      "available_classes_error": "Veuillez sélectionner au moins un cours.",
-      "select_all_button": "Tout sélectionner",
-      "deselect_all_button": "Tout désélectionner",
+    "MembershipProgramAssociationStep": {
+      "title": "Association au programme",
+      "subtitle": "Sélectionnez le programme auquel cette adhésion est associée",
+      "program_label": "Programme associé",
+      "program_placeholder": "Sélectionnez un programme",
+      "program_help": "Les membres avec cette adhésion auront accès à ce programme",
       "cancel_button": "Annuler",
       "back_button": "Retour",
       "next_button": "Suivant"
@@ -1249,8 +1232,7 @@
       "summary_signup_fee": "Frais d'inscription",
       "summary_frequency": "Fréquence de paiement",
       "summary_contract": "Durée du contrat",
-      "summary_class_access": "Accès aux cours",
-      "summary_available_classes": "Cours disponibles",
+      "summary_associated_program": "Programme associé",
       "summary_cancellation_fee": "Frais d'annulation",
       "summary_hold_limit": "Limite de suspension",
       "price_free": "Gratuit",
@@ -1265,8 +1247,7 @@
       "contract_3_months": "3 mois",
       "contract_6_months": "6 mois",
       "contract_12_months": "12 mois",
-      "class_access_unlimited": "Illimité",
-      "class_access_limited": "{count} cours/mois",
+      "no_program": "Aucun programme assigné",
       "per_year": "par an",
       "done_button": "Terminé"
     }

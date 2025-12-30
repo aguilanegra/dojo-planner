@@ -738,7 +738,8 @@
     "access_label": "Access",
     "active_members": "Active Members",
     "active_trials": "Active Trials",
-    "edit_button_aria_label": "Edit membership"
+    "edit_button_aria_label": "Edit membership",
+    "program_prefix": "Program:"
   },
   "ClassCard": {
     "edit_button_aria_label": "Edit class"
@@ -1010,13 +1011,19 @@
       "type_trial": "Trial",
       "description_label": "Description"
     },
-    "ClassAccessCard": {
-      "title": "Class Access",
-      "class_limit_label": "Class Limit",
-      "access_unlimited": "Unlimited Classes",
-      "access_limited": "{count} Classes per Month",
-      "available_classes_label": "Available Classes",
-      "no_classes": "No classes assigned"
+    "AssociatedProgramCard": {
+      "title": "Associated Program",
+      "program_label": "Program",
+      "no_program": "No program assigned"
+    },
+    "EditAssociatedProgramModal": {
+      "title": "Edit Associated Program",
+      "program_label": "Associated Program",
+      "program_placeholder": "Select a program",
+      "program_help": "Members with this membership will have access to this program",
+      "cancel_button": "Cancel",
+      "save_button": "Save Changes",
+      "saving_button": "Saving..."
     },
     "PaymentDetailsCard": {
       "title": "Payment Details",
@@ -1074,22 +1081,6 @@
       "save_button": "Save Changes",
       "saving_button": "Saving..."
     },
-    "EditClassAccessModal": {
-      "title": "Edit Class Access",
-      "class_limits_label": "Class Limits",
-      "class_limits_unlimited": "Unlimited Classes",
-      "class_limits_limited": "Limited Classes",
-      "class_limit_count_label": "Classes per Month",
-      "class_limit_count_placeholder": "e.g., 8",
-      "class_limit_count_error": "Please enter a valid number of classes.",
-      "available_classes_label": "Available Classes",
-      "available_classes_error": "Please select at least one class.",
-      "select_all_button": "Select All",
-      "deselect_all_button": "Deselect All",
-      "cancel_button": "Cancel",
-      "save_button": "Save Changes",
-      "saving_button": "Saving..."
-    },
     "EditPaymentDetailsModal": {
       "title": "Edit Payment Details",
       "signup_fee_label": "Sign-up Fee",
@@ -1137,7 +1128,7 @@
   "AddMembershipWizard": {
     "modal_title": "Add New Membership",
     "step_basics_title": "Membership Basics",
-    "step_class_access_title": "Class Access",
+    "step_program_association_title": "Program Association",
     "step_payment_details_title": "Payment Details",
     "step_contract_terms_title": "Contract Terms",
     "step_success_title": "Success",
@@ -1162,20 +1153,12 @@
       "cancel_button": "Cancel",
       "next_button": "Next"
     },
-    "MembershipClassAccessStep": {
-      "title": "Class Access",
-      "subtitle": "Define which classes members can access with this membership",
-      "class_limits_label": "Class Limits",
-      "class_limits_placeholder": "Select class limit type",
-      "class_limits_unlimited": "Unlimited Classes",
-      "class_limits_limited": "Limited Classes",
-      "class_limit_count_label": "Classes per Month",
-      "class_limit_count_placeholder": "e.g., 8",
-      "class_limit_count_error": "Please enter a valid number of classes.",
-      "available_classes_label": "Available Classes",
-      "available_classes_error": "Please select at least one class.",
-      "select_all_button": "Select All",
-      "deselect_all_button": "Deselect All",
+    "MembershipProgramAssociationStep": {
+      "title": "Program Association",
+      "subtitle": "Select the program this membership is associated with",
+      "program_label": "Associated Program",
+      "program_placeholder": "Select a program",
+      "program_help": "Members with this membership will have access to this program",
       "cancel_button": "Cancel",
       "back_button": "Back",
       "next_button": "Next"
@@ -1241,8 +1224,7 @@
       "summary_signup_fee": "Sign-up Fee",
       "summary_frequency": "Payment Frequency",
       "summary_contract": "Contract Length",
-      "summary_class_access": "Class Access",
-      "summary_available_classes": "Available Classes",
+      "summary_associated_program": "Associated Program",
       "summary_cancellation_fee": "Cancellation Fee",
       "summary_hold_limit": "Hold Limit",
       "price_free": "Free",
@@ -1257,8 +1239,7 @@
       "contract_3_months": "3 Months",
       "contract_6_months": "6 Months",
       "contract_12_months": "12 Months",
-      "class_access_unlimited": "Unlimited",
-      "class_access_limited": "{count} Classes/mo",
+      "no_program": "No program assigned",
       "per_year": "per year",
       "done_button": "Done"
     }

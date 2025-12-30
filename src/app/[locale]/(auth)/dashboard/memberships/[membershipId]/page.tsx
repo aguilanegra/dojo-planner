@@ -3,7 +3,6 @@
 import type {
   AutoRenewalOption,
   ChargeSignUpFeeOption,
-  ClassLimitType,
   ContractLength,
   MembershipStatus,
   MembershipType,
@@ -16,12 +15,12 @@ import { useRouter } from 'next/navigation';
 import { use, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { DeleteMembershipAlertDialog } from '@/features/memberships/details/DeleteMembershipAlertDialog';
-import { EditClassAccessModal } from '@/features/memberships/details/EditClassAccessModal';
+import { EditAssociatedProgramModal } from '@/features/memberships/details/EditAssociatedProgramModal';
 import { EditContractTermsModal } from '@/features/memberships/details/EditContractTermsModal';
 import { EditMembershipBasicsModal } from '@/features/memberships/details/EditMembershipBasicsModal';
 import { EditPaymentDetailsModal } from '@/features/memberships/details/EditPaymentDetailsModal';
+import { MembershipAssociatedProgramCard } from '@/features/memberships/details/MembershipAssociatedProgramCard';
 import { MembershipBasicsCard } from '@/features/memberships/details/MembershipBasicsCard';
-import { MembershipClassAccessCard } from '@/features/memberships/details/MembershipClassAccessCard';
 import { MembershipContractTermsCard } from '@/features/memberships/details/MembershipContractTermsCard';
 import { MembershipPaymentDetailsCard } from '@/features/memberships/details/MembershipPaymentDetailsCard';
 import { MembershipStatsCard } from '@/features/memberships/details/MembershipStatsCard';
@@ -35,10 +34,9 @@ export type MembershipDetailData = {
   membershipType: MembershipType;
   description: string;
   category: string;
-  // Class Access
-  classLimitType: ClassLimitType;
-  classLimitCount: number | null;
-  availableClasses: string[];
+  // Associated Program
+  associatedProgramId: string | null;
+  associatedProgramName: string | null;
   // Payment Details
   signUpFee: number | null;
   chargeSignUpFee: ChargeSignUpFeeOption;
@@ -64,9 +62,8 @@ const mockMembershipDetails: Record<string, MembershipDetailData> = {
     membershipType: 'standard',
     description: 'Our most popular membership option for dedicated practitioners. Includes unlimited access to all adult BJJ classes with a 12-month commitment for the best monthly rate.',
     category: 'Adult Brazilian Jiu-Jitsu',
-    classLimitType: 'unlimited',
-    classLimitCount: null,
-    availableClasses: ['fundamentals', 'intro-bjj', 'no-gi', 'advanced', 'open-mat'],
+    associatedProgramId: '1',
+    associatedProgramName: 'Adult Brazilian Jiu-jitsu',
     signUpFee: 35,
     chargeSignUpFee: 'at-registration',
     monthlyFee: 150,
@@ -86,9 +83,8 @@ const mockMembershipDetails: Record<string, MembershipDetailData> = {
     membershipType: 'standard',
     description: 'Flexible month-to-month membership with no long-term commitment. Perfect for those who need flexibility in their training schedule.',
     category: 'Adult Brazilian Jiu-Jitsu',
-    classLimitType: 'unlimited',
-    classLimitCount: null,
-    availableClasses: ['fundamentals', 'intro-bjj', 'no-gi', 'advanced', 'open-mat'],
+    associatedProgramId: '1',
+    associatedProgramName: 'Adult Brazilian Jiu-jitsu',
     signUpFee: 35,
     chargeSignUpFee: 'at-registration',
     monthlyFee: 170,
@@ -108,9 +104,8 @@ const mockMembershipDetails: Record<string, MembershipDetailData> = {
     membershipType: 'trial',
     description: 'Experience our academy for free! New students can try up to 3 classes over 7 days to see if BJJ is right for them.',
     category: 'Adult Brazilian Jiu-Jitsu',
-    classLimitType: 'limited',
-    classLimitCount: 3,
-    availableClasses: ['fundamentals', 'intro-bjj'],
+    associatedProgramId: '1',
+    associatedProgramName: 'Adult Brazilian Jiu-jitsu',
     signUpFee: null,
     chargeSignUpFee: 'at-registration',
     monthlyFee: null,
@@ -130,9 +125,8 @@ const mockMembershipDetails: Record<string, MembershipDetailData> = {
     membershipType: 'standard',
     description: 'Monthly membership for our kids program. Includes access to all kids BJJ classes with age-appropriate instruction.',
     category: 'Kids Program',
-    classLimitType: 'limited',
-    classLimitCount: 8,
-    availableClasses: ['kids-fundamentals', 'kids-advanced'],
+    associatedProgramId: '2',
+    associatedProgramName: 'Kids Program',
     signUpFee: 25,
     chargeSignUpFee: 'at-registration',
     monthlyFee: 95,
@@ -152,9 +146,8 @@ const mockMembershipDetails: Record<string, MembershipDetailData> = {
     membershipType: 'trial',
     description: 'Let your child try BJJ for free! Two classes over one week to see if they enjoy training.',
     category: 'Kids Program',
-    classLimitType: 'limited',
-    classLimitCount: 2,
-    availableClasses: ['kids-fundamentals'],
+    associatedProgramId: '2',
+    associatedProgramName: 'Kids Program',
     signUpFee: null,
     chargeSignUpFee: 'at-registration',
     monthlyFee: null,
@@ -174,9 +167,8 @@ const mockMembershipDetails: Record<string, MembershipDetailData> = {
     membershipType: 'standard',
     description: 'For serious competitors. Includes unlimited access to all classes plus exclusive competition team training sessions.',
     category: 'Competition Team',
-    classLimitType: 'unlimited',
-    classLimitCount: null,
-    availableClasses: ['fundamentals', 'intro-bjj', 'no-gi', 'advanced', 'open-mat', 'competition-team'],
+    associatedProgramId: '3',
+    associatedProgramName: 'Competition Team',
     signUpFee: 50,
     chargeSignUpFee: 'at-registration',
     monthlyFee: 200,
@@ -196,9 +188,8 @@ const mockMembershipDetails: Record<string, MembershipDetailData> = {
     membershipType: 'standard',
     description: 'Previously offered 6-month commitment plan. This membership is no longer available for new sign-ups.',
     category: 'Adult Brazilian Jiu-Jitsu',
-    classLimitType: 'unlimited',
-    classLimitCount: null,
-    availableClasses: ['fundamentals', 'intro-bjj', 'no-gi', 'advanced'],
+    associatedProgramId: '1',
+    associatedProgramName: 'Adult Brazilian Jiu-jitsu',
     signUpFee: 35,
     chargeSignUpFee: 'at-registration',
     monthlyFee: 165,
@@ -224,7 +215,7 @@ export default function MembershipDetailPage({ params }: { params: Promise<PageP
 
   // Modal states
   const [isEditBasicsOpen, setIsEditBasicsOpen] = useState(false);
-  const [isEditClassAccessOpen, setIsEditClassAccessOpen] = useState(false);
+  const [isEditAssociatedProgramOpen, setIsEditAssociatedProgramOpen] = useState(false);
   const [isEditPaymentOpen, setIsEditPaymentOpen] = useState(false);
   const [isEditContractOpen, setIsEditContractOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -235,6 +226,9 @@ export default function MembershipDetailPage({ params }: { params: Promise<PageP
   );
 
   const isTrial = membershipData?.membershipType === 'trial';
+
+  // Check if deletion is allowed (must be inactive with zero members)
+  const canDelete = membershipData?.status === 'inactive' && membershipData?.activeCount === 0;
 
   // Handler for updating membership data
   const handleUpdateMembership = (updates: Partial<MembershipDetailData>) => {
@@ -310,12 +304,11 @@ export default function MembershipDetailPage({ params }: { params: Promise<PageP
           onEdit={() => setIsEditBasicsOpen(true)}
         />
 
-        {/* Class Access Card */}
-        <MembershipClassAccessCard
-          classLimitType={membershipData.classLimitType}
-          classLimitCount={membershipData.classLimitCount}
-          availableClasses={membershipData.availableClasses}
-          onEdit={() => setIsEditClassAccessOpen(true)}
+        {/* Associated Program Card */}
+        <MembershipAssociatedProgramCard
+          associatedProgramId={membershipData.associatedProgramId}
+          associatedProgramName={membershipData.associatedProgramName}
+          onEdit={() => setIsEditAssociatedProgramOpen(true)}
         />
 
         {/* Payment Details Card */}
@@ -353,15 +346,13 @@ export default function MembershipDetailPage({ params }: { params: Promise<PageP
         }}
       />
 
-      <EditClassAccessModal
-        isOpen={isEditClassAccessOpen}
-        onClose={() => setIsEditClassAccessOpen(false)}
-        classLimitType={membershipData.classLimitType}
-        classLimitCount={membershipData.classLimitCount}
-        availableClasses={membershipData.availableClasses}
+      <EditAssociatedProgramModal
+        isOpen={isEditAssociatedProgramOpen}
+        onClose={() => setIsEditAssociatedProgramOpen(false)}
+        associatedProgramId={membershipData.associatedProgramId}
         onSave={(data) => {
           handleUpdateMembership(data);
-          setIsEditClassAccessOpen(false);
+          setIsEditAssociatedProgramOpen(false);
         }}
       />
 
@@ -393,16 +384,18 @@ export default function MembershipDetailPage({ params }: { params: Promise<PageP
         }}
       />
 
-      {/* Delete Button */}
-      <div className="flex justify-end">
-        <Button
-          variant="destructive"
-          onClick={() => setIsDeleteDialogOpen(true)}
-        >
-          <Trash2 className="mr-2 h-4 w-4" />
-          {t('delete_button')}
-        </Button>
-      </div>
+      {/* Delete Button - only shown if inactive and no members */}
+      {canDelete && (
+        <div className="flex justify-end">
+          <Button
+            variant="destructive"
+            onClick={() => setIsDeleteDialogOpen(true)}
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            {t('delete_button')}
+          </Button>
+        </div>
+      )}
 
       {/* Delete Confirmation Dialog */}
       <DeleteMembershipAlertDialog

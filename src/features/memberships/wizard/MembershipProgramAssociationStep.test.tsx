@@ -2,23 +2,15 @@ import type { AddMembershipWizardData } from '@/hooks/useAddMembershipWizard';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { page, userEvent } from 'vitest/browser';
-import { MembershipClassAccessStep } from './MembershipClassAccessStep';
+import { MembershipProgramAssociationStep } from './MembershipProgramAssociationStep';
 
 // Mock next-intl with proper translations
 const translationKeys: Record<string, string> = {
-  title: 'Class Access',
-  subtitle: 'Define which classes members can access with this membership',
-  class_limits_label: 'Class Limits',
-  class_limits_placeholder: 'Select class limit type',
-  class_limits_unlimited: 'Unlimited Classes',
-  class_limits_limited: 'Limited Classes',
-  class_limit_count_label: 'Classes per Month',
-  class_limit_count_placeholder: 'e.g., 8',
-  class_limit_count_error: 'Please enter a valid number of classes.',
-  available_classes_label: 'Available Classes',
-  available_classes_error: 'Please select at least one class.',
-  select_all_button: 'Select All',
-  deselect_all_button: 'Deselect All',
+  title: 'Program Association',
+  subtitle: 'Select the program this membership is associated with',
+  program_label: 'Associated Program',
+  program_placeholder: 'Select a program',
+  program_help: 'Members with this membership will have access to this program',
   cancel_button: 'Cancel',
   back_button: 'Back',
   next_button: 'Next',
@@ -36,15 +28,14 @@ vi.mock('next-intl', () => ({
   },
 }));
 
-describe('MembershipClassAccessStep', () => {
+describe('MembershipProgramAssociationStep', () => {
   const mockData: AddMembershipWizardData = {
     membershipName: '12 Month Commitment',
     status: 'active',
     membershipType: 'standard',
     description: 'A great membership',
-    classLimitType: 'unlimited',
-    classLimitCount: null,
-    availableClasses: [],
+    associatedProgramId: null,
+    associatedProgramName: null,
     signUpFee: null,
     chargeSignUpFee: 'at-registration',
     monthlyFee: null,
@@ -71,7 +62,7 @@ describe('MembershipClassAccessStep', () => {
 
   it('should render the step with title and subtitle', () => {
     render(
-      <MembershipClassAccessStep
+      <MembershipProgramAssociationStep
         data={mockData}
         onUpdate={mockHandlers.onUpdate}
         onNext={mockHandlers.onNext}
@@ -85,9 +76,9 @@ describe('MembershipClassAccessStep', () => {
     expect(heading).toBeTruthy();
   });
 
-  it('should render class limits select', () => {
+  it('should render program select dropdown', () => {
     render(
-      <MembershipClassAccessStep
+      <MembershipProgramAssociationStep
         data={mockData}
         onUpdate={mockHandlers.onUpdate}
         onNext={mockHandlers.onNext}
@@ -96,67 +87,14 @@ describe('MembershipClassAccessStep', () => {
       />,
     );
 
-    const classLimitsLabel = page.getByText('Class Limits');
+    const programLabel = page.getByText('Associated Program');
 
-    expect(classLimitsLabel).toBeTruthy();
+    expect(programLabel).toBeTruthy();
   });
 
-  it('should render available classes section', () => {
+  it('should have Next button disabled when no program is selected', () => {
     render(
-      <MembershipClassAccessStep
-        data={mockData}
-        onUpdate={mockHandlers.onUpdate}
-        onNext={mockHandlers.onNext}
-        onBack={mockHandlers.onBack}
-        onCancel={mockHandlers.onCancel}
-      />,
-    );
-
-    const availableClassesLabel = page.getByText('Available Classes');
-
-    expect(availableClassesLabel).toBeTruthy();
-  });
-
-  it('should display Select All button when not all classes are selected', () => {
-    render(
-      <MembershipClassAccessStep
-        data={mockData}
-        onUpdate={mockHandlers.onUpdate}
-        onNext={mockHandlers.onNext}
-        onBack={mockHandlers.onBack}
-        onCancel={mockHandlers.onCancel}
-      />,
-    );
-
-    const selectAllButton = page.getByText('Select All');
-
-    expect(selectAllButton).toBeTruthy();
-  });
-
-  it('should display Deselect All button when all classes are selected', () => {
-    const allClassesData: AddMembershipWizardData = {
-      ...mockData,
-      availableClasses: ['fundamentals', 'intro-bjj', 'no-gi', 'advanced', 'open-mat', 'competition-team'],
-    };
-
-    render(
-      <MembershipClassAccessStep
-        data={allClassesData}
-        onUpdate={mockHandlers.onUpdate}
-        onNext={mockHandlers.onNext}
-        onBack={mockHandlers.onBack}
-        onCancel={mockHandlers.onCancel}
-      />,
-    );
-
-    const deselectAllButton = page.getByText('Deselect All');
-
-    expect(deselectAllButton).toBeTruthy();
-  });
-
-  it('should have Next button disabled when no classes are selected', () => {
-    render(
-      <MembershipClassAccessStep
+      <MembershipProgramAssociationStep
         data={mockData}
         onUpdate={mockHandlers.onUpdate}
         onNext={mockHandlers.onNext}
@@ -171,15 +109,16 @@ describe('MembershipClassAccessStep', () => {
     expect(nextButton?.disabled).toBe(true);
   });
 
-  it('should enable Next button when classes are selected', () => {
-    const dataWithClasses: AddMembershipWizardData = {
+  it('should enable Next button when a program is selected', () => {
+    const dataWithProgram: AddMembershipWizardData = {
       ...mockData,
-      availableClasses: ['fundamentals'],
+      associatedProgramId: '1',
+      associatedProgramName: 'Adult Brazilian Jiu-jitsu',
     };
 
     render(
-      <MembershipClassAccessStep
-        data={dataWithClasses}
+      <MembershipProgramAssociationStep
+        data={dataWithProgram}
         onUpdate={mockHandlers.onUpdate}
         onNext={mockHandlers.onNext}
         onBack={mockHandlers.onBack}
@@ -195,7 +134,7 @@ describe('MembershipClassAccessStep', () => {
 
   it('should call onCancel when Cancel button is clicked', async () => {
     render(
-      <MembershipClassAccessStep
+      <MembershipProgramAssociationStep
         data={mockData}
         onUpdate={mockHandlers.onUpdate}
         onNext={mockHandlers.onNext}
@@ -216,7 +155,7 @@ describe('MembershipClassAccessStep', () => {
 
   it('should call onBack when Back button is clicked', async () => {
     render(
-      <MembershipClassAccessStep
+      <MembershipProgramAssociationStep
         data={mockData}
         onUpdate={mockHandlers.onUpdate}
         onNext={mockHandlers.onNext}
@@ -236,14 +175,15 @@ describe('MembershipClassAccessStep', () => {
   });
 
   it('should call onNext when Next button is clicked with valid data', async () => {
-    const dataWithClasses: AddMembershipWizardData = {
+    const dataWithProgram: AddMembershipWizardData = {
       ...mockData,
-      availableClasses: ['fundamentals'],
+      associatedProgramId: '1',
+      associatedProgramName: 'Adult Brazilian Jiu-jitsu',
     };
 
     render(
-      <MembershipClassAccessStep
-        data={dataWithClasses}
+      <MembershipProgramAssociationStep
+        data={dataWithProgram}
         onUpdate={mockHandlers.onUpdate}
         onNext={mockHandlers.onNext}
         onBack={mockHandlers.onBack}
@@ -263,7 +203,7 @@ describe('MembershipClassAccessStep', () => {
 
   it('should display error message when provided', () => {
     render(
-      <MembershipClassAccessStep
+      <MembershipProgramAssociationStep
         data={mockData}
         onUpdate={mockHandlers.onUpdate}
         onNext={mockHandlers.onNext}
@@ -278,9 +218,9 @@ describe('MembershipClassAccessStep', () => {
     expect(errorMessage).toBeTruthy();
   });
 
-  it('should render class checkboxes', () => {
+  it('should call onUpdate when a program is selected', async () => {
     render(
-      <MembershipClassAccessStep
+      <MembershipProgramAssociationStep
         data={mockData}
         onUpdate={mockHandlers.onUpdate}
         onNext={mockHandlers.onNext}
@@ -289,38 +229,27 @@ describe('MembershipClassAccessStep', () => {
       />,
     );
 
-    const fundamentals = page.getByText('Fundamentals');
-    const introBjj = page.getByText('Intro to BJJ');
-    const noGi = page.getByText('No-Gi');
+    // Find the select trigger and click it
+    const selectTrigger = document.querySelector('[role="combobox"]');
+    if (selectTrigger) {
+      await userEvent.click(selectTrigger);
 
-    expect(fundamentals).toBeTruthy();
-    expect(introBjj).toBeTruthy();
-    expect(noGi).toBeTruthy();
-  });
+      // Wait for dropdown to open and select an option
+      const option = page.getByText('Adult Brazilian Jiu-jitsu');
+      if (option) {
+        await userEvent.click(option);
 
-  it('should call onUpdate when a class checkbox is clicked', async () => {
-    render(
-      <MembershipClassAccessStep
-        data={mockData}
-        onUpdate={mockHandlers.onUpdate}
-        onNext={mockHandlers.onNext}
-        onBack={mockHandlers.onBack}
-        onCancel={mockHandlers.onCancel}
-      />,
-    );
-
-    const checkboxes = Array.from(document.querySelectorAll('[role="checkbox"]'));
-
-    if (checkboxes[0]) {
-      await userEvent.click(checkboxes[0]);
-
-      expect(mockHandlers.onUpdate).toHaveBeenCalled();
+        expect(mockHandlers.onUpdate).toHaveBeenCalledWith({
+          associatedProgramId: '1',
+          associatedProgramName: 'Adult Brazilian Jiu-jitsu',
+        });
+      }
     }
   });
 
-  it('should call onUpdate when Select All button is clicked', async () => {
+  it('should display helper text', () => {
     render(
-      <MembershipClassAccessStep
+      <MembershipProgramAssociationStep
         data={mockData}
         onUpdate={mockHandlers.onUpdate}
         onNext={mockHandlers.onNext}
@@ -329,21 +258,15 @@ describe('MembershipClassAccessStep', () => {
       />,
     );
 
-    const selectAllButton = page.getByText('Select All');
-    await userEvent.click(selectAllButton);
+    const helpText = page.getByText('Members with this membership will have access to this program');
 
-    expect(mockHandlers.onUpdate).toHaveBeenCalled();
+    expect(helpText).toBeTruthy();
   });
 
-  it('should show class limit count input when limited is selected', () => {
-    const limitedData: AddMembershipWizardData = {
-      ...mockData,
-      classLimitType: 'limited',
-    };
-
+  it('should only show active programs in dropdown', async () => {
     render(
-      <MembershipClassAccessStep
-        data={limitedData}
+      <MembershipProgramAssociationStep
+        data={mockData}
         onUpdate={mockHandlers.onUpdate}
         onNext={mockHandlers.onNext}
         onBack={mockHandlers.onBack}
@@ -351,22 +274,28 @@ describe('MembershipClassAccessStep', () => {
       />,
     );
 
-    const countLabel = page.getByText('Classes per Month');
+    // Open the dropdown
+    const selectTrigger = document.querySelector('[role="combobox"]');
+    if (selectTrigger) {
+      await userEvent.click(selectTrigger);
 
-    expect(countLabel).toBeTruthy();
+      // Active programs should be visible
+      const activeProgram = page.getByText('Adult Brazilian Jiu-jitsu');
+
+      expect(activeProgram).toBeTruthy();
+
+      // Inactive program (Wrestling Fundamentals) should NOT be visible
+      const allOptions = Array.from(document.querySelectorAll('[role="option"]'));
+      const wrestlingOption = allOptions.find(opt => opt.textContent?.includes('Wrestling Fundamentals'));
+
+      expect(wrestlingOption).toBeUndefined();
+    }
   });
 
-  it('should disable Next when limited classes but no count provided', () => {
-    const limitedData: AddMembershipWizardData = {
-      ...mockData,
-      classLimitType: 'limited',
-      classLimitCount: null,
-      availableClasses: ['fundamentals'],
-    };
-
+  it('should show all active programs in dropdown', async () => {
     render(
-      <MembershipClassAccessStep
-        data={limitedData}
+      <MembershipProgramAssociationStep
+        data={mockData}
         onUpdate={mockHandlers.onUpdate}
         onNext={mockHandlers.onNext}
         onBack={mockHandlers.onBack}
@@ -374,33 +303,15 @@ describe('MembershipClassAccessStep', () => {
       />,
     );
 
-    const buttons = Array.from(document.querySelectorAll('button'));
-    const nextButton = buttons.find(btn => btn.textContent?.includes('Next'));
+    // Open the dropdown
+    const selectTrigger = document.querySelector('[role="combobox"]');
+    if (selectTrigger) {
+      await userEvent.click(selectTrigger);
 
-    expect(nextButton?.disabled).toBe(true);
-  });
+      // Count the options - should be 4 active programs (not 5 total)
+      const allOptions = Array.from(document.querySelectorAll('[role="option"]'));
 
-  it('should enable Next when limited classes with valid count', () => {
-    const limitedData: AddMembershipWizardData = {
-      ...mockData,
-      classLimitType: 'limited',
-      classLimitCount: 8,
-      availableClasses: ['fundamentals'],
-    };
-
-    render(
-      <MembershipClassAccessStep
-        data={limitedData}
-        onUpdate={mockHandlers.onUpdate}
-        onNext={mockHandlers.onNext}
-        onBack={mockHandlers.onBack}
-        onCancel={mockHandlers.onCancel}
-      />,
-    );
-
-    const buttons = Array.from(document.querySelectorAll('button'));
-    const nextButton = buttons.find(btn => btn.textContent?.includes('Next'));
-
-    expect(nextButton?.disabled).toBe(false);
+      expect(allOptions.length).toBe(4);
+    }
   });
 });

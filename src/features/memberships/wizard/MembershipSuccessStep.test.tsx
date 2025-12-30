@@ -16,8 +16,7 @@ const translationKeys: Record<string, string> = {
   summary_signup_fee: 'Sign-up Fee',
   summary_frequency: 'Payment Frequency',
   summary_contract: 'Contract Length',
-  summary_class_access: 'Class Access',
-  summary_available_classes: 'Available Classes',
+  summary_associated_program: 'Associated Program',
   summary_cancellation_fee: 'Cancellation Fee',
   summary_hold_limit: 'Hold Limit',
   price_free: 'Free',
@@ -32,8 +31,7 @@ const translationKeys: Record<string, string> = {
   contract_3_months: '3 Months',
   contract_6_months: '6 Months',
   contract_12_months: '12 Months',
-  class_access_unlimited: 'Unlimited',
-  class_access_limited: '{count} Classes/mo',
+  no_program: 'No program assigned',
   per_year: 'per year',
   done_button: 'Done',
 };
@@ -56,9 +54,8 @@ describe('MembershipSuccessStep', () => {
     status: 'active',
     membershipType: 'standard',
     description: 'A great membership',
-    classLimitType: 'unlimited',
-    classLimitCount: null,
-    availableClasses: ['fundamentals', 'intro-bjj', 'no-gi'],
+    associatedProgramId: '1',
+    associatedProgramName: 'Adult Brazilian Jiu-jitsu',
     signUpFee: 35,
     chargeSignUpFee: 'at-registration',
     monthlyFee: 150,
@@ -167,26 +164,26 @@ describe('MembershipSuccessStep', () => {
     expect(contract).toBeTruthy();
   });
 
-  it('should display class access as Unlimited', () => {
+  it('should display associated program in summary', () => {
     render(<MembershipSuccessStep data={mockData} onDone={mockOnDone} />);
 
-    const classAccess = page.getByText('Unlimited');
+    const program = page.getByText('Adult Brazilian Jiu-jitsu');
 
-    expect(classAccess).toBeTruthy();
+    expect(program).toBeTruthy();
   });
 
-  it('should display limited class access when set', () => {
-    const limitedData: AddMembershipWizardData = {
+  it('should display no program message when no program is associated', () => {
+    const noProgramData: AddMembershipWizardData = {
       ...mockData,
-      classLimitType: 'limited',
-      classLimitCount: 8,
+      associatedProgramId: null,
+      associatedProgramName: null,
     };
 
-    render(<MembershipSuccessStep data={limitedData} onDone={mockOnDone} />);
+    render(<MembershipSuccessStep data={noProgramData} onDone={mockOnDone} />);
 
-    const classAccess = page.getByText('8 Classes/mo');
+    const noProgram = page.getByText('No program assigned');
 
-    expect(classAccess).toBeTruthy();
+    expect(noProgram).toBeTruthy();
   });
 
   it('should display cancellation fee in summary', () => {
@@ -273,14 +270,6 @@ describe('MembershipSuccessStep', () => {
     const status = page.getByText('Inactive');
 
     expect(status).toBeTruthy();
-  });
-
-  it('should display available classes in summary', () => {
-    render(<MembershipSuccessStep data={mockData} onDone={mockOnDone} />);
-
-    const classesLabel = page.getByText('Available Classes');
-
-    expect(classesLabel).toBeTruthy();
   });
 
   it('should not display signup fee when 0', () => {

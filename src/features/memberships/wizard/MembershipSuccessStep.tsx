@@ -9,15 +9,6 @@ type MembershipSuccessStepProps = {
   onDone: () => void;
 };
 
-const MOCK_CLASSES: Record<string, string> = {
-  'fundamentals': 'Fundamentals',
-  'intro-bjj': 'Intro to BJJ',
-  'no-gi': 'No-Gi',
-  'advanced': 'Advanced',
-  'open-mat': 'Open Mat',
-  'competition-team': 'Competition Team',
-};
-
 export const MembershipSuccessStep = ({ data, onDone }: MembershipSuccessStepProps) => {
   const t = useTranslations('AddMembershipWizard.MembershipSuccessStep');
 
@@ -55,17 +46,6 @@ export const MembershipSuccessStep = ({ data, onDone }: MembershipSuccessStepPro
         return data.contractLength;
     }
   };
-
-  const getClassAccessLabel = () => {
-    if (data.classLimitType === 'unlimited') {
-      return t('class_access_unlimited');
-    }
-    return t('class_access_limited', { count: data.classLimitCount ?? 0 });
-  };
-
-  const selectedClasses = data.availableClasses
-    .map(id => MOCK_CLASSES[id] || id)
-    .join(', ');
 
   return (
     <div className="space-y-6 text-center">
@@ -125,15 +105,11 @@ export const MembershipSuccessStep = ({ data, onDone }: MembershipSuccessStepPro
             <span className="font-medium text-foreground">{getContractLengthLabel()}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">{t('summary_class_access')}</span>
-            <span className="font-medium text-foreground">{getClassAccessLabel()}</span>
+            <span className="text-muted-foreground">{t('summary_associated_program')}</span>
+            <span className="font-medium text-foreground">
+              {data.associatedProgramName ?? t('no_program')}
+            </span>
           </div>
-          {selectedClasses && (
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">{t('summary_available_classes')}</span>
-              <span className="max-w-[200px] truncate text-right font-medium text-foreground">{selectedClasses}</span>
-            </div>
-          )}
           {data.cancellationFee !== null && data.cancellationFee > 0 && (
             <div className="flex justify-between">
               <span className="text-muted-foreground">{t('summary_cancellation_fee')}</span>
