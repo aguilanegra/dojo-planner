@@ -9,6 +9,13 @@ import { Input } from '@/components/ui/input/input';
 import { Label } from '@/components/ui/label';
 import { logger } from '@/libs/Logger';
 
+/**
+ * Sanitizes phone number input to only allow valid phone characters.
+ */
+function sanitizePhone(value: string): string {
+  return value.replace(/[^0-9+\-() ]/g, '').trim();
+}
+
 type EditProfileFormProps = {
   onCancel: () => void;
   onSuccess?: () => void;
@@ -16,6 +23,7 @@ type EditProfileFormProps = {
     firstName: string;
     lastName: string;
     email: string;
+    phone: string;
   };
 };
 
@@ -23,6 +31,7 @@ type FormErrors = {
   firstName?: string;
   lastName?: string;
   email?: string;
+  phone?: string;
   general?: string;
 };
 
@@ -33,6 +42,7 @@ export function EditProfileForm({ onCancel, onSuccess, initialData }: EditProfil
   const [firstName, setFirstName] = useState(initialData.firstName);
   const [lastName, setLastName] = useState(initialData.lastName);
   const [email, setEmail] = useState(initialData.email);
+  const [phone, setPhone] = useState(initialData.phone);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [successMessage, setSuccessMessage] = useState('');
@@ -52,6 +62,10 @@ export function EditProfileForm({ onCancel, onSuccess, initialData }: EditProfil
       newErrors.email = t('email_required');
     }
 
+    if (!phone.trim()) {
+      newErrors.phone = t('phone_required');
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -68,6 +82,9 @@ export function EditProfileForm({ onCancel, onSuccess, initialData }: EditProfil
     setSuccessMessage('');
 
     try {
+      // Sanitize phone input
+      const sanitizedPhone = sanitizePhone(phone);
+
       // Update user profile via Clerk
       await user?.update({
         firstName,
@@ -81,6 +98,16 @@ export function EditProfileForm({ onCancel, onSuccess, initialData }: EditProfil
         const existingEmail = user?.emailAddresses.find(e => e.emailAddress === email);
         if (!existingEmail) {
           await user?.createEmailAddress({ email });
+        }
+      }
+
+      // Update primary phone if changed
+      const currentPhone = user?.primaryPhoneNumber?.phoneNumber;
+      if (sanitizedPhone !== currentPhone) {
+        // Create new phone number if it doesn't exist
+        const existingPhone = user?.phoneNumbers.find(p => p.phoneNumber === sanitizedPhone);
+        if (!existingPhone && sanitizedPhone) {
+          await user?.createPhoneNumber({ phoneNumber: sanitizedPhone });
         }
       }
 
@@ -136,21 +163,39 @@ export function EditProfileForm({ onCancel, onSuccess, initialData }: EditProfil
           )}
         </div>
       </div>
-      <div>
-        <Label htmlFor="edit-email">{t('email_label')}</Label>
-        <Input
-          id="edit-email"
-          type="email"
-          placeholder={t('email_placeholder')}
-          className="mt-2"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          error={!!errors.email}
-          disabled={isLoading}
-        />
-        {errors.email && (
-          <p className="mt-1 text-sm text-red-500">{errors.email}</p>
-        )}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <Label htmlFor="edit-phone">{t('phone_label')}</Label>
+          <Input
+            id="edit-phone"
+            type="tel"
+            placeholder={t('phone_placeholder')}
+            className="mt-2"
+            value={phone}
+            onChange={e => setPhone(e.target.value)}
+            error={!!errors.phone}
+            disabled={isLoading}
+          />
+          {errors.phone && (
+            <p className="mt-1 text-sm text-red-500">{errors.phone}</p>
+          )}
+        </div>
+        <div>
+          <Label htmlFor="edit-email">{t('email_label')}</Label>
+          <Input
+            id="edit-email"
+            type="email"
+            placeholder={t('email_placeholder')}
+            className="mt-2"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            error={!!errors.email}
+            disabled={isLoading}
+          />
+          {errors.email && (
+            <p className="mt-1 text-sm text-red-500">{errors.email}</p>
+          )}
+        </div>
       </div>
       {successMessage && (
         <p className="text-sm text-green-600">{successMessage}</p>

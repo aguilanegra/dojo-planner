@@ -30,6 +30,7 @@ export default defineConfig({
         test: {
           name: 'ui',
           include: ['**/*.test.tsx', 'src/hooks/**/*.test.ts'],
+          setupFiles: ['./vitest.browser.setup.ts'],
           browser: {
             enabled: true,
             headless: true,

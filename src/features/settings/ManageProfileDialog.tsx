@@ -13,6 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useHasPasswordAuth } from '@/hooks/useHasPasswordAuth';
 import { ChangePasswordForm } from './ChangePasswordForm';
 import { EditProfileForm } from './EditProfileForm';
+import { LocationCard } from './LocationCard';
 
 type ManageProfileDialogProps = {
   open: boolean;
@@ -90,7 +91,7 @@ export function ManageProfileDialog({ open, onOpenChange }: ManageProfileDialogP
               ? (
                   <div className="mt-8">
                     <EditProfileForm
-                      initialData={{ firstName, lastName, email }}
+                      initialData={{ firstName, lastName, email, phone }}
                       onCancel={() => setIsEditingProfile(false)}
                       onSuccess={handleEditProfileSuccess}
                     />
@@ -144,6 +145,9 @@ export function ManageProfileDialog({ open, onOpenChange }: ManageProfileDialogP
                   </>
                 )}
           </Card>
+
+          {/* Location Information Card */}
+          <LocationCard isLoading={!isLoaded} />
 
           {/* Change Password Section - Only show for password-based auth users */}
           {!isLoadingAuth && hasPasswordAuth && (

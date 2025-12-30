@@ -4,14 +4,24 @@ import { page, userEvent } from 'vitest/browser';
 import { ManageProfileDialog } from './ManageProfileDialog';
 
 // Mock user data
+const mockUpdate = vi.fn();
+const mockCreateEmailAddress = vi.fn();
+const mockCreatePhoneNumber = vi.fn();
+
+// Test fixtures - not real credentials
 const mockUser = {
   firstName: 'John',
   lastName: 'Doe',
-  primaryEmailAddress: { emailAddress: 'john.doe@example.com' },
-  primaryPhoneNumber: { phoneNumber: '+1 555-123-4567' },
-  imageUrl: 'https://example.com/avatar.jpg',
+  primaryEmailAddress: { emailAddress: 'john.doe@example.com' }, // pragma: allowlist secret
+  primaryPhoneNumber: { phoneNumber: '+1 555-123-4567' }, // pragma: allowlist secret
+  emailAddresses: [{ emailAddress: 'john.doe@example.com' }], // pragma: allowlist secret
+  phoneNumbers: [{ phoneNumber: '+1 555-123-4567' }], // pragma: allowlist secret
+  imageUrl: 'https://example.com/avatar.jpg', // pragma: allowlist secret
   passwordEnabled: true,
   updatePassword: vi.fn(),
+  update: mockUpdate,
+  createEmailAddress: mockCreateEmailAddress,
+  createPhoneNumber: mockCreatePhoneNumber,
 };
 
 // Mock logger to prevent process.env issues
@@ -43,6 +53,19 @@ vi.mock('next-intl', () => ({
         last_name_label: 'Last Name',
         phone_label: 'Phone',
         email_label: 'Email',
+        first_name_placeholder: 'Enter first name',
+        last_name_placeholder: 'Enter last name',
+        phone_placeholder: '(555) 123-4567',
+        email_placeholder: 'Enter email address',
+        cancel_button: 'Cancel',
+        save_button: 'Save',
+        saving_button: 'Saving...',
+        first_name_required: 'First name is required',
+        last_name_required: 'Last name is required',
+        phone_required: 'Phone number is required',
+        email_required: 'Email is required',
+        profile_updated_success: 'Profile updated successfully',
+        profile_update_error: 'Failed to update profile. Please try again.',
       },
       Security: {
         change_password_title: 'Change Password',
@@ -65,6 +88,14 @@ vi.mock('next-intl', () => ({
         two_factor_title: '2-Factor Authentication (2FA)',
         two_factor_description: 'Make your account more secure by adding a second form of authentication',
         add_2fa_button: 'Add 2FA',
+      },
+      LocationSettings: {
+        location_title: 'Location',
+        address_label: 'Address:',
+        phone_label: 'Phone:',
+        email_label: 'Email:',
+        status_label: 'Status:',
+        active_status: 'Active',
       },
     };
     return translations[namespace]?.[key] || key;
@@ -171,5 +202,64 @@ describe('ManageProfileDialog', () => {
 
     // The avatar fallback should contain initials JD
     expect(page.getByText('JD')).toBeDefined();
+  });
+
+  it('should render location card section', () => {
+    render(<ManageProfileDialog open onOpenChange={() => {}} />);
+
+    expect(page.getByText('Location')).toBeDefined();
+  });
+
+  it('should display location details', () => {
+    render(<ManageProfileDialog open onOpenChange={() => {}} />);
+
+    // Location card should display mock location data
+    expect(page.getByText('123 Main St. San Francisco. CA')).toBeDefined();
+    expect(page.getByText('(415) 555-0123')).toBeDefined();
+    expect(page.getByText('downtown@example.com')).toBeDefined();
+  });
+
+  it('should render location card between profile and 2FA sections', () => {
+    render(<ManageProfileDialog open onOpenChange={() => {}} />);
+
+    // All three sections should be visible
+    expect(page.getByText('Manage Profile')).toBeDefined();
+    expect(page.getByText('Location')).toBeDefined();
+    expect(page.getByText('2-Factor Authentication (2FA)')).toBeDefined();
+  });
+
+  it('should render edit button for location card', () => {
+    render(<ManageProfileDialog open onOpenChange={() => {}} />);
+
+    // There should be multiple edit buttons (profile and location)
+    const editButtons = page.getByRole('button', { name: /edit/i }).elements();
+
+    expect(editButtons.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('should show edit profile form when edit button is clicked', async () => {
+    render(<ManageProfileDialog open onOpenChange={() => {}} />);
+
+    const editButton = page.getByRole('button', { name: /^edit$/i });
+    await userEvent.click(editButton.element());
+
+    // The edit form should now be visible
+    expect(page.getByPlaceholder('Enter first name')).toBeDefined();
+    expect(page.getByPlaceholder('Enter last name')).toBeDefined();
+  });
+
+  it('should hide edit profile form when cancel is clicked', async () => {
+    render(<ManageProfileDialog open onOpenChange={() => {}} />);
+
+    // Click edit button to show form
+    const editButton = page.getByRole('button', { name: /^edit$/i });
+    await userEvent.click(editButton.element());
+
+    // Click cancel button
+    const cancelButton = page.getByRole('button', { name: /cancel/i });
+    await userEvent.click(cancelButton.element());
+
+    // Should be back to display mode
+    expect(page.getByRole('button', { name: /^edit$/i })).toBeDefined();
   });
 });

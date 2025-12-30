@@ -450,6 +450,8 @@
     "first_name_placeholder": "Entrez le prénom",
     "last_name_placeholder": "Entrez le nom",
     "email_placeholder": "Entrez l'adresse email",
+    "phone_placeholder": "(555) 123-4567",
+    "phone_required": "Le numéro de téléphone est requis",
     "save_button": "Enregistrer",
     "cancel_button": "Annuler",
     "saving_button": "Enregistrement...",
@@ -566,11 +568,10 @@
   },
   "LocationSettings": {
     "title": "Paramètres de localisation",
-    "location_information_title": "Informations de localisation",
+    "location_title": "Localisation",
     "address_label": "Adresse :",
     "phone_label": "Téléphone :",
     "email_label": "Email :",
-    "active_members_label": "Membres actifs :",
     "status_label": "Statut :",
     "active_status": "Actif",
     "EditLocationModal": {

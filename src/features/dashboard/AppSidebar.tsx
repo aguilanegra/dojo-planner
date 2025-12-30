@@ -88,17 +88,20 @@ export const AppSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
         />
         <AppSidebarNav
           label={t('settings_section_label')}
+          hidden
           items={[
             {
               title: t('location'),
               url: '/dashboard/location-settings',
               icon: Building,
+              hidden: true,
             },
             {
               title: t('preferences'),
               url: '/dashboard/preferences',
               icon: Settings,
               disabled: true,
+              hidden: true,
             },
           ]}
         />

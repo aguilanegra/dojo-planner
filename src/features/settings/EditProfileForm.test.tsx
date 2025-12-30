@@ -6,14 +6,19 @@ import { EditProfileForm } from './EditProfileForm';
 // Mock user with update function
 const mockUpdate = vi.fn();
 const mockCreateEmailAddress = vi.fn();
+const mockCreatePhoneNumber = vi.fn();
 
+// Test fixtures - not real credentials
 const mockUser = {
   firstName: 'John',
   lastName: 'Doe',
-  primaryEmailAddress: { emailAddress: 'john.doe@example.com' },
-  emailAddresses: [{ emailAddress: 'john.doe@example.com' }],
+  primaryEmailAddress: { emailAddress: 'john.doe@example.com' }, // pragma: allowlist secret
+  primaryPhoneNumber: { phoneNumber: '+1 555-123-4567' }, // pragma: allowlist secret
+  emailAddresses: [{ emailAddress: 'john.doe@example.com' }], // pragma: allowlist secret
+  phoneNumbers: [{ phoneNumber: '+1 555-123-4567' }], // pragma: allowlist secret
   update: mockUpdate,
   createEmailAddress: mockCreateEmailAddress,
+  createPhoneNumber: mockCreatePhoneNumber,
 };
 
 // Mock logger to prevent process.env issues
@@ -37,9 +42,11 @@ vi.mock('next-intl', () => ({
     const translations: Record<string, string> = {
       first_name_label: 'First Name',
       last_name_label: 'Last Name',
+      phone_label: 'Phone',
       email_label: 'Email',
       first_name_placeholder: 'Enter first name',
       last_name_placeholder: 'Enter last name',
+      phone_placeholder: '(555) 123-4567',
       email_placeholder: 'Enter email address',
       save_button: 'Save',
       cancel_button: 'Cancel',
@@ -48,6 +55,7 @@ vi.mock('next-intl', () => ({
       profile_update_error: 'Failed to update profile. Please try again.',
       first_name_required: 'First name is required',
       last_name_required: 'Last name is required',
+      phone_required: 'Phone number is required',
       email_required: 'Email is required',
     };
     return translations[key] || key;
@@ -57,16 +65,19 @@ vi.mock('next-intl', () => ({
 describe('EditProfileForm', () => {
   const mockOnCancel = vi.fn();
   const mockOnSuccess = vi.fn();
+  // Test fixtures - not real credentials
   const initialData = {
     firstName: 'John',
     lastName: 'Doe',
-    email: 'john.doe@example.com',
+    email: 'john.doe@example.com', // pragma: allowlist secret
+    phone: '+1 555-123-4567', // pragma: allowlist secret
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
     mockUpdate.mockReset();
     mockCreateEmailAddress.mockReset();
+    mockCreatePhoneNumber.mockReset();
   });
 
   it('should render all form fields', () => {
@@ -74,6 +85,7 @@ describe('EditProfileForm', () => {
 
     expect(page.getByText('First Name')).toBeDefined();
     expect(page.getByText('Last Name')).toBeDefined();
+    expect(page.getByText('Phone')).toBeDefined();
     expect(page.getByText('Email')).toBeDefined();
   });
 
@@ -89,10 +101,12 @@ describe('EditProfileForm', () => {
 
     const firstNameInput = page.getByPlaceholder('Enter first name');
     const lastNameInput = page.getByPlaceholder('Enter last name');
+    const phoneInput = page.getByPlaceholder('(555) 123-4567');
     const emailInput = page.getByPlaceholder('Enter email address');
 
     expect(firstNameInput.element()).toHaveProperty('value', 'John');
     expect(lastNameInput.element()).toHaveProperty('value', 'Doe');
+    expect(phoneInput.element()).toHaveProperty('value', '+1 555-123-4567');
     expect(emailInput.element()).toHaveProperty('value', 'john.doe@example.com');
   });
 
@@ -139,6 +153,18 @@ describe('EditProfileForm', () => {
     await userEvent.click(saveButton.element());
 
     expect(page.getByText('Email is required')).toBeDefined();
+  });
+
+  it('should validate required phone', async () => {
+    render(<EditProfileForm onCancel={mockOnCancel} initialData={initialData} />);
+
+    const phoneInput = page.getByPlaceholder('(555) 123-4567');
+    await userEvent.clear(phoneInput.element());
+
+    const saveButton = page.getByRole('button', { name: /save/i });
+    await userEvent.click(saveButton.element());
+
+    expect(page.getByText('Phone number is required')).toBeDefined();
   });
 
   it('should call user.update on valid submission', async () => {
@@ -192,5 +218,60 @@ describe('EditProfileForm', () => {
 
     expect(alert).toBeDefined();
     expect(page.getByText('Failed to update profile. Please try again.')).toBeDefined();
+  });
+
+  it('should create new email address when email is changed', async () => {
+    mockUpdate.mockResolvedValue({});
+    mockCreateEmailAddress.mockResolvedValue({});
+
+    render(<EditProfileForm onCancel={mockOnCancel} onSuccess={mockOnSuccess} initialData={initialData} />);
+
+    const emailInput = page.getByPlaceholder('Enter email address');
+    await userEvent.clear(emailInput.element());
+    await userEvent.fill(emailInput.element(), 'new@example.com');
+
+    const saveButton = page.getByRole('button', { name: /save/i });
+    await userEvent.click(saveButton.element());
+
+    // Wait for the async operation to complete
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    expect(mockCreateEmailAddress).toHaveBeenCalledWith({ email: 'new@example.com' });
+  });
+
+  it('should create new phone number when phone is changed', async () => {
+    mockUpdate.mockResolvedValue({});
+    mockCreatePhoneNumber.mockResolvedValue({});
+
+    render(<EditProfileForm onCancel={mockOnCancel} onSuccess={mockOnSuccess} initialData={initialData} />);
+
+    const phoneInput = page.getByPlaceholder('(555) 123-4567');
+    await userEvent.clear(phoneInput.element());
+    await userEvent.fill(phoneInput.element(), '(310) 555-9999');
+
+    const saveButton = page.getByRole('button', { name: /save/i });
+    await userEvent.click(saveButton.element());
+
+    // Wait for the async operation to complete
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    expect(mockCreatePhoneNumber).toHaveBeenCalledWith({ phoneNumber: '(310) 555-9999' });
+  });
+
+  it('should call onSuccess callback after timeout on successful update', async () => {
+    vi.useFakeTimers();
+    mockUpdate.mockResolvedValue({});
+
+    render(<EditProfileForm onCancel={mockOnCancel} onSuccess={mockOnSuccess} initialData={initialData} />);
+
+    const saveButton = page.getByRole('button', { name: /save/i });
+    await userEvent.click(saveButton.element());
+
+    // Wait for the update to complete
+    await vi.runAllTimersAsync();
+
+    expect(mockOnSuccess).toHaveBeenCalled();
+
+    vi.useRealTimers();
   });
 });
