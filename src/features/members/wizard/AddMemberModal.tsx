@@ -92,6 +92,11 @@ export const AddMemberModal = ({ isOpen, onCloseAction }: AddMemberModalProps) =
         });
       }
 
+      // Determine member status based on payment result
+      // If payment was declined, set status to 'past due'
+      // Note: amountDue will be calculated from a separate billing table in the future
+      const isPaymentDeclined = wizard.data.paymentStatus === 'declined';
+
       const createPayload = {
         email: wizard.data.email,
         firstName: wizard.data.firstName,
@@ -101,6 +106,7 @@ export const AddMemberModal = ({ isOpen, onCloseAction }: AddMemberModalProps) =
         ...(wizard.data.membershipPlanId && { membershipPlanId: wizard.data.membershipPlanId }),
         ...(addressPayload && { address: addressPayload }),
         ...(photoUrl && { photoUrl }),
+        ...(isPaymentDeclined && { status: 'past due' as const }),
       };
 
       console.info('[Add Member Wizard] Member creation payload:', {
@@ -119,19 +125,29 @@ export const AddMemberModal = ({ isOpen, onCloseAction }: AddMemberModalProps) =
       // Move to success step
       wizard.setStep('success');
     } catch (error) {
-      console.error('[Add Member Wizard] Failed to create member:', {
+      // Log full error details for debugging
+      console.error('[Add Member Wizard] Failed to create member - Full error:', JSON.stringify(error, null, 2));
+      console.error('[Add Member Wizard] Error details:', {
         timestamp: new Date().toISOString(),
         errorType: typeof error,
-        error: error instanceof Error ? error.message : String(error),
-        errorObj: error,
-        errorKeys: error && typeof error === 'object' ? Object.keys(error) : [],
+        isError: error instanceof Error,
+        message: error instanceof Error ? error.message : undefined,
+        name: error instanceof Error ? error.name : undefined,
+        keys: error && typeof error === 'object' ? Object.keys(error) : [],
       });
+
       let errorMessage = 'Failed to create member. Please try again.';
 
       if (error instanceof Error) {
         errorMessage = error.message;
-      } else if (error && typeof error === 'object' && 'message' in error) {
-        errorMessage = String((error as any).message);
+      } else if (error && typeof error === 'object') {
+        // Handle ORPC errors which may have different structure
+        const errObj = error as Record<string, unknown>;
+        if ('message' in errObj) {
+          errorMessage = String(errObj.message);
+        } else if ('data' in errObj && typeof errObj.data === 'object' && errObj.data && 'message' in errObj.data) {
+          errorMessage = String((errObj.data as Record<string, unknown>).message);
+        }
       }
 
       wizard.setError(errorMessage);
@@ -141,9 +157,10 @@ export const AddMemberModal = ({ isOpen, onCloseAction }: AddMemberModalProps) =
   };
 
   const handleSubscriptionNext = async () => {
-    // For now, all membership plans go directly to member creation
-    // Payment step can be added later for paid plans if needed
-    await handleFinalNext();
+    // Navigate to payment step after membership selection
+    // The payment step will handle determining if payment is actually required
+    // based on the selected membership plan (trials, free plans, etc.)
+    wizard.nextStep();
   };
 
   return (
@@ -205,10 +222,10 @@ export const AddMemberModal = ({ isOpen, onCloseAction }: AddMemberModalProps) =
           {wizard.step === 'payment' && (
             <MemberPaymentStep
               data={wizard.data}
-              onUpdate={wizard.updateData}
-              onNext={handleFinalNext}
-              onBack={wizard.previousStep}
-              onCancel={handleCancel}
+              onUpdateAction={wizard.updateData}
+              onNextAction={handleFinalNext}
+              onBackAction={wizard.previousStep}
+              onCancelAction={handleCancel}
               isLoading={wizard.isLoading}
             />
           )}

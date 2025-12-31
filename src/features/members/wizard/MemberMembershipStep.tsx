@@ -152,7 +152,14 @@ export const MemberMembershipStep = ({
   }, []);
 
   const handleSelect = (planId: string) => {
-    onUpdate({ membershipPlanId: planId });
+    const selectedPlan = membershipPlans.find(p => p.id === planId);
+    onUpdate({
+      membershipPlanId: planId,
+      membershipPlanPrice: selectedPlan?.price,
+      membershipPlanFrequency: selectedPlan?.frequency,
+      membershipPlanName: selectedPlan?.name,
+      membershipPlanIsTrial: selectedPlan?.isTrial ?? undefined,
+    });
     setError(null);
   };
 

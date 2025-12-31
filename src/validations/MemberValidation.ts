@@ -6,6 +6,7 @@ export const MemberValidation = z.object({
   lastName: z.string().min(1),
   phone: z.string().optional(),
   memberType: z.enum(['individual', 'family-member', 'head-of-household']).optional(),
+  membershipPlanId: z.string().optional(),
   address: z.object({
     street: z.string(),
     apartment: z.string().optional(),
@@ -15,6 +16,7 @@ export const MemberValidation = z.object({
     country: z.string(),
   }).optional(),
   photoUrl: z.string().optional(),
+  status: z.enum(['active', 'hold', 'trial', 'cancelled', 'past due']).optional(),
 });
 
 export const EditMemberValidation = z.object({

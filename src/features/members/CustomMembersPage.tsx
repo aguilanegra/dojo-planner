@@ -1,7 +1,7 @@
 'use client';
 
 import { useOrganization } from '@clerk/nextjs';
-import { Download, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
 import { useCallback, useState } from 'react';
@@ -40,16 +40,10 @@ export function CustomMembersPage() {
         onRowClickAction={handleRowClick}
         loading={loading}
         headerActions={(
-          <div className="flex items-center gap-2">
-            <Button variant="outline" disabled>
-              <Download className="mr-0.5 h-4 w-4" />
-              {t('import_members_button')}
-            </Button>
-            <Button onClick={() => setIsAddMemberModalOpen(true)}>
-              <Plus className="mr-0.5 h-4 w-4" />
-              {t('add_member_button')}
-            </Button>
-          </div>
+          <Button onClick={() => setIsAddMemberModalOpen(true)}>
+            <Plus className="mr-0.5 h-4 w-4" />
+            {t('add_member_button')}
+          </Button>
         )}
       />
 

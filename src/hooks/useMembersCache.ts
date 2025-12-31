@@ -161,9 +161,17 @@ export const useMembersCache = (organizationId?: string | undefined) => {
 
       dispatch({ type: 'SET_MEMBERS', payload: detailedMembers });
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch members';
+      // Extract error message from various error types (Error, ORPC errors, etc.)
+      let errorMessage = 'Failed to fetch members';
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (err && typeof err === 'object' && 'message' in err) {
+        errorMessage = String((err as { message: unknown }).message);
+      }
 
-      console.error('[Members Cache] Error fetching members:', {
+      // Use warn instead of error since this can happen during initial load
+      // when organization context isn't fully ready yet
+      console.warn('[Members Cache] Failed to fetch members:', {
         error: errorMessage,
         organizationId,
       });

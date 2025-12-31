@@ -3,6 +3,8 @@ import { useState } from 'react';
 export type MemberType = 'individual' | 'family-member' | 'head-of-household';
 type SubscriptionPlan = 'free-trial' | 'monthly' | 'annual';
 export type PaymentMethod = 'card' | 'ach';
+export type PaymentStatus = 'pending' | 'processing' | 'approved' | 'declined';
+export type PaymentDeclineReason = 'insufficient_funds' | 'invalid_cvc' | 'expired_card' | 'card_declined' | 'ach_failed';
 
 export type AddMemberWizardData = {
   // Step 1: Member Type
@@ -28,6 +30,10 @@ export type AddMemberWizardData = {
 
   // Step 4: Membership
   membershipPlanId: string | null;
+  membershipPlanPrice?: number;
+  membershipPlanFrequency?: string;
+  membershipPlanName?: string;
+  membershipPlanIsTrial?: boolean;
   // Legacy fields (kept for backwards compatibility)
   subscriptionPlan?: SubscriptionPlan | null;
   subscriptionId?: string;
@@ -41,6 +47,11 @@ export type AddMemberWizardData = {
   achAccountHolder?: string;
   achRoutingNumber?: string;
   achAccountNumber?: string;
+
+  // Payment processing state
+  paymentStatus?: PaymentStatus;
+  paymentDeclineReason?: PaymentDeclineReason;
+  paymentProcessed?: boolean;
 };
 
 export type WizardStep = 'member-type' | 'details' | 'photo' | 'subscription' | 'payment' | 'success';
@@ -115,6 +126,9 @@ export const useAddMemberWizard = () => {
       achAccountHolder: undefined,
       achRoutingNumber: undefined,
       achAccountNumber: undefined,
+      paymentStatus: undefined,
+      paymentDeclineReason: undefined,
+      paymentProcessed: undefined,
     });
     setError(null);
     setIsLoading(false);

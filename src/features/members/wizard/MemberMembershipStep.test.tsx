@@ -338,7 +338,13 @@ describe('MemberMembershipStep', () => {
       const planButton = page.getByLabelText('Select 12 Month Commitment (Gold) membership plan');
       await planButton.click();
 
-      expect(mockHandlers.onUpdate).toHaveBeenCalledWith({ membershipPlanId: 'plan-1' });
+      expect(mockHandlers.onUpdate).toHaveBeenCalledWith({
+        membershipPlanId: 'plan-1',
+        membershipPlanPrice: 150,
+        membershipPlanFrequency: 'Monthly',
+        membershipPlanName: '12 Month Commitment (Gold)',
+        membershipPlanIsTrial: false,
+      });
     });
 
     it('should highlight selected plan with check icon', async () => {
