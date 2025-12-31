@@ -23,12 +23,30 @@ export const create = os
         email: input.email,
         phone: input.phone,
         memberType: input.memberType,
-        status: 'active',
+        status: input.status || 'active',
         address: input.address,
         ...(input.photoUrl && { photoUrl: input.photoUrl }),
       }, orgId);
 
       logger.info(`A new member has been created: ${memberId}`);
+
+      // If a membership plan was selected, validate it exists and create the membership
+      if (input.membershipPlanId && member[0]?.id) {
+        // Skip mock plan IDs (they start with 'mock-')
+        if (input.membershipPlanId.startsWith('mock-')) {
+          logger.info(`Skipping mock membership plan: ${input.membershipPlanId}`);
+        } else {
+          // Verify the plan exists before adding membership
+          const plans = await getMembershipPlans(orgId);
+          const planExists = plans.some(p => p.id === input.membershipPlanId);
+          if (planExists) {
+            await addMemberMembership(member[0].id, input.membershipPlanId);
+            logger.info(`Membership added for new member: ${member[0].id}, planId: ${input.membershipPlanId}`);
+          } else {
+            logger.warn(`Membership plan not found, skipping: ${input.membershipPlanId}`);
+          }
+        }
+      }
 
       return {
         id: member[0]?.id,

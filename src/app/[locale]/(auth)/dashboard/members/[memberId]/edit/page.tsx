@@ -3,7 +3,7 @@
 import type { MemberNote } from '@/features/members/details/MemberDetailNotes';
 import type { Member } from '@/hooks/useMembersCache';
 import { useOrganization } from '@clerk/nextjs';
-import { Plus, Trash2 } from 'lucide-react';
+import { Download, Plus, Trash2 } from 'lucide-react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useReducer, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -13,11 +13,18 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ChangeMembershipModal } from '@/features/members/details/ChangeMembershipModal';
 import { EditContactInfoModal } from '@/features/members/details/EditContactInfoModal';
-import { MemberDetailFinancial } from '@/features/members/details/MemberDetailFinancial';
 import { MemberDetailNotes } from '@/features/members/details/MemberDetailNotes';
 import { useMembersCache } from '@/hooks/useMembersCache';
+import {
+  formatCurrency,
+  getBrandIcon,
+  getInitials,
+  getStatusColor,
+  getStatusLabel,
+  resolveTabFromUrl,
+} from './utils';
 
-type Tab = 'overview' | 'financial' | 'notes';
+type Tab = 'overview' | 'notes';
 
 type ContactInfo = {
   phone?: string;
@@ -465,9 +472,8 @@ export default function EditMemberPage() {
   // Handler to sync tab from URL
   const syncTabFromUrl = useCallback(() => {
     const tabParam = searchParams.get('tab');
-    if (tabParam === 'financial' || tabParam === 'overview' || tabParam === 'notes') {
-      dispatch({ type: 'SET_ACTIVE_TAB', payload: tabParam as Tab });
-    }
+    const resolvedTab = resolveTabFromUrl(tabParam);
+    dispatch({ type: 'SET_ACTIVE_TAB', payload: resolvedTab });
   }, [searchParams]);
 
   // Sync tab from URL search params
@@ -526,28 +532,6 @@ export default function EditMemberPage() {
     loadMemberData();
   }, [loadMemberData]);
 
-  const getInitials = (name: string) => {
-    const parts = name.split(' ');
-    return parts.map(part => part[0]).join('').toUpperCase();
-  };
-
-  const getStatusColor = (status: 'active' | 'on-hold' | 'cancelled'): 'default' | 'secondary' | 'destructive' => {
-    if (status === 'active') {
-      return 'default';
-    }
-    if (status === 'on-hold') {
-      return 'secondary';
-    }
-    return 'destructive';
-  };
-
-  const getStatusLabel = (status: 'active' | 'on-hold' | 'cancelled') => {
-    if (status === 'on-hold') {
-      return 'On Hold';
-    }
-    return status.charAt(0).toUpperCase() + status.slice(1);
-  };
-
   const handleRemoveFamilyMember = useCallback((familyMemberId: string) => {
     dispatch({ type: 'REMOVE_FAMILY_MEMBER', payload: familyMemberId });
   }, []);
@@ -605,8 +589,13 @@ export default function EditMemberPage() {
         </Avatar>
         <div className="flex flex-col gap-2">
           <h1 className="text-2xl font-bold text-foreground">{state.currentData.memberName}</h1>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Badge variant="secondary">{state.currentData.billingContactRole}</Badge>
+            {currentMember?.status && (
+              <Badge variant={getStatusColor(currentMember.status as 'active' | 'on-hold' | 'cancelled')}>
+                {getStatusLabel(currentMember.status as 'active' | 'on-hold' | 'cancelled')}
+              </Badge>
+            )}
             {hasActiveMembership && state.currentData.membershipBadge && (
               <Badge variant="default">{state.currentData.membershipBadge}</Badge>
             )}
@@ -630,17 +619,6 @@ export default function EditMemberPage() {
             }`}
           >
             Overview
-          </button>
-          <button
-            type="button"
-            onClick={() => handleTabChange('financial')}
-            className={`cursor-pointer pb-3 text-sm font-semibold transition-colors ${
-              state.activeTab === 'financial'
-                ? 'border-b-2 border-foreground text-foreground'
-                : 'border-b-2 border-transparent text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            Financial
           </button>
           <button
             type="button"
@@ -716,48 +694,76 @@ export default function EditMemberPage() {
               }
             />
 
-            {/* Membership Details - Read Only */}
+            {/* Membership Details - Comprehensive */}
             <Card className="flex flex-col p-6">
               <div>
                 <h2 className="mb-6 text-lg font-semibold text-foreground">Membership Details</h2>
                 {hasActiveMembership
                   ? (
                       <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="font-semibold text-foreground">
-                              {currentMembership?.membershipPlan?.name || state.currentData.subscriptionDetails.membershipType}
-                            </h3>
-                            <Badge variant={getStatusColor(state.currentData.subscriptionDetails.status)} className="mt-2">
-                              {getStatusLabel(state.currentData.subscriptionDetails.status)}
-                            </Badge>
-                          </div>
-                          {(currentMembership?.membershipPlan?.price || state.currentData.subscriptionDetails.amount) > 0 && (
-                            <div className="text-right">
-                              <p className="text-2xl font-bold text-primary">
-                                $
-                                {currentMembership?.membershipPlan?.price || state.currentData.subscriptionDetails.amount}
-                              </p>
-                            </div>
-                          )}
+                        <div className="flex items-start justify-between">
+                          <p className="text-sm text-muted-foreground">Status</p>
+                          <Badge variant={getStatusColor(state.currentData.membershipDetails.status)}>
+                            {getStatusLabel(state.currentData.membershipDetails.status)}
+                          </Badge>
                         </div>
-                        {state.currentData.subscriptionDetails.pastDuePayments > 0 && (
-                          <div className="border-t border-border pt-4">
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <h3 className="font-semibold text-foreground">Past Due Payments</h3>
-                                <p className="mt-1 text-sm text-muted-foreground">{state.currentData.subscriptionDetails.lastPayment}</p>
-                              </div>
-                              <p className="text-2xl font-bold text-destructive">
-                                $
-                                {state.currentData.subscriptionDetails.pastDuePayments.toFixed(2)}
-                              </p>
-                            </div>
+                        <div className="flex items-start justify-between">
+                          <p className="text-sm text-muted-foreground">Program</p>
+                          <p className={`text-right text-sm ${state.currentData.membershipDetails.program === 'N/A' ? 'text-muted-foreground' : 'text-foreground'}`}>
+                            {state.currentData.membershipDetails.program}
+                          </p>
+                        </div>
+                        <div className="flex items-start justify-between">
+                          <p className="text-sm text-muted-foreground">Membership Type</p>
+                          <p className={`text-right text-sm ${state.currentData.membershipDetails.membershipType === 'N/A' ? 'text-muted-foreground' : 'text-foreground'}`}>
+                            {state.currentData.membershipDetails.membershipType}
+                          </p>
+                        </div>
+                        {state.currentData.membershipDetails.membershipFee > 0 && (
+                          <div className="flex items-start justify-between">
+                            <p className="text-sm text-muted-foreground">Membership Fee</p>
+                            <p className="text-right text-sm font-semibold text-foreground">
+                              {formatCurrency(state.currentData.membershipDetails.membershipFee)}
+                            </p>
                           </div>
                         )}
-                        {state.currentData.subscriptionDetails.pastDuePayments === 0 && (
-                          <div className="border-t border-border pt-4">
-                            <p className="text-sm text-muted-foreground">No payments due</p>
+                        {state.currentData.membershipDetails.paymentFrequency !== 'N/A' && (
+                          <div className="flex items-start justify-between">
+                            <p className="text-sm text-muted-foreground">Payment Frequency</p>
+                            <p className="text-right text-sm text-foreground">{state.currentData.membershipDetails.paymentFrequency}</p>
+                          </div>
+                        )}
+                        <div className="flex items-start justify-between border-t border-border pt-4">
+                          <p className="text-sm text-muted-foreground">Registration Date</p>
+                          <p className="text-right text-sm text-foreground">{state.currentData.membershipDetails.registrationDate}</p>
+                        </div>
+                        <div className="flex items-start justify-between">
+                          <p className="text-sm text-muted-foreground">Start Date</p>
+                          <p className="text-right text-sm text-foreground">{state.currentData.membershipDetails.startDate}</p>
+                        </div>
+                        {state.currentData.membershipDetails.nextPaymentDate !== 'N/A' && (
+                          <div className="flex items-start justify-between">
+                            <p className="text-sm text-muted-foreground">Next Payment Date</p>
+                            <p className="text-right text-sm text-foreground">{state.currentData.membershipDetails.nextPaymentDate}</p>
+                          </div>
+                        )}
+                        {state.currentData.membershipDetails.nextPaymentAmount > 0 && (
+                          <div className="flex items-start justify-between">
+                            <p className="text-sm text-muted-foreground">Next Payment Amount</p>
+                            <p className="text-right text-sm font-semibold text-foreground">
+                              {formatCurrency(state.currentData.membershipDetails.nextPaymentAmount)}
+                            </p>
+                          </div>
+                        )}
+                        {state.currentData.subscriptionDetails.pastDuePayments > 0 && (
+                          <div className="flex items-start justify-between border-t border-border pt-4">
+                            <div>
+                              <p className="text-sm font-semibold text-destructive">Past Due Payments</p>
+                              <p className="text-xs text-muted-foreground">{state.currentData.subscriptionDetails.lastPayment}</p>
+                            </div>
+                            <p className="text-lg font-bold text-destructive">
+                              {formatCurrency(state.currentData.subscriptionDetails.pastDuePayments)}
+                            </p>
                           </div>
                         )}
                       </div>
@@ -769,7 +775,7 @@ export default function EditMemberPage() {
                       </div>
                     )}
               </div>
-              <div className="mt-auto flex justify-end gap-3 pt-6">
+              <div className="mt-auto flex flex-wrap justify-end gap-3 pt-6">
                 {hasActiveMembership
                   ? (
                       <>
@@ -804,6 +810,157 @@ export default function EditMemberPage() {
               mode={membershipModalMode}
             />
           </div>
+
+          {/* Payment Method & Agreement Section */}
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Payment Method */}
+            <Card className="flex flex-col p-6">
+              <div>
+                <h2 className="mb-6 text-lg font-semibold text-foreground">Payment Method</h2>
+                <div className="flex items-start gap-4">
+                  <div className="rounded-lg bg-blue-600 p-3">
+                    <span className="text-2xl">{getBrandIcon(state.currentData.paymentMethod.brand)}</span>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-foreground">
+                      {state.currentData.paymentMethod.brand.toUpperCase()}
+                      {' '}
+                      •••• •••• ••••
+                      {' '}
+                      {state.currentData.paymentMethod.last4}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {state.currentData.paymentMethod.isDefault ? 'Default payment method' : ''}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-auto flex justify-end pt-6">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => console.info('Send secure link')}
+                  className="h-auto w-fit p-0 text-blue-600 hover:bg-transparent hover:text-blue-700"
+                >
+                  Send secure link to member
+                </Button>
+              </div>
+            </Card>
+
+            {/* Agreement & Waiver */}
+            <Card className="flex flex-col border-green-200 bg-green-50 p-6 dark:border-green-900 dark:bg-green-950">
+              <div>
+                <h2 className="mb-2 text-lg font-semibold text-foreground">Agreement & Waiver</h2>
+                <p className="text-sm text-muted-foreground">
+                  Signed on
+                  {' '}
+                  {state.currentData.agreement.signedDate}
+                </p>
+              </div>
+              <div className="mt-auto flex justify-end pt-6">
+                <Button
+                  size="sm"
+                  onClick={() => console.info('Download agreement')}
+                  className="w-fit gap-2 bg-foreground text-background hover:bg-foreground/90"
+                >
+                  <Download className="h-4 w-4" />
+                  Download
+                </Button>
+              </div>
+            </Card>
+          </div>
+
+          {/* Billing History */}
+          <Card className="p-6">
+            <h2 className="mb-6 text-lg font-semibold text-foreground">Billing History</h2>
+            {state.currentData.billingHistory.length === 0
+              ? (
+                  <div className="flex items-center justify-center py-12">
+                    <p className="text-muted-foreground">No billing history</p>
+                  </div>
+                )
+              : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-border">
+                          <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">Member</th>
+                          <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">Date</th>
+                          <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">Amount</th>
+                          <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">Purpose</th>
+                          <th className="hidden px-4 py-3 text-left text-sm font-semibold text-foreground sm:table-cell">Method</th>
+                          <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {state.currentData.billingHistory.flatMap((item) => {
+                          if (item.groupType === 'family' && item.children && item.children.length > 0) {
+                            return [
+                              <tr key={item.id} className="border-b border-border hover:bg-secondary/30">
+                                <td className="px-4 py-4">
+                                  <span className="text-sm font-semibold text-foreground">{item.member}</span>
+                                </td>
+                                <td className="px-4 py-4 text-sm text-muted-foreground">{item.date}</td>
+                                <td className="px-4 py-4 text-sm font-semibold text-primary">
+                                  {formatCurrency(item.amount)}
+                                </td>
+                                <td className="px-4 py-4 text-sm text-muted-foreground">{item.purpose}</td>
+                                <td className="hidden px-4 py-4 text-sm text-muted-foreground sm:table-cell">{item.method}</td>
+                                <td className="px-4 py-4">
+                                  <Button
+                                    size="sm"
+                                    onClick={() => console.info('Refund', item.id)}
+                                    className="w-fit bg-foreground text-background hover:bg-foreground/90"
+                                  >
+                                    Refund
+                                  </Button>
+                                </td>
+                              </tr>,
+                              ...item.children.map(child => (
+                                <tr key={child.id} className="border-b border-border bg-secondary/20">
+                                  <td className="px-4 py-4 pl-8 text-sm text-muted-foreground">
+                                    {child.member}
+                                  </td>
+                                  <td className="px-4 py-4 text-sm text-muted-foreground" />
+                                  <td className="px-4 py-4 text-sm text-muted-foreground">
+                                    {formatCurrency(child.amount)}
+                                  </td>
+                                  <td className="px-4 py-4 text-sm text-muted-foreground">{child.purpose}</td>
+                                  <td className="hidden px-4 py-4 text-sm text-muted-foreground sm:table-cell" />
+                                  <td className="px-4 py-4" />
+                                </tr>
+                              )),
+                            ];
+                          }
+
+                          return [
+                            <tr key={item.id} className="border-b border-border hover:bg-secondary/30">
+                              <td className="px-4 py-4">
+                                <span className="text-sm font-semibold text-foreground">{item.member}</span>
+                              </td>
+                              <td className="px-4 py-4 text-sm text-muted-foreground">{item.date}</td>
+                              <td className="px-4 py-4 text-sm font-semibold text-primary">
+                                {formatCurrency(item.amount)}
+                              </td>
+                              <td className="px-4 py-4 text-sm text-muted-foreground">{item.purpose}</td>
+                              <td className="hidden px-4 py-4 text-sm text-muted-foreground sm:table-cell">{item.method}</td>
+                              <td className="px-4 py-4">
+                                <Button
+                                  size="sm"
+                                  onClick={() => console.info('Refund', item.id)}
+                                  className="w-fit bg-foreground text-background hover:bg-foreground/90"
+                                >
+                                  Refund
+                                </Button>
+                              </td>
+                            </tr>,
+                          ];
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+          </Card>
 
           {/* Family Members Section - With Remove Buttons */}
           <div className="space-y-6">
@@ -870,26 +1027,6 @@ export default function EditMemberPage() {
           </div>
 
         </div>
-      )}
-
-      {state.activeTab === 'financial' && (
-        <MemberDetailFinancial
-          memberId={memberId}
-          memberName={state.currentData.memberName}
-          photoUrl={state.currentData.photoUrl}
-          billingContactRole={state.currentData.billingContactRole}
-          membershipBadge={state.currentData.membershipBadge}
-          amountOverdue={state.currentData.amountOverdue}
-          membershipDetails={state.currentData.membershipDetails}
-          paymentMethod={state.currentData.paymentMethod}
-          agreement={state.currentData.agreement}
-          billingHistory={state.currentData.billingHistory}
-          hideHeader={true}
-          onChangeMembership={() => console.warn('Change membership')}
-          onSendSecureLink={() => console.warn('Send secure link')}
-          onDownloadAgreement={() => console.warn('Download agreement')}
-          onRefund={() => console.warn('Refund')}
-        />
       )}
 
       {state.activeTab === 'notes' && (
