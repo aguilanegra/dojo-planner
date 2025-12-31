@@ -343,7 +343,7 @@ describe('MemberPaymentStep', () => {
     }
   });
 
-  it('shows next button after payment is declined (to continue with inactive status)', async () => {
+  it('shows process payment button after payment is declined (to allow retry)', async () => {
     const declinedProps = {
       ...defaultProps,
       data: {
@@ -362,9 +362,10 @@ describe('MemberPaymentStep', () => {
       <MemberPaymentStep {...declinedProps} />,
     );
 
-    const nextButton = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent === 'Next');
+    // After a decline, the Process Payment button should be shown to allow retry
+    const processPaymentButton = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent === 'Process Payment');
 
-    expect(nextButton).toBeTruthy();
+    expect(processPaymentButton).toBeTruthy();
   });
 
   it('shows payment declined alert with continue message', () => {

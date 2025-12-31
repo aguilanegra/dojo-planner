@@ -145,7 +145,18 @@ export const MemberPaymentStep = ({
   const paymentProcessed = data.paymentProcessed;
 
   const handleInputChange = (field: string, value: string) => {
-    onUpdateAction({ [field]: value });
+    // Reset payment status when user changes payment details after a decline
+    // This allows them to retry with new information
+    if (paymentStatus === 'declined') {
+      onUpdateAction({
+        [field]: value,
+        paymentStatus: undefined,
+        paymentDeclineReason: undefined,
+        paymentProcessed: false,
+      });
+    } else {
+      onUpdateAction({ [field]: value });
+    }
   };
 
   const handleInputBlur = (field: string) => {
@@ -186,8 +197,8 @@ export const MemberPaymentStep = ({
 
   const isFormValid = isCardFormValid || isAchFormValid;
 
-  // Payment can proceed if form is valid and payment has been processed
-  const canProceed = paymentProcessed === true;
+  // Payment can proceed only if payment was approved (not just processed)
+  const canProceed = paymentProcessed === true && paymentStatus === 'approved';
 
   const handleProcessPayment = async () => {
     if (!isFormValid || isProcessingPayment) {
