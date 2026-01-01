@@ -75,6 +75,7 @@ describe('ClassSuccessStep', () => {
           assistantStaff: '',
         },
       ],
+      exceptions: [],
       location: '',
     },
     calendarColor: '#3b82f6',

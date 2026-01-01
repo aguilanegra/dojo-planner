@@ -57,6 +57,7 @@ describe('ClassTagsStep', () => {
           assistantStaff: '',
         },
       ],
+      exceptions: [],
       location: '',
     },
     calendarColor: '#000000',

@@ -72,6 +72,18 @@ export function MonthlyView({ withFilters }: MonthlyViewProps = {}) {
     calendarDays.push(i);
   }
 
+  // Create weeks array with stable keys based on the first non-null day or position
+  const weeks: { key: string; days: (number | null)[] }[] = [];
+  const numWeeks = Math.ceil(calendarDays.length / 7);
+  for (let weekIdx = 0; weekIdx < numWeeks; weekIdx++) {
+    const weekDays = calendarDays.slice(weekIdx * 7, weekIdx * 7 + 7);
+    const firstDay = weekDays.find(d => d !== null) ?? weekIdx * 7;
+    weeks.push({
+      key: `${year}-${month}-day-${firstDay}`,
+      days: weekDays,
+    });
+  }
+
   const classColors = {
     'BJJ Fundamentals I': '#22c55e',
     'BJJ Fundamentals II': '#22c55e',
@@ -155,56 +167,64 @@ export function MonthlyView({ withFilters }: MonthlyViewProps = {}) {
 
       {/* Calendar Grid */}
       <div className="overflow-x-auto rounded-lg border border-border">
-        <div className="inline-block min-w-full">
+        <table className="w-full table-fixed border-collapse">
           {/* Header with days of week */}
-          <div className="grid grid-cols-7 gap-0 bg-muted">
-            {DAYS_OF_WEEK.map(day => (
-              <div
-                key={day}
-                className="border-r border-border p-2 text-center text-sm font-semibold text-foreground last:border-r-0 sm:p-3"
-              >
-                {day}
-              </div>
-            ))}
-          </div>
+          <thead className="bg-muted">
+            <tr>
+              {DAYS_OF_WEEK.map(day => (
+                <th
+                  key={day}
+                  className="border-r border-border p-2 text-center text-sm font-semibold text-foreground last:border-r-0 sm:p-3"
+                >
+                  {day}
+                </th>
+              ))}
+            </tr>
+          </thead>
 
           {/* Calendar cells */}
-          <div className="grid grid-cols-7 gap-0 divide-x divide-y divide-border bg-background">
-            {calendarDays.map((day, index) => (
-              <div
-                key={day || index}
-                className={`min-h-20 border-r border-border p-1 last:border-r-0 sm:min-h-24 sm:p-2 ${
-                  !day ? 'bg-muted' : ''
-                }`}
-              >
-                {day && (
-                  <>
-                    <div className="mb-1 text-sm font-semibold text-foreground">{day}</div>
-                    <div className="flex flex-col gap-1">
-                      {monthlyEvents[day.toString()]?.slice(0, 3).map(event => (
-                        <ClassEventHoverCard
-                          key={`${event.classId}-${day}`}
-                          classId={event.classId}
-                          className={event.className}
-                          color={event.color}
-                        >
-                          <span className="truncate">{event.className}</span>
-                        </ClassEventHoverCard>
-                      ))}
-                      {(monthlyEvents[day.toString()]?.length ?? 0) > 3 && (
-                        <div className="text-xs text-muted-foreground">
-                          +
-                          {monthlyEvents[day.toString()]!.length - 3}
-                          {' more'}
+          <tbody className="bg-background">
+            {weeks.map(week => (
+              <tr key={week.key} className="border-b border-border last:border-b-0">
+                {week.days.map(day => (
+                  <td
+                    key={day ?? `empty-${week.key}`}
+                    className={`h-20 border-r border-border p-1 align-top last:border-r-0 sm:h-24 sm:p-2 ${
+                      !day ? 'bg-muted' : ''
+                    }`}
+                  >
+                    {day && (
+                      <>
+                        <div className="mb-1 text-sm font-semibold text-foreground">{day}</div>
+                        <div className="flex flex-col gap-1">
+                          {monthlyEvents[day.toString()]?.slice(0, 3).map(event => (
+                            <ClassEventHoverCard
+                              key={`${event.classId}-${day}-${event.date ?? ''}`}
+                              classId={event.classId}
+                              className={event.className}
+                              color={event.color}
+                              exception={event.exception}
+                              sourceView="monthly"
+                            >
+                              <span className="truncate">{event.className}</span>
+                            </ClassEventHoverCard>
+                          ))}
+                          {(monthlyEvents[day.toString()]?.length ?? 0) > 3 && (
+                            <div className="text-xs text-muted-foreground">
+                              +
+                              {monthlyEvents[day.toString()]!.length - 3}
+                              {' more'}
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
+                      </>
+                    )}
+                  </td>
+                ))}
+              </tr>
             ))}
-          </div>
-        </div>
+          </tbody>
+        </table>
       </div>
 
       {/* Legend */}

@@ -136,6 +136,21 @@ export const mockClasses: ClassCardProps[] = [
   },
 ];
 
+type ScheduleExceptionType = 'deleted' | 'modified' | 'modified-forward';
+
+export type ClassScheduleException = {
+  classId: string;
+  date: string; // YYYY-MM-DD format
+  type: ScheduleExceptionType;
+  originalHour?: number;
+  originalMinute?: number;
+  newHour?: number;
+  newMinute?: number;
+  newDuration?: number;
+  newInstructor?: string;
+  note?: string;
+};
+
 type ClassEvent = {
   classId: string;
   className: string;
@@ -144,7 +159,50 @@ type ClassEvent = {
   minute: number; // 0-59
   duration: number; // in minutes
   color: string;
+  date?: string; // YYYY-MM-DD format for specific instances
+  exception?: ClassScheduleException;
 };
+
+// Mock schedule exceptions for demonstration
+const mockScheduleExceptions: ClassScheduleException[] = [
+  {
+    classId: '1',
+    date: '2025-09-15', // Monday
+    type: 'modified',
+    originalHour: 6,
+    originalMinute: 0,
+    newInstructor: 'Professor Jessica',
+    note: 'Coach Alex out sick',
+  },
+  {
+    classId: '1',
+    date: '2025-09-17', // Wednesday
+    type: 'deleted',
+    originalHour: 6,
+    originalMinute: 0,
+    note: 'Gym closed for maintenance',
+  },
+  {
+    classId: '9',
+    date: '2025-09-15', // Monday
+    type: 'modified',
+    originalHour: 20,
+    originalMinute: 0,
+    newHour: 19,
+    newMinute: 30,
+    note: 'Earlier start time this week',
+  },
+  {
+    classId: '3',
+    date: '2025-09-17', // Wednesday
+    type: 'modified-forward',
+    originalHour: 19,
+    originalMinute: 0,
+    newHour: 19,
+    newMinute: 30,
+    note: 'Permanent time change',
+  },
+];
 
 function getClassColor(className: string): string {
   if (className.includes('Fundamentals')) {
@@ -165,7 +223,11 @@ function getClassColor(className: string): string {
   return '#6b7280'; // gray
 }
 
-export function generateWeeklySchedule(startDate: Date, classesToUse?: typeof mockClasses): ClassEvent[] {
+export function generateWeeklySchedule(
+  startDate: Date,
+  classesToUse?: typeof mockClasses,
+  exceptions: ClassScheduleException[] = mockScheduleExceptions,
+): ClassEvent[] {
   const events: ClassEvent[] = [];
   const dayOfWeek = startDate.getDay();
   const weekStart = new Date(startDate);
@@ -215,17 +277,59 @@ export function generateWeeklySchedule(startDate: Date, classesToUse?: typeof mo
     ],
   };
 
+  // Helper to format date as YYYY-MM-DD
+  const formatDate = (date: Date): string => {
+    return date.toISOString().split('T')[0] ?? '';
+  };
+
   for (const classData of classesData) {
     const schedules = classSchedules[classData.name] || [];
     for (const schedule of schedules) {
+      // Calculate the actual date for this event in the current week
+      const eventDate = new Date(weekStart);
+      eventDate.setDate(weekStart.getDate() + schedule.day);
+      const dateStr = formatDate(eventDate);
+
+      // Check if there's an exception for this class on this date
+      const exception = exceptions.find(
+        exc => exc.classId === classData.id
+          && exc.date === dateStr
+          && (exc.originalHour === undefined || exc.originalHour === schedule.hour)
+          && (exc.originalMinute === undefined || exc.originalMinute === schedule.minute),
+      );
+
+      // Skip deleted events
+      if (exception?.type === 'deleted') {
+        // Still add the event but mark it as deleted so it can be shown with strikethrough
+        events.push({
+          classId: classData.id,
+          className: classData.name,
+          dayOfWeek: schedule.day,
+          hour: schedule.hour,
+          minute: schedule.minute,
+          duration: schedule.duration,
+          color: getClassColor(classData.name),
+          date: dateStr,
+          exception,
+        });
+        continue;
+      }
+
+      // Apply modifications from exception
+      const finalHour = exception?.newHour ?? schedule.hour;
+      const finalMinute = exception?.newMinute ?? schedule.minute;
+      const finalDuration = exception?.newDuration ?? schedule.duration;
+
       events.push({
         classId: classData.id,
         className: classData.name,
         dayOfWeek: schedule.day,
-        hour: schedule.hour,
-        minute: schedule.minute,
-        duration: schedule.duration,
+        hour: finalHour,
+        minute: finalMinute,
+        duration: finalDuration,
         color: getClassColor(classData.name),
+        date: dateStr,
+        exception,
       });
     }
   }
@@ -233,14 +337,28 @@ export function generateWeeklySchedule(startDate: Date, classesToUse?: typeof mo
   return events;
 }
 
-export function generateMonthlySchedule(year: number, month: number, classesToUse?: typeof mockClasses): Record<string, ClassEvent[]> {
+export function generateMonthlySchedule(
+  year: number,
+  month: number,
+  classesToUse?: typeof mockClasses,
+  exceptions: ClassScheduleException[] = mockScheduleExceptions,
+): Record<string, ClassEvent[]> {
   const monthlyEvents: Record<string, ClassEvent[]> = {};
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const classesData = classesToUse || mockClasses;
 
+  // Helper to format date as YYYY-MM-DD
+  const formatDate = (date: Date): string => {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  };
+
   for (let day = 1; day <= daysInMonth; day++) {
     const date = new Date(year, month, day);
     const dayOfWeek = date.getDay();
+    const dateStr = formatDate(date);
     monthlyEvents[day.toString()] = [];
 
     const classSchedules: Record<string, number[]> = {
@@ -258,6 +376,11 @@ export function generateMonthlySchedule(year: number, month: number, classesToUs
     for (const classData of classesData) {
       const daysForClass = classSchedules[classData.name] || [];
       if (daysForClass.includes(dayOfWeek)) {
+        // Check for exceptions on this date
+        const exception = exceptions.find(
+          exc => exc.classId === classData.id && exc.date === dateStr,
+        );
+
         monthlyEvents[day.toString()]!.push({
           classId: classData.id,
           className: classData.name,
@@ -266,6 +389,8 @@ export function generateMonthlySchedule(year: number, month: number, classesToUs
           minute: 0,
           duration: 0,
           color: getClassColor(classData.name),
+          date: dateStr,
+          exception,
         });
       }
     }

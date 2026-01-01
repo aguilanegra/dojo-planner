@@ -1,10 +1,10 @@
 'use client';
 
-import type { ScheduleInstance } from '@/hooks/useAddClassWizard';
+import type { ScheduleException, ScheduleInstance } from '@/hooks/useAddClassWizard';
 import { ArrowLeft, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { use, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ClassBasicsCard } from '@/features/classes/details/ClassBasicsCard';
@@ -15,6 +15,7 @@ import { DeleteClassAlertDialog } from '@/features/classes/details/DeleteClassAl
 import { EditClassBasicsModal } from '@/features/classes/details/EditClassBasicsModal';
 import { EditClassScheduleModal } from '@/features/classes/details/EditClassScheduleModal';
 import { EditClassSettingsModal } from '@/features/classes/details/EditClassSettingsModal';
+import { EditScheduleInstanceModal } from '@/features/classes/details/EditScheduleInstanceModal';
 
 export type ClassLevel = 'Beginner' | 'Intermediate' | 'Advanced' | 'All Levels';
 export type ClassType = 'Adults' | 'Kids' | 'Women' | 'Open' | 'Competition';
@@ -39,6 +40,7 @@ export type ClassDetailData = {
   style: ClassStyle;
   // Schedule
   scheduleInstances: ScheduleInstance[];
+  scheduleExceptions: ScheduleException[];
   location: string;
   calendarColor: string;
   // Instructors
@@ -68,6 +70,43 @@ const mockClassDetails: Record<string, ClassDetailData> = {
       { id: 'si-1-2', dayOfWeek: 'Wednesday', timeHour: 6, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'coach-alex', assistantStaff: '' },
       { id: 'si-1-3', dayOfWeek: 'Friday', timeHour: 6, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'professor-jessica', assistantStaff: '' },
     ],
+    scheduleExceptions: [
+      {
+        id: 'exc-1-1',
+        scheduleInstanceId: 'si-1-1',
+        date: '2025-01-06',
+        type: 'modified',
+        overrides: {
+          staffMember: 'professor-jessica',
+          assistantStaff: '',
+        },
+        note: 'Coach Alex out sick, Professor Jessica covering',
+        createdAt: '2025-01-05T10:00:00Z',
+      },
+      {
+        id: 'exc-1-2',
+        scheduleInstanceId: 'si-1-2',
+        date: '2025-01-08',
+        type: 'deleted',
+        note: 'Gym closed for maintenance',
+        createdAt: '2025-01-02T14:30:00Z',
+      },
+      {
+        id: 'exc-1-3',
+        scheduleInstanceId: 'si-1-3',
+        date: '2025-01-10',
+        type: 'modified',
+        overrides: {
+          timeHour: 7,
+          timeMinute: 0,
+          timeAmPm: 'PM',
+          durationHours: 1,
+          durationMinutes: 30,
+        },
+        note: 'Extended class, moved to later slot',
+        createdAt: '2025-01-08T09:00:00Z',
+      },
+    ],
     location: 'Downtown HQ',
     calendarColor: '#22c55e',
     instructors: [
@@ -93,6 +132,7 @@ const mockClassDetails: Record<string, ClassDetailData> = {
       { id: 'si-2-1', dayOfWeek: 'Tuesday', timeHour: 6, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 30, staffMember: 'professor-ivan', assistantStaff: '' },
       { id: 'si-2-2', dayOfWeek: 'Thursday', timeHour: 6, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 30, staffMember: 'professor-ivan', assistantStaff: '' },
     ],
+    scheduleExceptions: [],
     location: 'Downtown HQ',
     calendarColor: '#22c55e',
     instructors: [
@@ -117,6 +157,7 @@ const mockClassDetails: Record<string, ClassDetailData> = {
       { id: 'si-3-1', dayOfWeek: 'Monday', timeHour: 7, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'professor-joao', assistantStaff: '' },
       { id: 'si-3-2', dayOfWeek: 'Wednesday', timeHour: 7, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'professor-joao', assistantStaff: '' },
     ],
+    scheduleExceptions: [],
     location: 'Downtown HQ',
     calendarColor: '#6b7280',
     instructors: [
@@ -141,6 +182,7 @@ const mockClassDetails: Record<string, ClassDetailData> = {
       { id: 'si-4-1', dayOfWeek: 'Wednesday', timeHour: 7, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'coach-alex', assistantStaff: '' },
       { id: 'si-4-2', dayOfWeek: 'Friday', timeHour: 7, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'coach-alex', assistantStaff: '' },
     ],
+    scheduleExceptions: [],
     location: 'Downtown HQ',
     calendarColor: '#a855f7',
     instructors: [
@@ -165,6 +207,7 @@ const mockClassDetails: Record<string, ClassDetailData> = {
       { id: 'si-5-1', dayOfWeek: 'Tuesday', timeHour: 4, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'coach-liza', assistantStaff: '' },
       { id: 'si-5-2', dayOfWeek: 'Thursday', timeHour: 4, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'coach-liza', assistantStaff: '' },
     ],
+    scheduleExceptions: [],
     location: 'Downtown HQ',
     calendarColor: '#06b6d4',
     instructors: [
@@ -189,6 +232,7 @@ const mockClassDetails: Record<string, ClassDetailData> = {
       { id: 'si-6-1', dayOfWeek: 'Saturday', timeHour: 12, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'professor-joao', assistantStaff: '' },
       { id: 'si-6-2', dayOfWeek: 'Sunday', timeHour: 12, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'professor-joao', assistantStaff: '' },
     ],
+    scheduleExceptions: [],
     location: 'Downtown HQ',
     calendarColor: '#a855f7',
     instructors: [
@@ -212,6 +256,7 @@ const mockClassDetails: Record<string, ClassDetailData> = {
     scheduleInstances: [
       { id: 'si-7-1', dayOfWeek: 'Tuesday', timeHour: 5, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'professor-jessica', assistantStaff: '' },
     ],
+    scheduleExceptions: [],
     location: 'Downtown HQ',
     calendarColor: '#ec4899',
     instructors: [
@@ -236,6 +281,7 @@ const mockClassDetails: Record<string, ClassDetailData> = {
       { id: 'si-8-1', dayOfWeek: 'Saturday', timeHour: 10, timeMinute: 0, timeAmPm: 'AM', durationHours: 2, durationMinutes: 0, staffMember: '', assistantStaff: '' },
       { id: 'si-8-2', dayOfWeek: 'Sunday', timeHour: 10, timeMinute: 0, timeAmPm: 'AM', durationHours: 2, durationMinutes: 0, staffMember: '', assistantStaff: '' },
     ],
+    scheduleExceptions: [],
     location: 'Downtown HQ',
     calendarColor: '#ef4444',
     instructors: [],
@@ -259,6 +305,22 @@ const mockClassDetails: Record<string, ClassDetailData> = {
       { id: 'si-9-2', dayOfWeek: 'Wednesday', timeHour: 8, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'coach-alex', assistantStaff: '' },
       { id: 'si-9-3', dayOfWeek: 'Friday', timeHour: 8, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'coach-alex', assistantStaff: '' },
     ],
+    scheduleExceptions: [
+      {
+        id: 'exc-9-1',
+        scheduleInstanceId: 'si-9-1',
+        date: '2025-01-13',
+        type: 'modified-forward',
+        overrides: {
+          timeHour: 7,
+          timeMinute: 30,
+          timeAmPm: 'PM',
+        },
+        effectiveFromDate: '2025-01-13',
+        note: 'Permanent time change for Monday competition classes',
+        createdAt: '2025-01-10T16:00:00Z',
+      },
+    ],
     location: 'Downtown HQ',
     calendarColor: '#a855f7',
     instructors: [
@@ -277,16 +339,29 @@ type PageParams = {
   classId: string;
 };
 
+type InstanceEditState = {
+  instance: ScheduleInstance;
+  date: string;
+  existingException?: ScheduleException;
+} | null;
+
 export default function ClassDetailPage({ params }: { params: Promise<PageParams> }) {
   const resolvedParams = use(params);
   const t = useTranslations('ClassDetailPage');
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Get the view param to preserve when navigating back
+  const viewParam = searchParams.get('view');
+  const backToClassesUrl = viewParam ? `/dashboard/classes?view=${viewParam}` : '/dashboard/classes';
 
   // Modal states
   const [isEditBasicsOpen, setIsEditBasicsOpen] = useState(false);
   const [isEditScheduleOpen, setIsEditScheduleOpen] = useState(false);
   const [isEditSettingsOpen, setIsEditSettingsOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isEditInstanceOpen, setIsEditInstanceOpen] = useState(false);
+  const [instanceEditState, setInstanceEditState] = useState<InstanceEditState>(null);
 
   // Get class data (in real app, this would come from an API)
   const [classData, setClassData] = useState<ClassDetailData | null>(
@@ -303,7 +378,59 @@ export default function ClassDetailPage({ params }: { params: Promise<PageParams
   // Handler for deleting class
   const handleDeleteClass = () => {
     // In a real app, this would call an API to delete the class
-    router.push('/dashboard/classes');
+    router.push(backToClassesUrl);
+  };
+
+  // Handler for opening the instance edit modal
+  const handleEditInstance = (instance: ScheduleInstance, date: string, existingException?: ScheduleException) => {
+    setInstanceEditState({ instance, date, existingException });
+    setIsEditInstanceOpen(true);
+  };
+
+  // Handler for saving a schedule exception
+  const handleSaveException = (exception: ScheduleException) => {
+    if (!classData) {
+      return;
+    }
+
+    const existingIndex = classData.scheduleExceptions.findIndex(e => e.id === exception.id);
+    let updatedExceptions: ScheduleException[];
+
+    if (existingIndex >= 0) {
+      updatedExceptions = [...classData.scheduleExceptions];
+      updatedExceptions[existingIndex] = exception;
+    } else {
+      updatedExceptions = [...classData.scheduleExceptions, exception];
+    }
+
+    setClassData({
+      ...classData,
+      scheduleExceptions: updatedExceptions,
+    });
+  };
+
+  // Handler for deleting a schedule instance (creating a deletion exception)
+  const handleDeleteException = (exception: ScheduleException) => {
+    if (!classData) {
+      return;
+    }
+
+    const existingIndex = classData.scheduleExceptions.findIndex(
+      e => e.scheduleInstanceId === exception.scheduleInstanceId && e.date === exception.date,
+    );
+    let updatedExceptions: ScheduleException[];
+
+    if (existingIndex >= 0) {
+      updatedExceptions = [...classData.scheduleExceptions];
+      updatedExceptions[existingIndex] = exception;
+    } else {
+      updatedExceptions = [...classData.scheduleExceptions, exception];
+    }
+
+    setClassData({
+      ...classData,
+      scheduleExceptions: updatedExceptions,
+    });
   };
 
   if (!classData) {
@@ -318,7 +445,7 @@ export default function ClassDetailPage({ params }: { params: Promise<PageParams
     <div className="w-full space-y-6">
       {/* Back Navigation */}
       <div className="flex items-center gap-4">
-        <Link href="/dashboard/classes">
+        <Link href={backToClassesUrl}>
           <Button variant="ghost" size="sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
             {t('back_to_classes')}
@@ -367,9 +494,11 @@ export default function ClassDetailPage({ params }: { params: Promise<PageParams
         {/* Right Column: Schedule Card spanning full height */}
         <ClassScheduleCard
           scheduleInstances={classData.scheduleInstances}
+          scheduleExceptions={classData.scheduleExceptions}
           location={classData.location}
           calendarColor={classData.calendarColor}
           onEdit={() => setIsEditScheduleOpen(true)}
+          onEditInstance={handleEditInstance}
         />
       </div>
 
@@ -412,6 +541,21 @@ export default function ClassDetailPage({ params }: { params: Promise<PageParams
           setIsEditSettingsOpen(false);
         }}
       />
+
+      {instanceEditState && (
+        <EditScheduleInstanceModal
+          isOpen={isEditInstanceOpen}
+          onClose={() => {
+            setIsEditInstanceOpen(false);
+            setInstanceEditState(null);
+          }}
+          scheduleInstance={instanceEditState.instance}
+          selectedDate={instanceEditState.date}
+          existingException={instanceEditState.existingException}
+          onSaveException={handleSaveException}
+          onDeleteException={handleDeleteException}
+        />
+      )}
 
       {/* Delete Button */}
       <div className="flex justify-end">

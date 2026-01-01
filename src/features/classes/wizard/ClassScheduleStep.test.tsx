@@ -60,6 +60,7 @@ describe('ClassScheduleStep', () => {
     description: 'Test description',
     schedule: {
       instances: [],
+      exceptions: [],
       location: '',
     },
     calendarColor: '#000000',
@@ -164,6 +165,7 @@ describe('ClassScheduleStep', () => {
       ...mockData,
       schedule: {
         instances: [mockInstance],
+        exceptions: [],
         location: 'Downtown HQ',
       },
     };
@@ -252,6 +254,7 @@ describe('ClassScheduleStep', () => {
       ...mockData,
       schedule: {
         instances: [mockInstance],
+        exceptions: [],
         location: 'Downtown HQ',
       },
     };
@@ -282,6 +285,7 @@ describe('ClassScheduleStep', () => {
       ...mockData,
       schedule: {
         instances: [mockInstance],
+        exceptions: [],
         location: 'Downtown HQ',
       },
     };
@@ -344,6 +348,7 @@ describe('ClassScheduleStep', () => {
       ...mockData,
       schedule: {
         instances: multipleInstances,
+        exceptions: [],
         location: 'Downtown HQ',
       },
     };
@@ -376,6 +381,7 @@ describe('ClassScheduleStep', () => {
       ...mockData,
       schedule: {
         instances: [invalidInstance],
+        exceptions: [],
         location: 'Downtown HQ',
       },
     };
@@ -407,6 +413,7 @@ describe('ClassScheduleStep', () => {
       ...mockData,
       schedule: {
         instances: [invalidInstance],
+        exceptions: [],
         location: 'Downtown HQ',
       },
     };
@@ -433,6 +440,7 @@ describe('ClassScheduleStep', () => {
       ...mockData,
       schedule: {
         instances: [mockInstance],
+        exceptions: [],
         location: 'Downtown HQ',
       },
     };
@@ -458,6 +466,7 @@ describe('ClassScheduleStep', () => {
       ...mockData,
       schedule: {
         instances: [mockInstance],
+        exceptions: [],
         location: 'Downtown HQ',
       },
     };
@@ -483,6 +492,7 @@ describe('ClassScheduleStep', () => {
       ...mockData,
       schedule: {
         instances: [mockInstance],
+        exceptions: [],
         location: 'Downtown HQ',
       },
     };
@@ -525,6 +535,7 @@ describe('ClassScheduleStep', () => {
       ...mockData,
       schedule: {
         instances: [mockInstance],
+        exceptions: [],
         location: 'Downtown HQ',
       },
     };
@@ -558,6 +569,7 @@ describe('ClassScheduleStep', () => {
       ...mockData,
       schedule: {
         instances: [mockInstance],
+        exceptions: [],
         location: 'Downtown HQ',
       },
     };

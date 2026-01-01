@@ -1,8 +1,15 @@
 import type { AddMemberWizardData } from '@/hooks/useAddMemberWizard';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { page, userEvent } from 'vitest/browser';
 import { MemberPaymentStep } from './MemberPaymentStep';
+
+// Helper to advance timers for payment processing tests
+const advancePaymentTimer = async () => {
+  // The mock payment has a 1000 + Math.random() * 1000 delay
+  // We advance time past that threshold
+  await vi.advanceTimersByTimeAsync(2100);
+};
 
 // Mock next-intl
 const translationKeys: Record<string, string> = {
@@ -85,6 +92,11 @@ const defaultProps = {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.useFakeTimers();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 describe('MemberPaymentStep', () => {
@@ -550,8 +562,8 @@ describe('MemberPaymentStep', () => {
       // Verify processing state was set
       expect(onUpdateAction).toHaveBeenCalledWith({ paymentStatus: 'processing' });
 
-      // Wait for the mock payment to complete (1-2 seconds simulated delay)
-      await new Promise(resolve => setTimeout(resolve, 2500));
+      // Advance timers to complete the mock payment (1-2 seconds simulated delay)
+      await advancePaymentTimer();
 
       // Verify approved state was set
       expect(onUpdateAction).toHaveBeenCalledWith(
@@ -586,8 +598,8 @@ describe('MemberPaymentStep', () => {
     if (processButton) {
       await userEvent.click(processButton);
 
-      // Wait for the mock payment to complete
-      await new Promise(resolve => setTimeout(resolve, 2500));
+      // Advance timers to complete the mock payment
+      await advancePaymentTimer();
 
       // Verify declined state was set with correct reason
       expect(onUpdateAction).toHaveBeenCalledWith(
@@ -665,7 +677,7 @@ describe('MemberPaymentStep', () => {
       expect(nameInput?.disabled).toBe(true);
 
       // Wait for completion
-      await new Promise(resolve => setTimeout(resolve, 2500));
+      await advancePaymentTimer();
     }
   });
 
@@ -818,7 +830,7 @@ describe('MemberPaymentStep', () => {
       expect(onUpdateAction).toHaveBeenCalledWith({ paymentStatus: 'processing' });
 
       // Wait for the mock payment to complete
-      await new Promise(resolve => setTimeout(resolve, 2500));
+      await advancePaymentTimer();
 
       // Verify approved state was set
       expect(onUpdateAction).toHaveBeenCalledWith(
@@ -854,7 +866,7 @@ describe('MemberPaymentStep', () => {
       await userEvent.click(processButton);
 
       // Wait for the mock payment to complete
-      await new Promise(resolve => setTimeout(resolve, 2500));
+      await advancePaymentTimer();
 
       // Verify declined state was set with correct reason
       expect(onUpdateAction).toHaveBeenCalledWith(
@@ -891,7 +903,7 @@ describe('MemberPaymentStep', () => {
       await userEvent.click(processButton);
 
       // Wait for the mock payment to complete
-      await new Promise(resolve => setTimeout(resolve, 2500));
+      await advancePaymentTimer();
 
       // Verify declined state was set with invalid CVC reason
       expect(onUpdateAction).toHaveBeenCalledWith(
@@ -928,7 +940,7 @@ describe('MemberPaymentStep', () => {
       await userEvent.click(processButton);
 
       // Wait for the mock payment to complete
-      await new Promise(resolve => setTimeout(resolve, 2500));
+      await advancePaymentTimer();
 
       // Verify declined state was set with expired card reason
       expect(onUpdateAction).toHaveBeenCalledWith(
@@ -965,7 +977,7 @@ describe('MemberPaymentStep', () => {
       await userEvent.click(processButton);
 
       // Wait for the mock payment to complete
-      await new Promise(resolve => setTimeout(resolve, 2500));
+      await advancePaymentTimer();
 
       // Verify declined state was set with card declined reason
       expect(onUpdateAction).toHaveBeenCalledWith(

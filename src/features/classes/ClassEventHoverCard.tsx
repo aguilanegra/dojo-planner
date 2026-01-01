@@ -1,5 +1,7 @@
 'use client';
 
+import type { ClassScheduleException } from './classesData';
+import { AlertCircle, Calendar, Pencil, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -12,7 +14,9 @@ type ClassEventHoverCardProps = {
   hour?: number;
   minute?: number;
   duration?: number;
+  exception?: ClassScheduleException;
   children?: React.ReactNode;
+  sourceView?: 'weekly' | 'monthly';
 };
 
 function formatTime(hour: number, minute: number): string {
@@ -33,6 +37,32 @@ function formatDuration(minutes: number): string {
   return `${hours}h ${mins}m`;
 }
 
+function getExceptionIcon(type: ClassScheduleException['type']) {
+  switch (type) {
+    case 'deleted':
+      return <Trash2 className="h-3 w-3 text-destructive" />;
+    case 'modified':
+      return <Pencil className="h-3 w-3 text-amber-500" />;
+    case 'modified-forward':
+      return <Calendar className="h-3 w-3 text-blue-500" />;
+    default:
+      return <AlertCircle className="h-3 w-3" />;
+  }
+}
+
+function getExceptionLabel(type: ClassScheduleException['type']): string {
+  switch (type) {
+    case 'deleted':
+      return 'Cancelled';
+    case 'modified':
+      return 'Modified';
+    case 'modified-forward':
+      return 'Modified (ongoing)';
+    default:
+      return 'Exception';
+  }
+}
+
 export function ClassEventHoverCard({
   classId,
   className,
@@ -40,7 +70,9 @@ export function ClassEventHoverCard({
   hour,
   minute,
   duration,
+  exception,
   children,
+  sourceView,
 }: ClassEventHoverCardProps) {
   const router = useRouter();
 
@@ -48,13 +80,34 @@ export function ClassEventHoverCard({
   const classData = mockClasses.find(c => c.id === classId);
 
   const handleClick = () => {
-    router.push(`/dashboard/classes/${classId}`);
+    const viewParam = sourceView ? `?view=${sourceView}` : '';
+    router.push(`/dashboard/classes/${classId}${viewParam}`);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       handleClick();
+    }
+  };
+
+  const isDeleted = exception?.type === 'deleted';
+  const hasException = !!exception;
+
+  // Determine border/styling based on exception type
+  const getExceptionStyles = () => {
+    if (!exception) {
+      return {};
+    }
+    switch (exception.type) {
+      case 'deleted':
+        return { opacity: 0.5, textDecoration: 'line-through' };
+      case 'modified':
+        return { boxShadow: 'inset 0 0 0 2px #f59e0b' }; // amber border
+      case 'modified-forward':
+        return { boxShadow: 'inset 0 0 0 2px #3b82f6' }; // blue border
+      default:
+        return {};
     }
   };
 
@@ -65,9 +118,15 @@ export function ClassEventHoverCard({
           type="button"
           onClick={handleClick}
           onKeyDown={handleKeyDown}
-          className="mb-1 w-full cursor-pointer truncate rounded px-2 py-1 text-left text-xs font-medium text-white transition-opacity hover:opacity-80 sm:text-sm"
-          style={{ backgroundColor: color }}
+          className={`mb-1 w-full cursor-pointer truncate rounded px-2 py-1 text-left text-xs font-medium text-white transition-opacity hover:opacity-80 sm:text-sm ${hasException ? 'relative' : ''}`}
+          style={{ backgroundColor: color, ...getExceptionStyles() }}
+          data-exception-type={exception?.type}
         >
+          {hasException && (
+            <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-background shadow-sm">
+              {getExceptionIcon(exception.type)}
+            </span>
+          )}
           {children || className}
         </button>
       </TooltipTrigger>
@@ -93,8 +152,31 @@ export function ClassEventHoverCard({
             </p>
           )}
 
+          {/* Exception info if available */}
+          {exception && (
+            <div
+              className={`flex items-center gap-2 rounded-md px-2 py-1 text-xs ${
+                exception.type === 'deleted'
+                  ? 'bg-destructive/10 text-destructive'
+                  : exception.type === 'modified-forward'
+                    ? 'bg-blue-500/10 text-blue-600'
+                    : 'bg-amber-500/10 text-amber-600'
+              }`}
+            >
+              {getExceptionIcon(exception.type)}
+              <span className="font-medium">{getExceptionLabel(exception.type)}</span>
+              {exception.note && (
+                <span className="text-muted-foreground">
+                  -
+                  {' '}
+                  {exception.note}
+                </span>
+              )}
+            </div>
+          )}
+
           {/* Time info if available */}
-          {hour !== undefined && minute !== undefined && duration !== undefined && (
+          {hour !== undefined && minute !== undefined && duration !== undefined && !isDeleted && (
             <div className="text-xs text-muted-foreground">
               <span className="font-medium">Time:</span>
               {' '}

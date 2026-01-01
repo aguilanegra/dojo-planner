@@ -180,63 +180,67 @@ export function WeeklyView({ withFilters }: WeeklyViewProps = {}) {
 
       {/* Weekly Schedule Table */}
       <div className="overflow-x-auto rounded-lg border border-border">
-        <div className="inline-block min-w-full">
+        <table className="w-full table-fixed border-collapse">
           {/* Header with days */}
-          <div className="grid gap-0 bg-muted" style={{ gridTemplateColumns: '80px repeat(7, 1fr)' }}>
-            <div className="border-r border-border p-2 text-center text-sm font-semibold text-foreground">Time</div>
-            {Array.from({ length: 7 }).map((_, i) => {
-              const date = new Date(weekStart);
-              date.setDate(weekStart.getDate() + i);
-              return (
-                <div
-                  key={date.toISOString()}
-                  className="border-r border-border p-2 text-center text-xs font-semibold text-foreground last:border-r-0 sm:text-sm"
-                >
-                  <div>{DAYS_OF_WEEK[i]}</div>
-                  <div>{date.getDate()}</div>
-                </div>
-              );
-            })}
-          </div>
+          <thead className="bg-muted">
+            <tr>
+              <th className="w-20 border-r border-border p-2 text-center text-sm font-semibold text-foreground">Time</th>
+              {Array.from({ length: 7 }).map((_, i) => {
+                const date = new Date(weekStart);
+                date.setDate(weekStart.getDate() + i);
+                return (
+                  <th
+                    key={date.toISOString()}
+                    className="border-r border-border p-2 text-center text-xs font-semibold text-foreground last:border-r-0 sm:text-sm"
+                  >
+                    <div>{DAYS_OF_WEEK[i]}</div>
+                    <div>{date.getDate()}</div>
+                  </th>
+                );
+              })}
+            </tr>
+          </thead>
 
           {/* Time slots */}
-          <div className="bg-background">
+          <tbody className="bg-background">
             {HOURS.map(hour => (
-              <div key={hour} className="grid gap-0 border-b border-border" style={{ gridTemplateColumns: '80px repeat(7, 1fr)' }}>
+              <tr key={hour} className="border-b border-border">
                 {/* Time label */}
-                <div className="border-r border-border p-1 text-center text-xs text-muted-foreground sm:p-2 sm:text-sm">
+                <td className="w-20 border-r border-border p-1 text-center text-xs text-muted-foreground sm:p-2 sm:text-sm">
                   {formatHour(hour)}
-                </div>
+                </td>
 
                 {/* Day cells */}
                 {Array.from({ length: 7 }).map((_, dayIndex) => {
                   const events = getEventsForTimeSlot(dayIndex, hour);
                   return (
-                    <div
+                    <td
                       key={`${DAYS_OF_WEEK[dayIndex]}-${hour}`}
-                      className="border-r border-border p-1 last:border-r-0 sm:p-2"
-                      style={{ minHeight: '60px' }}
+                      className="border-r border-border p-1 align-top last:border-r-0 sm:p-2"
+                      style={{ minHeight: '60px', height: '60px' }}
                     >
                       {events.map(event => (
                         <ClassEventHoverCard
-                          key={`${event.classId}-${event.hour}-${event.minute}`}
+                          key={`${event.classId}-${event.hour}-${event.minute}-${event.date ?? ''}`}
                           classId={event.classId}
                           className={event.className}
                           color={event.color}
                           hour={event.hour}
                           minute={event.minute}
                           duration={event.duration}
+                          exception={event.exception}
+                          sourceView="weekly"
                         >
                           {event.className}
                         </ClassEventHoverCard>
                       ))}
-                    </div>
+                    </td>
                   );
                 })}
-              </div>
+              </tr>
             ))}
-          </div>
-        </div>
+          </tbody>
+        </table>
       </div>
 
       {/* Legend */}
