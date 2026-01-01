@@ -2,9 +2,9 @@
 
 import type { ClassFilters } from './ClassFilterBar';
 import type { ClassCardProps } from '@/templates/ClassCard';
-import { Grid3x3, List, Plus, Tags } from 'lucide-react';
+import { CalendarDays, CalendarRange, Grid3x3, Plus, Tags } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ButtonGroupItem, ButtonGroupRoot } from '@/components/ui/button-group';
@@ -17,10 +17,19 @@ import { MonthlyView } from './MonthlyView';
 import { WeeklyView } from './WeeklyView';
 import { AddClassModal } from './wizard';
 
+const VALID_VIEWS = ['grid', 'weekly', 'monthly'] as const;
+type ViewType = (typeof VALID_VIEWS)[number];
+
 export function ClassesPage() {
   const t = useTranslations('ClassesPage');
   const router = useRouter();
-  const [viewType, setViewType] = useState('grid');
+  const searchParams = useSearchParams();
+
+  // Get initial view from URL or default to 'grid'
+  const viewParam = searchParams.get('view');
+  const initialView: ViewType = VALID_VIEWS.includes(viewParam as ViewType) ? (viewParam as ViewType) : 'grid';
+
+  const [viewType, setViewType] = useState<ViewType>(initialView);
   const [isTagsSheetOpen, setIsTagsSheetOpen] = useState(false);
   const [isAddClassModalOpen, setIsAddClassModalOpen] = useState(false);
   const [classes, setClasses] = useState<ClassCardProps[]>(initialMockClasses);
@@ -30,10 +39,24 @@ export function ClassesPage() {
     instructor: 'all',
   });
 
-  // Handle edit class navigation
+  // Handle view type change and update URL
+  const handleViewChange = useCallback((newView: string) => {
+    setViewType(newView as ViewType);
+    const params = new URLSearchParams(searchParams.toString());
+    if (newView === 'grid') {
+      params.delete('view');
+    } else {
+      params.set('view', newView);
+    }
+    const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname;
+    router.replace(newUrl, { scroll: false });
+  }, [router, searchParams]);
+
+  // Handle edit class navigation - preserve view param
   const handleEditClass = useCallback((id: string) => {
-    router.push(`/dashboard/classes/${id}`);
-  }, [router]);
+    const viewParam = viewType !== 'grid' ? `?view=${viewType}` : '';
+    router.push(`/dashboard/classes/${id}${viewParam}`);
+  }, [router, viewType]);
 
   // Handle new class creation
   const handleClassCreated = (newClass: ClassCardProps) => {
@@ -101,20 +124,18 @@ export function ClassesPage() {
 
           <div className="flex items-center gap-2 sm:gap-3">
             {/* View Toggle Button Group */}
-            <ButtonGroupRoot value={viewType} onValueChange={setViewType}>
-              <ButtonGroupItem value="list" title="List view">
-                <List className="h-4 w-4" />
-                <span className="ml-1 hidden text-xs sm:ml-2 sm:inline">{t('list_view_label')}</span>
-              </ButtonGroupItem>
+            <ButtonGroupRoot value={viewType} onValueChange={handleViewChange}>
               <ButtonGroupItem value="grid" title="Grid view">
                 <Grid3x3 className="h-4 w-4" />
-                <span className="ml-1 hidden text-xs sm:ml-2 sm:inline">{t('grid_view_label')}</span>
+                <span className="hidden text-sm sm:ml-1 sm:inline">{t('grid_view_label')}</span>
               </ButtonGroupItem>
               <ButtonGroupItem value="weekly" title="Weekly view">
-                <span className="text-xs">Weekly</span>
+                <CalendarRange className="h-4 w-4" />
+                <span className="hidden text-sm sm:ml-1 sm:inline">Weekly</span>
               </ButtonGroupItem>
               <ButtonGroupItem value="monthly" title="Monthly view">
-                <span className="text-xs">Monthly</span>
+                <CalendarDays className="h-4 w-4" />
+                <span className="hidden text-sm sm:ml-1 sm:inline">Monthly</span>
               </ButtonGroupItem>
             </ButtonGroupRoot>
 
@@ -136,9 +157,9 @@ export function ClassesPage() {
         <WeeklyView withFilters={filters} />
       )}
 
-      {/* Render Card/List View */}
-      {(viewType === 'grid' || viewType === 'list') && (
-        <div className={viewType === 'grid' ? 'grid gap-6 md:grid-cols-2 lg:grid-cols-3' : 'flex flex-col gap-4'}>
+      {/* Render Grid View */}
+      {viewType === 'grid' && (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredClasses.map(classItem => (
             <ClassCard key={classItem.id} {...classItem} onEdit={handleEditClass} />
           ))}

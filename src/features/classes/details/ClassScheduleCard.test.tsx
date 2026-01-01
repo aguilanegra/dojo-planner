@@ -1,10 +1,9 @@
-import type { ScheduleInstance } from '@/hooks/useAddClassWizard';
+import type { ScheduleException, ScheduleInstance } from '@/hooks/useAddClassWizard';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { page, userEvent } from 'vitest/browser';
 import { ClassScheduleCard } from './ClassScheduleCard';
 
-// Mock next-intl with proper translations
 const translationKeys: Record<string, string> = {
   title: 'Schedule',
   schedule_label: 'Schedule',
@@ -13,10 +12,26 @@ const translationKeys: Record<string, string> = {
   column_duration: 'Duration',
   column_instructor: 'Instructor',
   column_assistant: 'Assistant',
+  column_actions: 'Actions',
   no_schedule: 'No schedule set',
   location_label: 'Location',
   calendar_color_label: 'Calendar Color',
   no_location: 'No location set',
+  exceptions_label: 'Schedule Exceptions',
+  exception_type_deleted: 'Cancelled',
+  exception_type_modified: 'Modified',
+  exception_type_modified_forward: 'Modified (ongoing)',
+  unknown_instance: 'Unknown',
+  and_onwards: '(and onwards)',
+  instructor_changed: 'Instructor',
+  time_changed: 'Time',
+  edit_exception_aria: 'Edit exception',
+  add_exception_aria: 'Add exception for this schedule',
+  add_exception_title: 'Add Schedule Exception',
+  add_exception_description: 'Select a {day} to modify or cancel this class occurrence.',
+  select_date_label: 'Date',
+  cancel_button: 'Cancel',
+  continue_button: 'Continue',
 };
 
 vi.mock('next-intl', () => ({
@@ -273,5 +288,357 @@ describe('ClassScheduleCard', () => {
     const duration = page.getByText('45m');
 
     expect(duration).toBeTruthy();
+  });
+
+  describe('Schedule Exceptions', () => {
+    const mockOnEditInstance = vi.fn();
+
+    const mockException: ScheduleException = {
+      id: 'exception-1',
+      scheduleInstanceId: 'test-instance-1',
+      date: '2025-01-15',
+      type: 'modified',
+      overrides: {
+        staffMember: 'professor-jessica',
+      },
+      createdAt: '2025-01-10T00:00:00.000Z',
+    };
+
+    it('should not render exceptions section when no exceptions', () => {
+      render(<ClassScheduleCard {...defaultProps} scheduleExceptions={[]} />);
+
+      const exceptionsSection = document.querySelector('[data-testid="schedule-exceptions-section"]');
+
+      expect(exceptionsSection).toBeNull();
+    });
+
+    it('should render exceptions section when exceptions exist', () => {
+      render(<ClassScheduleCard {...defaultProps} scheduleExceptions={[mockException]} />);
+
+      const exceptionsSection = document.querySelector('[data-testid="schedule-exceptions-section"]');
+
+      expect(exceptionsSection).toBeTruthy();
+    });
+
+    it('should render exceptions label', () => {
+      render(<ClassScheduleCard {...defaultProps} scheduleExceptions={[mockException]} />);
+
+      const label = page.getByText('Schedule Exceptions');
+
+      expect(label).toBeTruthy();
+    });
+
+    it('should render exception with correct test id', () => {
+      render(<ClassScheduleCard {...defaultProps} scheduleExceptions={[mockException]} />);
+
+      const exceptionElement = document.querySelector('[data-testid="schedule-exception-exception-1"]');
+
+      expect(exceptionElement).toBeTruthy();
+    });
+
+    it('should render day abbreviation for exception', () => {
+      render(<ClassScheduleCard {...defaultProps} scheduleExceptions={[mockException]} />);
+
+      const exceptionsSection = document.querySelector('[data-testid="schedule-exceptions-section"]');
+      const dayAbbrev = exceptionsSection?.textContent?.includes('Mon');
+
+      expect(dayAbbrev).toBe(true);
+    });
+
+    it('should render deleted exception with correct styling', () => {
+      const deletedException: ScheduleException = {
+        ...mockException,
+        type: 'deleted',
+        overrides: undefined,
+      };
+
+      render(<ClassScheduleCard {...defaultProps} scheduleExceptions={[deletedException]} />);
+
+      const exceptionElement = document.querySelector('[data-testid="schedule-exception-exception-1"]');
+
+      expect(exceptionElement?.classList.toString()).toContain('destructive');
+    });
+
+    it('should render modified-forward exception with and onwards text', () => {
+      const forwardException: ScheduleException = {
+        ...mockException,
+        type: 'modified-forward',
+        effectiveFromDate: '2025-01-15',
+      };
+
+      render(<ClassScheduleCard {...defaultProps} scheduleExceptions={[forwardException]} />);
+
+      const onwardsText = page.getByText('(and onwards)');
+
+      expect(onwardsText).toBeTruthy();
+    });
+
+    it('should render instructor changed badge when instructor is different', () => {
+      render(<ClassScheduleCard {...defaultProps} scheduleExceptions={[mockException]} />);
+
+      const instructorBadge = page.getByText(/Instructor/);
+
+      expect(instructorBadge).toBeTruthy();
+    });
+
+    it('should render exception note when provided', () => {
+      const exceptionWithNote: ScheduleException = {
+        ...mockException,
+        note: 'Substitute instructor for the day',
+      };
+
+      render(<ClassScheduleCard {...defaultProps} scheduleExceptions={[exceptionWithNote]} />);
+
+      const note = page.getByText('Substitute instructor for the day');
+
+      expect(note).toBeTruthy();
+    });
+
+    it('should render edit button for exception when onEditInstance is provided', () => {
+      render(<ClassScheduleCard {...defaultProps} scheduleExceptions={[mockException]} onEditInstance={mockOnEditInstance} />);
+
+      const editButton = document.querySelector('[data-testid="edit-exception-exception-1"]');
+
+      expect(editButton).toBeTruthy();
+    });
+
+    it('should not render edit button when onEditInstance is not provided', () => {
+      render(<ClassScheduleCard {...defaultProps} scheduleExceptions={[mockException]} />);
+
+      const editButton = document.querySelector('[data-testid="edit-exception-exception-1"]');
+
+      expect(editButton).toBeNull();
+    });
+
+    it('should call onEditInstance when edit button is clicked', async () => {
+      render(<ClassScheduleCard {...defaultProps} scheduleExceptions={[mockException]} onEditInstance={mockOnEditInstance} />);
+
+      const editButton = document.querySelector('[data-testid="edit-exception-exception-1"]');
+      if (editButton) {
+        await userEvent.click(editButton);
+      }
+
+      expect(mockOnEditInstance).toHaveBeenCalledWith(
+        mockInstance,
+        mockException.date,
+        mockException,
+      );
+    });
+
+    it('should render multiple exceptions', () => {
+      const multipleExceptions: ScheduleException[] = [
+        { ...mockException, id: 'exc-1', date: '2025-01-15' },
+        { ...mockException, id: 'exc-2', date: '2025-01-22' },
+        { ...mockException, id: 'exc-3', date: '2025-01-29', type: 'deleted', overrides: undefined },
+      ];
+
+      render(<ClassScheduleCard {...defaultProps} scheduleExceptions={multipleExceptions} />);
+
+      const exc1 = document.querySelector('[data-testid="schedule-exception-exc-1"]');
+      const exc2 = document.querySelector('[data-testid="schedule-exception-exc-2"]');
+      const exc3 = document.querySelector('[data-testid="schedule-exception-exc-3"]');
+
+      expect(exc1).toBeTruthy();
+      expect(exc2).toBeTruthy();
+      expect(exc3).toBeTruthy();
+    });
+
+    it('should show unknown for exception with invalid instance id', () => {
+      const orphanException: ScheduleException = {
+        ...mockException,
+        scheduleInstanceId: 'non-existent-instance',
+      };
+
+      render(<ClassScheduleCard {...defaultProps} scheduleExceptions={[orphanException]} />);
+
+      const unknown = page.getByText('Unknown');
+
+      expect(unknown).toBeTruthy();
+    });
+
+    it('should render time changed badge when time is modified', () => {
+      const timeException: ScheduleException = {
+        ...mockException,
+        overrides: {
+          timeHour: 7,
+          timeMinute: 30,
+          timeAmPm: 'PM',
+        },
+      };
+
+      render(<ClassScheduleCard {...defaultProps} scheduleExceptions={[timeException]} />);
+
+      const timeBadge = page.getByText(/Time:/);
+
+      expect(timeBadge).toBeTruthy();
+    });
+
+    it('should not render overrides section for deleted exceptions', () => {
+      const deletedException: ScheduleException = {
+        ...mockException,
+        type: 'deleted',
+        overrides: {
+          staffMember: 'professor-jessica',
+        },
+      };
+
+      render(<ClassScheduleCard {...defaultProps} scheduleExceptions={[deletedException]} />);
+
+      const exceptionsSection = document.querySelector('[data-testid="schedule-exceptions-section"]');
+      const hasInstructorBadge = exceptionsSection?.textContent?.includes('Instructor:');
+
+      expect(hasInstructorBadge).toBe(false);
+    });
+  });
+
+  describe('Add Exception Button', () => {
+    const mockOnEditInstance = vi.fn();
+
+    beforeEach(() => {
+      vi.clearAllMocks();
+    });
+
+    it('should not render add exception button when onEditInstance is not provided', () => {
+      render(<ClassScheduleCard {...defaultProps} />);
+
+      const addButton = document.querySelector('[data-testid="add-exception-test-instance-1"]');
+
+      expect(addButton).toBeNull();
+    });
+
+    it('should not render Actions column when onEditInstance is not provided', () => {
+      render(<ClassScheduleCard {...defaultProps} />);
+
+      const actionsHeader = page.getByText('Actions');
+
+      expect(actionsHeader.elements().length).toBe(0);
+    });
+
+    it('should render add exception button when onEditInstance is provided', () => {
+      render(<ClassScheduleCard {...defaultProps} onEditInstance={mockOnEditInstance} />);
+
+      const addButton = document.querySelector('[data-testid="add-exception-test-instance-1"]');
+
+      expect(addButton).toBeTruthy();
+    });
+
+    it('should render Actions column when onEditInstance is provided', () => {
+      render(<ClassScheduleCard {...defaultProps} onEditInstance={mockOnEditInstance} />);
+
+      const actionsHeader = page.getByText('Actions');
+
+      expect(actionsHeader).toBeTruthy();
+    });
+
+    it('should open date picker popover when add button is clicked', async () => {
+      render(<ClassScheduleCard {...defaultProps} onEditInstance={mockOnEditInstance} />);
+
+      const addButton = document.querySelector('[data-testid="add-exception-test-instance-1"]');
+      if (addButton) {
+        await userEvent.click(addButton);
+      }
+
+      const popoverTitle = page.getByText('Add Schedule Exception');
+
+      expect(popoverTitle).toBeTruthy();
+    });
+
+    it('should render date input in popover', async () => {
+      render(<ClassScheduleCard {...defaultProps} onEditInstance={mockOnEditInstance} />);
+
+      const addButton = document.querySelector('[data-testid="add-exception-test-instance-1"]');
+      if (addButton) {
+        await userEvent.click(addButton);
+      }
+
+      const dateInput = document.querySelector('[data-testid="date-input-test-instance-1"]');
+
+      expect(dateInput).toBeTruthy();
+    });
+
+    it('should render cancel button in popover', async () => {
+      render(<ClassScheduleCard {...defaultProps} onEditInstance={mockOnEditInstance} />);
+
+      const addButton = document.querySelector('[data-testid="add-exception-test-instance-1"]');
+      if (addButton) {
+        await userEvent.click(addButton);
+      }
+
+      const cancelButton = page.getByText('Cancel');
+
+      expect(cancelButton).toBeTruthy();
+    });
+
+    it('should render continue button in popover', async () => {
+      render(<ClassScheduleCard {...defaultProps} onEditInstance={mockOnEditInstance} />);
+
+      const addButton = document.querySelector('[data-testid="add-exception-test-instance-1"]');
+      if (addButton) {
+        await userEvent.click(addButton);
+      }
+
+      const continueButton = page.getByText('Continue');
+
+      expect(continueButton).toBeTruthy();
+    });
+
+    it('should close popover when cancel is clicked', async () => {
+      render(<ClassScheduleCard {...defaultProps} onEditInstance={mockOnEditInstance} />);
+
+      const addButton = document.querySelector('[data-testid="add-exception-test-instance-1"]');
+      if (addButton) {
+        await userEvent.click(addButton);
+      }
+
+      const cancelButton = page.getByRole('button', { name: 'Cancel' });
+      await userEvent.click(cancelButton);
+
+      // Wait a bit for animation
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      const popoverTitle = document.querySelector('[data-testid="date-input-test-instance-1"]');
+
+      expect(popoverTitle).toBeNull();
+    });
+
+    it('should call onEditInstance when continue is clicked with selected date', async () => {
+      render(<ClassScheduleCard {...defaultProps} onEditInstance={mockOnEditInstance} />);
+
+      const addButton = document.querySelector('[data-testid="add-exception-test-instance-1"]');
+      if (addButton) {
+        await userEvent.click(addButton);
+      }
+
+      const dateInput = document.querySelector('[data-testid="date-input-test-instance-1"]') as HTMLInputElement;
+      if (dateInput) {
+        dateInput.value = '2025-02-10';
+        dateInput.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+
+      const confirmButton = document.querySelector('[data-testid="confirm-date-test-instance-1"]');
+      if (confirmButton) {
+        await userEvent.click(confirmButton);
+      }
+
+      expect(mockOnEditInstance).toHaveBeenCalled();
+    });
+
+    it('should render add button for each schedule instance', () => {
+      const multipleInstances: ScheduleInstance[] = [
+        { ...mockInstance, id: 'instance-1', dayOfWeek: 'Monday' },
+        { ...mockInstance, id: 'instance-2', dayOfWeek: 'Wednesday' },
+        { ...mockInstance, id: 'instance-3', dayOfWeek: 'Friday' },
+      ];
+
+      render(<ClassScheduleCard {...defaultProps} scheduleInstances={multipleInstances} onEditInstance={mockOnEditInstance} />);
+
+      const btn1 = document.querySelector('[data-testid="add-exception-instance-1"]');
+      const btn2 = document.querySelector('[data-testid="add-exception-instance-2"]');
+      const btn3 = document.querySelector('[data-testid="add-exception-instance-3"]');
+
+      expect(btn1).toBeTruthy();
+      expect(btn2).toBeTruthy();
+      expect(btn3).toBeTruthy();
+    });
   });
 });

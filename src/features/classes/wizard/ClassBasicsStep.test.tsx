@@ -53,6 +53,7 @@ describe('ClassBasicsStep', () => {
     description: '',
     schedule: {
       instances: [],
+      exceptions: [],
       location: '',
     },
     calendarColor: '#000000',

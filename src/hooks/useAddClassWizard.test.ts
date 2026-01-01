@@ -27,6 +27,7 @@ describe('useAddClassWizard types and exports', () => {
           { ...mockInstance, dayOfWeek: 'Monday' },
           { ...mockInstance, id: 'test-2', dayOfWeek: 'Wednesday' },
         ],
+        exceptions: [],
         location: 'cta-irving',
       },
       calendarColor: '#000000',
@@ -45,6 +46,7 @@ describe('useAddClassWizard types and exports', () => {
         { ...mockInstance, id: 'test-2', dayOfWeek: 'Wednesday' },
         { ...mockInstance, id: 'test-3', dayOfWeek: 'Friday' },
       ],
+      exceptions: [],
       location: 'downtown-hq',
     };
 
@@ -121,6 +123,7 @@ describe('useAddClassWizard types and exports', () => {
       description: '',
       schedule: {
         instances: [],
+        exceptions: [],
         location: '',
       },
       calendarColor: '#000000',
@@ -173,6 +176,7 @@ describe('useAddClassWizard types and exports', () => {
       description: 'Test',
       schedule: {
         instances: [],
+        exceptions: [],
         location: '',
       },
       calendarColor: '#000000',
@@ -195,6 +199,7 @@ describe('useAddClassWizard types and exports', () => {
       description: 'Test',
       schedule: {
         instances: [],
+        exceptions: [],
         location: '',
       },
       calendarColor: '#ff0000',
@@ -211,6 +216,7 @@ describe('useAddClassWizard types and exports', () => {
         { ...mockInstance, id: 'mon-am', dayOfWeek: 'Monday', timeAmPm: 'AM', staffMember: 'coach-alex' },
         { ...mockInstance, id: 'mon-pm', dayOfWeek: 'Monday', timeAmPm: 'PM', staffMember: 'professor-jessica' },
       ],
+      exceptions: [],
       location: 'downtown-hq',
     };
 

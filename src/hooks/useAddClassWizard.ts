@@ -15,8 +15,42 @@ export type ScheduleInstance = {
   assistantStaff: string;
 };
 
+/**
+ * Represents an exception to a regular schedule instance.
+ * Can be used to:
+ * 1. Delete a specific occurrence (type: 'deleted')
+ * 2. Modify a specific occurrence (type: 'modified')
+ * 3. Modify all future occurrences from a date (type: 'modified-forward')
+ */
+export type ScheduleException = {
+  id: string;
+  /** The ID of the parent schedule instance this exception applies to */
+  scheduleInstanceId: string;
+  /** The specific date this exception applies to (ISO date string YYYY-MM-DD) */
+  date: string;
+  /** Type of exception */
+  type: 'deleted' | 'modified' | 'modified-forward';
+  /** For 'modified' and 'modified-forward' types, the override values */
+  overrides?: {
+    timeHour?: number;
+    timeMinute?: number;
+    timeAmPm?: 'AM' | 'PM';
+    durationHours?: number;
+    durationMinutes?: number;
+    staffMember?: string;
+    assistantStaff?: string;
+  };
+  /** When type is 'modified-forward', this indicates changes apply from this date onwards */
+  effectiveFromDate?: string;
+  /** Human-readable note about the exception */
+  note?: string;
+  /** Timestamp when the exception was created */
+  createdAt: string;
+};
+
 export type ClassSchedule = {
   instances: ScheduleInstance[];
+  exceptions: ScheduleException[];
   location: string;
 };
 
@@ -41,6 +75,7 @@ type ClassWizardStep = 'class-basics' | 'schedule' | 'tags' | 'success';
 
 const initialSchedule: ClassSchedule = {
   instances: [],
+  exceptions: [],
   location: '',
 };
 

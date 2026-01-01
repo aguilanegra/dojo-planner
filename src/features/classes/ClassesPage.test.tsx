@@ -6,10 +6,16 @@ import { ClassesPage } from './ClassesPage';
 
 // Mock next/navigation for AddClassModal and edit navigation
 const mockPush = vi.fn();
+const mockReplace = vi.fn();
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
     refresh: vi.fn(),
     push: mockPush,
+    replace: mockReplace,
+  }),
+  useSearchParams: () => ({
+    get: () => null,
+    toString: () => '',
   }),
 }));
 
@@ -179,10 +185,12 @@ describe('ClassesPage', () => {
       );
 
       const gridButton = page.getByTitle('Grid view');
-      const listButton = page.getByTitle('List view');
+      const weeklyButton = page.getByTitle('Weekly view');
+      const monthlyButton = page.getByTitle('Monthly view');
 
       expect(gridButton).toBeInTheDocument();
-      expect(listButton).toBeInTheDocument();
+      expect(weeklyButton).toBeInTheDocument();
+      expect(monthlyButton).toBeInTheDocument();
     });
 
     it('should render weekly view toggle button', () => {
@@ -211,22 +219,6 @@ describe('ClassesPage', () => {
   });
 
   describe('View Switching', () => {
-    it('should switch to list view when clicking list button', async () => {
-      render(
-        <I18nWrapper>
-          <ClassesPage />
-        </I18nWrapper>,
-      );
-
-      const listButton = page.getByTitle('List view');
-      await userEvent.click(listButton);
-
-      // Class cards should still render in list view
-      const classTitle = page.getByRole('heading', { name: 'BJJ Fundamentals I' }).first();
-
-      expect(classTitle).toBeInTheDocument();
-    });
-
     it('should switch to weekly view when clicking weekly button', async () => {
       render(
         <I18nWrapper>
@@ -255,15 +247,15 @@ describe('ClassesPage', () => {
       expect(monthlyButton).toBeInTheDocument();
     });
 
-    it('should switch back to grid view after switching to list', async () => {
+    it('should switch back to grid view after switching to weekly', async () => {
       render(
         <I18nWrapper>
           <ClassesPage />
         </I18nWrapper>,
       );
 
-      const listButton = page.getByTitle('List view');
-      await userEvent.click(listButton);
+      const weeklyButton = page.getByTitle('Weekly view');
+      await userEvent.click(weeklyButton);
 
       const gridButton = page.getByTitle('Grid view');
       await userEvent.click(gridButton);
@@ -423,11 +415,13 @@ describe('ClassesPage', () => {
         </I18nWrapper>,
       );
 
-      const listButton = page.getByTitle('List view');
       const gridButton = page.getByTitle('Grid view');
+      const weeklyButton = page.getByTitle('Weekly view');
+      const monthlyButton = page.getByTitle('Monthly view');
 
-      expect(listButton).toBeVisible();
       expect(gridButton).toBeVisible();
+      expect(weeklyButton).toBeVisible();
+      expect(monthlyButton).toBeVisible();
     });
   });
 
@@ -561,19 +555,23 @@ describe('ClassesPage', () => {
       expect(editButtons.length).toBeGreaterThan(0);
     });
 
-    it('should have edit buttons visible in list view', async () => {
+    it('should have edit buttons visible in grid view after switching views', async () => {
       render(
         <I18nWrapper>
           <ClassesPage />
         </I18nWrapper>,
       );
 
-      const listButton = page.getByTitle('List view');
-      await userEvent.click(listButton);
+      // Switch to weekly then back to grid
+      const weeklyButton = page.getByTitle('Weekly view');
+      await userEvent.click(weeklyButton);
+
+      const gridButton = page.getByTitle('Grid view');
+      await userEvent.click(gridButton);
 
       const editButtons = page.getByRole('button', { name: /Edit class/i }).elements();
 
-      // All edit buttons should be visible in list view
+      // All edit buttons should be visible in grid view
       expect(editButtons.length).toBe(9);
     });
   });
