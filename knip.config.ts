@@ -7,6 +7,7 @@ const config: KnipConfig = {
     'src/components/ui/**',
     'src/features/landing/LogoCloud.tsx',
     'src/libs/I18n.ts',
+    'src/templates/**', // Template files export types for consumption by other components
     'src/types/Auth.ts',
     'src/types/I18n.ts',
     'src/types/Table.ts',
