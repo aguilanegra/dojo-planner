@@ -3,7 +3,6 @@
 import type { Coupon } from './types';
 import { Edit, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
@@ -16,11 +15,11 @@ type CouponCardProps = {
 function getStatusVariant(status: string): 'default' | 'secondary' | 'destructive' | 'outline' {
   switch (status) {
     case 'Active':
-      return 'default';
+      return 'outline';
     case 'Expired':
-      return 'secondary';
-    case 'Inactive':
       return 'destructive';
+    case 'Inactive':
+      return 'secondary';
     default:
       return 'outline';
   }
@@ -47,21 +46,53 @@ function getUsagePercentage(usage: string): number {
   return Math.min((used / limitNum) * 100, 100);
 }
 
-function formatExpiryDate(expiry: string): string {
-  if (!expiry) {
+function formatEndDateTime(endDateTime: string): string {
+  if (!endDateTime) {
     return 'No Expiry';
   }
 
   try {
-    const date = new Date(expiry);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
+    // Return in format YYYY-MM-DD hh:mm:ss
+    const date = new Date(endDateTime);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   } catch {
-    return expiry;
+    return endDateTime;
   }
+}
+
+function canDeleteCoupon(usage: string): boolean {
+  const parts = usage.split('/');
+  if (parts.length !== 2 || !parts[0] || !parts[1]) {
+    return true;
+  }
+
+  const used = Number.parseFloat(parts[0]);
+  const limit = parts[1];
+
+  // Allow delete if usage is 0
+  if (used === 0) {
+    return true;
+  }
+
+  // Allow delete if unlimited usage (infinity symbol)
+  if (limit === '\u221E') {
+    return false;
+  }
+
+  const limitNum = Number.parseFloat(limit);
+  if (Number.isNaN(used) || Number.isNaN(limitNum) || limitNum === 0) {
+    return true;
+  }
+
+  // Allow delete if usage is at 100%
+  const percentage = (used / limitNum) * 100;
+  return percentage >= 100;
 }
 
 export function CouponCard({
@@ -83,9 +114,16 @@ export function CouponCard({
               <p className="text-xs text-muted-foreground">{coupon.description}</p>
             </div>
           </div>
-          <Badge variant={getStatusVariant(coupon.status)}>
+          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+            getStatusVariant(coupon.status) === 'outline'
+              ? 'border border-green-500 bg-green-50 text-green-700 dark:bg-green-950/30 dark:text-green-400'
+              : getStatusVariant(coupon.status) === 'destructive'
+                ? 'bg-destructive/10 text-destructive'
+                : 'bg-secondary text-secondary-foreground'
+          }`}
+          >
             {coupon.status}
-          </Badge>
+          </span>
         </div>
 
         {/* Details Grid */}
@@ -106,8 +144,8 @@ export function CouponCard({
           </div>
 
           <div>
-            <span className="text-xs font-semibold text-muted-foreground">{t('table_expiry')}</span>
-            <div className="mt-1 text-sm font-medium text-foreground">{formatExpiryDate(coupon.expiry)}</div>
+            <span className="text-xs font-semibold text-muted-foreground">{t('table_expires')}</span>
+            <div className="mt-1 text-sm font-medium text-foreground">{formatEndDateTime(coupon.endDateTime)}</div>
           </div>
         </div>
 
@@ -136,15 +174,17 @@ export function CouponCard({
           >
             <Edit className="h-4 w-4" />
           </Button>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => onDelete(coupon.id)}
-            aria-label={`Delete ${coupon.code}`}
-            title={`Delete ${coupon.code}`}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          {canDeleteCoupon(coupon.usage) && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => onDelete(coupon.id)}
+              aria-label={`Delete ${coupon.code}`}
+              title={`Delete ${coupon.code}`}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </div>
     </Card>

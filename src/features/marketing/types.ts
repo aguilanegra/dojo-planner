@@ -10,7 +10,8 @@ export type Coupon = {
   amount: string;
   applyTo: CouponApplyTo;
   usage: string;
-  expiry: string;
+  startDateTime: string;
+  endDateTime: string;
   status: CouponStatus;
 };
 
@@ -21,6 +22,10 @@ export type CouponFormData = {
   amount: string;
   applyTo: CouponApplyTo;
   usageLimit: string;
-  expiry: string;
+  startDate: string;
+  startTime: string;
+  endDate: string;
+  endTime: string;
+  neverExpires: boolean;
   status: CouponStatus;
 };

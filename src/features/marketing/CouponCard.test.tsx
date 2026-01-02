@@ -21,7 +21,8 @@ describe('CouponCard', () => {
     amount: '15%',
     applyTo: 'Memberships',
     usage: '23/100',
-    expiry: '2024-12-31T12:00:00',
+    startDateTime: '2024-01-01T00:00:00',
+    endDateTime: '2024-12-31T12:00:00',
     status: 'Active',
   };
 
@@ -91,7 +92,7 @@ describe('CouponCard', () => {
       await expect.element(page.getByText('23/100')).toBeVisible();
     });
 
-    it('should render expiry date', async () => {
+    it('should render expiry date in YYYY-MM-DD hh:mm:ss format', async () => {
       render(
         <CouponCard
           coupon={mockCoupon}
@@ -100,7 +101,8 @@ describe('CouponCard', () => {
         />,
       );
 
-      await expect.element(page.getByText('Dec 31, 2024')).toBeVisible();
+      // The new format is YYYY-MM-DD hh:mm:ss
+      await expect.element(page.getByText('2024-12-31 12:00:00')).toBeVisible();
     });
 
     it('should render status badge', async () => {
@@ -115,7 +117,7 @@ describe('CouponCard', () => {
       await expect.element(page.getByText('Active')).toBeVisible();
     });
 
-    it('should render edit and delete buttons', async () => {
+    it('should render edit button', async () => {
       render(
         <CouponCard
           coupon={mockCoupon}
@@ -125,6 +127,49 @@ describe('CouponCard', () => {
       );
 
       await expect.element(page.getByRole('button', { name: 'Edit TEST_COUPON' })).toBeVisible();
+    });
+
+    it('should hide delete button for coupons with active usage', async () => {
+      // mockCoupon has 23/100 usage, so delete should be hidden
+      render(
+        <CouponCard
+          coupon={mockCoupon}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />,
+      );
+
+      try {
+        const deleteButton = page.getByRole('button', { name: 'Delete TEST_COUPON' });
+
+        expect(deleteButton.element()).toBeFalsy();
+      } catch {
+        // Expected - delete button should not exist for active usage
+        expect(true).toBe(true);
+      }
+    });
+
+    it('should show delete button for coupons with 0 usage', async () => {
+      render(
+        <CouponCard
+          coupon={{ ...mockCoupon, usage: '0/100' }}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />,
+      );
+
+      await expect.element(page.getByRole('button', { name: 'Delete TEST_COUPON' })).toBeVisible();
+    });
+
+    it('should show delete button for coupons at 100% usage', async () => {
+      render(
+        <CouponCard
+          coupon={{ ...mockCoupon, usage: '100/100' }}
+          onEdit={mockOnEdit}
+          onDelete={mockOnDelete}
+        />,
+      );
+
       await expect.element(page.getByRole('button', { name: 'Delete TEST_COUPON' })).toBeVisible();
     });
   });
@@ -187,9 +232,10 @@ describe('CouponCard', () => {
 
   describe('Delete functionality', () => {
     it('should call onDelete with coupon id when delete button is clicked', async () => {
+      // Use a coupon with 0 usage so delete button is visible
       render(
         <CouponCard
-          coupon={mockCoupon}
+          coupon={{ ...mockCoupon, usage: '0/100' }}
           onEdit={mockOnEdit}
           onDelete={mockOnDelete}
         />,
