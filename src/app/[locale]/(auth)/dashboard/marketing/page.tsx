@@ -18,7 +18,8 @@ const mockCoupons: Coupon[] = [
     amount: '15%',
     applyTo: 'Memberships',
     usage: '23/100',
-    expiry: '2024-12-31',
+    startDateTime: '2024-01-01T00:00:00',
+    endDateTime: '2024-12-31T23:59:59',
     status: 'Active',
   },
   {
@@ -29,7 +30,8 @@ const mockCoupons: Coupon[] = [
     amount: '$50',
     applyTo: 'Memberships',
     usage: '8/50',
-    expiry: '2025-03-15',
+    startDateTime: '2024-06-01T08:00:00',
+    endDateTime: '2025-03-15T18:00:00',
     status: 'Active',
   },
   {
@@ -40,7 +42,8 @@ const mockCoupons: Coupon[] = [
     amount: '7 Days',
     applyTo: 'Memberships',
     usage: '45/\u221E',
-    expiry: '',
+    startDateTime: '2024-01-01T00:00:00',
+    endDateTime: '',
     status: 'Active',
   },
   {
@@ -51,7 +54,8 @@ const mockCoupons: Coupon[] = [
     amount: '25%',
     applyTo: 'Products',
     usage: '67/200',
-    expiry: '2024-11-30',
+    startDateTime: '2024-11-25T00:00:00',
+    endDateTime: '2024-11-30T23:59:59',
     status: 'Expired',
   },
   {
@@ -62,7 +66,8 @@ const mockCoupons: Coupon[] = [
     amount: '20%',
     applyTo: 'Both',
     usage: '12/100',
-    expiry: '2024-08-31',
+    startDateTime: '2024-06-01T00:00:00',
+    endDateTime: '2024-08-31T23:59:59',
     status: 'Inactive',
   },
   {
@@ -73,7 +78,8 @@ const mockCoupons: Coupon[] = [
     amount: '$25',
     applyTo: 'Memberships',
     usage: '35/75',
-    expiry: '2024-12-25',
+    startDateTime: '2024-12-01T00:00:00',
+    endDateTime: '2024-12-25T23:59:59',
     status: 'Active',
   },
   {
@@ -84,7 +90,8 @@ const mockCoupons: Coupon[] = [
     amount: '10%',
     applyTo: 'Memberships',
     usage: '102/\u221E',
-    expiry: '',
+    startDateTime: '2024-01-01T00:00:00',
+    endDateTime: '',
     status: 'Active',
   },
   {
@@ -95,7 +102,8 @@ const mockCoupons: Coupon[] = [
     amount: '$20',
     applyTo: 'Products',
     usage: '50/50',
-    expiry: '2025-01-01',
+    startDateTime: '2024-12-31T12:00:00',
+    endDateTime: '2025-01-01T12:00:00',
     status: 'Expired',
   },
   {
@@ -106,7 +114,8 @@ const mockCoupons: Coupon[] = [
     amount: '25%',
     applyTo: 'Both',
     usage: '0/150',
-    expiry: '2025-01-31',
+    startDateTime: '2025-01-01T00:00:00',
+    endDateTime: '2025-01-31T23:59:59',
     status: 'Active',
   },
   {
@@ -117,7 +126,8 @@ const mockCoupons: Coupon[] = [
     amount: '15%',
     applyTo: 'Memberships',
     usage: '88/100',
-    expiry: '2025-02-28',
+    startDateTime: '2025-01-01T00:00:00',
+    endDateTime: '2025-02-28T23:59:59',
     status: 'Active',
   },
   {
@@ -128,7 +138,8 @@ const mockCoupons: Coupon[] = [
     amount: '$10',
     applyTo: 'Products',
     usage: '15/40',
-    expiry: '2025-04-01',
+    startDateTime: '2025-03-01T00:00:00',
+    endDateTime: '2025-04-01T23:59:59',
     status: 'Active',
   },
   {
@@ -139,7 +150,8 @@ const mockCoupons: Coupon[] = [
     amount: '$50',
     applyTo: 'Memberships',
     usage: '5/20',
-    expiry: '2025-05-15',
+    startDateTime: '2025-01-01T00:00:00',
+    endDateTime: '2025-05-15T23:59:59',
     status: 'Inactive',
   },
 ];
@@ -147,11 +159,11 @@ const mockCoupons: Coupon[] = [
 function getStatusVariant(status: string): 'default' | 'secondary' | 'destructive' | 'outline' {
   switch (status) {
     case 'Active':
-      return 'default';
+      return 'outline';
     case 'Expired':
-      return 'secondary';
-    case 'Inactive':
       return 'destructive';
+    case 'Inactive':
+      return 'secondary';
     default:
       return 'outline';
   }
@@ -178,24 +190,56 @@ function getUsagePercentage(usage: string): number {
   return Math.min((used / limitNum) * 100, 100);
 }
 
-function formatExpiryDate(expiry: string): string {
-  if (!expiry) {
+function formatEndDateTime(endDateTime: string): string {
+  if (!endDateTime) {
     return 'No Expiry';
   }
 
   try {
-    const date = new Date(expiry);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
+    // Return in format YYYY-MM-DD hh:mm:ss
+    const date = new Date(endDateTime);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   } catch {
-    return expiry;
+    return endDateTime;
   }
 }
 
-type SortField = 'code' | 'type' | 'amount' | 'applyTo' | 'usage' | 'expiry' | 'status';
+function canDeleteCoupon(usage: string): boolean {
+  const parts = usage.split('/');
+  if (parts.length !== 2 || !parts[0] || !parts[1]) {
+    return true;
+  }
+
+  const used = Number.parseFloat(parts[0]);
+  const limit = parts[1];
+
+  // Allow delete if usage is 0
+  if (used === 0) {
+    return true;
+  }
+
+  // Allow delete if unlimited usage (infinity symbol)
+  if (limit === '\u221E') {
+    return false;
+  }
+
+  const limitNum = Number.parseFloat(limit);
+  if (Number.isNaN(used) || Number.isNaN(limitNum) || limitNum === 0) {
+    return true;
+  }
+
+  // Allow delete if usage is at 100%
+  const percentage = (used / limitNum) * 100;
+  return percentage >= 100;
+}
+
+type SortField = 'code' | 'type' | 'amount' | 'applyTo' | 'usage' | 'endDateTime' | 'status';
 type SortDirection = 'asc' | 'desc';
 
 export default function MarketingPage() {
@@ -287,9 +331,9 @@ export default function MarketingPage() {
         aValue = a.usage.toLowerCase();
         bValue = b.usage.toLowerCase();
         break;
-      case 'expiry':
-        aValue = a.expiry.toLowerCase();
-        bValue = b.expiry.toLowerCase();
+      case 'endDateTime':
+        aValue = a.endDateTime.toLowerCase();
+        bValue = b.endDateTime.toLowerCase();
         break;
       case 'status':
         aValue = a.status.toLowerCase();
@@ -376,9 +420,6 @@ export default function MarketingPage() {
 
       {/* Header */}
       <h1 className="text-3xl font-bold text-foreground">{t('title')}</h1>
-
-      {/* Coupons Heading */}
-      <h2 className="text-lg font-semibold text-foreground">{t('coupons_heading')}</h2>
 
       {/* Search, Filter Bar, and Add Button */}
       <div className="space-y-4">
@@ -475,11 +516,11 @@ export default function MarketingPage() {
                   <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
                     <button
                       type="button"
-                      onClick={() => handleSort('expiry')}
+                      onClick={() => handleSort('endDateTime')}
                       className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
                     >
-                      {t('table_expiry')}
-                      {sortField === 'expiry' && (
+                      {t('table_expires')}
+                      {sortField === 'endDateTime' && (
                         sortDirection === 'asc'
                           ? <ArrowDownAZ className="h-4 w-4" />
                           : <ArrowUpZA className="h-4 w-4" />
@@ -526,14 +567,14 @@ export default function MarketingPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-foreground">{formatExpiryDate(coupon.expiry)}</td>
+                    <td className="px-6 py-4 text-sm text-foreground">{formatEndDateTime(coupon.endDateTime)}</td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                        getStatusVariant(coupon.status) === 'default'
-                          ? 'bg-primary/10 text-primary'
-                          : getStatusVariant(coupon.status) === 'secondary'
-                            ? 'bg-secondary text-secondary-foreground'
-                            : 'bg-destructive/10 text-destructive'
+                        getStatusVariant(coupon.status) === 'outline'
+                          ? 'border border-green-500 bg-green-50 text-green-700 dark:bg-green-950/30 dark:text-green-400'
+                          : getStatusVariant(coupon.status) === 'destructive'
+                            ? 'bg-destructive/10 text-destructive'
+                            : 'bg-secondary text-secondary-foreground'
                       }`}
                       >
                         {coupon.status}
@@ -550,15 +591,17 @@ export default function MarketingPage() {
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDeleteCoupon(coupon.id)}
-                          aria-label={`Delete ${coupon.code}`}
-                          title={`Delete ${coupon.code}`}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        {canDeleteCoupon(coupon.usage) && (
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDeleteCoupon(coupon.id)}
+                            aria-label={`Delete ${coupon.code}`}
+                            title={`Delete ${coupon.code}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </td>
                   </tr>

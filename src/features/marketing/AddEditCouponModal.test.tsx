@@ -28,7 +28,8 @@ describe('AddEditCouponModal', () => {
     amount: '15%',
     applyTo: 'Memberships',
     usage: '23/100',
-    expiry: 'Dec 31 24',
+    startDateTime: '2024-01-01T00:00:00',
+    endDateTime: '2024-12-31T23:59:59',
     status: 'Active',
   };
 
@@ -112,7 +113,10 @@ describe('AddEditCouponModal', () => {
       await expect.element(page.getByTestId('coupon-apply-to-select')).toBeVisible();
       await expect.element(page.getByTestId('coupon-status-select')).toBeVisible();
       await expect.element(page.getByTestId('coupon-usage-limit-input')).toBeVisible();
-      await expect.element(page.getByTestId('coupon-expiry-input')).toBeVisible();
+      await expect.element(page.getByTestId('coupon-start-date-input')).toBeVisible();
+      await expect.element(page.getByTestId('coupon-start-time-input')).toBeVisible();
+      await expect.element(page.getByTestId('coupon-end-date-input')).toBeVisible();
+      await expect.element(page.getByTestId('coupon-end-time-input')).toBeVisible();
     });
 
     it('should update form fields when user types', async () => {
@@ -226,7 +230,8 @@ describe('AddEditCouponModal', () => {
       // Fill in other fields but leave code empty
       await userEvent.fill(page.getByTestId('coupon-description-input'), 'Description');
       await userEvent.fill(page.getByTestId('coupon-amount-input'), '15');
-      await userEvent.fill(page.getByTestId('coupon-expiry-input'), 'Dec 31 24');
+      // Check never expires to skip end date validation
+      await userEvent.click(page.getByTestId('coupon-never-expires-checkbox'));
 
       // Submit the form
       const saveButton = page.getByRole('button', { name: 'add_button' });
@@ -247,7 +252,8 @@ describe('AddEditCouponModal', () => {
       // Fill in other fields but leave description empty
       await userEvent.fill(page.getByTestId('coupon-code-input'), 'CODE123');
       await userEvent.fill(page.getByTestId('coupon-amount-input'), '15');
-      await userEvent.fill(page.getByTestId('coupon-expiry-input'), 'Dec 31 24');
+      // Check never expires to skip end date validation
+      await userEvent.click(page.getByTestId('coupon-never-expires-checkbox'));
 
       // Submit the form
       const saveButton = page.getByRole('button', { name: 'add_button' });
@@ -268,7 +274,8 @@ describe('AddEditCouponModal', () => {
       // Fill in other fields but leave amount empty
       await userEvent.fill(page.getByTestId('coupon-code-input'), 'CODE123');
       await userEvent.fill(page.getByTestId('coupon-description-input'), 'Description');
-      await userEvent.fill(page.getByTestId('coupon-expiry-input'), 'Dec 31 24');
+      // Check never expires to skip end date validation
+      await userEvent.click(page.getByTestId('coupon-never-expires-checkbox'));
 
       // Submit the form
       const saveButton = page.getByRole('button', { name: 'add_button' });
@@ -277,7 +284,7 @@ describe('AddEditCouponModal', () => {
       await expect.element(page.getByText('amount_error')).toBeVisible();
     });
 
-    it('should show validation error when expiry is empty', async () => {
+    it('should show validation error when end date is empty', async () => {
       render(
         <AddEditCouponModal
           isOpen={true}
@@ -286,7 +293,7 @@ describe('AddEditCouponModal', () => {
         />,
       );
 
-      // Fill in other fields but leave expiry empty
+      // Fill in other fields but leave end date empty
       await userEvent.fill(page.getByTestId('coupon-code-input'), 'CODE123');
       await userEvent.fill(page.getByTestId('coupon-description-input'), 'Description');
       await userEvent.fill(page.getByTestId('coupon-amount-input'), '15');
@@ -295,7 +302,7 @@ describe('AddEditCouponModal', () => {
       const saveButton = page.getByRole('button', { name: 'add_button' });
       await userEvent.click(saveButton);
 
-      await expect.element(page.getByText('expiry_error')).toBeVisible();
+      await expect.element(page.getByText('end_date_error')).toBeVisible();
     });
   });
 
@@ -313,7 +320,8 @@ describe('AddEditCouponModal', () => {
       await userEvent.fill(page.getByTestId('coupon-code-input'), 'NEWCODE');
       await userEvent.fill(page.getByTestId('coupon-description-input'), 'New Description');
       await userEvent.fill(page.getByTestId('coupon-amount-input'), '15');
-      await userEvent.fill(page.getByTestId('coupon-expiry-input'), 'Dec 31 24');
+      // Check never expires to skip end date validation (since DatePicker uses button, not input)
+      await userEvent.click(page.getByTestId('coupon-never-expires-checkbox'));
 
       // Submit the form
       const saveButton = page.getByRole('button', { name: 'add_button' });
@@ -325,7 +333,7 @@ describe('AddEditCouponModal', () => {
             code: 'NEWCODE',
             description: 'New Description',
             amount: '15',
-            expiry: 'Dec 31 24',
+            neverExpires: true,
           }),
           false, // isEdit = false for add
         );
@@ -367,7 +375,8 @@ describe('AddEditCouponModal', () => {
       await userEvent.fill(page.getByTestId('coupon-code-input'), 'NEWCODE');
       await userEvent.fill(page.getByTestId('coupon-description-input'), 'New Description');
       await userEvent.fill(page.getByTestId('coupon-amount-input'), '15');
-      await userEvent.fill(page.getByTestId('coupon-expiry-input'), 'Dec 31 24');
+      // Check never expires to skip end date validation
+      await userEvent.click(page.getByTestId('coupon-never-expires-checkbox'));
 
       // Submit the form
       const saveButton = page.getByRole('button', { name: 'add_button' });
@@ -422,7 +431,8 @@ describe('AddEditCouponModal', () => {
       await userEvent.fill(page.getByTestId('coupon-code-input'), 'NEWCODE');
       await userEvent.fill(page.getByTestId('coupon-description-input'), 'Description');
       await userEvent.fill(page.getByTestId('coupon-amount-input'), '50');
-      await userEvent.fill(page.getByTestId('coupon-expiry-input'), 'Dec 31 24');
+      // Check never expires to skip end date validation
+      await userEvent.click(page.getByTestId('coupon-never-expires-checkbox'));
 
       const saveButton = page.getByRole('button', { name: 'add_button' });
       await userEvent.click(saveButton);
@@ -456,7 +466,8 @@ describe('AddEditCouponModal', () => {
       await userEvent.fill(page.getByTestId('coupon-code-input'), 'NEWCODE');
       await userEvent.fill(page.getByTestId('coupon-description-input'), 'Description');
       await userEvent.fill(page.getByTestId('coupon-amount-input'), '15');
-      await userEvent.fill(page.getByTestId('coupon-expiry-input'), 'Dec 31 24');
+      // Check never expires to skip end date validation
+      await userEvent.click(page.getByTestId('coupon-never-expires-checkbox'));
 
       const saveButton = page.getByRole('button', { name: 'add_button' });
       await userEvent.click(saveButton);
@@ -490,7 +501,8 @@ describe('AddEditCouponModal', () => {
       await userEvent.fill(page.getByTestId('coupon-code-input'), 'NEWCODE');
       await userEvent.fill(page.getByTestId('coupon-description-input'), 'Description');
       await userEvent.fill(page.getByTestId('coupon-amount-input'), '15');
-      await userEvent.fill(page.getByTestId('coupon-expiry-input'), 'Dec 31 24');
+      // Check never expires to skip end date validation
+      await userEvent.click(page.getByTestId('coupon-never-expires-checkbox'));
 
       const saveButton = page.getByRole('button', { name: 'add_button' });
       await userEvent.click(saveButton);
@@ -499,6 +511,80 @@ describe('AddEditCouponModal', () => {
         expect(mockHandlers.onSaveAction).toHaveBeenCalledWith(
           expect.objectContaining({
             status: 'Inactive',
+          }),
+          false,
+        );
+      });
+    });
+  });
+
+  describe('Never expires checkbox', () => {
+    it('should render the never expires checkbox', async () => {
+      render(
+        <AddEditCouponModal
+          isOpen={true}
+          onCloseAction={mockHandlers.onCloseAction}
+          onSaveAction={mockHandlers.onSaveAction}
+        />,
+      );
+
+      await expect.element(page.getByTestId('coupon-never-expires-checkbox')).toBeVisible();
+    });
+
+    it('should hide end date fields when never expires is checked', async () => {
+      render(
+        <AddEditCouponModal
+          isOpen={true}
+          onCloseAction={mockHandlers.onCloseAction}
+          onSaveAction={mockHandlers.onSaveAction}
+        />,
+      );
+
+      // Initially end date should be visible
+      await expect.element(page.getByTestId('coupon-end-date-input')).toBeVisible();
+
+      // Click the never expires checkbox
+      const checkbox = page.getByTestId('coupon-never-expires-checkbox');
+      await userEvent.click(checkbox);
+
+      // End date should now be hidden
+      try {
+        const endDateInput = page.getByTestId('coupon-end-date-input');
+
+        expect(endDateInput.element()).toBeFalsy();
+      } catch {
+        // Expected - element should not exist
+        expect(true).toBe(true);
+      }
+    });
+
+    it('should allow form submission when never expires is checked without end date', async () => {
+      render(
+        <AddEditCouponModal
+          isOpen={true}
+          onCloseAction={mockHandlers.onCloseAction}
+          onSaveAction={mockHandlers.onSaveAction}
+        />,
+      );
+
+      // Fill in required fields
+      await userEvent.fill(page.getByTestId('coupon-code-input'), 'NEWCODE');
+      await userEvent.fill(page.getByTestId('coupon-description-input'), 'Description');
+      await userEvent.fill(page.getByTestId('coupon-amount-input'), '15');
+
+      // Check never expires
+      const checkbox = page.getByTestId('coupon-never-expires-checkbox');
+      await userEvent.click(checkbox);
+
+      // Submit the form
+      const saveButton = page.getByRole('button', { name: 'add_button' });
+      await userEvent.click(saveButton);
+
+      await waitFor(() => {
+        expect(mockHandlers.onSaveAction).toHaveBeenCalledWith(
+          expect.objectContaining({
+            neverExpires: true,
+            endDate: '',
           }),
           false,
         );

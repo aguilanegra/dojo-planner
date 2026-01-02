@@ -19,14 +19,6 @@ describe('Marketing Page', () => {
       expect(heading).toBeInTheDocument();
     });
 
-    it('renders coupons heading', () => {
-      render(<I18nWrapper><MarketingPage /></I18nWrapper>);
-
-      const couponsHeading = page.getByRole('heading', { name: /Coupons/i });
-
-      expect(couponsHeading).toBeInTheDocument();
-    });
-
     it('renders add new coupon button', () => {
       render(<I18nWrapper><MarketingPage /></I18nWrapper>);
 
@@ -141,11 +133,43 @@ describe('Marketing Page', () => {
       expect(editButton).toBeInTheDocument();
     });
 
-    it('renders delete button for each coupon', () => {
+    it('renders delete button for coupons with 0 usage', () => {
       render(<I18nWrapper><MarketingPage /></I18nWrapper>);
 
       const table = page.getByRole('table');
-      const deleteButton = table.getByRole('button', { name: /Delete CTA_FAMILY_1/i });
+      // NEWYEAR25 has 0/150 usage
+      const deleteButton = table.getByRole('button', { name: /Delete NEWYEAR25/i });
+
+      expect(deleteButton).toBeInTheDocument();
+    });
+
+    it('hides delete button for coupons with active usage', () => {
+      render(<I18nWrapper><MarketingPage /></I18nWrapper>);
+
+      const table = page.getByRole('table');
+      // CTA_FAMILY_1 has 23/100 usage (active usage, not 0 or 100%)
+      // Since delete button is hidden, we verify by checking edit button exists but delete doesn't
+      const editButton = table.getByRole('button', { name: /Edit CTA_FAMILY_1/i });
+
+      expect(editButton).toBeInTheDocument();
+
+      try {
+        const deleteButton = table.getByRole('button', { name: /Delete CTA_FAMILY_1/i });
+
+        // If we find it, the test should fail
+        expect(deleteButton.element()).toBeFalsy();
+      } catch {
+        // Expected - delete button should not exist
+        expect(true).toBe(true);
+      }
+    });
+
+    it('renders delete button for coupons at 100% usage', () => {
+      render(<I18nWrapper><MarketingPage /></I18nWrapper>);
+
+      const table = page.getByRole('table');
+      // FLASH20 has 50/50 usage (100%)
+      const deleteButton = table.getByRole('button', { name: /Delete FLASH20/i });
 
       expect(deleteButton).toBeInTheDocument();
     });

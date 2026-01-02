@@ -4,6 +4,8 @@ import type { Coupon, CouponApplyTo, CouponFormData, CouponStatus, CouponType } 
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { DateTimePicker } from '@/components/ui/date-picker';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input/input';
 import { Label } from '@/components/ui/label/label';
@@ -22,10 +24,26 @@ type AddEditCouponModalProps = {
   onSaveAction: (couponData: CouponFormData, isEdit: boolean) => void;
 };
 
+function parseDateTime(dateTimeStr: string): { date: string; time: string } {
+  if (!dateTimeStr) {
+    return { date: '', time: '' };
+  }
+  // Expecting format YYYY-MM-DDThh:mm:ss
+  const parts = dateTimeStr.split('T');
+  return {
+    date: parts[0] || '',
+    time: parts[1] || '00:00:00',
+  };
+}
+
 function getInitialFormData(coupon?: Coupon | null): CouponFormData {
   if (coupon) {
     const usageParts = coupon.usage.split('/');
     const usageLimit = usageParts[1] === '\u221E' ? '' : usageParts[1] || '';
+    const startParsed = parseDateTime(coupon.startDateTime);
+    const endParsed = parseDateTime(coupon.endDateTime);
+    // If endDateTime is empty, the coupon never expires
+    const neverExpires = !coupon.endDateTime;
 
     return {
       code: coupon.code,
@@ -34,7 +52,11 @@ function getInitialFormData(coupon?: Coupon | null): CouponFormData {
       amount: coupon.amount.replace(/[$%]/g, '').replace(' Days', ''),
       applyTo: coupon.applyTo,
       usageLimit,
-      expiry: coupon.expiry,
+      startDate: startParsed.date,
+      startTime: startParsed.time,
+      endDate: endParsed.date,
+      endTime: endParsed.time,
+      neverExpires,
       status: coupon.status,
     };
   }
@@ -46,7 +68,11 @@ function getInitialFormData(coupon?: Coupon | null): CouponFormData {
     amount: '',
     applyTo: 'Memberships',
     usageLimit: '',
-    expiry: '',
+    startDate: '',
+    startTime: '00:00:00',
+    endDate: '',
+    endTime: '23:59:59',
+    neverExpires: false,
     status: 'Active',
   };
 }
@@ -81,8 +107,9 @@ function CouponFormContent({ coupon, onCloseAction, onSaveAction }: CouponFormCo
       newErrors.amount = t('amount_error');
     }
 
-    if (!formData.expiry.trim()) {
-      newErrors.expiry = t('expiry_error');
+    // Only require end date if neverExpires is false
+    if (!formData.neverExpires && !formData.endDate.trim()) {
+      newErrors.endDate = t('end_date_error');
     }
 
     setErrors(newErrors);
@@ -110,10 +137,24 @@ function CouponFormContent({ coupon, onCloseAction, onSaveAction }: CouponFormCo
     setIsLoading(false);
   };
 
-  const handleInputChange = (field: keyof CouponFormData, value: string) => {
+  const handleInputChange = (field: keyof CouponFormData, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
+    }
+  };
+
+  const handleNeverExpiresChange = (checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      neverExpires: checked,
+      // Clear end date/time if never expires is checked
+      endDate: checked ? '' : prev.endDate,
+      endTime: checked ? '' : prev.endTime,
+    }));
+    // Clear any end date error when toggling
+    if (errors.endDate) {
+      setErrors(prev => ({ ...prev, endDate: undefined }));
     }
   };
 
@@ -247,35 +288,68 @@ function CouponFormContent({ coupon, onCloseAction, onSaveAction }: CouponFormCo
                   </div>
                 </div>
 
-                {/* Usage Limit and Expiry */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="coupon-usage-limit">{t('usage_limit_label')}</Label>
-                    <Input
-                      id="coupon-usage-limit"
-                      type="number"
-                      value={formData.usageLimit}
-                      onChange={e => handleInputChange('usageLimit', e.target.value)}
-                      placeholder={t('usage_limit_placeholder')}
-                      data-testid="coupon-usage-limit-input"
-                    />
-                    <p className="text-xs text-muted-foreground">{t('usage_limit_help')}</p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="coupon-expiry">{t('expiry_label')}</Label>
-                    <Input
-                      id="coupon-expiry"
-                      value={formData.expiry}
-                      onChange={e => handleInputChange('expiry', e.target.value)}
-                      placeholder={t('expiry_placeholder')}
-                      data-testid="coupon-expiry-input"
-                    />
-                    {errors.expiry && (
-                      <p className="text-sm text-destructive">{errors.expiry}</p>
-                    )}
-                  </div>
+                {/* Usage Limit */}
+                <div className="space-y-2">
+                  <Label htmlFor="coupon-usage-limit">{t('usage_limit_label')}</Label>
+                  <Input
+                    id="coupon-usage-limit"
+                    type="number"
+                    value={formData.usageLimit}
+                    onChange={e => handleInputChange('usageLimit', e.target.value)}
+                    placeholder={t('usage_limit_placeholder')}
+                    data-testid="coupon-usage-limit-input"
+                  />
+                  <p className="text-xs text-muted-foreground">{t('usage_limit_help')}</p>
                 </div>
+
+                {/* Start Date and Time */}
+                <DateTimePicker
+                  date={formData.startDate}
+                  time={formData.startTime}
+                  onDateChange={date => handleInputChange('startDate', date)}
+                  onTimeChange={time => handleInputChange('startTime', time)}
+                  dateLabel={t('start_date_label')}
+                  timeLabel={t('start_time_label')}
+                  datePlaceholder={t('start_date_placeholder')}
+                  data-testid-date="coupon-start-date-input"
+                  data-testid-time="coupon-start-time-input"
+                />
+
+                {/* Never Expires Checkbox */}
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="coupon-never-expires"
+                    checked={formData.neverExpires}
+                    onCheckedChange={handleNeverExpiresChange}
+                    data-testid="coupon-never-expires-checkbox"
+                  />
+                  <Label
+                    htmlFor="coupon-never-expires"
+                    className="cursor-pointer text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    {t('never_expires_label')}
+                  </Label>
+                </div>
+
+                {/* End Date and Time - hidden when Never Expires is checked */}
+                {!formData.neverExpires && (
+                  <>
+                    <DateTimePicker
+                      date={formData.endDate}
+                      time={formData.endTime}
+                      onDateChange={date => handleInputChange('endDate', date)}
+                      onTimeChange={time => handleInputChange('endTime', time)}
+                      dateLabel={t('end_date_label')}
+                      timeLabel={t('end_time_label')}
+                      datePlaceholder={t('end_date_placeholder')}
+                      data-testid-date="coupon-end-date-input"
+                      data-testid-time="coupon-end-time-input"
+                    />
+                    {errors.endDate && (
+                      <p className="text-sm text-destructive">{errors.endDate}</p>
+                    )}
+                  </>
+                )}
               </div>
             )}
       </div>
