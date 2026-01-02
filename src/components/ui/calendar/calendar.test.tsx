@@ -21,11 +21,11 @@ describe('Calendar', () => {
     });
 
     it('should apply custom className', () => {
-      render(<Calendar className="custom-calendar" data-testid="test-calendar" />);
+      render(<Calendar className="w-96" data-testid="test-calendar" />);
 
       const calendar = page.getByTestId('test-calendar');
 
-      expect(calendar).toHaveClass('custom-calendar');
+      expect(calendar).toHaveClass('w-96');
     });
 
     it('should render navigation buttons', () => {
