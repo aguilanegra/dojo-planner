@@ -13,6 +13,8 @@ const config: KnipConfig = {
     'src/types/Table.ts',
     'src/utils/Helpers.ts',
     'tests/**/*.ts',
+    '.storybook/vitest.setup.ts', // Knip false positive with vitest setupFiles
+    '.storybook/vitest.config.mts', // Knip false positive with vitest setupFiles
   ],
   // Dependencies to ignore during analysis
   ignoreDependencies: [
