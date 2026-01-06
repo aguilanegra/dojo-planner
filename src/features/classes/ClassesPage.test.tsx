@@ -95,10 +95,10 @@ describe('ClassesPage', () => {
         </I18nWrapper>,
       );
 
-      // 5 unique instructors: Coach Alex, Professor Jessica, Professor Ivan, Professor Joao, Coach Liza
-      const fiveElements = page.getByText('5', { exact: true }).elements();
+      // 6 unique instructors from classes and events: Coach Alex, Professor Jessica, Professor Ivan, Professor Joao, Coach Liza, Master Rodriguez
+      const sixElements = page.getByText('6', { exact: true }).elements();
 
-      expect(fiveElements.length).toBeGreaterThan(0);
+      expect(sixElements.length).toBeGreaterThan(0);
     });
   });
 

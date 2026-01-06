@@ -2,6 +2,7 @@
 
 import type { ClassFilters } from './ClassFilterBar';
 import type { ClassCardProps } from '@/templates/ClassCard';
+import type { EventCardProps } from '@/templates/EventCard';
 import { CalendarDays, CalendarRange, Grid3x3, Plus, Tags } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -9,8 +10,9 @@ import { useCallback, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ButtonGroupItem, ButtonGroupRoot } from '@/components/ui/button-group';
 import { ClassCard } from '@/templates/ClassCard';
+import { EventCard } from '@/templates/EventCard';
 import { StatsCards } from '@/templates/StatsCards';
-import { mockClasses as initialMockClasses } from './classesData';
+import { mockClasses as initialMockClasses, mockEvents as initialMockEvents } from './classesData';
 import { ClassFilterBar } from './ClassFilterBar';
 import { ClassTagsManagement } from './ClassTagsManagement';
 import { MonthlyView } from './MonthlyView';
@@ -33,6 +35,7 @@ export function ClassesPage() {
   const [isTagsSheetOpen, setIsTagsSheetOpen] = useState(false);
   const [isAddClassModalOpen, setIsAddClassModalOpen] = useState(false);
   const [classes, setClasses] = useState<ClassCardProps[]>(initialMockClasses);
+  const [events, setEvents] = useState<EventCardProps[]>(initialMockEvents);
   const [filters, setFilters] = useState<ClassFilters>({
     search: '',
     tag: 'all',
@@ -63,9 +66,23 @@ export function ClassesPage() {
     setClasses(prev => [...prev, newClass]);
   };
 
-  // Get unique instructors from classes
+  // Handle new event creation
+  const handleEventCreated = (newEvent: EventCardProps) => {
+    setEvents(prev => [...prev, newEvent]);
+  };
+
+  // Handle edit event navigation
+  const handleEditEvent = useCallback((id: string) => {
+    const viewParam = viewType !== 'grid' ? `?view=${viewType}` : '';
+    router.push(`/dashboard/classes/events/${id}${viewParam}`);
+  }, [router, viewType]);
+
+  // Get unique instructors from classes and events
   const allInstructors = Array.from(
-    new Set(classes.flatMap(cls => cls.instructors.map(i => i.name))),
+    new Set([
+      ...classes.flatMap(cls => cls.instructors.map(i => i.name)),
+      ...events.flatMap(evt => evt.instructors.map(i => i.name)),
+    ]),
   );
 
   // Calculate stats
@@ -75,23 +92,39 @@ export function ClassesPage() {
     const totalTags = uniqueTypes.size + uniqueStyles.size;
     return {
       totalClasses: classes.length,
+      totalEvents: events.length,
       totalTags,
       totalInstructors: allInstructors.length,
     };
-  }, [classes, allInstructors.length]);
+  }, [classes, events.length, allInstructors.length]);
 
   // Filter classes based on filters
-  const filteredClasses = classes.filter((cls) => {
-    const matchesSearch = cls.name.toLowerCase().includes(filters.search.toLowerCase())
-      || cls.description.toLowerCase().includes(filters.search.toLowerCase());
-    const matchesTag = filters.tag === 'all' || cls.type === filters.tag || cls.style === filters.tag;
+  // If "Event" tag is selected, hide all classes
+  const filteredClasses = filters.tag === 'Event'
+    ? []
+    : classes.filter((cls) => {
+        const matchesSearch = cls.name.toLowerCase().includes(filters.search.toLowerCase())
+          || cls.description.toLowerCase().includes(filters.search.toLowerCase());
+        const matchesTag = filters.tag === 'all' || cls.type === filters.tag || cls.style === filters.tag;
+        const matchesInstructor = filters.instructor === 'all'
+          || cls.instructors.some(i => i.name === filters.instructor);
+        return matchesSearch && matchesTag && matchesInstructor;
+      });
+
+  // Filter events based on filters
+  // "Event" tag matches all events; other tags should hide events unless they match eventType
+  const filteredEvents = events.filter((evt) => {
+    const matchesSearch = evt.name.toLowerCase().includes(filters.search.toLowerCase())
+      || evt.description.toLowerCase().includes(filters.search.toLowerCase());
+    const matchesTag = filters.tag === 'all' || filters.tag === 'Event' || evt.eventType === filters.tag;
     const matchesInstructor = filters.instructor === 'all'
-      || cls.instructors.some(i => i.name === filters.instructor);
+      || evt.instructors.some(i => i.name === filters.instructor);
     return matchesSearch && matchesTag && matchesInstructor;
   });
 
   const statsData = useMemo(() => [
     { id: 'classes', label: t('total_classes_label'), value: stats.totalClasses },
+    { id: 'events', label: t('total_events_label'), value: stats.totalEvents },
     { id: 'tags', label: t('total_tags_label'), value: stats.totalTags },
     { id: 'instructors', label: t('total_instructors_label'), value: stats.totalInstructors },
   ], [stats, t]);
@@ -99,7 +132,7 @@ export function ClassesPage() {
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
-      <StatsCards stats={statsData} columns={3} />
+      <StatsCards stats={statsData} columns={4} />
 
       {/* Header */}
       <div className="flex items-center gap-4">
@@ -160,6 +193,9 @@ export function ClassesPage() {
       {/* Render Grid View */}
       {viewType === 'grid' && (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {filteredEvents.map(eventItem => (
+            <EventCard key={eventItem.id} {...eventItem} onEdit={handleEditEvent} />
+          ))}
           {filteredClasses.map(classItem => (
             <ClassCard key={classItem.id} {...classItem} onEdit={handleEditClass} />
           ))}
@@ -172,11 +208,12 @@ export function ClassesPage() {
         onOpenChange={setIsTagsSheetOpen}
       />
 
-      {/* Add Class Wizard Modal */}
+      {/* Add Class/Event Wizard Modal */}
       <AddClassModal
         isOpen={isAddClassModalOpen}
         onCloseAction={() => setIsAddClassModalOpen(false)}
         onClassCreated={handleClassCreated}
+        onEventCreated={handleEventCreated}
       />
     </div>
   );

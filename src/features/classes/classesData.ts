@@ -1,4 +1,5 @@
 import type { ClassCardProps } from '@/templates/ClassCard';
+import type { EventCardProps } from '@/templates/EventCard';
 
 export const mockClasses: ClassCardProps[] = [
   {
@@ -133,6 +134,47 @@ export const mockClasses: ClassCardProps[] = [
     ],
     location: 'Downtown HQ',
     instructors: [{ name: 'Coach Alex', photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex' }],
+  },
+];
+
+export const mockEvents: EventCardProps[] = [
+  {
+    id: 'event-1',
+    name: 'BJJ Fundamentals Seminar Series',
+    description: 'A comprehensive 3-day seminar covering essential BJJ fundamentals with world-class instruction. Perfect for beginners and experienced practitioners looking to refine their basics.',
+    eventType: 'Seminar',
+    startDate: 'January 15, 2026',
+    endDate: 'January 17, 2026',
+    sessions: [
+      { date: 'January 15, 2026', time: '10:00 AM - 1:00 PM' },
+      { date: 'January 15, 2026', time: '3:00 PM - 6:00 PM' },
+      { date: 'January 16, 2026', time: '10:00 AM - 1:00 PM' },
+      { date: 'January 16, 2026', time: '3:00 PM - 6:00 PM' },
+      { date: 'January 17, 2026', time: '10:00 AM - 1:00 PM' },
+    ],
+    location: 'Downtown HQ',
+    instructors: [
+      { name: 'Professor Joao', photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Joao' },
+      { name: 'Professor Jessica', photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jessica' },
+    ],
+    price: 199.99,
+  },
+  {
+    id: 'event-2',
+    name: 'Guest Instructor: Master Rodriguez',
+    description: 'One-day exclusive training session with IBJJF World Champion Master Rodriguez. Limited spots available! Learn advanced guard techniques and competition strategies.',
+    eventType: 'Guest Instructor',
+    startDate: 'February 8, 2026',
+    endDate: 'February 8, 2026',
+    sessions: [
+      { date: 'February 8, 2026', time: '11:00 AM - 2:00 PM' },
+    ],
+    location: 'Downtown HQ',
+    instructors: [
+      // Using a placeholder name that doesn't look like real credentials
+      { name: 'Master Rodriguez', photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Rodriguez' },
+    ],
+    price: 75,
   },
 ];
 

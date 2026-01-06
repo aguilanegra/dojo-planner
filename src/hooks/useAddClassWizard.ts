@@ -1,7 +1,9 @@
 import { useState } from 'react';
 
+export type ItemType = 'class' | 'event';
 type AllowWalkIns = 'Yes' | 'No';
 export type DayOfWeek = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
+export type EventType = 'Seminar' | 'Workshop' | 'Guest Instructor' | 'Tournament' | 'Other';
 
 export type ScheduleInstance = {
   id: string;
@@ -54,8 +56,42 @@ export type ClassSchedule = {
   location: string;
 };
 
+export type EventSession = {
+  id: string;
+  date: string; // YYYY-MM-DD format
+  timeHour: number;
+  timeMinute: number;
+  timeAmPm: 'AM' | 'PM';
+  durationHours: number;
+  durationMinutes: number;
+  staffMember: string;
+  assistantStaff: string;
+};
+
+export type EventSchedule = {
+  isMultiDay: boolean;
+  startDate: string; // YYYY-MM-DD format
+  endDate: string; // YYYY-MM-DD format
+  sessions: EventSession[];
+  location: string;
+};
+
+export type EventBilling = {
+  hasFee: boolean;
+  price: number | null;
+  hasEarlyBird: boolean;
+  earlyBirdPrice: number | null;
+  earlyBirdDeadline: string | null; // YYYY-MM-DD format
+  hasMemberDiscount: boolean;
+  memberDiscountType: 'percentage' | 'fixed';
+  memberDiscountAmount: number | null;
+};
+
 export type AddClassWizardData = {
-  // Step 1: Class Basics
+  // Step 0: Item Type Selection
+  itemType: ItemType;
+
+  // Step 1: Class Basics (for classes)
   className: string;
   program: string;
   maximumCapacity: number | null;
@@ -63,15 +99,36 @@ export type AddClassWizardData = {
   allowWalkIns: AllowWalkIns;
   description: string;
 
-  // Step 2: Schedule Details
+  // Step 1: Event Basics (for events)
+  eventName: string;
+  eventType: EventType | '';
+  eventProgram: string;
+  eventMaxCapacity: number | null;
+  eventDescription: string;
+
+  // Step 2: Schedule Details (for classes)
   schedule: ClassSchedule;
   calendarColor: string;
 
-  // Step 3: Tags
+  // Step 2: Event Schedule (for events - non-recurring)
+  eventSchedule: EventSchedule;
+
+  // Step 3: Event Billing (for events only)
+  eventBilling: EventBilling;
+
+  // Step 3/4: Tags
   tags: string[];
 };
 
-type ClassWizardStep = 'class-basics' | 'schedule' | 'tags' | 'success';
+type WizardStep
+  = | 'type-selection'
+    | 'class-basics'
+    | 'event-basics'
+    | 'schedule'
+    | 'event-schedule'
+    | 'event-billing'
+    | 'tags'
+    | 'success';
 
 const initialSchedule: ClassSchedule = {
   instances: [],
@@ -79,20 +136,47 @@ const initialSchedule: ClassSchedule = {
   location: '',
 };
 
+const initialEventSchedule: EventSchedule = {
+  isMultiDay: false,
+  startDate: '',
+  endDate: '',
+  sessions: [],
+  location: '',
+};
+
+const initialEventBilling: EventBilling = {
+  hasFee: false,
+  price: null,
+  hasEarlyBird: false,
+  earlyBirdPrice: null,
+  earlyBirdDeadline: null,
+  hasMemberDiscount: false,
+  memberDiscountType: 'percentage',
+  memberDiscountAmount: null,
+};
+
 const initialData: AddClassWizardData = {
+  itemType: 'class',
   className: '',
   program: '',
   maximumCapacity: null,
   minimumAge: null,
   allowWalkIns: 'Yes',
   description: '',
+  eventName: '',
+  eventType: '',
+  eventProgram: '',
+  eventMaxCapacity: null,
+  eventDescription: '',
   schedule: initialSchedule,
   calendarColor: '#000000',
+  eventSchedule: initialEventSchedule,
+  eventBilling: initialEventBilling,
   tags: [],
 };
 
 export const useAddClassWizard = () => {
-  const [step, setStep] = useState<ClassWizardStep>('class-basics');
+  const [step, setStep] = useState<WizardStep>('type-selection');
   const [data, setData] = useState<AddClassWizardData>(initialData);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -113,8 +197,32 @@ export const useAddClassWizard = () => {
     setError(null);
   };
 
+  const updateEventSchedule = (updates: Partial<EventSchedule>) => {
+    setData(prev => ({
+      ...prev,
+      eventSchedule: { ...prev.eventSchedule, ...updates },
+    }));
+    setError(null);
+  };
+
+  const updateEventBilling = (updates: Partial<EventBilling>) => {
+    setData(prev => ({
+      ...prev,
+      eventBilling: { ...prev.eventBilling, ...updates },
+    }));
+    setError(null);
+  };
+
+  // Define step sequences for classes and events
+  const getStepSequence = (): WizardStep[] => {
+    if (data.itemType === 'event') {
+      return ['type-selection', 'event-basics', 'event-schedule', 'event-billing', 'tags', 'success'];
+    }
+    return ['type-selection', 'class-basics', 'schedule', 'tags', 'success'];
+  };
+
   const nextStep = () => {
-    const steps: ClassWizardStep[] = ['class-basics', 'schedule', 'tags', 'success'];
+    const steps = getStepSequence();
     const currentIndex = steps.indexOf(step);
     if (currentIndex < steps.length - 1 && currentIndex !== -1) {
       const nextStepValue = steps[currentIndex + 1];
@@ -126,7 +234,7 @@ export const useAddClassWizard = () => {
   };
 
   const previousStep = () => {
-    const steps: ClassWizardStep[] = ['class-basics', 'schedule', 'tags', 'success'];
+    const steps = getStepSequence();
     const currentIndex = steps.indexOf(step);
     if (currentIndex > 0) {
       const prevStepValue = steps[currentIndex - 1];
@@ -146,7 +254,7 @@ export const useAddClassWizard = () => {
   };
 
   const reset = () => {
-    setStep('class-basics');
+    setStep('type-selection');
     setData(initialData);
     setError(null);
     setIsLoading(false);
@@ -158,6 +266,8 @@ export const useAddClassWizard = () => {
     data,
     updateData,
     updateSchedule,
+    updateEventSchedule,
+    updateEventBilling,
     nextStep,
     previousStep,
     reset,

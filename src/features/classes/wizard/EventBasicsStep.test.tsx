@@ -3,29 +3,22 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { page, userEvent } from 'vitest/browser';
 import { createMockWizardData } from '@/test-utils/mockWizardData';
-import { ClassBasicsStep } from './ClassBasicsStep';
+import { EventBasicsStep } from './EventBasicsStep';
 
 // Mock next-intl with proper translations
 const translationKeys: Record<string, string> = {
-  title: 'Class Basics',
-  subtitle: 'Enter the basic information for this class',
-  class_name_label: 'Class Name',
-  class_name_placeholder: 'Enter class name',
-  class_name_error: 'Please enter a class name.',
-  program_label: 'Program',
-  program_placeholder: 'Select a program',
-  program_error: 'Please select a program.',
+  title: 'Event Details',
+  subtitle: 'Enter the basic information for your event',
+  event_name_label: 'Event Name',
+  event_name_placeholder: 'Enter event name',
+  event_name_error: 'Please enter an event name.',
+  event_type_label: 'Event Type',
+  event_type_placeholder: 'Select event type',
   max_capacity_label: 'Maximum Capacity',
-  max_capacity_placeholder: 'e.g., 20',
-  max_capacity_help: 'Maximum number of students per class',
-  min_age_label: 'Minimum Age',
-  min_age_placeholder: 'e.g., 16',
-  min_age_help: 'Minimum age to enroll',
-  allow_walkins_label: 'Allow Walk-ins',
-  allow_walkins_yes: 'Yes',
-  allow_walkins_no: 'No',
+  max_capacity_placeholder: 'e.g., 50',
+  max_capacity_help: 'Maximum number of participants',
   description_label: 'Description',
-  description_placeholder: 'Enter class description',
+  description_placeholder: 'Enter event description',
   description_error: 'Please enter a description.',
   description_character_count: '{count}/{max} characters',
   cancel_button: 'Cancel',
@@ -44,12 +37,15 @@ vi.mock('next-intl', () => ({
   },
 }));
 
-describe('ClassBasicsStep', () => {
-  const mockData = createMockWizardData();
+describe('EventBasicsStep', () => {
+  const mockData = createMockWizardData({
+    itemType: 'event',
+  });
 
   const mockHandlers = {
     onUpdate: vi.fn(),
     onNext: vi.fn(),
+    onBack: vi.fn(),
     onCancel: vi.fn(),
   };
 
@@ -59,10 +55,11 @@ describe('ClassBasicsStep', () => {
 
   it('should render the step with title and subtitle', () => {
     render(
-      <ClassBasicsStep
+      <EventBasicsStep
         data={mockData}
         onUpdate={mockHandlers.onUpdate}
         onNext={mockHandlers.onNext}
+        onBack={mockHandlers.onBack}
         onCancel={mockHandlers.onCancel}
       />,
     );
@@ -72,43 +69,46 @@ describe('ClassBasicsStep', () => {
     expect(heading).toBeTruthy();
   });
 
-  it('should render class name input', () => {
+  it('should render event name input', () => {
     render(
-      <ClassBasicsStep
+      <EventBasicsStep
         data={mockData}
         onUpdate={mockHandlers.onUpdate}
         onNext={mockHandlers.onNext}
+        onBack={mockHandlers.onBack}
         onCancel={mockHandlers.onCancel}
       />,
     );
 
-    const input = page.getByPlaceholder('Enter class name');
+    const input = page.getByPlaceholder('Enter event name');
 
     expect(input).toBeTruthy();
   });
 
-  it('should call onUpdate when class name changes', async () => {
+  it('should call onUpdate when event name changes', async () => {
     render(
-      <ClassBasicsStep
+      <EventBasicsStep
         data={mockData}
         onUpdate={mockHandlers.onUpdate}
         onNext={mockHandlers.onNext}
+        onBack={mockHandlers.onBack}
         onCancel={mockHandlers.onCancel}
       />,
     );
 
-    const input = page.getByPlaceholder('Enter class name');
-    await userEvent.type(input, 'BJJ Fundamentals');
+    const input = page.getByPlaceholder('Enter event name');
+    await userEvent.type(input, 'BJJ Seminar');
 
     expect(mockHandlers.onUpdate).toHaveBeenCalled();
   });
 
   it('should have Next button disabled when form is incomplete', () => {
     render(
-      <ClassBasicsStep
+      <EventBasicsStep
         data={mockData}
         onUpdate={mockHandlers.onUpdate}
         onNext={mockHandlers.onNext}
+        onBack={mockHandlers.onBack}
         onCancel={mockHandlers.onCancel}
       />,
     );
@@ -122,16 +122,17 @@ describe('ClassBasicsStep', () => {
   it('should enable Next button when form is complete', () => {
     const completeData: AddClassWizardData = {
       ...mockData,
-      className: 'BJJ Fundamentals',
-      program: 'adult-bjj',
-      description: 'A beginner class',
+      eventName: 'BJJ Seminar',
+      eventType: 'Seminar',
+      eventDescription: 'A great seminar',
     };
 
     render(
-      <ClassBasicsStep
+      <EventBasicsStep
         data={completeData}
         onUpdate={mockHandlers.onUpdate}
         onNext={mockHandlers.onNext}
+        onBack={mockHandlers.onBack}
         onCancel={mockHandlers.onCancel}
       />,
     );
@@ -144,10 +145,11 @@ describe('ClassBasicsStep', () => {
 
   it('should call onCancel when Cancel button is clicked', async () => {
     render(
-      <ClassBasicsStep
+      <EventBasicsStep
         data={mockData}
         onUpdate={mockHandlers.onUpdate}
         onNext={mockHandlers.onNext}
+        onBack={mockHandlers.onBack}
         onCancel={mockHandlers.onCancel}
       />,
     );
@@ -162,19 +164,41 @@ describe('ClassBasicsStep', () => {
     }
   });
 
+  it('should call onBack when Back button is clicked', async () => {
+    render(
+      <EventBasicsStep
+        data={mockData}
+        onUpdate={mockHandlers.onUpdate}
+        onNext={mockHandlers.onNext}
+        onBack={mockHandlers.onBack}
+        onCancel={mockHandlers.onCancel}
+      />,
+    );
+
+    const buttons = Array.from(document.querySelectorAll('button'));
+    const backButton = buttons.find(btn => btn.textContent?.includes('Back'));
+
+    if (backButton) {
+      await userEvent.click(backButton);
+
+      expect(mockHandlers.onBack).toHaveBeenCalled();
+    }
+  });
+
   it('should call onNext when Next button is clicked with valid data', async () => {
     const completeData: AddClassWizardData = {
       ...mockData,
-      className: 'BJJ Fundamentals',
-      program: 'adult-bjj',
-      description: 'A beginner class',
+      eventName: 'BJJ Seminar',
+      eventType: 'Seminar',
+      eventDescription: 'A great seminar',
     };
 
     render(
-      <ClassBasicsStep
+      <EventBasicsStep
         data={completeData}
         onUpdate={mockHandlers.onUpdate}
         onNext={mockHandlers.onNext}
+        onBack={mockHandlers.onBack}
         onCancel={mockHandlers.onCancel}
       />,
     );
@@ -191,10 +215,11 @@ describe('ClassBasicsStep', () => {
 
   it('should display error message when provided', () => {
     render(
-      <ClassBasicsStep
+      <EventBasicsStep
         data={mockData}
         onUpdate={mockHandlers.onUpdate}
         onNext={mockHandlers.onNext}
+        onBack={mockHandlers.onBack}
         onCancel={mockHandlers.onCancel}
         error="Something went wrong"
       />,
@@ -208,14 +233,15 @@ describe('ClassBasicsStep', () => {
   it('should show character count for description', () => {
     const dataWithDescription: AddClassWizardData = {
       ...mockData,
-      description: 'Test description',
+      eventDescription: 'Test description',
     };
 
     render(
-      <ClassBasicsStep
+      <EventBasicsStep
         data={dataWithDescription}
         onUpdate={mockHandlers.onUpdate}
         onNext={mockHandlers.onNext}
+        onBack={mockHandlers.onBack}
         onCancel={mockHandlers.onCancel}
       />,
     );
@@ -225,91 +251,75 @@ describe('ClassBasicsStep', () => {
     expect(characterCount).toBeTruthy();
   });
 
-  it('should render program select', () => {
+  it('should render event type select', () => {
     render(
-      <ClassBasicsStep
+      <EventBasicsStep
         data={mockData}
         onUpdate={mockHandlers.onUpdate}
         onNext={mockHandlers.onNext}
+        onBack={mockHandlers.onBack}
         onCancel={mockHandlers.onCancel}
       />,
     );
 
-    const programLabel = page.getByText('Program');
+    const eventTypeLabel = page.getByText('Event Type');
 
-    expect(programLabel).toBeTruthy();
+    expect(eventTypeLabel).toBeTruthy();
   });
 
-  it('should render optional fields', () => {
+  it('should render max capacity input', () => {
     render(
-      <ClassBasicsStep
+      <EventBasicsStep
         data={mockData}
         onUpdate={mockHandlers.onUpdate}
         onNext={mockHandlers.onNext}
+        onBack={mockHandlers.onBack}
         onCancel={mockHandlers.onCancel}
       />,
     );
 
     const maxCapacityLabel = page.getByText('Maximum Capacity');
-    const minAgeLabel = page.getByText('Minimum Age');
-    const allowWalkInsLabel = page.getByText('Allow Walk-ins');
 
     expect(maxCapacityLabel).toBeTruthy();
-    expect(minAgeLabel).toBeTruthy();
-    expect(allowWalkInsLabel).toBeTruthy();
   });
 
-  it('should show validation error when class name is touched but empty', async () => {
+  it('should update max capacity when changed', async () => {
     render(
-      <ClassBasicsStep
+      <EventBasicsStep
         data={mockData}
         onUpdate={mockHandlers.onUpdate}
         onNext={mockHandlers.onNext}
+        onBack={mockHandlers.onBack}
         onCancel={mockHandlers.onCancel}
       />,
     );
 
-    const input = page.getByPlaceholder('Enter class name');
+    const input = page.getByPlaceholder('e.g., 50');
+    await userEvent.type(input, '100');
+
+    expect(mockHandlers.onUpdate).toHaveBeenCalled();
+  });
+
+  it('should show validation error when event name is touched but empty', async () => {
+    render(
+      <EventBasicsStep
+        data={mockData}
+        onUpdate={mockHandlers.onUpdate}
+        onNext={mockHandlers.onNext}
+        onBack={mockHandlers.onBack}
+        onCancel={mockHandlers.onCancel}
+      />,
+    );
+
+    const input = page.getByPlaceholder('Enter event name');
     await userEvent.click(input);
-    await userEvent.tab(); // Blur the input
+    await userEvent.tab();
 
     // Wait for state update
     await new Promise(resolve => setTimeout(resolve, 100));
 
-    const errorMessage = page.getByText('Please enter a class name.');
+    const errorMessage = page.getByText('Please enter an event name.');
 
     expect(errorMessage).toBeTruthy();
-  });
-
-  it('should update maximum capacity when changed', async () => {
-    render(
-      <ClassBasicsStep
-        data={mockData}
-        onUpdate={mockHandlers.onUpdate}
-        onNext={mockHandlers.onNext}
-        onCancel={mockHandlers.onCancel}
-      />,
-    );
-
-    const input = page.getByPlaceholder('e.g., 20');
-    await userEvent.type(input, '25');
-
-    expect(mockHandlers.onUpdate).toHaveBeenCalled();
-  });
-
-  it('should update minimum age when changed', async () => {
-    render(
-      <ClassBasicsStep
-        data={mockData}
-        onUpdate={mockHandlers.onUpdate}
-        onNext={mockHandlers.onNext}
-        onCancel={mockHandlers.onCancel}
-      />,
-    );
-
-    const input = page.getByPlaceholder('e.g., 16');
-    await userEvent.type(input, '18');
-
-    expect(mockHandlers.onUpdate).toHaveBeenCalled();
   });
 });

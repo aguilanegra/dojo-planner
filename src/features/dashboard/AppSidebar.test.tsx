@@ -108,7 +108,7 @@ describe('AppSidebar - Translation Keys', () => {
       // Check Academy items exist and have correct values
       expect(dashboardLayout.dashboard).toBe('Dashboard');
       expect(dashboardLayout.programs).toBe('Programs');
-      expect(dashboardLayout.classes).toBe('Classes');
+      expect(dashboardLayout.classes).toBe('Classes/Events');
       expect(dashboardLayout.members).toBe('Members');
       expect(dashboardLayout.roles).toBe('Roles');
       expect(dashboardLayout.staff).toBe('Staff');
