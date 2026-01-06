@@ -1,6 +1,7 @@
 'use client';
 
 import { Search } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { Input } from '@/components/ui/input/input';
 import {
@@ -23,6 +24,7 @@ type ClassFilterBarProps = {
 };
 
 export function ClassFilterBar({ onFiltersChangeAction, instructors }: ClassFilterBarProps) {
+  const t = useTranslations('ClassesPage');
   const [filters, setFilters] = useState<ClassFilters>({
     search: '',
     tag: 'all',
@@ -47,17 +49,17 @@ export function ClassFilterBar({ onFiltersChangeAction, instructors }: ClassFilt
     onFiltersChangeAction(newFilters);
   };
 
-  const tags = ['all', 'Adults', 'Kids', 'Women', 'No Gi', 'Gi', 'Competition', 'Open'];
+  const tags = ['all', 'Event', 'Adults', 'Kids', 'Women', 'No Gi', 'Gi', 'Competition', 'Open'];
   const uniqueInstructors = ['all', ...new Set(instructors)];
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
       {/* Search Input */}
-      <div className="relative flex-1 sm:max-w-xs sm:flex-initial">
+      <div className="relative flex-1 sm:max-w-xs sm:flex-initial md:max-w-sm lg:max-w-md xl:max-w-lg">
         <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           type="text"
-          placeholder="Search classes..."
+          placeholder={t('search_placeholder')}
           value={filters.search}
           onChange={handleSearchChange}
           className="pl-9"

@@ -3,3 +3,7 @@ export * from './ClassBasicsStep';
 export * from './ClassScheduleStep';
 export * from './ClassSuccessStep';
 export * from './ClassTagsStep';
+export * from './EventBasicsStep';
+export * from './EventBillingStep';
+export * from './EventScheduleStep';
+export * from './TypeSelectionStep';

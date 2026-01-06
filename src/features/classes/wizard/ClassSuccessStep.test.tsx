@@ -2,6 +2,7 @@ import type { AddClassWizardData } from '@/hooks/useAddClassWizard';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { page, userEvent } from 'vitest/browser';
+import { createMockScheduleInstance, createMockWizardData } from '@/test-utils/mockWizardData';
 import { ClassSuccessStep } from './ClassSuccessStep';
 
 // Mock next-intl with proper translations
@@ -32,55 +33,31 @@ vi.mock('next-intl', () => ({
 }));
 
 describe('ClassSuccessStep', () => {
-  const mockData: AddClassWizardData = {
+  const baseInstance = createMockScheduleInstance({
+    timeHour: 6,
+    timeMinute: 30,
+    timeAmPm: 'AM',
+    durationHours: 1,
+    durationMinutes: 30,
+    staffMember: 'coach-alex',
+  });
+
+  const mockData = createMockWizardData({
     className: 'Morning BJJ',
     program: 'adult-bjj',
-    maximumCapacity: null,
-    minimumAge: null,
-    allowWalkIns: 'Yes',
     description: 'A great class for adults',
     schedule: {
       instances: [
-        {
-          id: 'instance-1',
-          dayOfWeek: 'Monday',
-          timeHour: 6,
-          timeMinute: 30,
-          timeAmPm: 'AM',
-          durationHours: 1,
-          durationMinutes: 30,
-          staffMember: 'coach-alex',
-          assistantStaff: '',
-        },
-        {
-          id: 'instance-2',
-          dayOfWeek: 'Wednesday',
-          timeHour: 6,
-          timeMinute: 30,
-          timeAmPm: 'AM',
-          durationHours: 1,
-          durationMinutes: 30,
-          staffMember: 'coach-alex',
-          assistantStaff: '',
-        },
-        {
-          id: 'instance-3',
-          dayOfWeek: 'Friday',
-          timeHour: 6,
-          timeMinute: 30,
-          timeAmPm: 'AM',
-          durationHours: 1,
-          durationMinutes: 30,
-          staffMember: 'coach-alex',
-          assistantStaff: '',
-        },
+        { ...baseInstance, id: 'instance-1', dayOfWeek: 'Monday' },
+        { ...baseInstance, id: 'instance-2', dayOfWeek: 'Wednesday' },
+        { ...baseInstance, id: 'instance-3', dayOfWeek: 'Friday' },
       ],
       exceptions: [],
       location: '',
     },
     calendarColor: '#3b82f6',
     tags: [],
-  };
+  });
 
   const mockOnDone = vi.fn();
 

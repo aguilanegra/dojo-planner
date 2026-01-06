@@ -8,6 +8,13 @@ export type ClassTag = {
 
 export const mockClassTags: ClassTag[] = [
   {
+    id: 'tag-0',
+    name: 'Event',
+    color: '#0ea5e9', // sky blue
+    usageCount: 2,
+    classNames: ['BJJ Fundamentals Seminar Series', 'Guest Instructor: Master Rodriguez'],
+  },
+  {
     id: 'tag-1',
     name: 'Beginner',
     color: '#22c55e', // green

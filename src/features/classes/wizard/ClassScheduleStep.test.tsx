@@ -2,6 +2,7 @@ import type { AddClassWizardData, ScheduleInstance } from '@/hooks/useAddClassWi
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { page, userEvent } from 'vitest/browser';
+import { createMockScheduleInstance, createMockWizardData } from '@/test-utils/mockWizardData';
 import { ClassScheduleStep } from './ClassScheduleStep';
 
 // Mock next-intl with proper translations
@@ -51,33 +52,16 @@ vi.mock('next-intl', () => ({
 }));
 
 describe('ClassScheduleStep', () => {
-  const mockData: AddClassWizardData = {
+  const mockData = createMockWizardData({
     className: 'Test Class',
     program: 'adult-bjj',
-    maximumCapacity: null,
-    minimumAge: null,
-    allowWalkIns: 'Yes',
     description: 'Test description',
-    schedule: {
-      instances: [],
-      exceptions: [],
-      location: '',
-    },
-    calendarColor: '#000000',
-    tags: [],
-  };
+  });
 
-  const mockInstance: ScheduleInstance = {
+  const mockInstance: ScheduleInstance = createMockScheduleInstance({
     id: 'test-instance-1',
-    dayOfWeek: 'Monday',
-    timeHour: 6,
-    timeMinute: 0,
-    timeAmPm: 'PM',
-    durationHours: 1,
-    durationMinutes: 0,
     staffMember: 'coach-alex',
-    assistantStaff: '',
-  };
+  });
 
   const mockHandlers = {
     onUpdate: vi.fn(),
