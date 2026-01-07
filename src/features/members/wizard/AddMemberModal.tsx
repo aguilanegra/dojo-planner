@@ -165,7 +165,7 @@ export const AddMemberModal = ({ isOpen, onCloseAction }: AddMemberModalProps) =
 
   return (
     <Dialog open={isOpen} onOpenChange={isOpen => !isOpen && handleCancel()}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>
             {wizard.step === 'member-type' && 'Choose Member Type'}

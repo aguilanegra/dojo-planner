@@ -321,6 +321,8 @@
       "cancel_button": "Cancel",
       "next_button": "Next",
       "process_payment_button": "Process Payment",
+      "retry_payment_button": "Retry Payment",
+      "continue_anyway_button": "Continue Anyway",
       "processing_button": "Processing...",
       "payment_approved_title": "Payment Approved",
       "payment_approved_message": "The payment has been successfully processed. You can now proceed to complete member registration.",

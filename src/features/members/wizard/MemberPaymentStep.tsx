@@ -197,9 +197,6 @@ export const MemberPaymentStep = ({
 
   const isFormValid = isCardFormValid || isAchFormValid;
 
-  // Payment can proceed only if payment was approved (not just processed)
-  const canProceed = paymentProcessed === true && paymentStatus === 'approved';
-
   const handleProcessPayment = async () => {
     if (!isFormValid || isProcessingPayment) {
       return;
@@ -494,7 +491,8 @@ export const MemberPaymentStep = ({
           </Button>
         </div>
         <div className="flex gap-3">
-          {!canProceed && (
+          {/* Show Process Payment button when payment has not been processed yet */}
+          {!paymentProcessed && (
             <Button
               onClick={handleProcessPayment}
               disabled={!isFormValid || isProcessingPayment || isLoading}
@@ -509,7 +507,30 @@ export const MemberPaymentStep = ({
                 : t('process_payment_button')}
             </Button>
           )}
-          {canProceed && (
+          {/* When payment is declined, show both Retry and Continue Anyway buttons */}
+          {paymentStatus === 'declined' && (
+            <>
+              <Button
+                variant="outline"
+                onClick={handleProcessPayment}
+                disabled={!isFormValid || isProcessingPayment || isLoading}
+              >
+                {isProcessingPayment
+                  ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        {t('processing_button')}
+                      </>
+                    )
+                  : t('retry_payment_button')}
+              </Button>
+              <Button onClick={onNextAction} disabled={isLoading} variant="destructive">
+                {isLoading ? `${t('continue_anyway_button')}...` : t('continue_anyway_button')}
+              </Button>
+            </>
+          )}
+          {/* Show Next button when payment is approved */}
+          {paymentStatus === 'approved' && (
             <Button onClick={onNextAction} disabled={isLoading}>
               {isLoading ? `${t('next_button')}...` : t('next_button')}
             </Button>

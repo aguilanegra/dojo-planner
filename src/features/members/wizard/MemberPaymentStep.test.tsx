@@ -46,6 +46,8 @@ const translationKeys: Record<string, string> = {
   cancel_button: 'Cancel',
   next_button: 'Next',
   process_payment_button: 'Process Payment',
+  retry_payment_button: 'Retry Payment',
+  continue_anyway_button: 'Continue Anyway',
   processing_button: 'Processing...',
   payment_approved_title: 'Payment Approved',
   payment_approved_message: 'The payment has been successfully processed.',
@@ -355,7 +357,7 @@ describe('MemberPaymentStep', () => {
     }
   });
 
-  it('shows process payment button after payment is declined (to allow retry)', async () => {
+  it('shows retry payment and continue anyway buttons after payment is declined', async () => {
     const declinedProps = {
       ...defaultProps,
       data: {
@@ -374,10 +376,41 @@ describe('MemberPaymentStep', () => {
       <MemberPaymentStep {...declinedProps} />,
     );
 
-    // After a decline, the Process Payment button should be shown to allow retry
-    const processPaymentButton = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent === 'Process Payment');
+    // After a decline, both Retry Payment and Continue Anyway buttons should be shown
+    const retryPaymentButton = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent === 'Retry Payment');
+    const continueAnywayButton = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent === 'Continue Anyway');
 
-    expect(processPaymentButton).toBeTruthy();
+    expect(retryPaymentButton).toBeTruthy();
+    expect(continueAnywayButton).toBeTruthy();
+  });
+
+  it('calls onNextAction when continue anyway button is clicked after payment decline', async () => {
+    const onNextAction = vi.fn();
+    const declinedProps = {
+      ...defaultProps,
+      data: {
+        ...defaultProps.data,
+        cardholderName: 'John Doe',
+        cardNumber: '4111111111111111',
+        cardExpiry: '12/25',
+        cardCvc: '123',
+        paymentProcessed: true,
+        paymentStatus: 'declined' as const,
+        paymentDeclineReason: 'insufficient_funds' as const,
+      },
+      onNextAction,
+    };
+
+    render(
+      <MemberPaymentStep {...declinedProps} />,
+    );
+
+    const continueAnywayButton = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent === 'Continue Anyway');
+    if (continueAnywayButton) {
+      await userEvent.click(continueAnywayButton);
+
+      expect(onNextAction).toHaveBeenCalled();
+    }
   });
 
   it('shows payment declined alert with continue message', () => {
@@ -1166,5 +1199,477 @@ describe('MemberPaymentStep', () => {
     );
 
     expect(page.getByText(/annual recurring membership/)).toBeTruthy();
+  });
+
+  it('allows retry payment after decline by clicking Retry Payment button', async () => {
+    const onUpdateAction = vi.fn();
+    const declinedProps = {
+      ...defaultProps,
+      data: {
+        ...defaultProps.data,
+        cardholderName: 'John Doe',
+        cardNumber: '4111111111111111',
+        cardExpiry: '12/25',
+        cardCvc: '123',
+        paymentProcessed: true,
+        paymentStatus: 'declined' as const,
+        paymentDeclineReason: 'insufficient_funds' as const,
+      },
+      onUpdateAction,
+    };
+
+    render(
+      <MemberPaymentStep {...declinedProps} />,
+    );
+
+    const retryButton = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent === 'Retry Payment');
+
+    if (retryButton) {
+      await userEvent.click(retryButton);
+
+      // Verify processing state was set
+      expect(onUpdateAction).toHaveBeenCalledWith({ paymentStatus: 'processing' });
+
+      // Wait for the mock payment to complete
+      await advancePaymentTimer();
+
+      // Should have attempted reprocessing
+      expect(onUpdateAction).toHaveBeenCalledWith(
+        expect.objectContaining({
+          paymentProcessed: true,
+        }),
+      );
+    }
+  });
+
+  it('does not show Process Payment button after payment has been processed', () => {
+    const processedProps = {
+      ...defaultProps,
+      data: {
+        ...defaultProps.data,
+        cardholderName: 'John Doe',
+        cardNumber: '4111111111111111',
+        cardExpiry: '12/25',
+        cardCvc: '123',
+        paymentProcessed: true,
+        paymentStatus: 'approved' as const,
+      },
+    };
+
+    render(
+      <MemberPaymentStep {...processedProps} />,
+    );
+
+    const processPaymentButton = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent === 'Process Payment');
+
+    expect(processPaymentButton).toBeFalsy();
+  });
+
+  it('shows Continue Anyway button with loading state when isLoading is true and payment is declined', () => {
+    const declinedLoadingProps = {
+      ...defaultProps,
+      data: {
+        ...defaultProps.data,
+        cardholderName: 'John Doe',
+        cardNumber: '4111111111111111',
+        cardExpiry: '12/25',
+        cardCvc: '123',
+        paymentProcessed: true,
+        paymentStatus: 'declined' as const,
+        paymentDeclineReason: 'insufficient_funds' as const,
+      },
+      isLoading: true,
+    };
+
+    render(
+      <MemberPaymentStep {...declinedLoadingProps} />,
+    );
+
+    const continueAnywayButton = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent?.includes('Continue Anyway...')) as HTMLButtonElement;
+
+    expect(continueAnywayButton).toBeTruthy();
+    expect(continueAnywayButton?.disabled).toBe(true);
+  });
+
+  it('disables Retry Payment button when isLoading is true', () => {
+    const declinedLoadingProps = {
+      ...defaultProps,
+      data: {
+        ...defaultProps.data,
+        cardholderName: 'John Doe',
+        cardNumber: '4111111111111111',
+        cardExpiry: '12/25',
+        cardCvc: '123',
+        paymentProcessed: true,
+        paymentStatus: 'declined' as const,
+        paymentDeclineReason: 'insufficient_funds' as const,
+      },
+      isLoading: true,
+    };
+
+    render(
+      <MemberPaymentStep {...declinedLoadingProps} />,
+    );
+
+    const retryButton = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent === 'Retry Payment') as HTMLButtonElement;
+
+    expect(retryButton?.disabled).toBe(true);
+  });
+
+  it('shows processing state on Retry Payment button when processing', async () => {
+    const onUpdateAction = vi.fn();
+    const declinedProps = {
+      ...defaultProps,
+      data: {
+        ...defaultProps.data,
+        cardholderName: 'John Doe',
+        cardNumber: '4111111111111111',
+        cardExpiry: '12/25',
+        cardCvc: '123',
+        paymentProcessed: true,
+        paymentStatus: 'declined' as const,
+        paymentDeclineReason: 'insufficient_funds' as const,
+      },
+      onUpdateAction,
+    };
+
+    render(
+      <MemberPaymentStep {...declinedProps} />,
+    );
+
+    const retryButton = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent === 'Retry Payment');
+
+    if (retryButton) {
+      await userEvent.click(retryButton);
+
+      // Button should now show Processing...
+      const processingButton = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent?.includes('Processing...'));
+
+      expect(processingButton).toBeTruthy();
+
+      // Complete the timer
+      await advancePaymentTimer();
+    }
+  });
+
+  it('does not show Next button when payment is declined', () => {
+    const declinedProps = {
+      ...defaultProps,
+      data: {
+        ...defaultProps.data,
+        cardholderName: 'John Doe',
+        cardNumber: '4111111111111111',
+        cardExpiry: '12/25',
+        cardCvc: '123',
+        paymentProcessed: true,
+        paymentStatus: 'declined' as const,
+        paymentDeclineReason: 'insufficient_funds' as const,
+      },
+    };
+
+    render(
+      <MemberPaymentStep {...declinedProps} />,
+    );
+
+    // Should show Continue Anyway, not Next
+    const nextButton = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent === 'Next');
+    const continueAnywayButton = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent === 'Continue Anyway');
+
+    expect(nextButton).toBeFalsy();
+    expect(continueAnywayButton).toBeTruthy();
+  });
+
+  it('does not show Retry Payment or Continue Anyway buttons when payment is approved', () => {
+    const approvedProps = {
+      ...defaultProps,
+      data: {
+        ...defaultProps.data,
+        cardholderName: 'John Doe',
+        cardNumber: '4111111111111111',
+        cardExpiry: '12/25',
+        cardCvc: '123',
+        paymentProcessed: true,
+        paymentStatus: 'approved' as const,
+      },
+    };
+
+    render(
+      <MemberPaymentStep {...approvedProps} />,
+    );
+
+    const retryButton = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent === 'Retry Payment');
+    const continueAnywayButton = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent === 'Continue Anyway');
+
+    expect(retryButton).toBeFalsy();
+    expect(continueAnywayButton).toBeFalsy();
+  });
+
+  it('disables Retry Payment button when form is invalid after decline', () => {
+    const declinedInvalidFormProps = {
+      ...defaultProps,
+      data: {
+        ...defaultProps.data,
+        cardholderName: '', // Invalid - empty
+        cardNumber: '4111111111111111',
+        cardExpiry: '12/25',
+        cardCvc: '123',
+        paymentProcessed: true,
+        paymentStatus: 'declined' as const,
+        paymentDeclineReason: 'insufficient_funds' as const,
+      },
+    };
+
+    render(
+      <MemberPaymentStep {...declinedInvalidFormProps} />,
+    );
+
+    const retryButton = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent === 'Retry Payment') as HTMLButtonElement;
+
+    expect(retryButton?.disabled).toBe(true);
+  });
+
+  it('handles ACH account holder blur event', async () => {
+    const achProps = {
+      ...defaultProps,
+      data: {
+        ...defaultProps.data,
+        paymentMethod: 'ach' as const,
+      },
+    };
+
+    render(
+      <MemberPaymentStep {...achProps} />,
+    );
+
+    const accountHolderInput = document.querySelector('input#achAccountHolder') as HTMLInputElement;
+    if (accountHolderInput) {
+      await userEvent.click(accountHolderInput);
+      accountHolderInput.blur();
+    }
+
+    expect(page.getByLabelText(/Account holder name/)).toBeTruthy();
+  });
+
+  it('handles ACH routing number blur event', async () => {
+    const achProps = {
+      ...defaultProps,
+      data: {
+        ...defaultProps.data,
+        paymentMethod: 'ach' as const,
+      },
+    };
+
+    render(
+      <MemberPaymentStep {...achProps} />,
+    );
+
+    const routingInput = document.querySelector('input#achRoutingNumber') as HTMLInputElement;
+    if (routingInput) {
+      await userEvent.click(routingInput);
+      routingInput.blur();
+    }
+
+    expect(page.getByLabelText(/Routing number/)).toBeTruthy();
+  });
+
+  it('handles ACH account number blur event', async () => {
+    const achProps = {
+      ...defaultProps,
+      data: {
+        ...defaultProps.data,
+        paymentMethod: 'ach' as const,
+      },
+    };
+
+    render(
+      <MemberPaymentStep {...achProps} />,
+    );
+
+    const accountInput = document.querySelector('input#achAccountNumber') as HTMLInputElement;
+    if (accountInput) {
+      await userEvent.click(accountInput);
+      accountInput.blur();
+    }
+
+    expect(page.getByLabelText(/Account number/)).toBeTruthy();
+  });
+
+  it('shows payment amount with decimal formatting', () => {
+    const priceProps = {
+      ...defaultProps,
+      data: {
+        ...defaultProps.data,
+        membershipPlanPrice: 149.99,
+        membershipPlanName: 'Premium Plan',
+        membershipPlanFrequency: 'monthly',
+      },
+    };
+
+    render(
+      <MemberPaymentStep {...priceProps} />,
+    );
+
+    expect(page.getByText(/Pay \$149\.99/)).toBeTruthy();
+  });
+
+  it('shows yearly frequency label for annual plan', () => {
+    const annualPriceProps = {
+      ...defaultProps,
+      data: {
+        ...defaultProps.data,
+        membershipPlanPrice: 1200,
+        membershipPlanName: 'Annual Plan',
+        membershipPlanFrequency: 'annually',
+      },
+    };
+
+    render(
+      <MemberPaymentStep {...annualPriceProps} />,
+    );
+
+    expect(page.getByText(/year/)).toBeTruthy();
+  });
+
+  it('shows yearly frequency label for yearly plan', () => {
+    const yearlyPriceProps = {
+      ...defaultProps,
+      data: {
+        ...defaultProps.data,
+        membershipPlanPrice: 1200,
+        membershipPlanName: 'Yearly Plan',
+        membershipPlanFrequency: 'yearly',
+      },
+    };
+
+    render(
+      <MemberPaymentStep {...yearlyPriceProps} />,
+    );
+
+    expect(page.getByText(/year/)).toBeTruthy();
+  });
+
+  it('handles None frequency as empty label', () => {
+    const noneFrequencyProps = {
+      ...defaultProps,
+      data: {
+        ...defaultProps.data,
+        membershipPlanPrice: 50,
+        membershipPlanName: 'One-time Plan',
+        membershipPlanFrequency: 'None',
+      },
+    };
+
+    render(
+      <MemberPaymentStep {...noneFrequencyProps} />,
+    );
+
+    // The plan description should show without a period text
+    expect(page.getByText(/One-time Plan/)).toBeTruthy();
+  });
+
+  it('resets payment status when changing payment details after decline', async () => {
+    const onUpdateAction = vi.fn();
+    const declinedProps = {
+      ...defaultProps,
+      data: {
+        ...defaultProps.data,
+        cardholderName: 'John Doe',
+        cardNumber: '4111111111110000',
+        cardExpiry: '12/25',
+        cardCvc: '123',
+        paymentProcessed: true,
+        paymentStatus: 'declined' as const,
+        paymentDeclineReason: 'insufficient_funds' as const,
+      },
+      onUpdateAction,
+    };
+
+    render(
+      <MemberPaymentStep {...declinedProps} />,
+    );
+
+    // Change card number to trigger reset
+    const cardInput = document.querySelector('input#cardNumber') as HTMLInputElement;
+    if (cardInput) {
+      await userEvent.fill(cardInput, '4111111111111111');
+    }
+
+    // Should reset payment status when changing details after decline
+    expect(onUpdateAction).toHaveBeenCalledWith({
+      cardNumber: '4111111111111111',
+      paymentStatus: undefined,
+      paymentDeclineReason: undefined,
+      paymentProcessed: false,
+    });
+  });
+
+  it('processes payment with all zeros CVC and shows insufficient funds decline', async () => {
+    const onUpdateAction = vi.fn();
+    const allZerosCvcProps = {
+      ...defaultProps,
+      data: {
+        ...defaultProps.data,
+        cardholderName: 'John Doe',
+        cardNumber: '4111111111111111',
+        cardExpiry: '12/25',
+        cardCvc: '0000',
+      },
+      onUpdateAction,
+    };
+
+    render(
+      <MemberPaymentStep {...allZerosCvcProps} />,
+    );
+
+    const processButton = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent?.includes('Process Payment'));
+
+    if (processButton) {
+      await userEvent.click(processButton);
+
+      // Wait for the mock payment to complete
+      await advancePaymentTimer();
+
+      // Verify declined state was set with insufficient funds reason (all zeros CVC)
+      expect(onUpdateAction).toHaveBeenCalledWith(
+        expect.objectContaining({
+          paymentStatus: 'declined',
+          paymentDeclineReason: 'insufficient_funds',
+          paymentProcessed: true,
+        }),
+      );
+    }
+  });
+
+  it('disables payment method tabs while processing', async () => {
+    const onUpdateAction = vi.fn();
+    const completedProps = {
+      ...defaultProps,
+      data: {
+        ...defaultProps.data,
+        cardholderName: 'John Doe',
+        cardNumber: '4111111111111111',
+        cardExpiry: '12/25',
+        cardCvc: '123',
+      },
+      onUpdateAction,
+    };
+
+    render(
+      <MemberPaymentStep {...completedProps} />,
+    );
+
+    const processButton = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent?.includes('Process Payment'));
+
+    if (processButton) {
+      await userEvent.click(processButton);
+
+      // Check that ACH tab is disabled during processing
+      const achButton = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent?.includes('ACH Bank Account')) as HTMLButtonElement;
+
+      expect(achButton?.disabled).toBe(true);
+
+      // Wait for completion
+      await advancePaymentTimer();
+    }
   });
 });
