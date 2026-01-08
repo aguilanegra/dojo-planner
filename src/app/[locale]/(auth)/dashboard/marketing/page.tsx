@@ -190,14 +190,14 @@ function getUsagePercentage(usage: string): number {
   return Math.min((used / limitNum) * 100, 100);
 }
 
-function formatEndDateTime(endDateTime: string): string {
-  if (!endDateTime) {
+function formatDateTime(dateTime: string): string {
+  if (!dateTime) {
     return 'No Expiry';
   }
 
   try {
     // Return in format YYYY-MM-DD hh:mm:ss
-    const date = new Date(endDateTime);
+    const date = new Date(dateTime);
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
@@ -206,7 +206,20 @@ function formatEndDateTime(endDateTime: string): string {
     const seconds = String(date.getSeconds()).padStart(2, '0');
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   } catch {
-    return endDateTime;
+    return dateTime;
+  }
+}
+
+function getTypeAbbreviation(type: string): string {
+  switch (type) {
+    case 'Percentage':
+      return 'PCT';
+    case 'Fixed Amount':
+      return 'FXD';
+    case 'Free Trial':
+      return 'TRY';
+    default:
+      return type;
   }
 }
 
@@ -519,7 +532,7 @@ export default function MarketingPage() {
                       onClick={() => handleSort('endDateTime')}
                       className="flex cursor-pointer items-center gap-2 hover:text-foreground/80"
                     >
-                      {t('table_expires')}
+                      {t('table_effective')}
                       {sortField === 'endDateTime' && (
                         sortDirection === 'asc'
                           ? <ArrowDownAZ className="h-4 w-4" />
@@ -553,7 +566,7 @@ export default function MarketingPage() {
                         <p className="text-xs text-muted-foreground">{coupon.description}</p>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-foreground">{coupon.type}</td>
+                    <td className="px-6 py-4 text-sm text-foreground">{getTypeAbbreviation(coupon.type)}</td>
                     <td className="px-6 py-4 text-sm text-foreground">{coupon.amount}</td>
                     <td className="px-6 py-4 text-sm text-foreground">{coupon.applyTo}</td>
                     <td className="px-6 py-4">
@@ -567,7 +580,12 @@ export default function MarketingPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-foreground">{formatEndDateTime(coupon.endDateTime)}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col">
+                        <span className="text-sm text-foreground">{formatDateTime(coupon.startDateTime)}</span>
+                        <span className="text-sm text-muted-foreground">{formatDateTime(coupon.endDateTime)}</span>
+                      </div>
+                    </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
                         getStatusVariant(coupon.status) === 'outline'

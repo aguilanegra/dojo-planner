@@ -1,11 +1,14 @@
 'use client';
 
-import type { AddMemberWizardData, PaymentDeclineReason, PaymentMethod, PaymentStatus } from '@/hooks/useAddMemberWizard';
-import { AlertCircle, CheckCircle2, CreditCard, Landmark, Loader2 } from 'lucide-react';
+import type { Coupon } from '@/features/marketing';
+import type { AddMemberWizardData, AppliedCoupon, PaymentDeclineReason, PaymentMethod, PaymentStatus } from '@/hooks/useAddMemberWizard';
+import { AlertCircle, CheckCircle2, CreditCard, Landmark, Loader2, Tag } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { calculateCouponDiscount, getValidMembershipCoupons } from '@/features/marketing';
 
 type MemberPaymentStepProps = {
   data: AddMemberWizardData;
@@ -14,6 +17,7 @@ type MemberPaymentStepProps = {
   onBackAction: () => void;
   onCancelAction: () => void;
   isLoading?: boolean;
+  availableCoupons?: Coupon[];
 };
 
 type MockPaymentResult = {
@@ -133,16 +137,45 @@ export const MemberPaymentStep = ({
   onBackAction,
   onCancelAction,
   isLoading = false,
+  availableCoupons = [],
 }: MemberPaymentStepProps) => {
   const t = useTranslations('AddMemberWizard.MemberPaymentStep');
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   const paymentMethod = data.paymentMethod || 'card';
-  const paymentAmount = formatPaymentAmount(data.membershipPlanPrice);
+  const originalPrice = data.membershipPlanPrice ?? 0;
   const frequencyLabel = getFrequencyLabel(data.membershipPlanFrequency);
   const paymentStatus = data.paymentStatus;
   const paymentProcessed = data.paymentProcessed;
+
+  // Get valid membership coupons
+  const validCoupons = useMemo(() => {
+    return getValidMembershipCoupons(availableCoupons);
+  }, [availableCoupons]);
+
+  // Calculate discount if coupon is applied
+  const { discountAmount, finalPrice } = useMemo(() => {
+    if (data.appliedCoupon && originalPrice > 0) {
+      // Convert AppliedCoupon to Coupon format for calculation
+      const couponForCalc: Coupon = {
+        id: data.appliedCoupon.id,
+        code: data.appliedCoupon.code,
+        type: data.appliedCoupon.type,
+        amount: data.appliedCoupon.amount,
+        description: data.appliedCoupon.description,
+        applyTo: 'Memberships',
+        usage: '0/0',
+        startDateTime: '',
+        endDateTime: '',
+        status: 'Active',
+      };
+      return calculateCouponDiscount(couponForCalc, originalPrice);
+    }
+    return { discountAmount: 0, finalPrice: originalPrice };
+  }, [data.appliedCoupon, originalPrice]);
+
+  const paymentAmount = formatPaymentAmount(finalPrice);
 
   const handleInputChange = (field: string, value: string) => {
     // Reset payment status when user changes payment details after a decline
@@ -171,6 +204,25 @@ export const MemberPaymentStep = ({
       paymentDeclineReason: undefined,
       paymentProcessed: false,
     });
+  };
+
+  const handleCouponChange = (couponId: string) => {
+    if (couponId === 'none') {
+      onUpdateAction({ appliedCoupon: null });
+      return;
+    }
+
+    const selectedCoupon = validCoupons.find(c => c.id === couponId);
+    if (selectedCoupon) {
+      const appliedCoupon: AppliedCoupon = {
+        id: selectedCoupon.id,
+        code: selectedCoupon.code,
+        type: selectedCoupon.type,
+        amount: selectedCoupon.amount,
+        description: selectedCoupon.description,
+      };
+      onUpdateAction({ appliedCoupon });
+    }
   };
 
   // Card validation helpers for touched fields
@@ -249,11 +301,25 @@ export const MemberPaymentStep = ({
   // Determine plan label and period for display
   const planText = data.membershipPlanName || '';
   const periodText = frequencyLabel;
+  const originalAmountText = formatPaymentAmount(originalPrice);
+  const hasCouponApplied = data.appliedCoupon && discountAmount > 0;
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold">{t('pay_amount', { amount: paymentAmount })}</h2>
+        <h2 className="text-lg font-semibold">
+          {hasCouponApplied
+            ? (
+                <>
+                  {t('pay_amount', { amount: paymentAmount })}
+                  {' '}
+                  <span className="text-base font-normal text-muted-foreground line-through">
+                    {originalAmountText}
+                  </span>
+                </>
+              )
+            : t('pay_amount', { amount: paymentAmount })}
+        </h2>
         <p className="text-sm text-muted-foreground">
           {t('payment_description', {
             plan: planText,
@@ -262,6 +328,56 @@ export const MemberPaymentStep = ({
           })}
         </p>
       </div>
+
+      {/* Coupon Selection */}
+      {validCoupons.length > 0 && originalPrice > 0 && (
+        <div>
+          <label htmlFor="couponSelect" className="block text-sm font-medium">
+            {t('coupon_label')}
+          </label>
+          <Select
+            value={data.appliedCoupon?.id || 'none'}
+            onValueChange={handleCouponChange}
+            disabled={isProcessingPayment}
+          >
+            <SelectTrigger id="couponSelect" className="mt-1">
+              <SelectValue placeholder={t('coupon_placeholder')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">{t('coupon_none')}</SelectItem>
+              {validCoupons.map(coupon => (
+                <SelectItem key={coupon.id} value={coupon.id}>
+                  <span className="flex items-center gap-2">
+                    <Tag className="h-3 w-3" />
+                    {coupon.code}
+                    {' - '}
+                    {coupon.type === 'Percentage' && coupon.amount}
+                    {coupon.type === 'Fixed Amount' && coupon.amount}
+                    {coupon.type === 'Free Trial' && t('coupon_free_trial')}
+                    {' '}
+                    {t('coupon_off')}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {/* Savings Alert */}
+      {hasCouponApplied && (
+        <div className="flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-950/30">
+          <Tag className="mt-0.5 h-5 w-5 shrink-0 text-green-600 dark:text-green-400" />
+          <div>
+            <p className="font-medium text-green-800 dark:text-green-200">
+              {t('coupon_applied_title', { code: data.appliedCoupon?.code ?? '' })}
+            </p>
+            <p className="text-sm text-green-700 dark:text-green-300">
+              {t('coupon_savings_message', { amount: formatPaymentAmount(discountAmount) })}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Payment Status Alerts */}
       {paymentStatus === 'approved' && (

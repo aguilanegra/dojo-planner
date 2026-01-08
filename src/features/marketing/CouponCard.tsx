@@ -46,14 +46,14 @@ function getUsagePercentage(usage: string): number {
   return Math.min((used / limitNum) * 100, 100);
 }
 
-function formatEndDateTime(endDateTime: string): string {
-  if (!endDateTime) {
+function formatDateTime(dateTime: string): string {
+  if (!dateTime) {
     return 'No Expiry';
   }
 
   try {
     // Return in format YYYY-MM-DD hh:mm:ss
-    const date = new Date(endDateTime);
+    const date = new Date(dateTime);
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
@@ -62,7 +62,20 @@ function formatEndDateTime(endDateTime: string): string {
     const seconds = String(date.getSeconds()).padStart(2, '0');
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   } catch {
-    return endDateTime;
+    return dateTime;
+  }
+}
+
+function getTypeAbbreviation(type: string): string {
+  switch (type) {
+    case 'Percentage':
+      return 'PCT';
+    case 'Fixed Amount':
+      return 'FXD';
+    case 'Free Trial':
+      return 'TRY';
+    default:
+      return type;
   }
 }
 
@@ -130,7 +143,7 @@ export function CouponCard({
         <div className="grid grid-cols-2 gap-4">
           <div>
             <span className="text-xs font-semibold text-muted-foreground">{t('table_type')}</span>
-            <div className="mt-1 text-sm font-medium text-foreground">{coupon.type}</div>
+            <div className="mt-1 text-sm font-medium text-foreground">{getTypeAbbreviation(coupon.type)}</div>
           </div>
 
           <div>
@@ -144,8 +157,11 @@ export function CouponCard({
           </div>
 
           <div>
-            <span className="text-xs font-semibold text-muted-foreground">{t('table_expires')}</span>
-            <div className="mt-1 text-sm font-medium text-foreground">{formatEndDateTime(coupon.endDateTime)}</div>
+            <span className="text-xs font-semibold text-muted-foreground">{t('table_effective')}</span>
+            <div className="mt-1 flex flex-col">
+              <span className="text-sm font-medium text-foreground">{formatDateTime(coupon.startDateTime)}</span>
+              <span className="text-sm text-muted-foreground">{formatDateTime(coupon.endDateTime)}</span>
+            </div>
           </div>
         </div>
 

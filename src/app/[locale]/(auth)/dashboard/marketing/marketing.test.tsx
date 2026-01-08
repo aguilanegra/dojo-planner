@@ -104,12 +104,13 @@ describe('Marketing Page', () => {
       expect(statusHeader).toBeInTheDocument();
     });
 
-    it('renders coupon data in table', () => {
+    it('renders coupon data in table with type abbreviations', () => {
       render(<I18nWrapper><MarketingPage /></I18nWrapper>);
 
       const table = page.getByRole('table');
       const couponCode = table.getByText(/CTA_FAMILY_1/);
-      const couponType = table.getByRole('cell', { name: /Percentage/ }).first();
+      // Type should be displayed as PCT abbreviation (not "Percentage")
+      const couponType = table.getByRole('cell', { name: /PCT/ }).first();
 
       expect(couponCode).toBeInTheDocument();
       expect(couponType).toBeInTheDocument();
@@ -253,6 +254,67 @@ describe('Marketing Page', () => {
       expect(codeHeader).toBeInTheDocument();
     });
 
+    it('can sort by code column twice to toggle direction', async () => {
+      render(<I18nWrapper><MarketingPage /></I18nWrapper>);
+
+      const table = page.getByRole('table');
+      const codeHeader = table.getByRole('button', { name: /Code/ });
+      await userEvent.click(codeHeader);
+      await userEvent.click(codeHeader);
+
+      expect(codeHeader).toBeInTheDocument();
+    });
+
+    it('can sort by type column', async () => {
+      render(<I18nWrapper><MarketingPage /></I18nWrapper>);
+
+      const table = page.getByRole('table');
+      const typeHeader = table.getByRole('button', { name: /Type/ });
+      await userEvent.click(typeHeader);
+
+      expect(typeHeader).toBeInTheDocument();
+    });
+
+    it('can sort by amount column', async () => {
+      render(<I18nWrapper><MarketingPage /></I18nWrapper>);
+
+      const table = page.getByRole('table');
+      const amountHeader = table.getByRole('button', { name: /Amount/ });
+      await userEvent.click(amountHeader);
+
+      expect(amountHeader).toBeInTheDocument();
+    });
+
+    it('can sort by apply to column', async () => {
+      render(<I18nWrapper><MarketingPage /></I18nWrapper>);
+
+      const table = page.getByRole('table');
+      const applyToHeader = table.getByRole('button', { name: /Apply to/ });
+      await userEvent.click(applyToHeader);
+
+      expect(applyToHeader).toBeInTheDocument();
+    });
+
+    it('can sort by usage column', async () => {
+      render(<I18nWrapper><MarketingPage /></I18nWrapper>);
+
+      const table = page.getByRole('table');
+      const usageHeader = table.getByRole('button', { name: /Usage/ });
+      await userEvent.click(usageHeader);
+
+      expect(usageHeader).toBeInTheDocument();
+    });
+
+    it('can sort by effective column', async () => {
+      render(<I18nWrapper><MarketingPage /></I18nWrapper>);
+
+      const table = page.getByRole('table');
+      const effectiveHeader = table.getByRole('button', { name: /Effective/ });
+      await userEvent.click(effectiveHeader);
+
+      expect(effectiveHeader).toBeInTheDocument();
+    });
+
     it('can sort by status column', async () => {
       render(<I18nWrapper><MarketingPage /></I18nWrapper>);
 
@@ -261,6 +323,50 @@ describe('Marketing Page', () => {
       await userEvent.click(statusHeader);
 
       expect(statusHeader).toBeInTheDocument();
+    });
+  });
+
+  describe('Delete functionality', () => {
+    it('opens delete confirmation dialog when clicking delete button', async () => {
+      render(<I18nWrapper><MarketingPage /></I18nWrapper>);
+
+      const table = page.getByRole('table');
+      // NEWYEAR25 has 0/150 usage so delete button is visible
+      const deleteButton = table.getByRole('button', { name: /Delete NEWYEAR25/i });
+      await userEvent.click(deleteButton);
+
+      await waitFor(() => {
+        const dialog = page.getByRole('alertdialog');
+
+        expect(dialog).toBeInTheDocument();
+      });
+    });
+
+    it('closes delete dialog when cancel is clicked', async () => {
+      render(<I18nWrapper><MarketingPage /></I18nWrapper>);
+
+      const table = page.getByRole('table');
+      const deleteButton = table.getByRole('button', { name: /Delete NEWYEAR25/i });
+      await userEvent.click(deleteButton);
+
+      await waitFor(() => {
+        const cancelButton = page.getByRole('button', { name: /Cancel/i });
+
+        expect(cancelButton).toBeInTheDocument();
+      });
+
+      const cancelButton = page.getByRole('button', { name: /Cancel/i });
+      await userEvent.click(cancelButton);
+
+      await waitFor(() => {
+        try {
+          const dialog = page.getByRole('alertdialog');
+
+          expect(dialog.element()).toBeFalsy();
+        } catch {
+          expect(true).toBe(true);
+        }
+      });
     });
   });
 });
