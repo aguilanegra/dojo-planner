@@ -6,6 +6,15 @@ export type PaymentMethod = 'card' | 'ach';
 export type PaymentStatus = 'pending' | 'processing' | 'approved' | 'declined';
 export type PaymentDeclineReason = 'insufficient_funds' | 'invalid_cvc' | 'expired_card' | 'card_declined' | 'ach_failed';
 
+// Coupon information for payment step
+export type AppliedCoupon = {
+  id: string;
+  code: string;
+  type: 'Percentage' | 'Fixed Amount' | 'Free Trial';
+  amount: string;
+  description: string;
+};
+
 export type AddMemberWizardData = {
   // Step 1: Member Type
   memberType: MemberType | null;
@@ -47,6 +56,9 @@ export type AddMemberWizardData = {
   achAccountHolder?: string;
   achRoutingNumber?: string;
   achAccountNumber?: string;
+
+  // Coupon applied to payment
+  appliedCoupon?: AppliedCoupon | null;
 
   // Payment processing state
   paymentStatus?: PaymentStatus;
@@ -126,6 +138,7 @@ export const useAddMemberWizard = () => {
       achAccountHolder: undefined,
       achRoutingNumber: undefined,
       achAccountNumber: undefined,
+      appliedCoupon: undefined,
       paymentStatus: undefined,
       paymentDeclineReason: undefined,
       paymentProcessed: undefined,

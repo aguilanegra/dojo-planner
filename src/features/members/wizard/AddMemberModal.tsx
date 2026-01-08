@@ -1,5 +1,6 @@
 'use client';
 
+import type { Coupon } from '@/features/marketing';
 import { useOrganization, useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -15,9 +16,10 @@ import { MemberTypeStep } from './MemberTypeStep';
 type AddMemberModalProps = {
   isOpen: boolean;
   onCloseAction: () => void;
+  availableCoupons?: Coupon[];
 };
 
-export const AddMemberModal = ({ isOpen, onCloseAction }: AddMemberModalProps) => {
+export const AddMemberModal = ({ isOpen, onCloseAction, availableCoupons = [] }: AddMemberModalProps) => {
   const router = useRouter();
   const wizard = useAddMemberWizard();
   const { user } = useUser();
@@ -107,6 +109,15 @@ export const AddMemberModal = ({ isOpen, onCloseAction }: AddMemberModalProps) =
         ...(addressPayload && { address: addressPayload }),
         ...(photoUrl && { photoUrl }),
         ...(isPaymentDeclined && { status: 'past due' as const }),
+        ...(wizard.data.appliedCoupon && {
+          appliedCoupon: {
+            id: wizard.data.appliedCoupon.id,
+            code: wizard.data.appliedCoupon.code,
+            type: wizard.data.appliedCoupon.type,
+            amount: wizard.data.appliedCoupon.amount,
+            description: wizard.data.appliedCoupon.description,
+          },
+        }),
       };
 
       console.info('[Add Member Wizard] Member creation payload:', {
@@ -227,6 +238,7 @@ export const AddMemberModal = ({ isOpen, onCloseAction }: AddMemberModalProps) =
               onBackAction={wizard.previousStep}
               onCancelAction={handleCancel}
               isLoading={wizard.isLoading}
+              availableCoupons={availableCoupons}
             />
           )}
 

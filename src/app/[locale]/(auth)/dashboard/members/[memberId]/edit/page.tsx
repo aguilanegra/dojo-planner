@@ -70,6 +70,12 @@ type PaymentMethod = {
   last4: string;
   brand: string;
   isDefault: boolean;
+  appliedCoupon?: {
+    code: string;
+    type: string;
+    amount: string;
+    description: string;
+  };
 };
 
 type Agreement = {
@@ -141,6 +147,13 @@ const BASE_MOCK_DATA = {
     last4: '0046',
     brand: 'Visa',
     isDefault: true,
+    // Mock coupon data for demonstration
+    appliedCoupon: {
+      code: 'SAVE15',
+      type: 'Percentage',
+      amount: '15%',
+      description: 'New member discount',
+    },
   },
   agreement: {
     signedDate: 'Sep 01, 2025',
@@ -834,16 +847,31 @@ export default function EditMemberPage() {
                     </p>
                   </div>
                 </div>
-              </div>
-              <div className="mt-auto flex justify-end pt-6">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => console.info('Send secure link')}
-                  className="h-auto w-fit p-0 text-blue-600 hover:bg-transparent hover:text-blue-700"
-                >
-                  Send secure link to member
-                </Button>
+                {/* Applied Coupon Info */}
+                {state.currentData.paymentMethod.appliedCoupon && (
+                  <div className="mt-4 rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-950/30">
+                    <div className="flex items-center gap-2">
+                      <span className="text-green-600 dark:text-green-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+                          <line x1="7" y1="7" x2="7.01" y2="7" />
+                        </svg>
+                      </span>
+                      <span className="text-sm font-medium text-green-800 dark:text-green-200">
+                        Coupon Applied:
+                        {' '}
+                        {state.currentData.paymentMethod.appliedCoupon.code}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs text-green-700 dark:text-green-300">
+                      {state.currentData.paymentMethod.appliedCoupon.type === 'Free Trial'
+                        ? state.currentData.paymentMethod.appliedCoupon.amount
+                        : `${state.currentData.paymentMethod.appliedCoupon.amount} off`}
+                      {' - '}
+                      {state.currentData.paymentMethod.appliedCoupon.description}
+                    </p>
+                  </div>
+                )}
               </div>
             </Card>
 

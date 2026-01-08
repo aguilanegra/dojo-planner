@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
 import { useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { mockCoupons } from '@/features/marketing';
 import { invalidateMembersCache, useMembersCache } from '@/hooks/useMembersCache';
 import { MembersTable } from './MembersTable';
 import { AddMemberModal } from './wizard/AddMemberModal';
@@ -50,6 +51,7 @@ export function CustomMembersPage() {
       <AddMemberModal
         isOpen={isAddMemberModalOpen}
         onCloseAction={handleAddMemberModalClose}
+        availableCoupons={mockCoupons}
       />
     </>
   );
