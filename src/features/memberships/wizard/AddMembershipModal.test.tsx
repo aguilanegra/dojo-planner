@@ -25,6 +25,8 @@ const translationKeys: Record<string, string> = {
   membership_type_standard: 'Standard',
   membership_type_trial: 'Trial Membership',
   membership_type_trial_help: 'Trial memberships are typically free or low-cost introductory offers for new students',
+  membership_type_punchcard: 'Punchcard',
+  membership_type_punchcard_help: 'One-time fee for a set number of classes',
   description_label: 'Description',
   description_placeholder: 'Describe the terms, conditions, and benefits of this membership...',
   description_error: 'Please enter a description.',

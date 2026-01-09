@@ -60,6 +60,8 @@ describe('MembershipContractStep', () => {
     autoRenewal: 'none',
     cancellationFee: null,
     holdLimitPerYear: null,
+    classesIncluded: null,
+    punchcardPrice: null,
   };
 
   const mockHandlers = {

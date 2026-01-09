@@ -83,27 +83,50 @@ export const MembershipSuccessStep = ({ data, onDone }: MembershipSuccessStepPro
           <div className="flex justify-between">
             <span className="text-muted-foreground">{t('summary_type')}</span>
             <span className="font-medium text-foreground">
-              {data.membershipType === 'trial' ? t('type_trial') : t('type_standard')}
+              {data.membershipType === 'trial' && t('type_trial')}
+              {data.membershipType === 'standard' && t('type_standard')}
+              {data.membershipType === 'punchcard' && t('type_punchcard')}
             </span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">{t('summary_monthly_fee')}</span>
-            <span className="font-medium text-foreground">{formatPrice(data.monthlyFee)}</span>
-          </div>
-          {data.signUpFee !== null && data.signUpFee > 0 && (
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">{t('summary_signup_fee')}</span>
-              <span className="font-medium text-foreground">{formatPrice(data.signUpFee)}</span>
-            </div>
-          )}
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">{t('summary_frequency')}</span>
-            <span className="font-medium text-foreground">{getFrequencyLabel()}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">{t('summary_contract')}</span>
-            <span className="font-medium text-foreground">{getContractLengthLabel()}</span>
-          </div>
+          {data.membershipType === 'punchcard'
+            ? (
+                <>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t('summary_classes_included')}</span>
+                    <span className="font-medium text-foreground">
+                      {data.classesIncluded}
+                      {' '}
+                      {t('classes_label')}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t('summary_punchcard_price')}</span>
+                    <span className="font-medium text-foreground">{formatPrice(data.punchcardPrice)}</span>
+                  </div>
+                </>
+              )
+            : (
+                <>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t('summary_monthly_fee')}</span>
+                    <span className="font-medium text-foreground">{formatPrice(data.monthlyFee)}</span>
+                  </div>
+                  {data.signUpFee !== null && data.signUpFee > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">{t('summary_signup_fee')}</span>
+                      <span className="font-medium text-foreground">{formatPrice(data.signUpFee)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t('summary_frequency')}</span>
+                    <span className="font-medium text-foreground">{getFrequencyLabel()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t('summary_contract')}</span>
+                    <span className="font-medium text-foreground">{getContractLengthLabel()}</span>
+                  </div>
+                </>
+              )}
           <div className="flex justify-between">
             <span className="text-muted-foreground">{t('summary_associated_program')}</span>
             <span className="font-medium text-foreground">

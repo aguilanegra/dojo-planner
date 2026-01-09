@@ -87,7 +87,7 @@ export const MembershipBasicsStep = ({ data, onUpdate, onNext, onCancel, error }
         {/* Membership Type Selection Cards */}
         <div className="space-y-2">
           <label className="text-sm font-medium text-foreground">{t('membership_type_label')}</label>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             {/* Standard Membership Card */}
             <button
               type="button"
@@ -117,6 +117,22 @@ export const MembershipBasicsStep = ({ data, onUpdate, onNext, onCancel, error }
               <span className="font-medium text-foreground">{t('membership_type_trial')}</span>
               <p className="mt-1 text-xs text-muted-foreground">
                 {t('membership_type_trial_help')}
+              </p>
+            </button>
+
+            {/* Punchcard Membership Card */}
+            <button
+              type="button"
+              onClick={() => handleInputChange('membershipType', 'punchcard')}
+              className={`flex flex-col items-start rounded-lg border-2 p-4 text-left transition-all ${
+                data.membershipType === 'punchcard'
+                  ? 'border-primary bg-primary/5'
+                  : 'border-border hover:border-muted-foreground/50'
+              }`}
+            >
+              <span className="font-medium text-foreground">{t('membership_type_punchcard')}</span>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t('membership_type_punchcard_help')}
               </p>
             </button>
           </div>

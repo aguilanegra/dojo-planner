@@ -19,11 +19,15 @@ const translationKeys: Record<string, string> = {
   summary_associated_program: 'Associated Program',
   summary_cancellation_fee: 'Cancellation Fee',
   summary_hold_limit: 'Hold Limit',
+  summary_classes_included: 'Classes Included',
+  summary_punchcard_price: 'One-Time Price',
+  classes_label: 'classes',
   price_free: 'Free',
   status_active: 'Active',
   status_inactive: 'Inactive',
   type_standard: 'Standard',
   type_trial: 'Trial',
+  type_punchcard: 'Punchcard',
   frequency_monthly: 'Monthly',
   frequency_weekly: 'Weekly',
   frequency_annually: 'Annually',
@@ -67,6 +71,8 @@ describe('MembershipSuccessStep', () => {
     autoRenewal: 'month-to-month',
     cancellationFee: 300,
     holdLimitPerYear: 2,
+    classesIncluded: null,
+    punchcardPrice: null,
   };
 
   const mockOnDone = vi.fn();
@@ -383,5 +389,76 @@ describe('MembershipSuccessStep', () => {
     const contract = page.getByText('6 Months');
 
     expect(contract).toBeTruthy();
+  });
+
+  it('should display Punchcard type for punchcard memberships', () => {
+    const punchcardData: AddMembershipWizardData = {
+      ...mockData,
+      membershipType: 'punchcard',
+      classesIncluded: 10,
+      punchcardPrice: 200,
+    };
+
+    render(<MembershipSuccessStep data={punchcardData} onDone={mockOnDone} />);
+
+    const type = page.getByText('Punchcard');
+
+    expect(type).toBeTruthy();
+  });
+
+  it('should display classes included for punchcard memberships', () => {
+    const punchcardData: AddMembershipWizardData = {
+      ...mockData,
+      membershipType: 'punchcard',
+      classesIncluded: 10,
+      punchcardPrice: 200,
+    };
+
+    render(<MembershipSuccessStep data={punchcardData} onDone={mockOnDone} />);
+
+    const classesLabel = page.getByText('Classes Included');
+    const classesValue = page.getByText(/10/);
+
+    expect(classesLabel).toBeTruthy();
+    expect(classesValue).toBeTruthy();
+  });
+
+  it('should display punchcard price for punchcard memberships', () => {
+    const punchcardData: AddMembershipWizardData = {
+      ...mockData,
+      membershipType: 'punchcard',
+      classesIncluded: 10,
+      punchcardPrice: 200,
+    };
+
+    render(<MembershipSuccessStep data={punchcardData} onDone={mockOnDone} />);
+
+    const priceLabel = page.getByText('One-Time Price');
+    const priceValue = page.getByText('$200.00');
+
+    expect(priceLabel).toBeTruthy();
+    expect(priceValue).toBeTruthy();
+  });
+
+  it('should not display standard payment fields for punchcard memberships', () => {
+    const punchcardData: AddMembershipWizardData = {
+      ...mockData,
+      membershipType: 'punchcard',
+      classesIncluded: 10,
+      punchcardPrice: 200,
+    };
+
+    render(<MembershipSuccessStep data={punchcardData} onDone={mockOnDone} />);
+
+    // Monthly Fee and Contract Length should not be present for punchcard
+    const monthlyFeeLabels = Array.from(document.querySelectorAll('span')).filter(
+      s => s.textContent === 'Monthly Fee',
+    );
+    const contractLabels = Array.from(document.querySelectorAll('span')).filter(
+      s => s.textContent === 'Contract Length',
+    );
+
+    expect(monthlyFeeLabels.length).toBe(0);
+    expect(contractLabels.length).toBe(0);
   });
 });

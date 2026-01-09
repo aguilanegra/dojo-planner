@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export type MembershipType = 'standard' | 'trial';
+export type MembershipType = 'standard' | 'trial' | 'punchcard';
 export type MembershipStatus = 'active' | 'inactive';
 export type ChargeSignUpFeeOption = 'at-registration' | 'first-payment';
 export type PaymentFrequency = 'monthly' | 'weekly' | 'annually';
@@ -33,6 +33,10 @@ export type AddMembershipWizardData = {
   autoRenewal: AutoRenewalOption;
   cancellationFee: number | null;
   holdLimitPerYear: number | null;
+
+  // Punchcard-specific fields
+  classesIncluded: number | null;
+  punchcardPrice: number | null;
 };
 
 export type MembershipWizardStep = 'basics' | 'program-association' | 'payment-details' | 'contract-terms' | 'success';
@@ -55,6 +59,8 @@ const initialData: AddMembershipWizardData = {
   autoRenewal: 'none',
   cancellationFee: null,
   holdLimitPerYear: null,
+  classesIncluded: null,
+  punchcardPrice: null,
 };
 
 export const useAddMembershipWizard = () => {

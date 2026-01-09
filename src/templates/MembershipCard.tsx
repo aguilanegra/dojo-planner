@@ -15,6 +15,7 @@ export type MembershipCardProps = {
   status: MembershipStatus;
   isTrial?: boolean;
   isMonthly?: boolean;
+  isPunchcard?: boolean;
   price: string;
   signupFee: string;
   frequency: string;
@@ -65,6 +66,16 @@ function MonthlyBadge() {
   );
 }
 
+function PunchcardBadge() {
+  const t = useTranslations('MembershipCard');
+
+  return (
+    <Badge className="bg-violet-500 text-white hover:bg-violet-600">
+      {t('punchcard_badge')}
+    </Badge>
+  );
+}
+
 export function MembershipCard({
   id,
   name,
@@ -72,6 +83,7 @@ export function MembershipCard({
   status,
   isTrial = false,
   isMonthly = false,
+  isPunchcard = false,
   price,
   signupFee,
   frequency,
@@ -102,6 +114,7 @@ export function MembershipCard({
             <StatusBadge status={status} />
             {isTrial && <TrialBadge />}
             {isMonthly && <MonthlyBadge />}
+            {isPunchcard && <PunchcardBadge />}
           </div>
         </div>
 

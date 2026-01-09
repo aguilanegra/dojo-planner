@@ -28,6 +28,13 @@ const translationKeys: Record<string, string> = {
   custom_start_date_label: 'Custom Start Date',
   prorate_label: 'Pro-rate First Payment',
   prorate_description: 'Enable proration for partial months',
+  classes_included_label: 'Classes Included',
+  classes_included_placeholder: 'e.g., 10',
+  classes_included_error: 'Please enter the number of classes (at least 1).',
+  punchcard_price_label: 'One-Time Price',
+  punchcard_price_placeholder: '0.00',
+  punchcard_price_error: 'Please enter a valid price.',
+  punchcard_description: 'This punchcard allows the member to attend the specified number of classes for a one-time fee. No recurring payments.',
   cancel_button: 'Cancel',
   back_button: 'Back',
   next_button: 'Next',
@@ -64,6 +71,8 @@ describe('MembershipPaymentStep', () => {
     autoRenewal: 'none',
     cancellationFee: null,
     holdLimitPerYear: null,
+    classesIncluded: null,
+    punchcardPrice: null,
   };
 
   const mockHandlers = {
@@ -438,5 +447,145 @@ describe('MembershipPaymentStep', () => {
     const annualFeeLabel = page.getByText('Annual Fee');
 
     expect(annualFeeLabel).toBeTruthy();
+  });
+
+  it('should render punchcard-specific fields for punchcard membership', () => {
+    const punchcardData: AddMembershipWizardData = {
+      ...mockData,
+      membershipType: 'punchcard',
+    };
+
+    render(
+      <MembershipPaymentStep
+        data={punchcardData}
+        onUpdate={mockHandlers.onUpdate}
+        onNext={mockHandlers.onNext}
+        onBack={mockHandlers.onBack}
+        onCancel={mockHandlers.onCancel}
+      />,
+    );
+
+    const classesIncludedLabel = page.getByText('Classes Included');
+    const punchcardPriceLabel = page.getByText('One-Time Price');
+
+    expect(classesIncludedLabel).toBeTruthy();
+    expect(punchcardPriceLabel).toBeTruthy();
+  });
+
+  it('should not render standard payment fields for punchcard membership', () => {
+    const punchcardData: AddMembershipWizardData = {
+      ...mockData,
+      membershipType: 'punchcard',
+    };
+
+    render(
+      <MembershipPaymentStep
+        data={punchcardData}
+        onUpdate={mockHandlers.onUpdate}
+        onNext={mockHandlers.onNext}
+        onBack={mockHandlers.onBack}
+        onCancel={mockHandlers.onCancel}
+      />,
+    );
+
+    // These elements should not be present for punchcard
+    const monthlyFeeElements = Array.from(document.querySelectorAll('label')).filter(
+      el => el.textContent === 'Monthly Fee',
+    );
+
+    // For punchcard, we should NOT see the Monthly Fee label
+    expect(monthlyFeeElements.length).toBe(0);
+  });
+
+  it('should have Next button disabled for punchcard when classes and price are not provided', () => {
+    const punchcardData: AddMembershipWizardData = {
+      ...mockData,
+      membershipType: 'punchcard',
+    };
+
+    render(
+      <MembershipPaymentStep
+        data={punchcardData}
+        onUpdate={mockHandlers.onUpdate}
+        onNext={mockHandlers.onNext}
+        onBack={mockHandlers.onBack}
+        onCancel={mockHandlers.onCancel}
+      />,
+    );
+
+    const buttons = Array.from(document.querySelectorAll('button'));
+    const nextButton = buttons.find(btn => btn.textContent?.includes('Next'));
+
+    expect(nextButton?.disabled).toBe(true);
+  });
+
+  it('should enable Next button for punchcard when classes and price are provided', () => {
+    const punchcardDataWithValues: AddMembershipWizardData = {
+      ...mockData,
+      membershipType: 'punchcard',
+      classesIncluded: 10,
+      punchcardPrice: 200,
+    };
+
+    render(
+      <MembershipPaymentStep
+        data={punchcardDataWithValues}
+        onUpdate={mockHandlers.onUpdate}
+        onNext={mockHandlers.onNext}
+        onBack={mockHandlers.onBack}
+        onCancel={mockHandlers.onCancel}
+      />,
+    );
+
+    const buttons = Array.from(document.querySelectorAll('button'));
+    const nextButton = buttons.find(btn => btn.textContent?.includes('Next'));
+
+    expect(nextButton?.disabled).toBe(false);
+  });
+
+  it('should render punchcard description text', () => {
+    const punchcardData: AddMembershipWizardData = {
+      ...mockData,
+      membershipType: 'punchcard',
+    };
+
+    render(
+      <MembershipPaymentStep
+        data={punchcardData}
+        onUpdate={mockHandlers.onUpdate}
+        onNext={mockHandlers.onNext}
+        onBack={mockHandlers.onBack}
+        onCancel={mockHandlers.onCancel}
+      />,
+    );
+
+    const punchcardDescription = page.getByText(/This punchcard allows the member/);
+
+    expect(punchcardDescription).toBeTruthy();
+  });
+
+  it('should call onUpdate when punchcard classes included changes', async () => {
+    const punchcardData: AddMembershipWizardData = {
+      ...mockData,
+      membershipType: 'punchcard',
+    };
+
+    render(
+      <MembershipPaymentStep
+        data={punchcardData}
+        onUpdate={mockHandlers.onUpdate}
+        onNext={mockHandlers.onNext}
+        onBack={mockHandlers.onBack}
+        onCancel={mockHandlers.onCancel}
+      />,
+    );
+
+    const inputs = Array.from(document.querySelectorAll('input[type="number"]'));
+
+    if (inputs[0]) {
+      await userEvent.type(inputs[0], '10');
+
+      expect(mockHandlers.onUpdate).toHaveBeenCalled();
+    }
   });
 });

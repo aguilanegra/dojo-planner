@@ -19,6 +19,8 @@ const translationKeys: Record<string, string> = {
   membership_type_standard_help: 'Regular paid membership with recurring billing for ongoing students',
   membership_type_trial: 'Trial Membership',
   membership_type_trial_help: 'Free or low-cost introductory offer for new students',
+  membership_type_punchcard: 'Punchcard',
+  membership_type_punchcard_help: 'One-time fee for a set number of classes',
   description_label: 'Description',
   description_placeholder: 'Describe the terms, conditions, and benefits of this membership...',
   description_error: 'Please enter a description.',
@@ -58,6 +60,8 @@ describe('MembershipBasicsStep', () => {
     autoRenewal: 'none',
     cancellationFee: null,
     holdLimitPerYear: null,
+    classesIncluded: null,
+    punchcardPrice: null,
   };
 
   const mockHandlers = {
@@ -445,5 +449,64 @@ describe('MembershipBasicsStep', () => {
 
       expect(mockHandlers.onUpdate).toHaveBeenCalledWith({ membershipType: 'standard' });
     }
+  });
+
+  it('should render punchcard membership type card', () => {
+    render(
+      <MembershipBasicsStep
+        data={mockData}
+        onUpdate={mockHandlers.onUpdate}
+        onNext={mockHandlers.onNext}
+        onCancel={mockHandlers.onCancel}
+      />,
+    );
+
+    const punchcardCard = page.getByText('Punchcard');
+    const punchcardHelpText = page.getByText(/One-time fee for a set number of classes/);
+
+    expect(punchcardCard).toBeTruthy();
+    expect(punchcardHelpText).toBeTruthy();
+  });
+
+  it('should call onUpdate with membershipType when punchcard card is clicked', async () => {
+    render(
+      <MembershipBasicsStep
+        data={mockData}
+        onUpdate={mockHandlers.onUpdate}
+        onNext={mockHandlers.onNext}
+        onCancel={mockHandlers.onCancel}
+      />,
+    );
+
+    // Find the Punchcard card button
+    const buttons = Array.from(document.querySelectorAll('button'));
+    const punchcardCard = buttons.find(btn => btn.textContent?.includes('Punchcard') && btn.textContent?.includes('One-time fee'));
+
+    if (punchcardCard) {
+      await userEvent.click(punchcardCard);
+
+      expect(mockHandlers.onUpdate).toHaveBeenCalledWith({ membershipType: 'punchcard' });
+    }
+  });
+
+  it('should display punchcard type when selected', () => {
+    const punchcardData: AddMembershipWizardData = {
+      ...mockData,
+      membershipType: 'punchcard',
+    };
+
+    render(
+      <MembershipBasicsStep
+        data={punchcardData}
+        onUpdate={mockHandlers.onUpdate}
+        onNext={mockHandlers.onNext}
+        onCancel={mockHandlers.onCancel}
+      />,
+    );
+
+    // The Punchcard card should be rendered
+    const punchcardCard = page.getByText('Punchcard');
+
+    expect(punchcardCard).toBeTruthy();
   });
 });

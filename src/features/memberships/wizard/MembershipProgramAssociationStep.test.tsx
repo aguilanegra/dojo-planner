@@ -47,6 +47,8 @@ describe('MembershipProgramAssociationStep', () => {
     autoRenewal: 'none',
     cancellationFee: null,
     holdLimitPerYear: null,
+    classesIncluded: null,
+    punchcardPrice: null,
   };
 
   const mockHandlers = {
