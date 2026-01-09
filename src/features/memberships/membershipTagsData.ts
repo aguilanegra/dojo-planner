@@ -35,4 +35,11 @@ export const mockMembershipTags: MembershipTag[] = [
     usageCount: 5,
     membershipNames: ['12 Month Commitment (Gold)', 'Month to Month (Gold)', 'Kids Monthly', 'Competition Team', '6 Month Commitment (Silver)'],
   },
+  {
+    id: 'tag-5',
+    name: 'Punchcard',
+    color: '#8b5cf6', // violet-500 - for punchcard/class pack tag
+    usageCount: 1,
+    membershipNames: ['10-Class Punch Card'],
+  },
 ];

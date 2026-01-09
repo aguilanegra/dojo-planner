@@ -30,6 +30,8 @@ describe('useAddMembershipWizard types and exports', () => {
       autoRenewal: 'month-to-month',
       cancellationFee: 300,
       holdLimitPerYear: 2,
+      classesIncluded: null,
+      punchcardPrice: null,
     };
 
     expect(testData.membershipName).toBe('12 Month Commitment (Gold)');
@@ -38,11 +40,12 @@ describe('useAddMembershipWizard types and exports', () => {
   });
 
   it('should support all MembershipType options', () => {
-    const types: MembershipType[] = ['standard', 'trial'];
+    const types: MembershipType[] = ['standard', 'trial', 'punchcard'];
 
-    expect(types).toHaveLength(2);
+    expect(types).toHaveLength(3);
     expect(types[0]).toBe('standard');
     expect(types[1]).toBe('trial');
+    expect(types[2]).toBe('punchcard');
   });
 
   it('should support all MembershipStatus options', () => {
@@ -125,6 +128,8 @@ describe('useAddMembershipWizard types and exports', () => {
       autoRenewal: 'none',
       cancellationFee: null,
       holdLimitPerYear: null,
+      classesIncluded: null,
+      punchcardPrice: null,
     };
 
     expect(minimalData.signUpFee).toBeNull();
@@ -153,6 +158,8 @@ describe('useAddMembershipWizard types and exports', () => {
       autoRenewal: 'none',
       cancellationFee: null,
       holdLimitPerYear: null,
+      classesIncluded: null,
+      punchcardPrice: null,
     };
 
     expect(programData.associatedProgramId).toBe('2');
@@ -178,6 +185,8 @@ describe('useAddMembershipWizard types and exports', () => {
       autoRenewal: 'none',
       cancellationFee: null,
       holdLimitPerYear: null,
+      classesIncluded: null,
+      punchcardPrice: null,
     };
 
     expect(trialData.membershipType).toBe('trial');
@@ -204,6 +213,8 @@ describe('useAddMembershipWizard types and exports', () => {
       autoRenewal: 'month-to-month',
       cancellationFee: 300,
       holdLimitPerYear: 2,
+      classesIncluded: null,
+      punchcardPrice: null,
     };
 
     expect(customDateData.membershipStartDate).toBe('custom');
@@ -230,6 +241,8 @@ describe('useAddMembershipWizard types and exports', () => {
       autoRenewal: 'none',
       cancellationFee: null,
       holdLimitPerYear: null,
+      classesIncluded: null,
+      punchcardPrice: null,
     };
 
     expect(weeklyData.paymentFrequency).toBe('weekly');
@@ -254,6 +267,8 @@ describe('useAddMembershipWizard types and exports', () => {
       autoRenewal: 'same-term',
       cancellationFee: null,
       holdLimitPerYear: null,
+      classesIncluded: null,
+      punchcardPrice: null,
     };
 
     expect(annualData.paymentFrequency).toBe('annually');
@@ -279,6 +294,8 @@ describe('useAddMembershipWizard types and exports', () => {
       autoRenewal: 'none',
       cancellationFee: null,
       holdLimitPerYear: null,
+      classesIncluded: null,
+      punchcardPrice: null,
     };
 
     expect(inactiveData.status).toBe('inactive');
@@ -304,8 +321,38 @@ describe('useAddMembershipWizard types and exports', () => {
       autoRenewal: 'month-to-month',
       cancellationFee: null,
       holdLimitPerYear: null,
+      classesIncluded: null,
+      punchcardPrice: null,
     };
 
     expect(testData.chargeSignUpFee).toBe('first-payment');
+  });
+
+  it('should allow creating punchcard membership', () => {
+    const punchcardData: AddMembershipWizardData = {
+      membershipName: '10-Class Punch Card',
+      status: 'active',
+      membershipType: 'punchcard',
+      description: 'Pay once for 10 classes',
+      associatedProgramId: '1',
+      associatedProgramName: 'Adult Brazilian Jiu-jitsu',
+      signUpFee: null,
+      chargeSignUpFee: 'at-registration',
+      monthlyFee: null,
+      paymentFrequency: 'monthly',
+      membershipStartDate: 'same-as-registration',
+      customStartDate: '',
+      proRateFirstPayment: false,
+      contractLength: 'month-to-month',
+      autoRenewal: 'none',
+      cancellationFee: null,
+      holdLimitPerYear: null,
+      classesIncluded: 10,
+      punchcardPrice: 200,
+    };
+
+    expect(punchcardData.membershipType).toBe('punchcard');
+    expect(punchcardData.classesIncluded).toBe(10);
+    expect(punchcardData.punchcardPrice).toBe(200);
   });
 });

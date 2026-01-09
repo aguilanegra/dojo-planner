@@ -52,7 +52,15 @@ export const AddMembershipModal = ({ isOpen, onCloseAction, onMembershipCreated 
       await new Promise(resolve => setTimeout(resolve, 500));
 
       // Create the mock membership object
+      const isPunchcard = wizard.data.membershipType === 'punchcard';
+
       const formatPrice = () => {
+        if (isPunchcard) {
+          if (wizard.data.punchcardPrice === null || wizard.data.punchcardPrice === 0) {
+            return 'Free';
+          }
+          return `$${wizard.data.punchcardPrice.toFixed(2)}`;
+        }
         if (wizard.data.monthlyFee === null || wizard.data.monthlyFee === 0) {
           return 'Free';
         }
@@ -60,6 +68,9 @@ export const AddMembershipModal = ({ isOpen, onCloseAction, onMembershipCreated 
       };
 
       const formatSignupFee = () => {
+        if (isPunchcard) {
+          return 'One-time purchase';
+        }
         if (wizard.data.signUpFee === null || wizard.data.signUpFee === 0) {
           return 'No signup fee';
         }
@@ -67,6 +78,9 @@ export const AddMembershipModal = ({ isOpen, onCloseAction, onMembershipCreated 
       };
 
       const getFrequency = () => {
+        if (isPunchcard) {
+          return 'One-time';
+        }
         switch (wizard.data.paymentFrequency) {
           case 'monthly':
             return 'Monthly';
@@ -80,6 +94,9 @@ export const AddMembershipModal = ({ isOpen, onCloseAction, onMembershipCreated 
       };
 
       const getContract = () => {
+        if (isPunchcard) {
+          return `${wizard.data.classesIncluded} Classes`;
+        }
         switch (wizard.data.contractLength) {
           case 'month-to-month':
             return 'Month-to-Month';
@@ -94,20 +111,28 @@ export const AddMembershipModal = ({ isOpen, onCloseAction, onMembershipCreated 
         }
       };
 
+      const getAccess = () => {
+        if (isPunchcard) {
+          return `${wizard.data.classesIncluded} Classes Total`;
+        }
+        return 'Full Access';
+      };
+
       const newMembership: MembershipCardProps = {
         id: `membership-${Date.now()}`,
         name: wizard.data.membershipName,
         category: wizard.data.associatedProgramName ?? 'No Program',
         status: wizard.data.status === 'active' ? 'Active' : 'Inactive',
         isTrial: wizard.data.membershipType === 'trial',
-        isMonthly: wizard.data.paymentFrequency === 'monthly',
+        isMonthly: wizard.data.paymentFrequency === 'monthly' && !isPunchcard,
+        isPunchcard,
         price: formatPrice(),
         signupFee: formatSignupFee(),
         frequency: getFrequency(),
         contract: getContract(),
-        access: 'Full Access',
+        access: getAccess(),
         activeCount: 0,
-        revenue: '$0/mo revenue',
+        revenue: isPunchcard ? '$0 total' : '$0/mo revenue',
       };
 
       console.info('[Add Membership Wizard] Membership created successfully:', {

@@ -37,8 +37,8 @@ describe('Memberships Page', () => {
     render(<I18nWrapper><MembershipsPage /></I18nWrapper>);
 
     // Stats should show dynamic values from mock data
-    // Total memberships count of 7 appears in stats card
-    const statValues = page.getByText('7', { exact: true }).elements();
+    // Total memberships count of 8 appears in stats card (7 original + 1 punchcard)
+    const statValues = page.getByText('8', { exact: true }).elements();
 
     expect(statValues.length).toBeGreaterThan(0);
   });
@@ -120,7 +120,7 @@ describe('Memberships Page', () => {
 
     const editButtons = page.getByRole('button', { name: /Edit membership/i }).elements();
 
-    expect(editButtons.length).toBe(7);
+    expect(editButtons.length).toBe(8);
   });
 
   it('renders active trials label for trial memberships', () => {
@@ -462,6 +462,45 @@ describe('Memberships Page', () => {
       const monthlyOption = page.getByRole('option', { name: 'Monthly' });
 
       expect(monthlyOption).toBeInTheDocument();
+    });
+
+    it('filters memberships by tag - Punchcard', async () => {
+      render(<I18nWrapper><MembershipsPage /></I18nWrapper>);
+
+      // Click on tags dropdown
+      const tagDropdown = page.getByRole('combobox').first();
+      await userEvent.click(tagDropdown);
+
+      // Select Punchcard
+      const punchcardOption = page.getByRole('option', { name: 'Punchcard' });
+      await userEvent.click(punchcardOption);
+
+      // Punchcard membership should be visible
+      const punchcardCard = page.getByText('10-Class Punch Card');
+
+      expect(punchcardCard).toBeInTheDocument();
+
+      // Non-punchcard memberships should NOT be visible
+      const goldCardElements = page.getByText('12 Month Commitment (Gold)');
+
+      expect(goldCardElements.elements()).toHaveLength(0);
+    });
+
+    it('renders Punchcard badges on punchcard membership cards', () => {
+      render(<I18nWrapper><MembershipsPage /></I18nWrapper>);
+
+      const punchcardBadges = page.getByText('Punchcard').elements();
+
+      expect(punchcardBadges.length).toBeGreaterThan(0);
+    });
+
+    it('renders punchcard membership card with one-time pricing', () => {
+      render(<I18nWrapper><MembershipsPage /></I18nWrapper>);
+
+      // Use exact match to specifically find the punchcard price without /mo suffix
+      const punchcardPrice = page.getByText('$200.00', { exact: true });
+
+      expect(punchcardPrice).toBeInTheDocument();
     });
   });
 });

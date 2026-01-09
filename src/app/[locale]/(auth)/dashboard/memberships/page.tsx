@@ -23,6 +23,7 @@ type Membership = {
   status: MembershipStatus;
   isTrial?: boolean;
   isMonthly?: boolean;
+  isPunchcard?: boolean;
   price: string;
   signupFee: string;
   frequency: string;
@@ -138,6 +139,21 @@ const mockMemberships: Membership[] = [
     activeCount: 0,
     revenue: 'Discontinued',
   },
+  {
+    id: '8',
+    name: '10-Class Punch Card',
+    category: 'Adult Brazilian Jiu-Jitsu',
+    program: 'Adult',
+    status: 'Active',
+    isPunchcard: true,
+    price: '$200.00',
+    signupFee: 'One-time purchase',
+    frequency: 'One-time',
+    contract: '10 Classes',
+    access: '10 Classes Total',
+    activeCount: 12,
+    revenue: '$2,400 total',
+  },
 ];
 
 export default function MembershipsPage() {
@@ -165,6 +181,7 @@ export default function MembershipsPage() {
       status: newMembership.status,
       isTrial: newMembership.isTrial,
       isMonthly: newMembership.isMonthly,
+      isPunchcard: newMembership.isPunchcard,
       price: newMembership.price,
       signupFee: newMembership.signupFee,
       frequency: newMembership.frequency,
@@ -203,6 +220,9 @@ export default function MembershipsPage() {
     if (membership.isMonthly) {
       tags.push('Monthly');
     }
+    if (membership.isPunchcard) {
+      tags.push('Punchcard');
+    }
     return tags;
   };
 
@@ -222,6 +242,9 @@ export default function MembershipsPage() {
     }
     if (tag === 'Monthly') {
       return !!membership.isMonthly;
+    }
+    if (tag === 'Punchcard') {
+      return !!membership.isPunchcard;
     }
     return true;
   };
@@ -341,6 +364,7 @@ export default function MembershipsPage() {
                   status: membership.status,
                   isTrial: membership.isTrial,
                   isMonthly: membership.isMonthly,
+                  isPunchcard: membership.isPunchcard,
                   price: membership.price,
                   signupFee: membership.signupFee,
                   frequency: membership.frequency,

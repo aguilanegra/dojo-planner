@@ -43,13 +43,33 @@ export const MembershipPaymentStep = ({ data, onUpdate, onNext, onBack, onCancel
 
   // For trial memberships, payment details are optional (can be $0)
   // For standard memberships, monthly fee is required
+  // For punchcard memberships, classes included and price are required
   const isTrialMembership = data.membershipType === 'trial';
+  const isPunchcardMembership = data.membershipType === 'punchcard';
 
   const isMonthlyFeeInvalid = touched.monthlyFee
     && !isTrialMembership
+    && !isPunchcardMembership
     && (data.monthlyFee === null || data.monthlyFee < 0);
 
-  const isFormValid = isTrialMembership || (data.monthlyFee !== null && data.monthlyFee >= 0);
+  const isClassesIncludedInvalid = touched.classesIncluded
+    && isPunchcardMembership
+    && (data.classesIncluded === null || data.classesIncluded < 1);
+
+  const isPunchcardPriceInvalid = touched.punchcardPrice
+    && isPunchcardMembership
+    && (data.punchcardPrice === null || data.punchcardPrice < 0);
+
+  const isFormValid = (() => {
+    if (isTrialMembership) {
+      return true;
+    }
+    if (isPunchcardMembership) {
+      return (data.classesIncluded !== null && data.classesIncluded >= 1)
+        && (data.punchcardPrice !== null && data.punchcardPrice >= 0);
+    }
+    return data.monthlyFee !== null && data.monthlyFee >= 0;
+  })();
 
   // Get the appropriate fee label based on payment frequency
   const getFeeLabel = () => {
@@ -77,122 +97,172 @@ export const MembershipPaymentStep = ({ data, onUpdate, onNext, onBack, onCancel
           </div>
         )}
 
-        {/* Sign-up Fee and Charge Option */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-foreground">{t('signup_fee_label')}</label>
-            <div className="relative">
-              <span className="absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground">$</span>
-              <Input
-                type="number"
-                placeholder={t('signup_fee_placeholder')}
-                value={data.signUpFee ?? ''}
-                onChange={e => handleNumberChange('signUpFee', e.target.value)}
-                className="pl-7"
-                min={0}
-                step="0.01"
+        {/* Punchcard-specific fields */}
+        {isPunchcardMembership && (
+          <>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">{t('classes_included_label')}</label>
+                <Input
+                  type="number"
+                  placeholder={t('classes_included_placeholder')}
+                  value={data.classesIncluded ?? ''}
+                  onChange={e => handleNumberChange('classesIncluded', e.target.value)}
+                  onBlur={() => handleInputBlur('classesIncluded')}
+                  error={isClassesIncludedInvalid}
+                  min={1}
+                  step="1"
+                />
+                {isClassesIncludedInvalid && (
+                  <p className="text-xs text-destructive">{t('classes_included_error')}</p>
+                )}
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">{t('punchcard_price_label')}</label>
+                <div className="relative">
+                  <span className="absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground">$</span>
+                  <Input
+                    type="number"
+                    placeholder={t('punchcard_price_placeholder')}
+                    value={data.punchcardPrice ?? ''}
+                    onChange={e => handleNumberChange('punchcardPrice', e.target.value)}
+                    onBlur={() => handleInputBlur('punchcardPrice')}
+                    error={isPunchcardPriceInvalid}
+                    className="pl-7"
+                    min={0}
+                    step="0.01"
+                  />
+                </div>
+                {isPunchcardPriceInvalid && (
+                  <p className="text-xs text-destructive">{t('punchcard_price_error')}</p>
+                )}
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground">{t('punchcard_description')}</p>
+          </>
+        )}
+
+        {/* Standard/Trial membership fields */}
+        {!isPunchcardMembership && (
+          <>
+            {/* Sign-up Fee and Charge Option */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">{t('signup_fee_label')}</label>
+                <div className="relative">
+                  <span className="absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground">$</span>
+                  <Input
+                    type="number"
+                    placeholder={t('signup_fee_placeholder')}
+                    value={data.signUpFee ?? ''}
+                    onChange={e => handleNumberChange('signUpFee', e.target.value)}
+                    className="pl-7"
+                    min={0}
+                    step="0.01"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">{t('charge_signup_fee_label')}</label>
+                <Select
+                  value={data.chargeSignUpFee}
+                  onValueChange={(value: ChargeSignUpFeeOption) => onUpdate({ chargeSignUpFee: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="at-registration">{t('charge_at_registration')}</SelectItem>
+                    <SelectItem value="first-payment">{t('charge_first_payment')}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Fee and Payment Frequency */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">{getFeeLabel()}</label>
+                <div className="relative">
+                  <span className="absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground">$</span>
+                  <Input
+                    type="number"
+                    placeholder={t('monthly_fee_placeholder')}
+                    value={data.monthlyFee ?? ''}
+                    onChange={e => handleNumberChange('monthlyFee', e.target.value)}
+                    onBlur={() => handleInputBlur('monthlyFee')}
+                    error={isMonthlyFeeInvalid}
+                    className="pl-7"
+                    min={0}
+                    step="0.01"
+                  />
+                </div>
+                {isMonthlyFeeInvalid && (
+                  <p className="text-xs text-destructive">{t('monthly_fee_error')}</p>
+                )}
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">{t('payment_frequency_label')}</label>
+                <Select
+                  value={data.paymentFrequency}
+                  onValueChange={(value: PaymentFrequency) => onUpdate({ paymentFrequency: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="monthly">{t('frequency_monthly')}</SelectItem>
+                    <SelectItem value="weekly">{t('frequency_weekly')}</SelectItem>
+                    <SelectItem value="annually">{t('frequency_annually')}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Membership Start Date */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">{t('start_date_label')}</label>
+                <Select
+                  value={data.membershipStartDate}
+                  onValueChange={(value: MembershipStartDateOption) => onUpdate({ membershipStartDate: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="same-as-registration">{t('start_date_same_as_registration')}</SelectItem>
+                    <SelectItem value="custom">{t('start_date_custom')}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {data.membershipStartDate === 'custom' && (
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-foreground">{t('custom_start_date_label')}</label>
+                  <Input
+                    type="date"
+                    value={data.customStartDate}
+                    onChange={e => onUpdate({ customStartDate: e.target.value })}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Pro-rate First Payment */}
+            <div className="flex items-center justify-between rounded-lg border border-border p-4">
+              <div className="space-y-0.5">
+                <label className="text-sm font-medium text-foreground">{t('prorate_label')}</label>
+                <p className="text-xs text-muted-foreground">{t('prorate_description')}</p>
+              </div>
+              <Switch
+                checked={data.proRateFirstPayment}
+                onCheckedChange={(checked) => {
+                  onUpdate({ proRateFirstPayment: checked });
+                }}
               />
             </div>
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-foreground">{t('charge_signup_fee_label')}</label>
-            <Select
-              value={data.chargeSignUpFee}
-              onValueChange={(value: ChargeSignUpFeeOption) => onUpdate({ chargeSignUpFee: value })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="at-registration">{t('charge_at_registration')}</SelectItem>
-                <SelectItem value="first-payment">{t('charge_first_payment')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {/* Fee and Payment Frequency */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-foreground">{getFeeLabel()}</label>
-            <div className="relative">
-              <span className="absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground">$</span>
-              <Input
-                type="number"
-                placeholder={t('monthly_fee_placeholder')}
-                value={data.monthlyFee ?? ''}
-                onChange={e => handleNumberChange('monthlyFee', e.target.value)}
-                onBlur={() => handleInputBlur('monthlyFee')}
-                error={isMonthlyFeeInvalid}
-                className="pl-7"
-                min={0}
-                step="0.01"
-              />
-            </div>
-            {isMonthlyFeeInvalid && (
-              <p className="text-xs text-destructive">{t('monthly_fee_error')}</p>
-            )}
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-foreground">{t('payment_frequency_label')}</label>
-            <Select
-              value={data.paymentFrequency}
-              onValueChange={(value: PaymentFrequency) => onUpdate({ paymentFrequency: value })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="monthly">{t('frequency_monthly')}</SelectItem>
-                <SelectItem value="weekly">{t('frequency_weekly')}</SelectItem>
-                <SelectItem value="annually">{t('frequency_annually')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {/* Membership Start Date */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-foreground">{t('start_date_label')}</label>
-            <Select
-              value={data.membershipStartDate}
-              onValueChange={(value: MembershipStartDateOption) => onUpdate({ membershipStartDate: value })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="same-as-registration">{t('start_date_same_as_registration')}</SelectItem>
-                <SelectItem value="custom">{t('start_date_custom')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          {data.membershipStartDate === 'custom' && (
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-foreground">{t('custom_start_date_label')}</label>
-              <Input
-                type="date"
-                value={data.customStartDate}
-                onChange={e => onUpdate({ customStartDate: e.target.value })}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Pro-rate First Payment */}
-        <div className="flex items-center justify-between rounded-lg border border-border p-4">
-          <div className="space-y-0.5">
-            <label className="text-sm font-medium text-foreground">{t('prorate_label')}</label>
-            <p className="text-xs text-muted-foreground">{t('prorate_description')}</p>
-          </div>
-          <Switch
-            checked={data.proRateFirstPayment}
-            onCheckedChange={(checked) => {
-              onUpdate({ proRateFirstPayment: checked });
-            }}
-          />
-        </div>
+          </>
+        )}
       </div>
 
       <div className="flex justify-between gap-3 pt-6">
