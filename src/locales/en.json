@@ -48,13 +48,14 @@
     "academy_section_label": "Academy",
     "business_section_label": "Business",
     "settings_section_label": "Settings",
-    "dashboard": "Dashboard",
+    "performance": "Performance",
     "classes": "Classes/Events",
     "members": "Members",
     "roles": "Roles",
     "staff": "Staff",
     "messaging": "Messaging",
-    "finances": "Finances",
+    "transactions": "Transactions",
+    "reports": "Reports",
     "memberships": "Memberships",
     "programs": "Programs",
     "marketing": "Marketing",
@@ -698,8 +699,8 @@
       "saving_button": "Saving..."
     }
   },
-  "FinancesPage": {
-    "title": "Finances",
+  "TransactionsPage": {
+    "title": "Transactions",
     "search_placeholder": "Search transactions...",
     "all_statuses_filter": "All Statuses",
     "all_origins_filter": "All Origins",
@@ -754,6 +755,39 @@
     "seminar_date_label": "Date",
     "location_label": "Location",
     "close_button": "Close"
+  },
+  "ReportsPage": {
+    "title": "Reports",
+    "subtitle": "Select a report to view detailed analytics and insights",
+    "back_to_reports": "Back to Reports",
+    "report_accounts_autopay_suspended": "Accounts with Autopay Suspended",
+    "report_accounts_autopay_suspended_description": "View all accounts that have had their automatic payments suspended",
+    "report_expiring_credit_cards": "Expiring Credit Cards",
+    "report_expiring_credit_cards_description": "Credit cards expiring in the next 60 days",
+    "report_amount_due": "Amount Due",
+    "report_amount_due_description": "Total amount due from members in the next 30 days",
+    "report_past_due": "Past Due",
+    "report_past_due_description": "Total overdue payments from all members",
+    "report_payments_last_30_days": "Payments (Last 30 Days)",
+    "report_payments_last_30_days_description": "All payments received in the last 30 days",
+    "report_payments_pending": "Payments (Pending)",
+    "report_payments_pending_description": "Payments currently in pending status",
+    "report_failed_payments": "Failed Payments",
+    "report_failed_payments_description": "Payments that failed in the last 30 days",
+    "report_income_per_student": "Income Per Student",
+    "report_income_per_student_description": "Average income per student over the last 30 days",
+    "chart_title": "Historical Data",
+    "insights_title": "Insights",
+    "no_data": "No data available",
+    "time_period_monthly": "Monthly",
+    "time_period_yearly": "Yearly",
+    "compare_with_last_year": "Compare with last year"
+  },
+  "PerformancePage": {
+    "title": "Performance",
+    "memberships_card_title": "Memberships",
+    "financials_card_title": "Financials",
+    "compare_with_last_year": "Compare with last year"
   },
   "MarketingPage": {
     "title": "Marketing",

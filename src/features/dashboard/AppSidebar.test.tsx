@@ -20,13 +20,14 @@ vi.mock('next-intl', () => ({
       academy_section_label: 'Academy',
       business_section_label: 'Business',
       settings_section_label: 'Settings',
-      dashboard: 'Dashboard',
+      performance: 'Performance',
       classes: 'Classes',
       members: 'Members',
       roles: 'Roles',
       staff: 'Staff',
       messaging: 'Messaging',
-      finances: 'Finances',
+      transactions: 'Transactions',
+      reports: 'Reports',
       memberships: 'Memberships',
       programs: 'Programs',
       marketing: 'Marketing',
@@ -106,7 +107,6 @@ describe('AppSidebar - Translation Keys', () => {
       expect(dashboardLayout.academy_section_label).toBe('Academy');
 
       // Check Academy items exist and have correct values
-      expect(dashboardLayout.dashboard).toBe('Dashboard');
       expect(dashboardLayout.programs).toBe('Programs');
       expect(dashboardLayout.classes).toBe('Classes/Events');
       expect(dashboardLayout.members).toBe('Members');
@@ -122,8 +122,9 @@ describe('AppSidebar - Translation Keys', () => {
       expect(dashboardLayout.business_section_label).toBe('Business');
 
       // Check Business items exist and have correct values
-      // Note: subscription was moved to user menu dropdown
-      expect(dashboardLayout.finances).toBe('Finances');
+      expect(dashboardLayout.performance).toBe('Performance');
+      expect(dashboardLayout.transactions).toBe('Transactions');
+      expect(dashboardLayout.reports).toBe('Reports');
       expect(dashboardLayout.memberships).toBe('Memberships');
       expect(dashboardLayout.marketing).toBe('Marketing');
     });
@@ -155,13 +156,14 @@ describe('AppSidebar - Translation Keys', () => {
         'academy_section_label',
         'business_section_label',
         'settings_section_label',
-        'dashboard',
+        'performance',
         'classes',
         'members',
         'roles',
         'staff',
         'messaging',
-        'finances',
+        'transactions',
+        'reports',
         'memberships',
         'programs',
         'marketing',
@@ -205,7 +207,6 @@ describe('AppSidebar - Component Rendering', () => {
     render(<AppSidebar />);
 
     expect(page.getByText('Academy')).toBeDefined();
-    expect(page.getByText('Dashboard')).toBeDefined();
     expect(page.getByText('Programs')).toBeDefined();
     expect(page.getByText('Classes')).toBeDefined();
     expect(page.getByText('Members')).toBeDefined();
@@ -217,7 +218,9 @@ describe('AppSidebar - Component Rendering', () => {
     render(<AppSidebar />);
 
     expect(page.getByText('Business')).toBeDefined();
-    expect(page.getByText('Finances')).toBeDefined();
+    expect(page.getByText('Performance')).toBeDefined();
+    expect(page.getByText('Transactions')).toBeDefined();
+    expect(page.getByText('Reports')).toBeDefined();
     expect(page.getByText('Memberships')).toBeDefined();
     expect(page.getByText('Marketing')).toBeDefined();
   });

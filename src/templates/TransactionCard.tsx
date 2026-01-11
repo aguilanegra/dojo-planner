@@ -35,7 +35,7 @@ export function TransactionCard({
   status,
   onClickAction,
 }: TransactionCardProps) {
-  const t = useTranslations('FinancesPage');
+  const t = useTranslations('TransactionsPage');
 
   return (
     <Card

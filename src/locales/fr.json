@@ -48,13 +48,14 @@
     "academy_section_label": "Académie",
     "business_section_label": "Affaires",
     "settings_section_label": "Paramètres",
-    "dashboard": "Tableau de bord",
+    "performance": "Performance",
     "classes": "Cours/Événements",
     "members": "Membres",
     "roles": "Rôles",
     "staff": "Personnel",
     "messaging": "Messagerie",
-    "finances": "Finances",
+    "transactions": "Transactions",
+    "reports": "Rapports",
     "memberships": "Adhésions",
     "programs": "Programmes",
     "marketing": "Marketing",
@@ -701,8 +702,8 @@
       "saving_button": "Enregistrement..."
     }
   },
-  "FinancesPage": {
-    "title": "Finances",
+  "TransactionsPage": {
+    "title": "Transactions",
     "search_placeholder": "Rechercher des transactions...",
     "all_statuses_filter": "Tous les statuts",
     "all_origins_filter": "Toutes les origines",
@@ -724,6 +725,39 @@
     "no_transactions": "Aucune transaction trouvée",
     "no_results_found": "Aucune transaction ne correspond à votre recherche",
     "loading_transactions": "Chargement des transactions..."
+  },
+  "ReportsPage": {
+    "title": "Rapports",
+    "subtitle": "Sélectionnez un rapport pour voir les analyses et les informations détaillées",
+    "back_to_reports": "Retour aux rapports",
+    "report_accounts_autopay_suspended": "Comptes avec paiement automatique suspendu",
+    "report_accounts_autopay_suspended_description": "Voir tous les comptes dont les paiements automatiques ont été suspendus",
+    "report_expiring_credit_cards": "Cartes de crédit expirantes",
+    "report_expiring_credit_cards_description": "Cartes de crédit expirant dans les 60 prochains jours",
+    "report_amount_due": "Montant dû",
+    "report_amount_due_description": "Montant total dû par les membres dans les 30 prochains jours",
+    "report_past_due": "En retard",
+    "report_past_due_description": "Total des paiements en retard de tous les membres",
+    "report_payments_last_30_days": "Paiements (30 derniers jours)",
+    "report_payments_last_30_days_description": "Tous les paiements reçus au cours des 30 derniers jours",
+    "report_payments_pending": "Paiements (en attente)",
+    "report_payments_pending_description": "Paiements actuellement en statut d'attente",
+    "report_failed_payments": "Paiements échoués",
+    "report_failed_payments_description": "Paiements échoués au cours des 30 derniers jours",
+    "report_income_per_student": "Revenu par étudiant",
+    "report_income_per_student_description": "Revenu moyen par étudiant au cours des 30 derniers jours",
+    "chart_title": "Données historiques",
+    "insights_title": "Aperçus",
+    "no_data": "Aucune donnée disponible",
+    "time_period_monthly": "Mensuel",
+    "time_period_yearly": "Annuel",
+    "compare_with_last_year": "Comparer avec l'année dernière"
+  },
+  "PerformancePage": {
+    "title": "Performance",
+    "memberships_card_title": "Adhésions",
+    "financials_card_title": "Financiers",
+    "compare_with_last_year": "Comparer avec l'année dernière"
   },
   "TransactionDetailModal": {
     "title": "Détails de la transaction",

@@ -47,7 +47,7 @@ export function FinancesTable({
   loading = false,
   headerActions,
 }: FinancesTableProps) {
-  const t = useTranslations('FinancesPage');
+  const t = useTranslations('TransactionsPage');
   const [filters, setFilters] = useState<FinancesFilters>({
     search: '',
     origin: 'all',
@@ -212,9 +212,6 @@ export function FinancesTable({
 
   return (
     <div className="w-full space-y-6">
-      {/* Header */}
-      <h1 className="text-3xl font-bold text-foreground">{t('title')}</h1>
-
       {/* Search and Filter Bar with Actions */}
       <div className="space-y-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">

@@ -25,14 +25,16 @@ const createMockTransaction = (overrides: Partial<Transaction> = {}): Transactio
 
 describe('FinancesTable', () => {
   describe('Page Header', () => {
-    it('should render title heading', () => {
+    it('should render filter bar', () => {
       const mockTransactions = [createMockTransaction()];
 
       render(<FinancesTable transactions={mockTransactions} />);
 
-      const heading = page.getByRole('heading', { name: 'title', level: 1 });
+      // Title is now rendered by the page component, not the table
+      // Check for search input instead
+      const searchInput = page.getByPlaceholder('search_placeholder');
 
-      expect(heading).toBeInTheDocument();
+      expect(searchInput).toBeInTheDocument();
     });
   });
 

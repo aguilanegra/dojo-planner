@@ -1,23 +1,24 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import DashboardCharts from './DashboardCharts';
 
 const memberAverageData = {
   monthly: [
-    { month: 'Jan', average: 110 },
-    { month: 'Feb', average: 105 },
-    { month: 'Mar', average: 115 },
-    { month: 'Apr', average: 120 },
-    { month: 'May', average: 112 },
-    { month: 'Jun', average: 118 },
-    { month: 'Jul', average: 125 },
-    { month: 'Aug', average: 122 },
-    { month: 'Sep', average: 128 },
-    { month: 'Oct', average: 135 },
-    { month: 'Nov', average: 130 },
-    { month: 'Dec', average: 115 },
+    { month: 'Jan', average: 110, previousYearAverage: 95 },
+    { month: 'Feb', average: 105, previousYearAverage: 92 },
+    { month: 'Mar', average: 115, previousYearAverage: 98 },
+    { month: 'Apr', average: 120, previousYearAverage: 102 },
+    { month: 'May', average: 112, previousYearAverage: 100 },
+    { month: 'Jun', average: 118, previousYearAverage: 105 },
+    { month: 'Jul', average: 125, previousYearAverage: 110 },
+    { month: 'Aug', average: 122, previousYearAverage: 108 },
+    { month: 'Sep', average: 128, previousYearAverage: 112 },
+    { month: 'Oct', average: 135, previousYearAverage: 118 },
+    { month: 'Nov', average: 130, previousYearAverage: 115 },
+    { month: 'Dec', average: 115, previousYearAverage: 100 },
   ],
   yearly: [
     { year: '2020', average: 85 },
@@ -30,18 +31,18 @@ const memberAverageData = {
 
 const earningsData = {
   monthly: [
-    { month: 'Jan', earnings: 14000 },
-    { month: 'Feb', earnings: 13000 },
-    { month: 'Mar', earnings: 14500 },
-    { month: 'Apr', earnings: 15200 },
-    { month: 'May', earnings: 14800 },
-    { month: 'Jun', earnings: 15800 },
-    { month: 'Jul', earnings: 16200 },
-    { month: 'Aug', earnings: 15500 },
-    { month: 'Sep', earnings: 16800 },
-    { month: 'Oct', earnings: 17500 },
-    { month: 'Nov', earnings: 17200 },
-    { month: 'Dec', earnings: 14800 },
+    { month: 'Jan', earnings: 14000, previousYearEarnings: 12000 },
+    { month: 'Feb', earnings: 13000, previousYearEarnings: 11500 },
+    { month: 'Mar', earnings: 14500, previousYearEarnings: 12800 },
+    { month: 'Apr', earnings: 15200, previousYearEarnings: 13200 },
+    { month: 'May', earnings: 14800, previousYearEarnings: 12900 },
+    { month: 'Jun', earnings: 15800, previousYearEarnings: 13800 },
+    { month: 'Jul', earnings: 16200, previousYearEarnings: 14200 },
+    { month: 'Aug', earnings: 15500, previousYearEarnings: 13600 },
+    { month: 'Sep', earnings: 16800, previousYearEarnings: 14800 },
+    { month: 'Oct', earnings: 17500, previousYearEarnings: 15400 },
+    { month: 'Nov', earnings: 17200, previousYearEarnings: 15100 },
+    { month: 'Dec', earnings: 14800, previousYearEarnings: 13000 },
   ],
   yearly: [
     { year: '2020', earnings: 125000 },
@@ -71,22 +72,23 @@ const membershipsData: DashboardDataItem[] = [
 ];
 
 const financialsData: DashboardDataItem[] = [
-  { type: 'Accounts with autopay suspended:', quantity: 2, link: '/dashboard/finances' },
-  { type: 'Expiring credit cards (next 60 days)', quantity: 5, link: '/dashboard/finances' },
-  { type: 'Bills to approve (next 30 days)', quantity: 0, link: '/dashboard/finances' },
-  { type: 'Amount due (next 30 days)', quantity: '$14,394.20', link: '/dashboard/finances' },
-  { type: 'Past due (total)', quantity: '$450.62', link: '/dashboard/finances' },
-  { type: 'Payments (last 30 days)', quantity: '$13,150.44', link: '/dashboard/finances' },
-  { type: 'Payments (pending status)', quantity: '$0.00', link: '/dashboard/finances' },
-  { type: 'Failed payments (last 30 days)', quantity: '$1,834.67', link: '/dashboard/finances' },
-  { type: 'Income per student (30 days, $13,150.44 / 111 students)', quantity: '$118.47' },
+  { type: 'Accounts with autopay suspended:', quantity: 2, link: '/dashboard/reports?report=accounts-autopay-suspended' },
+  { type: 'Expiring credit cards (next 60 days)', quantity: 5, link: '/dashboard/reports?report=expiring-credit-cards' },
+  { type: 'Amount due (next 30 days)', quantity: '$14,394.20', link: '/dashboard/reports?report=amount-due' },
+  { type: 'Past due (total)', quantity: '$450.62', link: '/dashboard/reports?report=past-due' },
+  { type: 'Payments (last 30 days)', quantity: '$13,150.44', link: '/dashboard/reports?report=payments-last-30-days' },
+  { type: 'Payments (pending status)', quantity: '$0.00', link: '/dashboard/reports?report=payments-pending' },
+  { type: 'Failed payments (last 30 days)', quantity: '$1,834.67', link: '/dashboard/reports?report=failed-payments' },
+  { type: 'Income per student (30 days, $13,150.44 / 111 students)', quantity: '$118.47', link: '/dashboard/reports?report=income-per-student' },
 ];
 
 export function DashboardPage() {
+  const t = useTranslations('PerformancePage');
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+      <h1 className="text-3xl font-bold text-foreground">{t('title')}</h1>
 
       {/* Main Content Grid */}
       <div className="grid gap-6 lg:grid-cols-3">
@@ -94,7 +96,7 @@ export function DashboardPage() {
         <div className="space-y-6 lg:col-span-1">
           {/* Memberships Table */}
           <Card className="p-6">
-            <h2 className="mb-4 text-lg font-semibold text-foreground">Memberships</h2>
+            <h2 className="mb-4 text-lg font-semibold text-foreground">{t('memberships_card_title')}</h2>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -127,7 +129,7 @@ export function DashboardPage() {
 
           {/* Financials Table */}
           <Card className="p-6">
-            <h2 className="mb-4 text-lg font-semibold text-foreground">Financials</h2>
+            <h2 className="mb-4 text-lg font-semibold text-foreground">{t('financials_card_title')}</h2>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>

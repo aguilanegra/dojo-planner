@@ -38,7 +38,7 @@ export function FinancesFilterBar({
   availableOrigins,
   availableStatuses,
 }: FinancesFilterBarProps) {
-  const t = useTranslations('FinancesPage');
+  const t = useTranslations('TransactionsPage');
   const [filters, setFilters] = useState<FinancesFilters>({
     search: '',
     origin: 'all',

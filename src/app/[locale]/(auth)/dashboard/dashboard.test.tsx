@@ -16,6 +16,18 @@ vi.mock('next/link', async () => {
   };
 });
 
+// Mock next-intl
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string) => {
+    const translations: Record<string, string> = {
+      title: 'Performance',
+      memberships_card_title: 'Memberships',
+      financials_card_title: 'Financials',
+    };
+    return translations[key] || key;
+  },
+}));
+
 // Mock DashboardCharts to avoid recharts rendering issues in tests
 vi.mock('@/features/dashboard/DashboardCharts', async () => {
   const React = await import('react');
@@ -28,10 +40,10 @@ vi.mock('@/features/dashboard/DashboardCharts', async () => {
 });
 
 describe('Dashboard Page', () => {
-  it('renders dashboard header', () => {
+  it('renders performance header', () => {
     render(<DashboardPage />);
 
-    const heading = page.getByRole('heading', { name: /Dashboard/i });
+    const heading = page.getByRole('heading', { name: /Performance/i });
 
     expect(heading).toBeInTheDocument();
   });
@@ -163,85 +175,76 @@ describe('Dashboard Page - Membership Card Links', () => {
 });
 
 describe('Dashboard Page - Financials Card Links', () => {
-  it('renders Accounts with autopay suspended link pointing to finances page', () => {
+  it('renders Accounts with autopay suspended link pointing to reports page', () => {
     render(<DashboardPage />);
 
     const autopaySuspendedLink = page.getByRole('link', { name: /Accounts with autopay suspended/i });
 
     expect(autopaySuspendedLink).toBeInTheDocument();
-    expect(autopaySuspendedLink.element()).toHaveAttribute('href', '/dashboard/finances');
+    expect(autopaySuspendedLink.element()).toHaveAttribute('href', '/dashboard/reports?report=accounts-autopay-suspended');
   });
 
-  it('renders Expiring credit cards link pointing to finances page', () => {
+  it('renders Expiring credit cards link pointing to reports page', () => {
     render(<DashboardPage />);
 
     const expiringCardsLink = page.getByRole('link', { name: /Expiring credit cards/i });
 
     expect(expiringCardsLink).toBeInTheDocument();
-    expect(expiringCardsLink.element()).toHaveAttribute('href', '/dashboard/finances');
+    expect(expiringCardsLink.element()).toHaveAttribute('href', '/dashboard/reports?report=expiring-credit-cards');
   });
 
-  it('renders Bills to approve link pointing to finances page', () => {
-    render(<DashboardPage />);
-
-    const billsLink = page.getByRole('link', { name: /Bills to approve/i });
-
-    expect(billsLink).toBeInTheDocument();
-    expect(billsLink.element()).toHaveAttribute('href', '/dashboard/finances');
-  });
-
-  it('renders Amount due link pointing to finances page', () => {
+  it('renders Amount due link pointing to reports page', () => {
     render(<DashboardPage />);
 
     const amountDueLink = page.getByRole('link', { name: /Amount due/i });
 
     expect(amountDueLink).toBeInTheDocument();
-    expect(amountDueLink.element()).toHaveAttribute('href', '/dashboard/finances');
+    expect(amountDueLink.element()).toHaveAttribute('href', '/dashboard/reports?report=amount-due');
   });
 
-  it('renders Past due link pointing to finances page', () => {
+  it('renders Past due link pointing to reports page', () => {
     render(<DashboardPage />);
 
     const pastDueLink = page.getByRole('link', { name: /Past due/i });
 
     expect(pastDueLink).toBeInTheDocument();
-    expect(pastDueLink.element()).toHaveAttribute('href', '/dashboard/finances');
+    expect(pastDueLink.element()).toHaveAttribute('href', '/dashboard/reports?report=past-due');
   });
 
-  it('renders Payments (last 30 days) link pointing to finances page', () => {
+  it('renders Payments (last 30 days) link pointing to reports page', () => {
     render(<DashboardPage />);
 
     const paymentsLink = page.getByRole('link', { name: /^Payments \(last 30 days\)/i });
 
     expect(paymentsLink).toBeInTheDocument();
-    expect(paymentsLink.element()).toHaveAttribute('href', '/dashboard/finances');
+    expect(paymentsLink.element()).toHaveAttribute('href', '/dashboard/reports?report=payments-last-30-days');
   });
 
-  it('renders Payments (pending status) link pointing to finances page', () => {
+  it('renders Payments (pending status) link pointing to reports page', () => {
     render(<DashboardPage />);
 
     const pendingPaymentsLink = page.getByRole('link', { name: /Payments \(pending status\)/i });
 
     expect(pendingPaymentsLink).toBeInTheDocument();
-    expect(pendingPaymentsLink.element()).toHaveAttribute('href', '/dashboard/finances');
+    expect(pendingPaymentsLink.element()).toHaveAttribute('href', '/dashboard/reports?report=payments-pending');
   });
 
-  it('renders Failed payments link pointing to finances page', () => {
+  it('renders Failed payments link pointing to reports page', () => {
     render(<DashboardPage />);
 
     const failedPaymentsLink = page.getByRole('link', { name: /Failed payments/i });
 
     expect(failedPaymentsLink).toBeInTheDocument();
-    expect(failedPaymentsLink.element()).toHaveAttribute('href', '/dashboard/finances');
+    expect(failedPaymentsLink.element()).toHaveAttribute('href', '/dashboard/reports?report=failed-payments');
   });
 
-  it('displays Income per student as plain text without link', () => {
+  it('renders Income per student link pointing to reports page', () => {
     render(<DashboardPage />);
 
-    const incomeText = page.getByText(/Income per student/i);
+    const incomeLink = page.getByRole('link', { name: /Income per student/i });
 
-    expect(incomeText).toBeInTheDocument();
-    expect(incomeText.element().tagName.toLowerCase()).not.toBe('a');
+    expect(incomeLink).toBeInTheDocument();
+    expect(incomeLink.element()).toHaveAttribute('href', '/dashboard/reports?report=income-per-student');
   });
 });
 
@@ -305,7 +308,7 @@ describe('Dashboard Page - Layout Structure', () => {
   it('renders main content grid', () => {
     render(<DashboardPage />);
 
-    const heading = page.getByRole('heading', { name: /Dashboard/i });
+    const heading = page.getByRole('heading', { name: /Performance/i });
 
     expect(heading).toBeInTheDocument();
     expect(heading.element().tagName.toLowerCase()).toBe('h1');
