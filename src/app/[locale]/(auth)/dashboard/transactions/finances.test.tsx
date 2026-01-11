@@ -50,20 +50,20 @@ describe('Finances Page', () => {
   });
 
   describe('Page Header', () => {
-    it('should render finances h1 header', () => {
+    it('should render transactions h1 header', () => {
       render(<I18nWrapper><FinancesPage /></I18nWrapper>);
 
-      const heading = page.getByRole('heading', { name: 'Finances', level: 1 });
+      const heading = page.getByRole('heading', { name: 'Transactions', level: 1 });
 
       expect(heading).toBeInTheDocument();
     });
 
-    it('should not render the old Transactions heading', () => {
+    it('should not render the old Finances heading', () => {
       render(<I18nWrapper><FinancesPage /></I18nWrapper>);
 
-      const transactionsHeadings = page.getByRole('heading', { name: 'Transactions' }).elements();
+      const financesHeadings = page.getByRole('heading', { name: 'Finances' }).elements();
 
-      expect(transactionsHeadings.length).toBe(0);
+      expect(financesHeadings.length).toBe(0);
     });
   });
 

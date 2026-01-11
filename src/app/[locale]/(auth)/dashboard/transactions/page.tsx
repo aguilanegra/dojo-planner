@@ -53,8 +53,8 @@ function getTransactionsInPast30Days(transactions: Transaction[]): Transaction[]
   });
 }
 
-export default function FinancesPage() {
-  const t = useTranslations('FinancesPage');
+export default function TransactionsPage() {
+  const t = useTranslations('TransactionsPage');
 
   const stats = useMemo(() => {
     const recentTransactions = getTransactionsInPast30Days(mockTransactions);
@@ -74,6 +74,7 @@ export default function FinancesPage() {
 
   return (
     <div className="space-y-6">
+      <h1 className="text-3xl font-bold text-foreground">{t('title')}</h1>
       <StatsCards stats={statsData} columns={3} fullWidth={false} />
       <FinancesTable transactions={mockTransactions} />
     </div>
