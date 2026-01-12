@@ -13,13 +13,24 @@ vi.mock('recharts', () => ({
   XAxis: () => <div data-testid="x-axis" />,
   YAxis: () => <div data-testid="y-axis" />,
   Tooltip: () => <div data-testid="tooltip" />,
+  Legend: () => <div data-testid="legend" />,
+}));
+
+// Mock next-intl
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string) => {
+    const translations: Record<string, string> = {
+      compare_with_last_year: 'Compare with last year',
+    };
+    return translations[key] || key;
+  },
 }));
 
 const mockMemberAverageData = {
   monthly: [
-    { month: 'Jan', average: 110 },
-    { month: 'Feb', average: 105 },
-    { month: 'Mar', average: 115 },
+    { month: 'Jan', average: 110, previousYearAverage: 95 },
+    { month: 'Feb', average: 105, previousYearAverage: 92 },
+    { month: 'Mar', average: 115, previousYearAverage: 98 },
   ],
   yearly: [
     { year: '2022', average: 100 },
@@ -30,9 +41,9 @@ const mockMemberAverageData = {
 
 const mockEarningsData = {
   monthly: [
-    { month: 'Jan', earnings: 14000 },
-    { month: 'Feb', earnings: 13000 },
-    { month: 'Mar', earnings: 14500 },
+    { month: 'Jan', earnings: 14000, previousYearEarnings: 12000 },
+    { month: 'Feb', earnings: 13000, previousYearEarnings: 11500 },
+    { month: 'Mar', earnings: 14500, previousYearEarnings: 12800 },
   ],
   yearly: [
     { year: '2022', earnings: 150000 },
@@ -186,5 +197,88 @@ describe('DashboardCharts', () => {
     // Verify Member average is Yearly but Earnings is still Monthly
     expect(memberAverageSelect).toHaveTextContent('Yearly');
     expect(earningsSelect).toHaveTextContent('Monthly');
+  });
+
+  it('renders comparison checkbox for Member average when in monthly view', () => {
+    render(
+      <DashboardCharts
+        memberAverageData={mockMemberAverageData}
+        earningsData={mockEarningsData}
+      />,
+    );
+
+    const checkboxes = page.getByRole('checkbox');
+
+    // Should have at least 2 checkboxes (one for member average, one for earnings)
+    expect(checkboxes.elements().length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('renders comparison checkbox for Earnings when in monthly view', () => {
+    render(
+      <DashboardCharts
+        memberAverageData={mockMemberAverageData}
+        earningsData={mockEarningsData}
+      />,
+    );
+
+    const checkboxes = page.getByRole('checkbox');
+
+    // Should have 2 checkboxes total (one for each chart)
+    expect(checkboxes.elements().length).toBe(2);
+  });
+
+  it('comparison checkbox toggles on click', async () => {
+    render(
+      <DashboardCharts
+        memberAverageData={mockMemberAverageData}
+        earningsData={mockEarningsData}
+      />,
+    );
+
+    const checkboxes = page.getByRole('checkbox');
+    const memberComparisonCheckbox = checkboxes.first();
+
+    expect(memberComparisonCheckbox.element()).not.toBeChecked();
+
+    await userEvent.click(memberComparisonCheckbox.element());
+
+    expect(memberComparisonCheckbox.element()).toBeChecked();
+  });
+
+  it('comparison checkbox is hidden when switching to yearly view', async () => {
+    render(
+      <DashboardCharts
+        memberAverageData={mockMemberAverageData}
+        earningsData={mockEarningsData}
+      />,
+    );
+
+    // Initially should have 2 checkboxes
+    const initialCheckboxes = page.getByRole('checkbox');
+
+    expect(initialCheckboxes.elements().length).toBe(2);
+
+    const memberAverageSelect = page.getByRole('combobox', { name: /Select time period for member average/i });
+    await userEvent.click(memberAverageSelect.element());
+    const memberYearlyOption = page.getByRole('option', { name: /Yearly/i }).first();
+    await userEvent.click(memberYearlyOption.element());
+
+    // After switching to yearly, should only have 1 checkbox (for earnings)
+    const remainingCheckboxes = page.getByRole('checkbox');
+
+    expect(remainingCheckboxes.elements().length).toBe(1);
+  });
+
+  it('displays compare with last year label text', () => {
+    render(
+      <DashboardCharts
+        memberAverageData={mockMemberAverageData}
+        earningsData={mockEarningsData}
+      />,
+    );
+
+    const comparisonLabel = page.getByText(/Compare with last year/i);
+
+    expect(comparisonLabel.first()).toBeInTheDocument();
   });
 });

@@ -1,7 +1,7 @@
 'use client';
 
 import { useClerk } from '@clerk/nextjs';
-import { BookMarked, Briefcase, Building, CircleUser, Home, LogOut, Mail, Map, Megaphone, Settings, Users, Users2 } from 'lucide-react';
+import { BarChart3, BookMarked, Briefcase, Building, CircleUser, Home, LogOut, Mail, Map, Megaphone, Settings, Users, Users2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Badge } from '@/components/ui/badge';
 import { Sidebar, SidebarContent, SidebarHeader, SidebarRail } from '@/components/ui/sidebar';
@@ -26,11 +26,6 @@ export const AppSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
         <AppSidebarNav
           label={t('academy_section_label')}
           items={[
-            {
-              title: t('dashboard'),
-              url: '/dashboard',
-              icon: Home,
-            },
             {
               title: t('programs'),
               url: '/dashboard/programs',
@@ -75,8 +70,18 @@ export const AppSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
           label={t('business_section_label')}
           items={[
             {
-              title: t('finances'),
-              url: '/dashboard/finances',
+              title: t('performance'),
+              url: '/dashboard',
+              icon: Home,
+            },
+            {
+              title: t('reports'),
+              url: '/dashboard/reports',
+              icon: BarChart3,
+            },
+            {
+              title: t('transactions'),
+              url: '/dashboard/transactions',
               icon: Briefcase,
             },
             {
