@@ -87,8 +87,11 @@ export const memberMembershipSchema = pgTable('member_membership', {
   memberId: text('member_id').references(() => memberSchema.id).notNull(),
   membershipPlanId: text('membership_plan_id').references(() => membershipPlanSchema.id).notNull(),
   status: text('status').notNull().default('active'), // active, cancelled, expired, converted
+  billingType: text('billing_type').notNull().default('autopay'), // autopay, one-time
   startDate: timestamp('start_date', { mode: 'date' }).defaultNow().notNull(),
   endDate: timestamp('end_date', { mode: 'date' }), // null if ongoing
+  firstPaymentDate: timestamp('first_payment_date', { mode: 'date' }), // When the first payment was made
+  nextPaymentDate: timestamp('next_payment_date', { mode: 'date' }), // When the next payment is due (for autopay)
   createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { mode: 'date' })
     .defaultNow()

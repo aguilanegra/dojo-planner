@@ -50,6 +50,12 @@ const translationKeys: Record<string, string> = {
   coupon_off: 'off',
   coupon_applied_title: 'Coupon Applied: {code}',
   coupon_savings_message: 'You are saving {amount} with this coupon!',
+  billing_type_label: 'Payment Schedule',
+  billing_type_autopay: 'Autopay',
+  billing_type_autopay_description: 'Automatically billed every {period}',
+  billing_type_onetime: 'One-Time',
+  billing_type_onetime_description: 'Single payment, no recurring charges',
+  billing_type_autopay_note: 'Your payment method will be charged automatically every {period}. You can cancel or change this at any time.',
   back_button: 'Back',
   cancel_button: 'Cancel',
   next_button: 'Next',
@@ -2116,6 +2122,362 @@ describe('MemberPaymentStep', () => {
       expect(page.getByText(/Pay \$0/)).toBeTruthy();
       // Savings should be $30 (the full price), not $50
       expect(page.getByText(/saving \$30/)).toBeTruthy();
+    });
+  });
+
+  // Billing type functionality tests
+  describe('Billing type functionality', () => {
+    it('renders billing type selector for recurring monthly membership', () => {
+      const propsWithMonthlyMembership = {
+        ...defaultProps,
+        data: {
+          ...defaultProps.data,
+          membershipPlanPrice: 150,
+          membershipPlanName: 'Monthly Plan',
+          membershipPlanFrequency: 'Monthly',
+          membershipPlanIsTrial: false,
+        },
+      };
+
+      render(
+        <MemberPaymentStep {...propsWithMonthlyMembership} />,
+      );
+
+      expect(page.getByText('Payment Schedule')).toBeTruthy();
+      expect(page.getByText('Autopay')).toBeTruthy();
+      expect(page.getByText('One-Time')).toBeTruthy();
+    });
+
+    it('renders billing type selector for recurring annual membership', () => {
+      const propsWithAnnualMembership = {
+        ...defaultProps,
+        data: {
+          ...defaultProps.data,
+          membershipPlanPrice: 1200,
+          membershipPlanName: 'Annual Plan',
+          membershipPlanFrequency: 'Annual',
+          membershipPlanIsTrial: false,
+        },
+      };
+
+      render(
+        <MemberPaymentStep {...propsWithAnnualMembership} />,
+      );
+
+      expect(page.getByText('Payment Schedule')).toBeTruthy();
+      expect(page.getByText('Autopay')).toBeTruthy();
+      expect(page.getByText('One-Time')).toBeTruthy();
+    });
+
+    it('does not render billing type selector for trial membership', () => {
+      const propsWithTrialMembership = {
+        ...defaultProps,
+        data: {
+          ...defaultProps.data,
+          membershipPlanPrice: 0,
+          membershipPlanName: 'Trial Plan',
+          membershipPlanFrequency: 'Monthly',
+          membershipPlanIsTrial: true,
+        },
+      };
+
+      render(
+        <MemberPaymentStep {...propsWithTrialMembership} />,
+      );
+
+      // Should not find the billing type label
+      const billingTypeLabel = Array.from(document.querySelectorAll('label')).find(el => el.textContent?.includes('Payment Schedule'));
+
+      expect(billingTypeLabel).toBeFalsy();
+    });
+
+    it('does not render billing type selector for one-time membership (frequency None)', () => {
+      const propsWithOneTimeMembership = {
+        ...defaultProps,
+        data: {
+          ...defaultProps.data,
+          membershipPlanPrice: 50,
+          membershipPlanName: 'One-Time Event',
+          membershipPlanFrequency: 'None',
+          membershipPlanIsTrial: false,
+        },
+      };
+
+      render(
+        <MemberPaymentStep {...propsWithOneTimeMembership} />,
+      );
+
+      // Should not find the billing type label
+      const billingTypeLabel = Array.from(document.querySelectorAll('label')).find(el => el.textContent?.includes('Payment Schedule'));
+
+      expect(billingTypeLabel).toBeFalsy();
+    });
+
+    it('does not render billing type selector when price is 0', () => {
+      const propsWithZeroPrice = {
+        ...defaultProps,
+        data: {
+          ...defaultProps.data,
+          membershipPlanPrice: 0,
+          membershipPlanName: 'Free Plan',
+          membershipPlanFrequency: 'Monthly',
+          membershipPlanIsTrial: false,
+        },
+      };
+
+      render(
+        <MemberPaymentStep {...propsWithZeroPrice} />,
+      );
+
+      // Should not find the billing type label
+      const billingTypeLabel = Array.from(document.querySelectorAll('label')).find(el => el.textContent?.includes('Payment Schedule'));
+
+      expect(billingTypeLabel).toBeFalsy();
+    });
+
+    it('defaults to autopay for recurring memberships', () => {
+      const propsWithMonthlyMembership = {
+        ...defaultProps,
+        data: {
+          ...defaultProps.data,
+          membershipPlanPrice: 150,
+          membershipPlanName: 'Monthly Plan',
+          membershipPlanFrequency: 'Monthly',
+          membershipPlanIsTrial: false,
+          // billingType is not set, should default to autopay
+        },
+      };
+
+      render(
+        <MemberPaymentStep {...propsWithMonthlyMembership} />,
+      );
+
+      // Find the autopay button and check it has the selected class
+      const autopayButton = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent?.includes('Autopay'));
+
+      expect(autopayButton?.classList.contains('border-primary')).toBeTruthy();
+    });
+
+    it('calls onUpdateAction when switching to one-time billing', async () => {
+      const onUpdateAction = vi.fn();
+      const propsWithMonthlyMembership = {
+        ...defaultProps,
+        data: {
+          ...defaultProps.data,
+          membershipPlanPrice: 150,
+          membershipPlanName: 'Monthly Plan',
+          membershipPlanFrequency: 'Monthly',
+          membershipPlanIsTrial: false,
+        },
+        onUpdateAction,
+      };
+
+      render(
+        <MemberPaymentStep {...propsWithMonthlyMembership} />,
+      );
+
+      const oneTimeButton = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent?.includes('One-Time'));
+      if (oneTimeButton) {
+        await userEvent.click(oneTimeButton);
+
+        expect(onUpdateAction).toHaveBeenCalledWith({
+          billingType: 'one-time',
+          paymentStatus: undefined,
+          paymentDeclineReason: undefined,
+          paymentProcessed: false,
+        });
+      }
+    });
+
+    it('calls onUpdateAction when switching to autopay billing', async () => {
+      const onUpdateAction = vi.fn();
+      const propsWithOneTimeBilling = {
+        ...defaultProps,
+        data: {
+          ...defaultProps.data,
+          membershipPlanPrice: 150,
+          membershipPlanName: 'Monthly Plan',
+          membershipPlanFrequency: 'Monthly',
+          membershipPlanIsTrial: false,
+          billingType: 'one-time' as const,
+        },
+        onUpdateAction,
+      };
+
+      render(
+        <MemberPaymentStep {...propsWithOneTimeBilling} />,
+      );
+
+      const autopayButton = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent?.includes('Autopay'));
+      if (autopayButton) {
+        await userEvent.click(autopayButton);
+
+        expect(onUpdateAction).toHaveBeenCalledWith({
+          billingType: 'autopay',
+          paymentStatus: undefined,
+          paymentDeclineReason: undefined,
+          paymentProcessed: false,
+        });
+      }
+    });
+
+    it('shows autopay note when autopay is selected', () => {
+      const propsWithAutopay = {
+        ...defaultProps,
+        data: {
+          ...defaultProps.data,
+          membershipPlanPrice: 150,
+          membershipPlanName: 'Monthly Plan',
+          membershipPlanFrequency: 'Monthly',
+          membershipPlanIsTrial: false,
+          billingType: 'autopay' as const,
+        },
+      };
+
+      render(
+        <MemberPaymentStep {...propsWithAutopay} />,
+      );
+
+      expect(page.getByText(/automatically every month/i)).toBeTruthy();
+    });
+
+    it('does not show autopay note when one-time is selected', () => {
+      const propsWithOneTime = {
+        ...defaultProps,
+        data: {
+          ...defaultProps.data,
+          membershipPlanPrice: 150,
+          membershipPlanName: 'Monthly Plan',
+          membershipPlanFrequency: 'Monthly',
+          membershipPlanIsTrial: false,
+          billingType: 'one-time' as const,
+        },
+      };
+
+      render(
+        <MemberPaymentStep {...propsWithOneTime} />,
+      );
+
+      // Should not find the autopay note
+      const autopayNote = Array.from(document.querySelectorAll('p')).find(el => el.textContent?.includes('automatically'));
+
+      expect(autopayNote).toBeFalsy();
+    });
+
+    it('preserves billing type selection during payment processing', async () => {
+      const onUpdateAction = vi.fn();
+      const propsWithOneTime = {
+        ...defaultProps,
+        data: {
+          ...defaultProps.data,
+          membershipPlanPrice: 150,
+          membershipPlanName: 'Monthly Plan',
+          membershipPlanFrequency: 'Monthly',
+          membershipPlanIsTrial: false,
+          billingType: 'one-time' as const,
+          cardholderName: 'John Doe',
+          cardNumber: '4111111111111111',
+          cardExpiry: '12/25',
+          cardCvc: '123',
+        },
+        onUpdateAction,
+      };
+
+      render(
+        <MemberPaymentStep {...propsWithOneTime} />,
+      );
+
+      // Find one-time button and verify it's selected
+      const oneTimeButton = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent?.includes('One-Time'));
+
+      expect(oneTimeButton?.classList.contains('border-primary')).toBeTruthy();
+
+      // Start processing payment
+      const processButton = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent?.includes('Process Payment'));
+      if (processButton) {
+        await userEvent.click(processButton);
+
+        // One-time should still be selected
+        expect(oneTimeButton?.classList.contains('border-primary')).toBeTruthy();
+
+        // Complete the timer
+        await advancePaymentTimer();
+      }
+    });
+
+    it('disables billing type buttons while processing payment', async () => {
+      const onUpdateAction = vi.fn();
+      const propsWithMonthlyMembership = {
+        ...defaultProps,
+        data: {
+          ...defaultProps.data,
+          membershipPlanPrice: 150,
+          membershipPlanName: 'Monthly Plan',
+          membershipPlanFrequency: 'Monthly',
+          membershipPlanIsTrial: false,
+          cardholderName: 'John Doe',
+          cardNumber: '4111111111111111',
+          cardExpiry: '12/25',
+          cardCvc: '123',
+        },
+        onUpdateAction,
+      };
+
+      render(
+        <MemberPaymentStep {...propsWithMonthlyMembership} />,
+      );
+
+      const processButton = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent?.includes('Process Payment'));
+
+      if (processButton) {
+        await userEvent.click(processButton);
+
+        // Check that billing type buttons are disabled during processing
+        const oneTimeButton = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent?.includes('One-Time')) as HTMLButtonElement;
+
+        expect(oneTimeButton?.disabled).toBe(true);
+
+        // Wait for completion
+        await advancePaymentTimer();
+      }
+    });
+
+    it('shows correct frequency label in autopay description for monthly', () => {
+      const propsWithMonthlyMembership = {
+        ...defaultProps,
+        data: {
+          ...defaultProps.data,
+          membershipPlanPrice: 150,
+          membershipPlanName: 'Monthly Plan',
+          membershipPlanFrequency: 'Monthly',
+          membershipPlanIsTrial: false,
+        },
+      };
+
+      render(
+        <MemberPaymentStep {...propsWithMonthlyMembership} />,
+      );
+
+      expect(page.getByText(/every month/)).toBeTruthy();
+    });
+
+    it('shows correct frequency label in autopay description for annual', () => {
+      const propsWithAnnualMembership = {
+        ...defaultProps,
+        data: {
+          ...defaultProps.data,
+          membershipPlanPrice: 1200,
+          membershipPlanName: 'Annual Plan',
+          membershipPlanFrequency: 'Annual',
+          membershipPlanIsTrial: false,
+        },
+      };
+
+      render(
+        <MemberPaymentStep {...propsWithAnnualMembership} />,
+      );
+
+      expect(page.getByText(/every year/)).toBeTruthy();
     });
   });
 });
