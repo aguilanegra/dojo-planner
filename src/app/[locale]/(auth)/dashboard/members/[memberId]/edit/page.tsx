@@ -1,5 +1,6 @@
 'use client';
 
+import type { AttendanceRecord, PunchcardInfo } from '@/features/members/details/MemberDetailAttendance';
 import type { MemberNote } from '@/features/members/details/MemberDetailNotes';
 import type { Member } from '@/hooks/useMembersCache';
 import { useOrganization } from '@clerk/nextjs';
@@ -13,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ChangeMembershipModal } from '@/features/members/details/ChangeMembershipModal';
 import { EditContactInfoModal } from '@/features/members/details/EditContactInfoModal';
+import { MemberDetailAttendance } from '@/features/members/details/MemberDetailAttendance';
 import { MemberDetailNotes } from '@/features/members/details/MemberDetailNotes';
 import { useMembersCache } from '@/hooks/useMembersCache';
 import {
@@ -24,7 +26,7 @@ import {
   resolveTabFromUrl,
 } from './utils';
 
-type Tab = 'overview' | 'notes';
+type Tab = 'overview' | 'attendance' | 'notes';
 
 type ContactInfo = {
   phone?: string;
@@ -109,6 +111,88 @@ type MemberData = {
   paymentMethod: PaymentMethod;
   agreement: Agreement;
   billingHistory: BillingHistoryItem[];
+};
+
+// Mock attendance data for demonstration
+// Note: Class names and instructor names are for demonstration purposes only
+const MOCK_ATTENDANCE: AttendanceRecord[] = [
+  {
+    id: 'att-1',
+    className: 'BJJ Fundamentals I',
+    date: 'Jan 10, 2026',
+    time: '6:00 PM - 7:00 PM',
+    instructor: 'Coach Alex',
+  },
+  {
+    id: 'att-2',
+    className: 'BJJ Fundamentals II',
+    date: 'Jan 9, 2026',
+    time: '6:00 PM - 7:30 PM',
+    instructor: 'Professor Ivan',
+  },
+  {
+    id: 'att-3',
+    className: 'BJJ Fundamentals I',
+    date: 'Jan 8, 2026',
+    time: '6:00 PM - 7:00 PM',
+    instructor: 'Professor Jessica',
+  },
+  {
+    id: 'att-4',
+    className: 'Open Mat',
+    date: 'Jan 5, 2026',
+    time: '10:00 AM - 12:00 PM',
+    instructor: 'N/A',
+  },
+  {
+    id: 'att-5',
+    className: 'BJJ Intermediate',
+    date: 'Jan 6, 2026',
+    time: '7:00 PM - 8:00 PM',
+    instructor: 'Professor Joao',
+  },
+  {
+    id: 'att-6',
+    className: 'BJJ Fundamentals I',
+    date: 'Jan 3, 2026',
+    time: '6:00 PM - 7:00 PM',
+    instructor: 'Coach Alex',
+  },
+  {
+    id: 'att-7',
+    className: 'BJJ Fundamentals II',
+    date: 'Jan 2, 2026',
+    time: '6:00 PM - 7:30 PM',
+    instructor: 'Professor Ivan',
+  },
+  {
+    id: 'att-8',
+    className: 'BJJ Fundamentals I',
+    date: 'Dec 30, 2025',
+    time: '6:00 PM - 7:00 PM',
+    instructor: 'Coach Alex',
+  },
+  {
+    id: 'att-9',
+    className: 'Open Mat',
+    date: 'Dec 29, 2025',
+    time: '10:00 AM - 12:00 PM',
+    instructor: 'N/A',
+  },
+  {
+    id: 'att-10',
+    className: 'BJJ Intermediate',
+    date: 'Dec 27, 2025',
+    time: '7:00 PM - 8:00 PM',
+    instructor: 'Professor Joao',
+  },
+];
+
+// Mock punchcard info for demonstration (used when member has punchcard membership)
+const MOCK_PUNCHCARD_INFO: PunchcardInfo = {
+  totalClasses: 10,
+  classesUsed: 4,
+  classesRemaining: 6,
 };
 
 // Mock notes data for demonstration
@@ -635,6 +719,17 @@ export default function EditMemberPage() {
           </button>
           <button
             type="button"
+            onClick={() => handleTabChange('attendance')}
+            className={`cursor-pointer pb-3 text-sm font-semibold transition-colors ${
+              state.activeTab === 'attendance'
+                ? 'border-b-2 border-foreground text-foreground'
+                : 'border-b-2 border-transparent text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            Attendance
+          </button>
+          <button
+            type="button"
             onClick={() => handleTabChange('notes')}
             className={`cursor-pointer pb-3 text-sm font-semibold transition-colors ${
               state.activeTab === 'notes'
@@ -1055,6 +1150,15 @@ export default function EditMemberPage() {
           </div>
 
         </div>
+      )}
+
+      {state.activeTab === 'attendance' && (
+        <MemberDetailAttendance
+          memberId={memberId}
+          memberName={state.currentData.memberName}
+          attendanceRecords={MOCK_ATTENDANCE}
+          punchcardInfo={currentMembership?.membershipPlan?.category === 'punchcard' ? MOCK_PUNCHCARD_INFO : null}
+        />
       )}
 
       {state.activeTab === 'notes' && (
