@@ -5,6 +5,7 @@ type SubscriptionPlan = 'free-trial' | 'monthly' | 'annual';
 export type PaymentMethod = 'card' | 'ach';
 export type PaymentStatus = 'pending' | 'processing' | 'approved' | 'declined';
 export type PaymentDeclineReason = 'insufficient_funds' | 'invalid_cvc' | 'expired_card' | 'card_declined' | 'ach_failed';
+export type BillingType = 'autopay' | 'one-time';
 
 // Coupon information for payment step
 export type AppliedCoupon = {
@@ -49,6 +50,7 @@ export type AddMemberWizardData = {
 
   // Step 5: Payment (only for monthly/annual plans)
   paymentMethod?: PaymentMethod;
+  billingType?: BillingType; // autopay (recurring) or one-time payment
   cardholderName?: string;
   cardNumber?: string;
   cardExpiry?: string;
@@ -131,6 +133,7 @@ export const useAddMemberWizard = () => {
       phone: '',
       membershipPlanId: null,
       paymentMethod: undefined,
+      billingType: undefined,
       cardholderName: undefined,
       cardNumber: undefined,
       cardExpiry: undefined,

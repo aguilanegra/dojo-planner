@@ -1,11 +1,13 @@
 'use client';
 
-import { Download } from 'lucide-react';
+import { Download, RefreshCw } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+
+type BillingType = 'autopay' | 'one-time';
 
 type MembershipDetailsData = {
   status: 'active' | 'on-hold' | 'cancelled';
@@ -15,8 +17,10 @@ type MembershipDetailsData = {
   paymentFrequency: string;
   registrationDate: string;
   startDate: string;
+  firstPaymentDate?: string;
   nextPaymentDate: string;
   nextPaymentAmount: number;
+  billingType?: BillingType;
 };
 
 type PaymentMethod = {
@@ -179,6 +183,19 @@ export function MemberDetailFinancial({
                   <p className="text-right text-sm text-foreground">{membershipDetails.paymentFrequency}</p>
                 </div>
               )}
+              {membershipDetails.billingType && membershipDetails.paymentFrequency !== 'N/A' && (
+                <div className="flex items-start justify-between">
+                  <p className="text-sm text-muted-foreground">{t('billing_type_label')}</p>
+                  <div className="flex items-center gap-2">
+                    {membershipDetails.billingType === 'autopay' && (
+                      <RefreshCw className="h-3 w-3 text-primary" />
+                    )}
+                    <Badge variant={membershipDetails.billingType === 'autopay' ? 'default' : 'secondary'}>
+                      {membershipDetails.billingType === 'autopay' ? t('billing_type_autopay') : t('billing_type_onetime')}
+                    </Badge>
+                  </div>
+                </div>
+              )}
               <div className="flex items-start justify-between border-t border-border pt-4">
                 <p className="text-sm text-muted-foreground">{t('registration_date_label')}</p>
                 <p className="text-right text-sm text-foreground">{membershipDetails.registrationDate}</p>
@@ -187,13 +204,19 @@ export function MemberDetailFinancial({
                 <p className="text-sm text-muted-foreground">{t('start_date_label')}</p>
                 <p className="text-right text-sm text-foreground">{membershipDetails.startDate}</p>
               </div>
-              {membershipDetails.nextPaymentDate !== 'N/A' && (
+              {membershipDetails.firstPaymentDate && (
+                <div className="flex items-start justify-between">
+                  <p className="text-sm text-muted-foreground">{t('first_payment_date_label')}</p>
+                  <p className="text-right text-sm text-foreground">{membershipDetails.firstPaymentDate}</p>
+                </div>
+              )}
+              {membershipDetails.nextPaymentDate !== 'N/A' && membershipDetails.billingType === 'autopay' && (
                 <div className="flex items-start justify-between">
                   <p className="text-sm text-muted-foreground">{t('next_payment_date_label')}</p>
                   <p className="text-right text-sm text-foreground">{membershipDetails.nextPaymentDate}</p>
                 </div>
               )}
-              {membershipDetails.nextPaymentAmount > 0 && (
+              {membershipDetails.nextPaymentAmount > 0 && membershipDetails.billingType === 'autopay' && (
                 <div className="flex items-start justify-between">
                   <p className="text-sm text-muted-foreground">{t('next_payment_amount_label')}</p>
                   <p className="text-right text-sm font-semibold text-foreground">

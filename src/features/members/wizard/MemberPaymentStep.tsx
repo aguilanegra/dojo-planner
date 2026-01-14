@@ -1,8 +1,8 @@
 'use client';
 
 import type { Coupon } from '@/features/marketing';
-import type { AddMemberWizardData, AppliedCoupon, PaymentDeclineReason, PaymentMethod, PaymentStatus } from '@/hooks/useAddMemberWizard';
-import { AlertCircle, CheckCircle2, CreditCard, Landmark, Loader2, Tag } from 'lucide-react';
+import type { AddMemberWizardData, AppliedCoupon, BillingType, PaymentDeclineReason, PaymentMethod, PaymentStatus } from '@/hooks/useAddMemberWizard';
+import { AlertCircle, CheckCircle2, CreditCard, Landmark, Loader2, RefreshCw, Tag } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -149,6 +149,15 @@ export const MemberPaymentStep = ({
   const paymentStatus = data.paymentStatus;
   const paymentProcessed = data.paymentProcessed;
 
+  // Determine if this is a recurring membership (monthly or annual)
+  const isRecurringMembership = data.membershipPlanFrequency
+    && data.membershipPlanFrequency.toLowerCase() !== 'none'
+    && !data.membershipPlanIsTrial;
+
+  // Default to autopay for recurring memberships, one-time otherwise
+  const billingType: BillingType = data.billingType
+    || (isRecurringMembership ? 'autopay' : 'one-time');
+
   // Get valid membership coupons
   const validCoupons = useMemo(() => {
     return getValidMembershipCoupons(availableCoupons);
@@ -200,6 +209,16 @@ export const MemberPaymentStep = ({
     onUpdateAction({
       paymentMethod: method,
       // Reset payment status when changing method
+      paymentStatus: undefined,
+      paymentDeclineReason: undefined,
+      paymentProcessed: false,
+    });
+  };
+
+  const handleBillingTypeChange = (newBillingType: BillingType) => {
+    onUpdateAction({
+      billingType: newBillingType,
+      // Reset payment status when changing billing type
       paymentStatus: undefined,
       paymentDeclineReason: undefined,
       paymentProcessed: false,
@@ -376,6 +395,55 @@ export const MemberPaymentStep = ({
               {t('coupon_savings_message', { amount: formatPaymentAmount(discountAmount) })}
             </p>
           </div>
+        </div>
+      )}
+
+      {/* Billing Type Selection (only for recurring memberships) */}
+      {isRecurringMembership && originalPrice > 0 && (
+        <div>
+          <label className="mb-2 block text-sm font-medium">
+            {t('billing_type_label')}
+          </label>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => handleBillingTypeChange('autopay')}
+              disabled={isProcessingPayment}
+              className={`flex flex-1 items-center justify-center gap-2 rounded-lg border-2 px-4 py-3 transition-all ${
+                billingType === 'autopay'
+                  ? 'border-primary bg-primary/5'
+                  : 'border-border bg-background hover:border-primary/50 hover:bg-accent/50'
+              } ${isProcessingPayment ? 'cursor-not-allowed opacity-50' : ''}`}
+            >
+              <RefreshCw className="h-5 w-5" />
+              <div className="text-left">
+                <span className="block font-medium">{t('billing_type_autopay')}</span>
+                <span className="text-xs text-muted-foreground">{t('billing_type_autopay_description', { period: periodText })}</span>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleBillingTypeChange('one-time')}
+              disabled={isProcessingPayment}
+              className={`flex flex-1 items-center justify-center gap-2 rounded-lg border-2 px-4 py-3 transition-all ${
+                billingType === 'one-time'
+                  ? 'border-primary bg-primary/5'
+                  : 'border-border bg-background hover:border-primary/50 hover:bg-accent/50'
+              } ${isProcessingPayment ? 'cursor-not-allowed opacity-50' : ''}`}
+            >
+              <CreditCard className="h-5 w-5" />
+              <div className="text-left">
+                <span className="block font-medium">{t('billing_type_onetime')}</span>
+                <span className="text-xs text-muted-foreground">{t('billing_type_onetime_description')}</span>
+              </div>
+            </button>
+          </div>
+          {billingType === 'autopay' && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              {t('billing_type_autopay_note', { period: periodText })}
+            </p>
+          )}
         </div>
       )}
 
