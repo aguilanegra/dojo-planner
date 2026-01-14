@@ -60,7 +60,10 @@ export const getStatusLabel = (status: 'active' | 'on-hold' | 'cancelled'): stri
  * Determine which tab to show based on URL parameter
  * Handles backwards compatibility for removed 'financial' tab
  */
-export const resolveTabFromUrl = (tabParam: string | null): 'overview' | 'notes' => {
+export const resolveTabFromUrl = (tabParam: string | null): 'overview' | 'attendance' | 'notes' => {
+  if (tabParam === 'attendance') {
+    return 'attendance';
+  }
   if (tabParam === 'notes') {
     return 'notes';
   }
