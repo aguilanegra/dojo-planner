@@ -385,16 +385,18 @@ NEXT_PUBLIC_BETTER_STACK_INGESTING_HOST
 ## Scripts
 
 ```bash
-npm run dev          # Dev server with PGLite DB + Sentry Spotlight
-npm run build        # Production build
-npm run test         # Vitest (unit + UI)
-npm run test:e2e     # Playwright E2E
-npm run lint         # ESLint
-npm run check:types  # TypeScript check
-npm run check:deps   # Unused deps (knip)
-npm run storybook    # Component docs
+npm run dev           # Dev server with PGLite DB + Sentry Spotlight
+npm run build         # Production build
+npm run test          # Vitest (unit + UI)
+npm run test -- --coverage  # Run tests with coverage report
+npm run test:e2e      # Playwright E2E
+npm run lint          # ESLint
+npm run check:types   # TypeScript check
+npm run check:deps    # Unused deps (knip)
+npm run check:i18n    # Validate i18n keys (source: en)
+npm run storybook     # Component docs
 npm run stripe:listen # Forward Stripe webhooks
-npm run commit       # Interactive commit helper
+npm run commit        # Interactive commit helper
 ```
 
 ## Conventions
@@ -405,6 +407,7 @@ npm run commit       # Interactive commit helper
 - **Validation:** Zod schemas in `src/validations/`
 - **i18n:** Translation keys in `src/locales/[lang].json`
 - **Locales:** English (en), French (fr)
+- **Lint:** Never use eslint-ignore comments; fix the underlying issue instead
 
 ## CI/CD
 
