@@ -81,6 +81,11 @@ jobs:
       - name: I18n check
         run: npm run check:i18n
 
+      - name: Security audit
+        # Using critical level due to transitive dependencies with high vulns that require breaking changes to fix
+        # Review periodically and upgrade to --audit-level=high when dependencies are updated
+        run: npm audit --audit-level=critical
+
   unit:
     strategy:
       matrix:
