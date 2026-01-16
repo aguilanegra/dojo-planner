@@ -88,38 +88,6 @@
   "DataTable": {
     "no_results": "Aucun résultat."
   },
-  "Todos": {
-    "title_bar": "Liste de Todos",
-    "title_bar_description": "Afficher et gérer votre liste de todos",
-    "add_todo_button": "Nouveau todo"
-  },
-  "TodoTableColumns": {
-    "open_menu": "Ouvrir le menu",
-    "edit": "Modifier",
-    "delete": "Supprimer",
-    "title_header": "Titre",
-    "message_header": "Message",
-    "created_at_header": "Créé le"
-  },
-  "AddTodo": {
-    "title_bar": "Ajouter une todo",
-    "add_todo_section_title": "Créer une nouvelle todo",
-    "add_todo_section_description": "Remplissez le formulaire ci-dessous pour créer une nouvelle todo"
-  },
-  "EditTodo": {
-    "title_bar": "Editer le todo",
-    "edit_todo_section_title": "Modifier le todo",
-    "edit_todo_section_description": "Remplissez le formulaire ci-dessous pour modifier la todo"
-  },
-  "TodoForm": {
-    "title_label": "Titre",
-    "title_description": "Entrez un titre descriptif pour votre todo.",
-    "title_error_message": "Le titre est requis et ne peut pas être vide.",
-    "message_title": "Message",
-    "message_description": "Entrez un message détaillé pour votre todo.",
-    "message_error_message": "Le message est requis et ne peut pas être vide.",
-    "submit_button": "Envoyer"
-  },
   "Members": {
     "add_member_button": "Ajouter un membre",
     "search_placeholder": "Rechercher des membres...",

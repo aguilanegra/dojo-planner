@@ -88,38 +88,6 @@
   "DataTable": {
     "no_results": "No results."
   },
-  "Todos": {
-    "title_bar": "Todo List",
-    "title_bar_description": "View and manage your todo list",
-    "add_todo_button": "New todo"
-  },
-  "TodoTableColumns": {
-    "open_menu": "Open menu",
-    "edit": "Edit",
-    "delete": "Delete",
-    "title_header": "Title",
-    "message_header": "Message",
-    "created_at_header": "Created at"
-  },
-  "AddTodo": {
-    "title_bar": "Add Todo",
-    "add_todo_section_title": "Create a new todo",
-    "add_todo_section_description": "Fill in the form below to create a new todo"
-  },
-  "EditTodo": {
-    "title_bar": "Edit todo",
-    "edit_todo_section_title": "Modify todo",
-    "edit_todo_section_description": "Fill in the form below to edit the todo"
-  },
-  "TodoForm": {
-    "title_label": "Title",
-    "title_description": "Enter a descriptive title for your todo.",
-    "title_error_message": "Title is required and cannot be empty",
-    "message_title": "Message",
-    "message_description": "Enter a detailed message for your todo.",
-    "message_error_message": "Message is required and cannot be empty",
-    "submit_button": "Submit"
-  },
   "Members": {
     "add_member_button": "Add Member",
     "search_placeholder": "Search members...",
