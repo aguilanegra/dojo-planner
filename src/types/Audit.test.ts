@@ -1,0 +1,142 @@
+import type { AuditContext, AuditEvent, AuditEventInput, AuditFieldChange, AuditStatus } from './Audit';
+import { describe, expect, it } from 'vitest';
+import { AUDIT_ACTION, AUDIT_ENTITY_TYPE } from './Audit';
+
+describe('Audit Types', () => {
+  describe('AUDIT_ACTION constants', () => {
+    it('should have all member action types', () => {
+      expect(AUDIT_ACTION.MEMBER_CREATE).toBe('member.create');
+      expect(AUDIT_ACTION.MEMBER_UPDATE).toBe('member.update');
+      expect(AUDIT_ACTION.MEMBER_REMOVE).toBe('member.remove');
+      expect(AUDIT_ACTION.MEMBER_RESTORE).toBe('member.restore');
+      expect(AUDIT_ACTION.MEMBER_UPDATE_CONTACT).toBe('member.updateContact');
+      expect(AUDIT_ACTION.MEMBER_UPDATE_ACCESS).toBe('member.updateAccess');
+      expect(AUDIT_ACTION.MEMBER_ADD_MEMBERSHIP).toBe('member.addMembership');
+      expect(AUDIT_ACTION.MEMBER_CHANGE_MEMBERSHIP).toBe('member.changeMembership');
+    });
+
+    it('should have all todo action types', () => {
+      expect(AUDIT_ACTION.TODO_CREATE).toBe('todo.create');
+      expect(AUDIT_ACTION.TODO_UPDATE).toBe('todo.update');
+      expect(AUDIT_ACTION.TODO_DELETE).toBe('todo.delete');
+    });
+
+    it('should have correct number of action types', () => {
+      const actionCount = Object.keys(AUDIT_ACTION).length;
+
+      expect(actionCount).toBe(11);
+    });
+  });
+
+  describe('AUDIT_ENTITY_TYPE constants', () => {
+    it('should have all entity types', () => {
+      expect(AUDIT_ENTITY_TYPE.MEMBER).toBe('member');
+      expect(AUDIT_ENTITY_TYPE.TODO).toBe('todo');
+      expect(AUDIT_ENTITY_TYPE.MEMBERSHIP).toBe('membership');
+    });
+
+    it('should have correct number of entity types', () => {
+      const entityCount = Object.keys(AUDIT_ENTITY_TYPE).length;
+
+      expect(entityCount).toBe(3);
+    });
+  });
+
+  describe('Type compatibility', () => {
+    it('should allow valid AuditContext', () => {
+      const context: AuditContext = {
+        userId: 'test-user-123',
+        orgId: 'test-org-456',
+        role: 'org:admin',
+      };
+
+      expect(context.userId).toBe('test-user-123');
+      expect(context.orgId).toBe('test-org-456');
+      expect(context.role).toBe('org:admin');
+    });
+
+    it('should allow AuditContext without optional role', () => {
+      const context: AuditContext = {
+        userId: 'test-user-123',
+        orgId: 'test-org-456',
+      };
+
+      expect(context.userId).toBe('test-user-123');
+      expect(context.role).toBeUndefined();
+    });
+
+    it('should allow valid AuditFieldChange', () => {
+      const change: AuditFieldChange = {
+        before: 'old value',
+        after: 'new value',
+      };
+
+      expect(change.before).toBe('old value');
+      expect(change.after).toBe('new value');
+    });
+
+    it('should allow AuditStatus values', () => {
+      const successStatus: AuditStatus = 'success';
+      const failureStatus: AuditStatus = 'failure';
+
+      expect(successStatus).toBe('success');
+      expect(failureStatus).toBe('failure');
+    });
+
+    it('should allow valid AuditEvent', () => {
+      const event: AuditEvent = {
+        userId: 'test-user-123',
+        orgId: 'test-org-456',
+        action: AUDIT_ACTION.MEMBER_CREATE,
+        entityType: AUDIT_ENTITY_TYPE.MEMBER,
+        entityId: 'test-entity-789',
+        timestamp: new Date('2024-01-15T10:00:00Z'),
+        role: 'org:admin',
+        status: 'success',
+      };
+
+      expect(event.userId).toBe('test-user-123');
+      expect(event.action).toBe('member.create');
+      expect(event.entityType).toBe('member');
+      expect(event.status).toBe('success');
+    });
+
+    it('should allow AuditEvent with optional fields', () => {
+      const event: AuditEvent = {
+        userId: 'test-user-123',
+        orgId: 'test-org-456',
+        action: AUDIT_ACTION.MEMBER_UPDATE,
+        entityType: AUDIT_ENTITY_TYPE.MEMBER,
+        timestamp: new Date(),
+        status: 'failure',
+        error: 'Something went wrong',
+        changes: {
+          firstName: { before: 'John', after: 'Jane' },
+        },
+        ipAddress: '192.168.1.1',
+        userAgent: 'Mozilla/5.0',
+        requestId: 'req-123',
+      };
+
+      expect(event.error).toBe('Something went wrong');
+      expect(event.changes?.firstName?.before).toBe('John');
+      expect(event.ipAddress).toBe('192.168.1.1');
+    });
+
+    it('should allow AuditEventInput without timestamp', () => {
+      const input: AuditEventInput = {
+        userId: 'test-user-123',
+        orgId: 'test-org-456',
+        action: AUDIT_ACTION.TODO_CREATE,
+        entityType: AUDIT_ENTITY_TYPE.TODO,
+        entityId: 'test-todo-123',
+        status: 'success',
+      };
+
+      expect(input.userId).toBe('test-user-123');
+      expect(input.action).toBe('todo.create');
+      // timestamp should not exist on input type
+      expect('timestamp' in input).toBe(false);
+    });
+  });
+});

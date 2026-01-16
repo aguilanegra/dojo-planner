@@ -415,5 +415,180 @@ npm run commit        # Interactive commit helper
   - Build matrix: Node 22.x, 24.x
   - Lint, types, deps check
   - Unit tests, Storybook tests, E2E tests
-- **Release:** Semantic release on main branch
+  - Security audit (`npm audit --audit-level=critical`)
+  - CodeQL SAST scanning (`.github/workflows/codeql.yml`)
+- **Release:** Semantic release on main branch (uses `RELEASE_PAT` for branch protection bypass)
 - **Monitoring:** Checkly synthetic monitoring
+
+## Security & Compliance (SOC2)
+
+This codebase implements security controls for SOC2 Type 1 compliance (Security Trust Service Criteria).
+
+### Audit Logging
+
+**Purpose:** Track WHO did WHAT to WHICH entity WHEN (CC7.2)
+
+**Key Files:**
+- `src/types/Audit.ts` - Audit event types and constants
+- `src/services/AuditService.ts` - Audit logging service
+- `src/libs/Logger.ts` - Dual logger (app + audit categories)
+
+**Usage Pattern:**
+```typescript
+import { audit } from '@/services/AuditService';
+import { AUDIT_ACTION, AUDIT_ENTITY_TYPE } from '@/types/Audit';
+
+// In router handlers after guardRole/guardAuth
+const context = await guardRole(ORG_ROLE.ADMIN);
+
+try {
+  const result = await someOperation();
+  await audit(context, AUDIT_ACTION.MEMBER_CREATE, AUDIT_ENTITY_TYPE.MEMBER, {
+    entityId: result.id,
+    status: 'success',
+  });
+  return result;
+} catch (error) {
+  await audit(context, AUDIT_ACTION.MEMBER_CREATE, AUDIT_ENTITY_TYPE.MEMBER, {
+    status: 'failure',
+    error: error instanceof Error ? error.message : 'Unknown error',
+  });
+  throw error;
+}
+```
+
+**Audit Actions:**
+```typescript
+AUDIT_ACTION.MEMBER_CREATE; // member.create
+AUDIT_ACTION.MEMBER_UPDATE; // member.update
+AUDIT_ACTION.MEMBER_REMOVE; // member.remove
+AUDIT_ACTION.MEMBER_RESTORE; // member.restore
+AUDIT_ACTION.MEMBER_UPDATE_CONTACT; // member.updateContact
+AUDIT_ACTION.MEMBER_ADD_MEMBERSHIP; // member.addMembership
+AUDIT_ACTION.MEMBER_CHANGE_MEMBERSHIP; // member.changeMembership
+AUDIT_ACTION.TODO_CREATE; // todo.create
+AUDIT_ACTION.TODO_UPDATE; // todo.update
+AUDIT_ACTION.TODO_DELETE; // todo.delete
+```
+
+**Adding New Audit Events:**
+1. Add action constant to `AUDIT_ACTION` in `src/types/Audit.ts`
+2. Add entity type to `AUDIT_ENTITY_TYPE` if needed
+3. Call `audit()` in the router handler with proper context
+
+### Rate Limiting
+
+**Purpose:** Prevent abuse and DoS attacks (CC6.1)
+
+**Key Files:**
+- `src/libs/RateLimit.ts` - Upstash Redis rate limiters
+- `src/libs/Env.ts` - Environment variables for Upstash
+- `src/routers/RateLimitGuard.ts` - ORPC rate limit guard
+- `src/app/[locale]/rpc/[[...rest]]/route.ts` - RPC rate limiting
+- `src/app/[locale]/webhook/billing/route.ts` - Webhook rate limiting
+
+**Rate Limits:**
+| Endpoint | Limit | Window | Identifier |
+|----------|-------|--------|------------|
+| `/rpc/*` (authenticated) | 100 req | 1 min | orgId |
+| `/rpc/*` (unauthenticated) | 10 req | 1 min | IP |
+| `/webhook/billing` | 100 req | 1 min | IP |
+
+**Environment Variables:**
+```bash
+# Optional - rate limiting disabled if not set
+UPSTASH_REDIS_REST_URL=https://xxx.upstash.io
+UPSTASH_REDIS_REST_TOKEN=your-token-here
+```
+
+**Adding Rate Limiting to New Endpoints:**
+```typescript
+import { getClientIP, isRateLimitingEnabled, rpcRateLimiter } from '@/libs/RateLimit';
+
+async function handleRequest(request: Request) {
+  if (isRateLimitingEnabled()) {
+    const ip = getClientIP(request);
+    const result = await rpcRateLimiter.limit(ip);
+    if (!result.success) {
+      return new Response('Too Many Requests', { status: 429 });
+    }
+  }
+  // ... handle request
+}
+```
+
+### Security Headers
+
+HTTP security headers are configured in `next.config.ts`:
+- `Strict-Transport-Security` (HSTS)
+- `X-Frame-Options: DENY`
+- `X-Content-Type-Options: nosniff`
+- `Referrer-Policy: strict-origin-when-cross-origin`
+- `Permissions-Policy` (camera, microphone, geolocation disabled)
+
+### Auth Guards (Enhanced for Audit)
+
+Guards now return full audit context:
+
+```typescript
+// guardAuth returns userId for audit logging
+const { userId, orgId, has } = await guardAuth();
+
+// guardRole returns AuditContext with role
+const context = await guardRole(ORG_ROLE.ADMIN);
+// context = { userId, orgId, role: 'org:admin' }
+```
+
+### Security Checklist for New Features
+
+When adding new features, ensure:
+
+1. **Authentication:** Use `guardAuth()` or `guardRole()` for all protected endpoints
+2. **Audit Logging:** Add `audit()` calls for all mutations (create, update, delete)
+3. **Rate Limiting:** Consider if the endpoint needs rate limiting
+4. **Input Validation:** Use Zod schemas in `src/validations/`
+5. **Error Handling:** Never expose internal errors to clients
+
+## Post-Implementation Checklist
+
+After completing any code changes, always run the following verification steps:
+
+### 1. Create/Update Unit Tests
+- Add tests for new functionality in co-located `*.test.ts` files
+- Update existing tests to reflect changed behavior
+- Ensure mocks are properly configured
+
+### 2. Run All Checks
+```bash
+# Run all checks in sequence
+npm run lint          # ESLint - fix issues, never use eslint-ignore
+npm run check:types   # TypeScript type checking
+npm run check:deps    # Unused dependencies (knip)
+npm run check:i18n    # i18n key validation
+npm run test          # Unit tests
+npm run test -- --coverage  # Verify coverage
+```
+
+### 3. Code Coverage Target
+- Aim for as close to 100% coverage as possible on new/modified code
+- Review uncovered lines and add tests for edge cases
+- Focus on branch coverage for conditional logic
+
+### 4. Git Guardian Compliance
+When using test credentials or example values in tests:
+```typescript
+// Use clearly fake/test values that won't trigger secret scanning
+const testUserId = 'test-user-123'; // Clearly a test value
+const testOrgId = 'test-org-456'; // Clearly a test value
+
+// For API keys in tests, use obvious placeholder patterns
+const mockApiKey = 'test_api_key_not_real'; // nosecret
+```
+
+### 5. Final Verification
+```bash
+# Full verification before commit
+npm run lint && npm run check:types && npm run check:deps && npm run check:i18n && npm run test -- --coverage
+```
+
+All checks must pass without errors or warnings before committing.
