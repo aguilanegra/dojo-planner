@@ -1,0 +1,26 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "src/**/*.{ts,tsx}",
+    "tests/**/*.ts",
+    ".storybook/**/*.{ts,tsx,mts}"
+  ],
+  "project": [
+    "src/**/*.{ts,tsx}",
+    "tests/**/*.ts",
+    ".storybook/**/*.{ts,tsx,mts}"
+  ],
+  "ignoreDependencies": [
+    "@swc/helpers",
+    "@semantic-release/npm",
+    "conventional-changelog-conventionalcommits",
+    "tw-animate-css"
+  ],
+  "ignoreBinaries": [
+    "production",
+    "stripe"
+  ],
+  "ignore": [
+    ".storybook/vitest.config.mts"
+  ]
+}

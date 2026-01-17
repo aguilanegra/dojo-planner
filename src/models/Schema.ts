@@ -1,4 +1,4 @@
-import { bigint, boolean, pgTable, primaryKey, real, serial, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
+import { bigint, boolean, pgTable, primaryKey, real, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 
 // This file defines the structure of your database tables using the Drizzle ORM.
 
@@ -139,15 +139,3 @@ export const familyMemberSchema = pgTable('family_member', {
 }, table => [
   primaryKey({ columns: [table.memberId, table.relatedMemberId] }),
 ]);
-
-export const todoSchema = pgTable('todo', {
-  id: serial('id').primaryKey(),
-  ownerId: text('owner_id').notNull(),
-  title: text('title').notNull(),
-  message: text('message').notNull(),
-  updatedAt: timestamp('updated_at', { mode: 'date' })
-    .defaultNow()
-    .$onUpdate(() => new Date())
-    .notNull(),
-  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
-});

@@ -36,21 +36,18 @@ src/
 │   ├── reports/           # Analytics/reporting
 │   ├── roles/             # RBAC
 │   ├── settings/          # Org settings
-│   ├── staff/             # Staff management
-│   └── todo/              # Task tracking
+│   └── staff/             # Staff management
 │
 ├── routers/               # ORPC API handlers
 │   ├── AuthGuards.ts      # Auth middleware (guardAuth, guardRole)
 │   ├── Member.ts          # Member CRUD
-│   ├── Members.ts         # Members list ops
-│   └── Todo.ts            # Todo CRUD
+│   └── Members.ts         # Members list ops
 │
 ├── services/              # Business logic layer
 │   ├── BillingService.ts  # Stripe integration
 │   ├── ClerkRolesService.ts # Clerk Backend API
 │   ├── MembersService.ts  # Member operations
-│   ├── OrganizationService.ts # Org & Stripe customer storage
-│   └── TodoService.ts
+│   └── OrganizationService.ts # Org & Stripe customer storage
 │
 ├── models/
 │   └── Schema.ts          # Drizzle ORM tables
@@ -118,9 +115,6 @@ docs/                      # Documentation
 | `/dashboard/transactions` | `transactions/page.tsx` | Finances |
 | `/dashboard/reports` | `reports/page.tsx` | Reports |
 | `/dashboard/marketing` | `marketing/page.tsx` | Marketing tools |
-| `/dashboard/todos` | `todos/page.tsx` | Todo list |
-| `/dashboard/todos/add` | `todos/add/page.tsx` | Add todo |
-| `/dashboard/todos/edit/[id]` | `todos/edit/[id]/page.tsx` | Edit todo |
 | `/dashboard/user-profile` | `user-profile/[[...user-profile]]/page.tsx` | Clerk UserProfile |
 | `/dashboard/organization-profile` | `organization-profile/[[...organization-profile]]/page.tsx` | Clerk OrgProfile |
 | `/dashboard/preferences` | `preferences/page.tsx` | User preferences |
@@ -345,7 +339,6 @@ await deleteUserWithOrganization();
 - `address` - Member addresses
 - `note` - Member notes
 - `family_member` - Family relationships
-- `todo` - Tasks
 
 **Commands:**
 ```bash
@@ -466,9 +459,6 @@ AUDIT_ACTION.MEMBER_RESTORE; // member.restore
 AUDIT_ACTION.MEMBER_UPDATE_CONTACT; // member.updateContact
 AUDIT_ACTION.MEMBER_ADD_MEMBERSHIP; // member.addMembership
 AUDIT_ACTION.MEMBER_CHANGE_MEMBERSHIP; // member.changeMembership
-AUDIT_ACTION.TODO_CREATE; // todo.create
-AUDIT_ACTION.TODO_UPDATE; // todo.update
-AUDIT_ACTION.TODO_DELETE; // todo.delete
 ```
 
 **Adding New Audit Events:**

@@ -15,30 +15,23 @@ describe('Audit Types', () => {
       expect(AUDIT_ACTION.MEMBER_CHANGE_MEMBERSHIP).toBe('member.changeMembership');
     });
 
-    it('should have all todo action types', () => {
-      expect(AUDIT_ACTION.TODO_CREATE).toBe('todo.create');
-      expect(AUDIT_ACTION.TODO_UPDATE).toBe('todo.update');
-      expect(AUDIT_ACTION.TODO_DELETE).toBe('todo.delete');
-    });
-
     it('should have correct number of action types', () => {
       const actionCount = Object.keys(AUDIT_ACTION).length;
 
-      expect(actionCount).toBe(11);
+      expect(actionCount).toBe(8);
     });
   });
 
   describe('AUDIT_ENTITY_TYPE constants', () => {
     it('should have all entity types', () => {
       expect(AUDIT_ENTITY_TYPE.MEMBER).toBe('member');
-      expect(AUDIT_ENTITY_TYPE.TODO).toBe('todo');
       expect(AUDIT_ENTITY_TYPE.MEMBERSHIP).toBe('membership');
     });
 
     it('should have correct number of entity types', () => {
       const entityCount = Object.keys(AUDIT_ENTITY_TYPE).length;
 
-      expect(entityCount).toBe(3);
+      expect(entityCount).toBe(2);
     });
   });
 
@@ -127,14 +120,14 @@ describe('Audit Types', () => {
       const input: AuditEventInput = {
         userId: 'test-user-123',
         orgId: 'test-org-456',
-        action: AUDIT_ACTION.TODO_CREATE,
-        entityType: AUDIT_ENTITY_TYPE.TODO,
-        entityId: 'test-todo-123',
+        action: AUDIT_ACTION.MEMBER_CREATE,
+        entityType: AUDIT_ENTITY_TYPE.MEMBER,
+        entityId: 'test-member-123',
         status: 'success',
       };
 
       expect(input.userId).toBe('test-user-123');
-      expect(input.action).toBe('todo.create');
+      expect(input.action).toBe('member.create');
       // timestamp should not exist on input type
       expect('timestamp' in input).toBe(false);
     });

@@ -14,11 +14,6 @@ export const AUDIT_ACTION = {
   MEMBER_UPDATE_ACCESS: 'member.updateAccess',
   MEMBER_ADD_MEMBERSHIP: 'member.addMembership',
   MEMBER_CHANGE_MEMBERSHIP: 'member.changeMembership',
-
-  // Todo operations
-  TODO_CREATE: 'todo.create',
-  TODO_UPDATE: 'todo.update',
-  TODO_DELETE: 'todo.delete',
 } as const;
 
 export type AuditAction = (typeof AUDIT_ACTION)[keyof typeof AUDIT_ACTION];
@@ -28,7 +23,6 @@ export type AuditAction = (typeof AUDIT_ACTION)[keyof typeof AUDIT_ACTION];
  */
 export const AUDIT_ENTITY_TYPE = {
   MEMBER: 'member',
-  TODO: 'todo',
   MEMBERSHIP: 'membership',
 } as const;
 

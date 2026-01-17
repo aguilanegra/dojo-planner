@@ -71,8 +71,8 @@ describe('AuditService', () => {
       const { auditLogger } = await import('@/libs/Logger');
       const beforeTime = Date.now();
 
-      await audit(mockContext, AUDIT_ACTION.TODO_CREATE, AUDIT_ENTITY_TYPE.TODO, {
-        entityId: 'test-todo-123',
+      await audit(mockContext, AUDIT_ACTION.MEMBER_CREATE, AUDIT_ENTITY_TYPE.MEMBER, {
+        entityId: 'test-member-123',
         status: 'success',
       });
 
@@ -139,8 +139,8 @@ describe('AuditService', () => {
     it('should include role from context', async () => {
       const { auditLogger } = await import('@/libs/Logger');
 
-      await audit(mockContext, AUDIT_ACTION.TODO_DELETE, AUDIT_ENTITY_TYPE.TODO, {
-        entityId: 'test-todo-123',
+      await audit(mockContext, AUDIT_ACTION.MEMBER_REMOVE, AUDIT_ENTITY_TYPE.MEMBER, {
+        entityId: 'test-member-123',
         status: 'success',
       });
 
