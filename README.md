@@ -187,6 +187,46 @@ npm run check:deps    # Detect unused dependencies
 npm run check:i18n    # Validate translations
 ```
 
+## Claude Code MCP Setup
+
+This project includes MCP (Model Context Protocol) server configuration for enhanced AI-assisted development with Claude Code. The `.mcp.json` file configures servers for database queries, GitHub integration, web fetching, and browser automation.
+
+### Required Environment Variables
+
+MCP servers read from your **shell environment**, not from `.env.local`. Add the following to your `~/.zshenv` (this file is read by GUI apps on macOS):
+
+```shell
+# Required for postgres MCP server
+export DATABASE_URL=your_postgres_connection_string
+
+# Required for GitHub MCP server
+export GITHUB_PERSONAL_ACCESS_TOKEN=ghp_xxxxxxxxxxxx
+```
+
+After editing, fully quit and reopen VSCode (Cmd+Q, then relaunch).
+
+### Creating a GitHub Personal Access Token
+
+1. Go to [GitHub Token Settings](https://github.com/settings/tokens?type=beta)
+2. Click **"Generate new token"**
+3. Configure:
+   - **Token name:** `Claude Code MCP`
+   - **Expiration:** 90 days (or your preference)
+   - **Repository access:** Select this repository
+   - **Permissions:** `Contents` (read), `Pull requests` (read/write), `Issues` (read/write)
+4. Add the token to `~/.zshenv` (required for GUI apps on macOS)
+
+### Available MCP Servers
+
+| Server | Purpose | Requires |
+|--------|---------|----------|
+| `postgres` | Query database, inspect schemas | `DATABASE_URL` |
+| `github` | Manage PRs, issues, view CI status | `GITHUB_PERSONAL_ACCESS_TOKEN` |
+| `fetch` | Enhanced web requests for API testing | Nothing |
+| `puppeteer` | Browser automation, screenshots, E2E test development | Nothing |
+
+After configuring, restart Claude Code to load the MCP servers.
+
 ## Commit Messages
 
 The project uses [Conventional Commits](https://www.conventionalcommits.org/). Use the interactive CLI to write properly formatted commit messages:
