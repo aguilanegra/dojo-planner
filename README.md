@@ -61,6 +61,7 @@ A comprehensive web-based management system for martial arts dojos. Dojo Planner
 - **Framework**: Next.js with App Router
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS with Shadcn UI components
+- **Typography**: Inter font (self-hosted via `next/font`)
 - **Authentication**: Clerk
 - **Database**: PostgreSQL via DrizzleORM
 - **Payments**: Stripe
@@ -186,6 +187,23 @@ npm run check:types   # TypeScript type checking
 npm run check:deps    # Detect unused dependencies
 npm run check:i18n    # Validate translations
 ```
+
+## Security
+
+### Content Security Policy (CSP)
+
+The application implements a strict Content Security Policy for SOC2 CC6.6 compliance, protecting against XSS attacks. Configuration is in `next.config.ts`.
+
+**Whitelisted vendors:**
+- **Clerk** - Authentication (`*.clerk.com`, `*.clerk.accounts.dev`)
+- **Sentry** - Error monitoring (`*.ingest.sentry.io`, `sentry.io`)
+- **Upstash** - Rate limiting (`*.upstash.io`)
+- **Better Stack** - Logging (`*.betterstack.com`)
+
+**Key notes:**
+- `'unsafe-inline'` is required in `script-src` (Next.js) and `style-src` (Clerk)
+- Inter font is self-hosted via `next/font` enabling strict `font-src 'self'`
+- See `claude.md` for detailed CSP documentation and how to add new vendors
 
 ## Claude Code MCP Setup
 
