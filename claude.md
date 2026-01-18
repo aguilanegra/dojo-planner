@@ -554,6 +554,69 @@ HTTP security headers are configured in `next.config.ts`:
 - `X-Content-Type-Options: nosniff`
 - `Referrer-Policy: strict-origin-when-cross-origin`
 - `Permissions-Policy` (camera, microphone, geolocation disabled)
+- `Content-Security-Policy` (CSP)
+
+### Content Security Policy (CSP)
+
+**Purpose:** Protect against XSS attacks by controlling which resources can be loaded (CC6.6)
+
+**Configuration:** `next.config.ts` - `contentSecurityPolicy` constant
+
+**Required `'unsafe-inline'` Directives:**
+- `script-src 'unsafe-inline'` - Required for Next.js theme script and RSC hydration data
+- `style-src 'unsafe-inline'` - Required for Tailwind CSS and Clerk inline styles
+
+**Self-Hosted Fonts:**
+
+The Inter font is self-hosted via `next/font` to eliminate external dependencies and enable a strict CSP (`font-src 'self'`).
+
+| File | Purpose |
+|------|---------|
+| `src/app/[locale]/layout.tsx` | Configures Inter via `next/font/google` with `variable: '--font-inter'` |
+| `src/styles/global.css` | Uses `var(--font-inter)` in `--font-family-inter` CSS variable |
+
+This approach:
+- Eliminates external font requests (previously `rsms.me`)
+- Enables strict `font-src 'self'` in CSP
+- Improves performance via automatic font optimization
+- Prevents layout shift with `display: 'swap'`
+
+**Whitelisted Domains by Vendor:**
+
+| Vendor | Domains | Directives |
+|--------|---------|------------|
+| **Clerk** | `api.clerk.com`, `cdn.clerk.com`, `*.clerk.com`, `*.clerk.accounts.dev` | script-src, style-src, connect-src, frame-src |
+| **Sentry** | `*.ingest.sentry.io`, `o-*.ingest.sentry.io`, `sentry.io`, `www.sentry-cdn.com` | connect-src, script-src |
+| **Better Stack** | `*.betterstack.com`, `logs.betterstack.com` | connect-src |
+| **Upstash** | `*.upstash.io` | connect-src |
+
+**Adding New Third-Party Services:**
+
+When integrating a new service, update the CSP in `next.config.ts`:
+
+1. Identify which directives the service needs:
+   - `script-src` - External JavaScript files
+   - `style-src` - External stylesheets
+   - `connect-src` - API calls (fetch, XHR, WebSocket)
+   - `frame-src` - Embedded iframes
+   - `img-src` - Images
+   - `font-src` - Web fonts
+
+2. Add the domain(s) to the appropriate directive(s) in `contentSecurityPolicy`
+
+3. Test all flows that use the service
+
+**Example - Adding a new analytics service:**
+```text
+// In next.config.ts contentSecurityPolicy array
+'script-src \'self\' https://cdn.clerk.com https://www.sentry-cdn.com https://cdn.analytics.com',
+'connect-src \'self\' https://api.clerk.com https://api.analytics.com',
+```
+
+**Testing CSP:**
+- Use `Content-Security-Policy-Report-Only` header during testing
+- Check browser console for CSP violations
+- Test: sign-in, sign-up, organization switching, error reporting
 
 ### Auth Guards (Enhanced for Audit)
 

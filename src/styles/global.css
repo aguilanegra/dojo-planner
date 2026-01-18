@@ -1,8 +1,5 @@
 @layer theme, base, clerk, components, utilities; /* Ensure Clerk is compatible with Tailwind CSS v4 */
 
-/* Inter font import - must be at the top */
-@import url('https://rsms.me/inter/inter.css');
-
 @import 'tailwindcss';
 @import './dojo-planner-colors.css';
 
@@ -12,8 +9,8 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  /* Typography - Font Family */
-  --font-family-inter: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* Typography - Font Family (uses --font-inter CSS variable from next/font) */
+  --font-family-inter: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-sans: var(--font-family-inter);
 
   /* Typography - Text Styles */

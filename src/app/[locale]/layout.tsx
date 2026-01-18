@@ -2,10 +2,18 @@ import type { Metadata } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
 import { setRequestLocale } from 'next-intl/server';
 import { ThemeProvider } from 'next-themes';
+import { Inter } from 'next/font/google';
 import { notFound } from 'next/navigation';
 import { routing } from '@/libs/I18nRouting';
 import { runMigrations } from '@/libs/RunMigrations';
 import '@/styles/global.css';
+
+// Self-hosted Inter font via next/font (eliminates rsms.me external dependency for CSP)
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+});
 
 export const metadata: Metadata = {
   icons: [
@@ -70,8 +78,8 @@ export default async function RootLayout(props: {
   await runMigrations();
 
   return (
-    <html lang={locale} suppressHydrationWarning>
-      <body>
+    <html lang={locale} suppressHydrationWarning className={inter.variable}>
+      <body className={inter.className}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
