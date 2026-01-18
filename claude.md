@@ -253,6 +253,45 @@ npm run stripe:setup-price # Create test prices
 - Console + remote ingestion
 - Conditional based on env vars
 
+### MCP Servers (Claude Code Integration)
+
+**Config:** `.mcp.json`
+
+MCP (Model Context Protocol) servers extend Claude Code's capabilities for this project.
+
+**Available Servers:**
+
+| Server | Package | Purpose |
+|--------|---------|---------|
+| `postgres` | `@modelcontextprotocol/server-postgres` | Query database, inspect schemas, debug data |
+| `github` | `@modelcontextprotocol/server-github` | PRs, issues, CI status, code search |
+| `fetch` | `@modelcontextprotocol/server-fetch` | Enhanced web requests, API testing |
+| `puppeteer` | `@modelcontextprotocol/server-puppeteer` | Browser automation, screenshots, E2E test development |
+
+**Environment Variables (shell environment, not `.env.local`):**
+
+MCP servers read from your shell environment. Add to `~/.zshenv` (required for GUI apps on macOS):
+```bash
+# Required for postgres server
+export DATABASE_URL=postgresql://...
+
+# Required for github server
+export GITHUB_PERSONAL_ACCESS_TOKEN=ghp_xxxxxxxxxxxx
+```
+
+After editing, fully quit and reopen VSCode (Cmd+Q, then relaunch).
+
+**Usage Examples:**
+- "Query the members table" → Uses postgres server
+- "List open PRs" → Uses github server
+- "Navigate to localhost:3000/dashboard and take a screenshot" → Uses puppeteer server
+
+**Puppeteer + Playwright Workflow:**
+The puppeteer server helps with E2E test development:
+1. Navigate to pages and take screenshots to see current state
+2. Discover selectors interactively before writing Playwright tests
+3. Validate user flows manually before codifying them
+
 ## Storybook
 
 **Framework:** `@storybook/nextjs-vite` v10.1.11
