@@ -26,10 +26,10 @@ export function CustomMembersPage() {
     window.location.href = `/${locale}/dashboard/members/${memberId}/edit`;
   }, [locale]);
 
-  const handleAddMemberModalClose = useCallback(() => {
+  const handleAddMemberModalClose = useCallback(async () => {
     setIsAddMemberModalOpen(false);
     // Invalidate cache when modal closes (member was likely added)
-    invalidateMembersCache();
+    await invalidateMembersCache();
   }, []);
 
   // Render the table with intelligent caching
