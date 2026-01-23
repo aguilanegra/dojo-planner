@@ -1,9 +1,31 @@
+import type { Tag } from '@/hooks/useTagsCache';
 import { describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { page, userEvent } from 'vitest/browser';
 import { I18nWrapper } from '@/lib/test-utils';
-import { mockMembershipTags } from './membershipTagsData';
 import { MembershipTagsManagement } from './MembershipTagsManagement';
+
+// Mock membership tags for testing
+const mockMembershipTags: Tag[] = [
+  { id: 'tag-active', name: 'Active', slug: 'active', color: '#22c55e', entityType: 'membership', usageCount: 4, membershipNames: ['12 Month Commitment', 'Monthly', 'Competition Team'] },
+  { id: 'tag-trial', name: 'Trial', slug: 'trial', color: '#3b82f6', entityType: 'membership', usageCount: 2, membershipNames: ['Free Trial'] },
+  { id: 'tag-inactive', name: 'Inactive', slug: 'inactive', color: '#ef4444', entityType: 'membership', usageCount: 1, membershipNames: ['Paused Membership'] },
+];
+
+// Mock the hooks used by MembershipTagsManagement
+vi.mock('@clerk/nextjs', () => ({
+  useOrganization: () => ({ organization: { id: 'test-org-123' } }),
+}));
+
+vi.mock('@/hooks/useTagsCache', () => ({
+  useTagsCache: () => ({
+    classTags: [],
+    membershipTags: mockMembershipTags,
+    loading: false,
+    error: null,
+    revalidate: vi.fn(),
+  }),
+}));
 
 describe('MembershipTagsManagement', () => {
   describe('Sheet Display', () => {

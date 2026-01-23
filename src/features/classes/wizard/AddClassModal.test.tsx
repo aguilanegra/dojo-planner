@@ -55,6 +55,26 @@ vi.mock('next/navigation', () => ({
   }),
 }));
 
+// Mock Clerk
+vi.mock('@clerk/nextjs', () => ({
+  useOrganization: () => ({ organization: { id: 'test-org-123' } }),
+}));
+
+// Mock the tags cache
+vi.mock('@/hooks/useTagsCache', () => ({
+  useTagsCache: () => ({
+    classTags: [
+      { id: 't1', name: 'Beginner', slug: 'beginner', color: '#22c55e', entityType: 'class', usageCount: 4 },
+      { id: 't2', name: 'Intermediate', slug: 'intermediate', color: '#06b6d4', entityType: 'class', usageCount: 2 },
+      { id: 't3', name: 'Advanced', slug: 'advanced', color: '#a855f7', entityType: 'class', usageCount: 2 },
+    ],
+    membershipTags: [],
+    loading: false,
+    error: null,
+    revalidate: vi.fn(),
+  }),
+}));
+
 describe('AddClassModal', () => {
   const mockHandlers = {
     onCloseAction: vi.fn(),

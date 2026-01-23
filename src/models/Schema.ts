@@ -1,4 +1,4 @@
-import { bigint, boolean, pgTable, primaryKey, real, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
+import { bigint, boolean, index, integer, pgTable, primaryKey, real, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 
 // This file defines the structure of your database tables using the Drizzle ORM.
 
@@ -13,6 +13,10 @@ import { bigint, boolean, pgTable, primaryKey, real, text, timestamp, uniqueInde
 
 // Need a database for production? Check out https://www.prisma.io/?via=nextjsboilerplate
 // Tested and compatible with SaaS Boilerplate
+
+// =============================================================================
+// ORGANIZATION & FOUNDATION TABLES
+// =============================================================================
 
 export const organizationSchema = pgTable(
   'organization',
@@ -37,67 +41,189 @@ export const organizationSchema = pgTable(
   ],
 );
 
-export const memberSchema = pgTable('member', {
-  id: text('id').primaryKey(), // UUID v4
-  organizationId: text('organization_id').notNull(),
-  firstName: text('first_name').notNull(),
-  lastName: text('last_name').notNull(),
-  email: text('email').notNull(),
-  memberType: text('member_type'), // individual, family-member, head-of-household
-  phone: text('phone'),
-  dateOfBirth: timestamp('date_of_birth', { mode: 'date' }),
-  photoUrl: text('photo_url'),
-  lastAccessedAt: timestamp('last_accessed_at', { mode: 'date' })
-    .$onUpdate(() => new Date()),
-  status: text('status').notNull().default('active'), // active, hold, trial, cancelled, past due
-  statusChangedAt: timestamp('status_changed_at', { mode: 'date' }),
-  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { mode: 'date' })
-    .defaultNow()
-    .$onUpdate(() => new Date())
-    .notNull(),
-});
+// Training programs (e.g., Adult BJJ, Kids, Competition)
+export const programSchema = pgTable(
+  'program',
+  {
+    id: text('id').primaryKey(), // UUID v4
+    organizationId: text('organization_id').notNull(),
+    name: text('name').notNull(), // e.g., 'Adult BJJ', 'Kids Program'
+    slug: text('slug').notNull(), // e.g., 'adult-bjj'
+    description: text('description'),
+    color: text('color'), // Hex color for UI display
+    isActive: boolean('is_active').default(true),
+    sortOrder: integer('sort_order').default(0),
+    createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { mode: 'date' })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  table => [
+    index('program_org_idx').on(table.organizationId),
+    uniqueIndex('program_org_slug_idx').on(table.organizationId, table.slug),
+  ],
+);
+
+// Polymorphic tags for classes, memberships, and events
+export const tagSchema = pgTable(
+  'tag',
+  {
+    id: text('id').primaryKey(), // UUID v4
+    organizationId: text('organization_id').notNull(),
+    entityType: text('entity_type').notNull(), // 'class', 'membership', 'event'
+    name: text('name').notNull(), // e.g., 'Beginner', 'Advanced', 'Gi', 'No-Gi'
+    slug: text('slug').notNull(),
+    color: text('color'), // Hex color for badge display
+    sortOrder: integer('sort_order').default(0),
+    createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+  },
+  table => [
+    index('tag_org_entity_idx').on(table.organizationId, table.entityType),
+    uniqueIndex('tag_org_entity_slug_idx').on(table.organizationId, table.entityType, table.slug),
+  ],
+);
+
+// Cloud-stored images with thumbnail URLs (Vercel Blob)
+export const imageSchema = pgTable(
+  'image',
+  {
+    id: text('id').primaryKey(), // UUID v4
+    organizationId: text('organization_id').notNull(),
+    entityType: text('entity_type').notNull(), // 'member', 'class', 'event', 'organization'
+    entityId: text('entity_id').notNull(), // ID of related entity
+    originalUrl: text('original_url').notNull(), // Full-size image URL
+    thumbnailSmUrl: text('thumbnail_sm_url'), // 48px thumbnail (avatars in lists)
+    thumbnailMdUrl: text('thumbnail_md_url'), // 200px thumbnail (cards)
+    thumbnailLgUrl: text('thumbnail_lg_url'), // 400px thumbnail (detail views)
+    mimeType: text('mime_type'), // 'image/jpeg', 'image/png', etc.
+    sizeBytes: bigint('size_bytes', { mode: 'number' }),
+    uploadedAt: timestamp('uploaded_at', { mode: 'date' }).defaultNow().notNull(),
+  },
+  table => [
+    index('image_entity_idx').on(table.entityType, table.entityId),
+    index('image_org_idx').on(table.organizationId),
+  ],
+);
+
+// SOC2 compliance audit logging
+export const auditEventSchema = pgTable(
+  'audit_event',
+  {
+    id: text('id').primaryKey(), // UUID v4
+    organizationId: text('organization_id').notNull(),
+    userId: text('user_id').notNull(), // Clerk user ID - WHO
+    action: text('action').notNull(), // e.g., 'member.create' - WHAT
+    entityType: text('entity_type').notNull(), // e.g., 'member'
+    entityId: text('entity_id'), // ID of affected entity - WHICH
+    role: text('role'), // User's role at time of action
+    status: text('status').notNull(), // 'success' or 'failure'
+    changes: text('changes'), // JSON string of field changes
+    error: text('error'), // Error message if status is 'failure'
+    ipAddress: text('ip_address'),
+    userAgent: text('user_agent'),
+    requestId: text('request_id'), // For request tracing
+    timestamp: timestamp('timestamp', { mode: 'date' }).defaultNow().notNull(),
+  },
+  table => [
+    index('audit_org_idx').on(table.organizationId),
+    index('audit_user_idx').on(table.userId),
+    index('audit_entity_idx').on(table.entityType, table.entityId),
+    index('audit_timestamp_idx').on(table.timestamp),
+  ],
+);
+
+// =============================================================================
+// MEMBER TABLES
+// =============================================================================
+
+export const memberSchema = pgTable(
+  'member',
+  {
+    id: text('id').primaryKey(), // UUID v4
+    organizationId: text('organization_id').notNull(),
+    clerkUserId: text('clerk_user_id'), // Links to Clerk for kiosk auth (nullable for legacy members)
+    firstName: text('first_name').notNull(),
+    lastName: text('last_name').notNull(),
+    email: text('email').notNull(),
+    memberType: text('member_type'), // individual, family-member, head-of-household
+    phone: text('phone'),
+    dateOfBirth: timestamp('date_of_birth', { mode: 'date' }),
+    photoUrl: text('photo_url'), // Legacy field - use imageId for new uploads
+    imageId: text('image_id'), // FK to image table for profile photos
+    lastAccessedAt: timestamp('last_accessed_at', { mode: 'date' })
+      .$onUpdate(() => new Date()),
+    status: text('status').notNull().default('active'), // active, hold, trial, cancelled, past_due
+    statusChangedAt: timestamp('status_changed_at', { mode: 'date' }),
+    createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { mode: 'date' })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  table => [
+    index('member_org_idx').on(table.organizationId),
+    index('member_org_status_idx').on(table.organizationId, table.status),
+    index('member_org_email_idx').on(table.organizationId, table.email),
+    uniqueIndex('member_clerk_user_idx').on(table.clerkUserId),
+  ],
+);
 
 // Membership plans table - stores available membership types that can be created/edited/deleted
-export const membershipPlanSchema = pgTable('membership_plan', {
-  id: text('id').primaryKey(), // UUID v4
-  organizationId: text('organization_id').notNull(),
-  name: text('name').notNull(), // e.g., '12 Month Commitment (Gold)'
-  slug: text('slug').notNull(), // e.g., '12_month_commitment_gold' - used for identification
-  category: text('category').notNull(), // e.g., 'Adult Brazilian Jiu-Jitsu'
-  program: text('program').notNull(), // e.g., 'Adult', 'Kids', 'Competition'
-  price: real('price').notNull().default(0), // Monthly price amount
-  signupFee: real('signup_fee').notNull().default(0),
-  frequency: text('frequency').notNull().default('Monthly'), // Monthly, Annual, None
-  contractLength: text('contract_length').notNull(), // e.g., '12 Months', 'Month-to-Month', '7 Days'
-  accessLevel: text('access_level').notNull(), // e.g., 'Unlimited', '8 Classes/mo'
-  description: text('description'), // Short description of the plan
-  isTrial: boolean('is_trial').default(false),
-  isActive: boolean('is_active').default(true), // Whether the plan is currently offered
-  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { mode: 'date' })
-    .defaultNow()
-    .$onUpdate(() => new Date())
-    .notNull(),
-});
+export const membershipPlanSchema = pgTable(
+  'membership_plan',
+  {
+    id: text('id').primaryKey(), // UUID v4
+    organizationId: text('organization_id').notNull(),
+    programId: text('program_id').references(() => programSchema.id), // FK to program
+    name: text('name').notNull(), // e.g., '12 Month Commitment (Gold)'
+    slug: text('slug').notNull(), // e.g., '12_month_commitment_gold' - used for identification
+    category: text('category').notNull(), // e.g., 'Adult Brazilian Jiu-Jitsu'
+    program: text('program').notNull(), // Legacy field - e.g., 'Adult', 'Kids', 'Competition'
+    price: real('price').notNull().default(0), // Monthly price amount
+    signupFee: real('signup_fee').notNull().default(0),
+    frequency: text('frequency').notNull().default('Monthly'), // Monthly, Annual, None
+    contractLength: text('contract_length').notNull(), // e.g., '12 Months', 'Month-to-Month', '7 Days'
+    accessLevel: text('access_level').notNull(), // e.g., 'Unlimited', '8 Classes/mo'
+    description: text('description'), // Short description of the plan
+    isTrial: boolean('is_trial').default(false),
+    isActive: boolean('is_active').default(true), // Whether the plan is currently offered
+    createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { mode: 'date' })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  table => [
+    index('membership_plan_org_idx').on(table.organizationId),
+    index('membership_plan_program_idx').on(table.programId),
+  ],
+);
 
 // Links members to their membership plans with historical tracking
-export const memberMembershipSchema = pgTable('member_membership', {
-  id: text('id').primaryKey(), // UUID v4
-  memberId: text('member_id').references(() => memberSchema.id).notNull(),
-  membershipPlanId: text('membership_plan_id').references(() => membershipPlanSchema.id).notNull(),
-  status: text('status').notNull().default('active'), // active, cancelled, expired, converted
-  billingType: text('billing_type').notNull().default('autopay'), // autopay, one-time
-  startDate: timestamp('start_date', { mode: 'date' }).defaultNow().notNull(),
-  endDate: timestamp('end_date', { mode: 'date' }), // null if ongoing
-  firstPaymentDate: timestamp('first_payment_date', { mode: 'date' }), // When the first payment was made
-  nextPaymentDate: timestamp('next_payment_date', { mode: 'date' }), // When the next payment is due (for autopay)
-  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { mode: 'date' })
-    .defaultNow()
-    .$onUpdate(() => new Date())
-    .notNull(),
-});
+export const memberMembershipSchema = pgTable(
+  'member_membership',
+  {
+    id: text('id').primaryKey(), // UUID v4
+    memberId: text('member_id').references(() => memberSchema.id).notNull(),
+    membershipPlanId: text('membership_plan_id').references(() => membershipPlanSchema.id).notNull(),
+    status: text('status').notNull().default('active'), // active, cancelled, expired, converted
+    billingType: text('billing_type').notNull().default('autopay'), // autopay, one-time
+    startDate: timestamp('start_date', { mode: 'date' }).defaultNow().notNull(),
+    endDate: timestamp('end_date', { mode: 'date' }), // null if ongoing
+    firstPaymentDate: timestamp('first_payment_date', { mode: 'date' }), // When the first payment was made
+    nextPaymentDate: timestamp('next_payment_date', { mode: 'date' }), // When the next payment is due (for autopay)
+    createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { mode: 'date' })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  table => [
+    index('member_membership_member_idx').on(table.memberId),
+    index('member_membership_member_status_idx').on(table.memberId, table.status),
+  ],
+);
 
 export const addressSchema = pgTable('address', {
   id: text('id').primaryKey(),
@@ -139,3 +265,381 @@ export const familyMemberSchema = pgTable('family_member', {
 }, table => [
   primaryKey({ columns: [table.memberId, table.relatedMemberId] }),
 ]);
+
+// =============================================================================
+// CLASS & EVENT TABLES
+// =============================================================================
+
+// Class definitions (e.g., BJJ Fundamentals, Kids Class)
+export const classSchema = pgTable(
+  'class',
+  {
+    id: text('id').primaryKey(), // UUID v4
+    organizationId: text('organization_id').notNull(),
+    programId: text('program_id').references(() => programSchema.id),
+    name: text('name').notNull(), // e.g., 'BJJ Fundamentals'
+    slug: text('slug').notNull(),
+    description: text('description'),
+    color: text('color'), // Hex color for calendar display
+    defaultDurationMinutes: integer('default_duration_minutes').default(60),
+    maxCapacity: integer('max_capacity'), // null = unlimited
+    minAge: integer('min_age'),
+    maxAge: integer('max_age'),
+    isActive: boolean('is_active').default(true),
+    createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { mode: 'date' })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  table => [
+    index('class_org_idx').on(table.organizationId),
+    index('class_program_idx').on(table.programId),
+    uniqueIndex('class_org_slug_idx').on(table.organizationId, table.slug),
+  ],
+);
+
+// Special events (seminars, workshops, tournaments)
+export const eventSchema = pgTable(
+  'event',
+  {
+    id: text('id').primaryKey(), // UUID v4
+    organizationId: text('organization_id').notNull(),
+    programId: text('program_id').references(() => programSchema.id),
+    name: text('name').notNull(), // e.g., 'Black Belt Seminar'
+    slug: text('slug').notNull(),
+    description: text('description'),
+    eventType: text('event_type').notNull(), // 'seminar', 'workshop', 'tournament', 'camp', 'other'
+    imageUrl: text('image_url'), // Event banner/poster
+    maxCapacity: integer('max_capacity'), // null = unlimited
+    registrationDeadline: timestamp('registration_deadline', { mode: 'date' }),
+    isPublic: boolean('is_public').default(true), // Visible to non-members
+    isActive: boolean('is_active').default(true),
+    createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { mode: 'date' })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  table => [
+    index('event_org_idx').on(table.organizationId),
+    uniqueIndex('event_org_slug_idx').on(table.organizationId, table.slug),
+  ],
+);
+
+// =============================================================================
+// SCHEDULE TABLES
+// =============================================================================
+
+// Recurring schedule patterns for classes (e.g., "Mondays at 6 PM")
+export const classScheduleInstanceSchema = pgTable(
+  'class_schedule_instance',
+  {
+    id: text('id').primaryKey(), // UUID v4
+    classId: text('class_id').references(() => classSchema.id).notNull(),
+    primaryInstructorClerkId: text('primary_instructor_clerk_id'), // Clerk user ID
+    dayOfWeek: integer('day_of_week').notNull(), // 0 = Sunday, 6 = Saturday
+    startTime: text('start_time').notNull(), // HH:MM format (24h)
+    endTime: text('end_time').notNull(), // HH:MM format (24h)
+    room: text('room'), // Optional room/mat designation
+    effectiveFrom: timestamp('effective_from', { mode: 'date' }).defaultNow().notNull(),
+    effectiveUntil: timestamp('effective_until', { mode: 'date' }), // null = ongoing
+    isActive: boolean('is_active').default(true),
+    createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { mode: 'date' })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  table => [
+    index('class_schedule_class_idx').on(table.classId),
+    index('class_schedule_day_idx').on(table.dayOfWeek),
+  ],
+);
+
+// Schedule overrides (cancellations, time changes, substitutions)
+export const classScheduleExceptionSchema = pgTable(
+  'class_schedule_exception',
+  {
+    id: text('id').primaryKey(), // UUID v4
+    classScheduleInstanceId: text('class_schedule_instance_id').references(() => classScheduleInstanceSchema.id).notNull(),
+    exceptionDate: timestamp('exception_date', { mode: 'date' }).notNull(),
+    exceptionType: text('exception_type').notNull(), // 'cancelled', 'time_change', 'instructor_change', 'room_change'
+    newStartTime: text('new_start_time'), // For time_change
+    newEndTime: text('new_end_time'), // For time_change
+    newInstructorClerkId: text('new_instructor_clerk_id'), // For instructor_change
+    newRoom: text('new_room'), // For room_change
+    reason: text('reason'),
+    createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+  },
+  table => [
+    index('class_exception_schedule_idx').on(table.classScheduleInstanceId),
+    index('class_exception_date_idx').on(table.exceptionDate),
+  ],
+);
+
+// Individual event time slots (events can have multiple sessions)
+export const eventSessionSchema = pgTable(
+  'event_session',
+  {
+    id: text('id').primaryKey(), // UUID v4
+    eventId: text('event_id').references(() => eventSchema.id).notNull(),
+    primaryInstructorClerkId: text('primary_instructor_clerk_id'), // Clerk user ID
+    sessionDate: timestamp('session_date', { mode: 'date' }).notNull(),
+    startTime: text('start_time').notNull(), // HH:MM format
+    endTime: text('end_time').notNull(), // HH:MM format
+    room: text('room'),
+    maxCapacity: integer('max_capacity'), // Override event capacity for this session
+    isCancelled: boolean('is_cancelled').default(false),
+    createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { mode: 'date' })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  table => [
+    index('event_session_event_idx').on(table.eventId),
+    index('event_session_date_idx').on(table.sessionDate),
+  ],
+);
+
+// Event pricing tiers (early bird, member discounts, etc.)
+export const eventBillingSchema = pgTable(
+  'event_billing',
+  {
+    id: text('id').primaryKey(), // UUID v4
+    eventId: text('event_id').references(() => eventSchema.id).notNull(),
+    name: text('name').notNull(), // e.g., 'Early Bird', 'Member Price', 'Non-Member'
+    price: real('price').notNull(),
+    memberOnly: boolean('member_only').default(false),
+    validFrom: timestamp('valid_from', { mode: 'date' }),
+    validUntil: timestamp('valid_until', { mode: 'date' }),
+    maxRegistrations: integer('max_registrations'), // Limit for this tier
+    sortOrder: integer('sort_order').default(0),
+    createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+  },
+  table => [
+    index('event_billing_event_idx').on(table.eventId),
+  ],
+);
+
+// =============================================================================
+// COUPON TABLES
+// =============================================================================
+
+// Discount codes and promotions
+export const couponSchema = pgTable(
+  'coupon',
+  {
+    id: text('id').primaryKey(), // UUID v4
+    organizationId: text('organization_id').notNull(),
+    code: text('code').notNull(), // e.g., 'SUMMER20'
+    name: text('name').notNull(), // Display name
+    description: text('description'),
+    discountType: text('discount_type').notNull(), // 'percentage', 'fixed', 'free_days'
+    discountValue: real('discount_value').notNull(), // Amount (percent or dollars or days)
+    applicableTo: text('applicable_to').notNull(), // 'membership', 'event', 'all'
+    minPurchaseAmount: real('min_purchase_amount'),
+    maxDiscountAmount: real('max_discount_amount'), // Cap for percentage discounts
+    usageLimit: integer('usage_limit'), // null = unlimited
+    usageCount: integer('usage_count').default(0),
+    perUserLimit: integer('per_user_limit').default(1),
+    validFrom: timestamp('valid_from', { mode: 'date' }).defaultNow().notNull(),
+    validUntil: timestamp('valid_until', { mode: 'date' }),
+    status: text('status').notNull().default('active'), // 'active', 'expired', 'inactive'
+    createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { mode: 'date' })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  table => [
+    index('coupon_org_idx').on(table.organizationId),
+    uniqueIndex('coupon_org_code_idx').on(table.organizationId, table.code),
+    index('coupon_status_idx').on(table.status),
+  ],
+);
+
+// Coupon redemption tracking
+export const couponUsageSchema = pgTable(
+  'coupon_usage',
+  {
+    id: text('id').primaryKey(), // UUID v4
+    couponId: text('coupon_id').references(() => couponSchema.id).notNull(),
+    memberId: text('member_id').references(() => memberSchema.id).notNull(),
+    transactionId: text('transaction_id'), // FK to transaction if applicable
+    discountApplied: real('discount_applied').notNull(), // Actual discount amount
+    usedAt: timestamp('used_at', { mode: 'date' }).defaultNow().notNull(),
+  },
+  table => [
+    index('coupon_usage_coupon_idx').on(table.couponId),
+    index('coupon_usage_member_idx').on(table.memberId),
+  ],
+);
+
+// =============================================================================
+// JUNCTION TABLES (M:N Relationships)
+// =============================================================================
+
+// Class-to-Instructor (M:N) - for listing multiple instructors per class
+export const classInstructorSchema = pgTable(
+  'class_instructor',
+  {
+    classId: text('class_id').references(() => classSchema.id).notNull(),
+    instructorClerkId: text('instructor_clerk_id').notNull(), // Clerk user ID
+    isPrimary: boolean('is_primary').default(false),
+    createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+  },
+  table => [
+    primaryKey({ columns: [table.classId, table.instructorClerkId] }),
+  ],
+);
+
+// Event-to-Instructor (M:N)
+export const eventInstructorSchema = pgTable(
+  'event_instructor',
+  {
+    eventId: text('event_id').references(() => eventSchema.id).notNull(),
+    instructorClerkId: text('instructor_clerk_id').notNull(), // Clerk user ID
+    isPrimary: boolean('is_primary').default(false),
+    createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+  },
+  table => [
+    primaryKey({ columns: [table.eventId, table.instructorClerkId] }),
+  ],
+);
+
+// Class-to-Tag (M:N)
+export const classTagSchema = pgTable(
+  'class_tag',
+  {
+    classId: text('class_id').references(() => classSchema.id).notNull(),
+    tagId: text('tag_id').references(() => tagSchema.id).notNull(),
+  },
+  table => [
+    primaryKey({ columns: [table.classId, table.tagId] }),
+  ],
+);
+
+// MembershipPlan-to-Tag (M:N)
+export const membershipTagSchema = pgTable(
+  'membership_tag',
+  {
+    membershipPlanId: text('membership_plan_id').references(() => membershipPlanSchema.id).notNull(),
+    tagId: text('tag_id').references(() => tagSchema.id).notNull(),
+  },
+  table => [
+    primaryKey({ columns: [table.membershipPlanId, table.tagId] }),
+  ],
+);
+
+// Event-to-Tag (M:N)
+export const eventTagSchema = pgTable(
+  'event_tag',
+  {
+    eventId: text('event_id').references(() => eventSchema.id).notNull(),
+    tagId: text('tag_id').references(() => tagSchema.id).notNull(),
+  },
+  table => [
+    primaryKey({ columns: [table.eventId, table.tagId] }),
+  ],
+);
+
+// =============================================================================
+// MEMBER ACTIVITY TABLES
+// =============================================================================
+
+// Member class enrollments (which classes a member is enrolled in)
+export const classEnrollmentSchema = pgTable(
+  'class_enrollment',
+  {
+    id: text('id').primaryKey(), // UUID v4
+    memberId: text('member_id').references(() => memberSchema.id).notNull(),
+    classId: text('class_id').references(() => classSchema.id).notNull(),
+    status: text('status').notNull().default('active'), // 'active', 'waitlist', 'dropped'
+    enrolledAt: timestamp('enrolled_at', { mode: 'date' }).defaultNow().notNull(),
+    droppedAt: timestamp('dropped_at', { mode: 'date' }),
+  },
+  table => [
+    index('class_enrollment_member_idx').on(table.memberId),
+    index('class_enrollment_class_idx').on(table.classId),
+    uniqueIndex('class_enrollment_member_class_idx').on(table.memberId, table.classId),
+  ],
+);
+
+// Member event registrations
+export const eventRegistrationSchema = pgTable(
+  'event_registration',
+  {
+    id: text('id').primaryKey(), // UUID v4
+    memberId: text('member_id').references(() => memberSchema.id).notNull(),
+    eventId: text('event_id').references(() => eventSchema.id).notNull(),
+    eventBillingId: text('event_billing_id').references(() => eventBillingSchema.id),
+    status: text('status').notNull().default('registered'), // 'registered', 'waitlist', 'cancelled', 'attended'
+    amountPaid: real('amount_paid'),
+    registeredAt: timestamp('registered_at', { mode: 'date' }).defaultNow().notNull(),
+    cancelledAt: timestamp('cancelled_at', { mode: 'date' }),
+  },
+  table => [
+    index('event_registration_member_idx').on(table.memberId),
+    index('event_registration_event_idx').on(table.eventId),
+  ],
+);
+
+// Check-in records for attendance tracking
+export const attendanceSchema = pgTable(
+  'attendance',
+  {
+    id: text('id').primaryKey(), // UUID v4
+    organizationId: text('organization_id').notNull(),
+    memberId: text('member_id').references(() => memberSchema.id).notNull(),
+    classScheduleInstanceId: text('class_schedule_instance_id').references(() => classScheduleInstanceSchema.id),
+    eventSessionId: text('event_session_id').references(() => eventSessionSchema.id),
+    attendanceDate: timestamp('attendance_date', { mode: 'date' }).notNull(),
+    checkInTime: timestamp('check_in_time', { mode: 'date' }).defaultNow().notNull(),
+    checkOutTime: timestamp('check_out_time', { mode: 'date' }),
+    checkInMethod: text('check_in_method').notNull().default('manual'), // 'manual', 'kiosk', 'app', 'qr_code'
+    checkedInByClerkId: text('checked_in_by_clerk_id'), // Staff who checked in (for manual)
+    instructorClerkId: text('instructor_clerk_id'), // Instructor at time of class
+    notes: text('notes'),
+  },
+  table => [
+    index('attendance_org_idx').on(table.organizationId),
+    index('attendance_member_idx').on(table.memberId),
+    index('attendance_date_idx').on(table.attendanceDate),
+    index('attendance_schedule_idx').on(table.classScheduleInstanceId),
+    index('attendance_session_idx').on(table.eventSessionId),
+  ],
+);
+
+// Payment transactions
+export const transactionSchema = pgTable(
+  'transaction',
+  {
+    id: text('id').primaryKey(), // UUID v4
+    organizationId: text('organization_id').notNull(),
+    memberId: text('member_id').references(() => memberSchema.id).notNull(),
+    memberMembershipId: text('member_membership_id').references(() => memberMembershipSchema.id),
+    eventRegistrationId: text('event_registration_id').references(() => eventRegistrationSchema.id),
+    stripePaymentIntentId: text('stripe_payment_intent_id'),
+    transactionType: text('transaction_type').notNull(), // 'membership_payment', 'event_registration', 'signup_fee', 'refund', 'adjustment'
+    amount: real('amount').notNull(),
+    currency: text('currency').notNull().default('USD'),
+    status: text('status').notNull().default('pending'), // 'pending', 'paid', 'declined', 'refunded', 'processing'
+    paymentMethod: text('payment_method'), // 'card', 'cash', 'check', 'bank_transfer'
+    description: text('description'),
+    processedAt: timestamp('processed_at', { mode: 'date' }),
+    createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { mode: 'date' })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  table => [
+    index('transaction_org_idx').on(table.organizationId),
+    index('transaction_member_idx').on(table.memberId),
+    index('transaction_status_idx').on(table.status),
+    index('transaction_date_idx').on(table.createdAt),
+    uniqueIndex('transaction_stripe_idx').on(table.stripePaymentIntentId),
+  ],
+);

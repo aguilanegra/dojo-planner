@@ -121,9 +121,10 @@ describe('AuthGuards', () => {
       });
     });
 
-    it('should call has function with correct role', async () => {
+    it('should check roles in hierarchy order (admin first, then lower)', async () => {
       const { auth } = await import('@clerk/nextjs/server');
-      const mockHas = vi.fn().mockReturnValue(true);
+      // Mock has to return false for ADMIN but true for ACADEMY_OWNER
+      const mockHas = vi.fn().mockImplementation(({ role }) => role === ORG_ROLE.ACADEMY_OWNER);
 
       vi.mocked(auth).mockResolvedValue({
         userId: 'test-user-123',
@@ -134,7 +135,28 @@ describe('AuthGuards', () => {
       const { guardRole } = await import('./AuthGuards');
       await guardRole(ORG_ROLE.ACADEMY_OWNER);
 
+      // With role hierarchy, it should check ADMIN first, then ACADEMY_OWNER
+      expect(mockHas).toHaveBeenCalledWith({ role: ORG_ROLE.ADMIN });
       expect(mockHas).toHaveBeenCalledWith({ role: ORG_ROLE.ACADEMY_OWNER });
+    });
+
+    it('should grant access if user has higher role than required', async () => {
+      const { auth } = await import('@clerk/nextjs/server');
+      // User is ADMIN, requesting FRONT_DESK access
+      const mockHas = vi.fn().mockImplementation(({ role }) => role === ORG_ROLE.ADMIN);
+
+      vi.mocked(auth).mockResolvedValue({
+        userId: 'test-user-123',
+        orgId: 'test-org-456',
+        has: mockHas,
+      } as any);
+
+      const { guardRole } = await import('./AuthGuards');
+      const result = await guardRole(ORG_ROLE.FRONT_DESK);
+
+      // Should succeed because ADMIN > FRONT_DESK
+      expect(result.userId).toBe('test-user-123');
+      expect(result.role).toBe(ORG_ROLE.FRONT_DESK);
     });
 
     it('should throw 401 when not authenticated before checking role', async () => {

@@ -1,13 +1,14 @@
 'use client';
 
 import type { AddClassWizardData } from '@/hooks/useAddClassWizard';
+import type { Tag } from '@/hooks/useTagsCache';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
-import { mockClassTags } from '../classTagsData';
 
 type ClassSuccessStepProps = {
   data: AddClassWizardData;
   onDone: () => void;
+  classTags: Tag[];
 };
 
 const MOCK_PROGRAMS: Record<string, string> = {
@@ -28,10 +29,10 @@ const MOCK_STAFF: Record<string, string> = {
   'professor-ivan': 'Professor Ivan',
 };
 
-export const ClassSuccessStep = ({ data, onDone }: ClassSuccessStepProps) => {
+export const ClassSuccessStep = ({ data, onDone, classTags }: ClassSuccessStepProps) => {
   const t = useTranslations('AddClassWizard.ClassSuccessStep');
 
-  const selectedTags = mockClassTags.filter(tag => data.tags.includes(tag.id));
+  const selectedTags = classTags.filter(tag => data.tags.includes(tag.id));
   const programName = MOCK_PROGRAMS[data.program] || data.program;
 
   // Get unique instructors from all schedule instances
@@ -126,7 +127,7 @@ export const ClassSuccessStep = ({ data, onDone }: ClassSuccessStepProps) => {
                   <span
                     key={tag.id}
                     className="rounded-full px-2 py-0.5 text-xs text-white"
-                    style={{ backgroundColor: tag.color }}
+                    style={{ backgroundColor: tag.color || '#6b7280' }}
                   >
                     {tag.name}
                   </span>

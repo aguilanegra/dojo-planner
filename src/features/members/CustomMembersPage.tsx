@@ -4,9 +4,10 @@ import { useOrganization } from '@clerk/nextjs';
 import { Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { mockCoupons } from '@/features/marketing';
+import { transformCouponsToUi } from '@/features/marketing';
+import { useCouponsCache } from '@/hooks/useCouponsCache';
 import { invalidateMembersCache, useMembersCache } from '@/hooks/useMembersCache';
 import { MembersTable } from './MembersTable';
 import { AddMemberModal } from './wizard/AddMemberModal';
@@ -17,8 +18,12 @@ export function CustomMembersPage() {
   const t = useTranslations('Members');
   const { organization } = useOrganization();
 
-  // Use intelligent caching hook with organization ID for proper cache invalidation
+  // Use intelligent caching hooks with organization ID for proper cache invalidation
   const { members, loading } = useMembersCache(organization?.id);
+  const { coupons: rawCoupons } = useCouponsCache(organization?.id);
+
+  // Transform coupons to UI format
+  const coupons = useMemo(() => transformCouponsToUi(rawCoupons), [rawCoupons]);
 
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
 
@@ -51,7 +56,7 @@ export function CustomMembersPage() {
       <AddMemberModal
         isOpen={isAddMemberModalOpen}
         onCloseAction={handleAddMemberModalClose}
-        availableCoupons={mockCoupons}
+        availableCoupons={coupons}
       />
     </>
   );

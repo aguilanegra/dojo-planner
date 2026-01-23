@@ -1,9 +1,16 @@
 import type { AddClassWizardData } from '@/hooks/useAddClassWizard';
+import type { Tag } from '@/hooks/useTagsCache';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { page, userEvent } from 'vitest/browser';
 import { createMockScheduleInstance, createMockWizardData } from '@/test-utils/mockWizardData';
 import { ClassSuccessStep } from './ClassSuccessStep';
+
+// Mock class tags for testing
+const mockClassTags: Tag[] = [
+  { id: 'tag-1', name: 'Beginner', slug: 'beginner', color: '#22c55e', entityType: 'class', usageCount: 3 },
+  { id: 'tag-2', name: 'Advanced', slug: 'advanced', color: '#ef4444', entityType: 'class', usageCount: 2 },
+];
 
 // Mock next-intl with proper translations
 const translationKeys: Record<string, string> = {
@@ -66,7 +73,7 @@ describe('ClassSuccessStep', () => {
   });
 
   it('should render success title', () => {
-    render(<ClassSuccessStep data={mockData} onDone={mockOnDone} />);
+    render(<ClassSuccessStep data={mockData} onDone={mockOnDone} classTags={mockClassTags} />);
 
     const title = page.getByRole('heading', { level: 2 });
 
@@ -74,7 +81,7 @@ describe('ClassSuccessStep', () => {
   });
 
   it('should display class name in description', () => {
-    render(<ClassSuccessStep data={mockData} onDone={mockOnDone} />);
+    render(<ClassSuccessStep data={mockData} onDone={mockOnDone} classTags={mockClassTags} />);
 
     const description = page.getByText(/"Morning BJJ" has been added to your schedule./);
 
@@ -82,7 +89,7 @@ describe('ClassSuccessStep', () => {
   });
 
   it('should display success checkmark icon', () => {
-    render(<ClassSuccessStep data={mockData} onDone={mockOnDone} />);
+    render(<ClassSuccessStep data={mockData} onDone={mockOnDone} classTags={mockClassTags} />);
 
     const svg = document.querySelector('svg');
 
@@ -91,7 +98,7 @@ describe('ClassSuccessStep', () => {
   });
 
   it('should display class summary section', () => {
-    render(<ClassSuccessStep data={mockData} onDone={mockOnDone} />);
+    render(<ClassSuccessStep data={mockData} onDone={mockOnDone} classTags={mockClassTags} />);
 
     const summaryTitle = page.getByText('Class Summary');
 
@@ -99,7 +106,7 @@ describe('ClassSuccessStep', () => {
   });
 
   it('should display class name in summary', () => {
-    render(<ClassSuccessStep data={mockData} onDone={mockOnDone} />);
+    render(<ClassSuccessStep data={mockData} onDone={mockOnDone} classTags={mockClassTags} />);
 
     const className = page.getByText('Morning BJJ');
 
@@ -107,7 +114,7 @@ describe('ClassSuccessStep', () => {
   });
 
   it('should display program name in summary', () => {
-    render(<ClassSuccessStep data={mockData} onDone={mockOnDone} />);
+    render(<ClassSuccessStep data={mockData} onDone={mockOnDone} classTags={mockClassTags} />);
 
     const program = page.getByText('Adult Brazilian Jiu-Jitsu');
 
@@ -115,7 +122,7 @@ describe('ClassSuccessStep', () => {
   });
 
   it('should display schedule in summary', () => {
-    render(<ClassSuccessStep data={mockData} onDone={mockOnDone} />);
+    render(<ClassSuccessStep data={mockData} onDone={mockOnDone} classTags={mockClassTags} />);
 
     const schedule = page.getByText(/Monday, Wednesday, Friday \(3 time slots\)/);
 
@@ -123,7 +130,7 @@ describe('ClassSuccessStep', () => {
   });
 
   it('should display duration with hours and minutes', () => {
-    render(<ClassSuccessStep data={mockData} onDone={mockOnDone} />);
+    render(<ClassSuccessStep data={mockData} onDone={mockOnDone} classTags={mockClassTags} />);
 
     const duration = page.getByText('1h 30m');
 
@@ -143,7 +150,7 @@ describe('ClassSuccessStep', () => {
       },
     };
 
-    render(<ClassSuccessStep data={dataWithOnlyHours} onDone={mockOnDone} />);
+    render(<ClassSuccessStep data={dataWithOnlyHours} onDone={mockOnDone} classTags={mockClassTags} />);
 
     const duration = page.getByText('2h');
 
@@ -163,7 +170,7 @@ describe('ClassSuccessStep', () => {
       },
     };
 
-    render(<ClassSuccessStep data={dataWithOnlyMinutes} onDone={mockOnDone} />);
+    render(<ClassSuccessStep data={dataWithOnlyMinutes} onDone={mockOnDone} classTags={mockClassTags} />);
 
     const duration = page.getByText('45m');
 
@@ -171,7 +178,7 @@ describe('ClassSuccessStep', () => {
   });
 
   it('should display instructor name in summary', () => {
-    render(<ClassSuccessStep data={mockData} onDone={mockOnDone} />);
+    render(<ClassSuccessStep data={mockData} onDone={mockOnDone} classTags={mockClassTags} />);
 
     const instructor = page.getByText('Coach Alex');
 
@@ -179,7 +186,7 @@ describe('ClassSuccessStep', () => {
   });
 
   it('should display calendar color preview', () => {
-    render(<ClassSuccessStep data={mockData} onDone={mockOnDone} />);
+    render(<ClassSuccessStep data={mockData} onDone={mockOnDone} classTags={mockClassTags} />);
 
     const colorHex = page.getByText('#3b82f6');
 
@@ -187,7 +194,7 @@ describe('ClassSuccessStep', () => {
   });
 
   it('should not display tags section when no tags are selected', () => {
-    render(<ClassSuccessStep data={mockData} onDone={mockOnDone} />);
+    render(<ClassSuccessStep data={mockData} onDone={mockOnDone} classTags={mockClassTags} />);
 
     const tagsLabel = document.body.textContent?.includes('Tags');
 
@@ -201,7 +208,7 @@ describe('ClassSuccessStep', () => {
       tags: ['tag-1'],
     };
 
-    render(<ClassSuccessStep data={dataWithTags} onDone={mockOnDone} />);
+    render(<ClassSuccessStep data={dataWithTags} onDone={mockOnDone} classTags={mockClassTags} />);
 
     const tagsLabel = page.getByText('Tags');
 
@@ -209,7 +216,7 @@ describe('ClassSuccessStep', () => {
   });
 
   it('should display Done button', () => {
-    render(<ClassSuccessStep data={mockData} onDone={mockOnDone} />);
+    render(<ClassSuccessStep data={mockData} onDone={mockOnDone} classTags={mockClassTags} />);
 
     const doneButton = page.getByRole('button', { name: 'Done' });
 
@@ -217,7 +224,7 @@ describe('ClassSuccessStep', () => {
   });
 
   it('should call onDone when Done button is clicked', async () => {
-    render(<ClassSuccessStep data={mockData} onDone={mockOnDone} />);
+    render(<ClassSuccessStep data={mockData} onDone={mockOnDone} classTags={mockClassTags} />);
 
     const doneButton = page.getByRole('button', { name: 'Done' });
     await userEvent.click(doneButton.element());
@@ -231,7 +238,7 @@ describe('ClassSuccessStep', () => {
       program: 'unknown-program',
     };
 
-    render(<ClassSuccessStep data={dataWithUnknownProgram} onDone={mockOnDone} />);
+    render(<ClassSuccessStep data={dataWithUnknownProgram} onDone={mockOnDone} classTags={mockClassTags} />);
 
     const program = page.getByText('unknown-program');
 
@@ -250,7 +257,7 @@ describe('ClassSuccessStep', () => {
       },
     };
 
-    render(<ClassSuccessStep data={dataWithUnknownStaff} onDone={mockOnDone} />);
+    render(<ClassSuccessStep data={dataWithUnknownStaff} onDone={mockOnDone} classTags={mockClassTags} />);
 
     const instructor = page.getByText('unknown-coach');
 
@@ -258,7 +265,7 @@ describe('ClassSuccessStep', () => {
   });
 
   it('should display schedule summary with days and time slots', () => {
-    render(<ClassSuccessStep data={mockData} onDone={mockOnDone} />);
+    render(<ClassSuccessStep data={mockData} onDone={mockOnDone} classTags={mockClassTags} />);
 
     // Should show days and time slot count
     const schedule = page.getByText(/Monday, Wednesday, Friday \(3 time slots\)/);

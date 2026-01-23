@@ -1,11 +1,14 @@
 'use client';
 
 import type { ClassFilters } from './ClassFilterBar';
+import { useOrganization } from '@clerk/nextjs';
 import { Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ButtonGroupItem, ButtonGroupRoot } from '@/components/ui/button-group';
-import { generateWeeklySchedule, mockClasses } from './classesData';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useClassesCache } from '@/hooks/useClassesCache';
+import { buildClassColorLegend, generateWeeklyScheduleFromData, transformClassesToCardProps } from './classDataTransformers';
 import { ClassEventHoverCard } from './ClassEventHoverCard';
 import { ClassFilterBar } from './ClassFilterBar';
 
@@ -17,12 +20,18 @@ type WeeklyViewProps = {
 };
 
 export function WeeklyView({ withFilters }: WeeklyViewProps = {}) {
-  const [currentDate, setCurrentDate] = useState(() => new Date(2025, 8, 15)); // September 15, 2025
+  const { organization } = useOrganization();
+  const { classes: rawClasses, loading } = useClassesCache(organization?.id);
+
+  const [currentDate, setCurrentDate] = useState(() => new Date());
   const [localFilters, setLocalFilters] = useState<ClassFilters>({
     search: '',
     tag: 'all',
     instructor: 'all',
   });
+
+  // Transform database data to card props for filtering
+  const classes = useMemo(() => transformClassesToCardProps(rawClasses), [rawClasses]);
 
   // Use parent filters if provided, otherwise use local filters
   const filters = withFilters || localFilters;
@@ -32,20 +41,24 @@ export function WeeklyView({ withFilters }: WeeklyViewProps = {}) {
   const weekStart = new Date(currentDate);
   weekStart.setDate(currentDate.getDate() - dayOfWeek);
 
-  // Get unique instructors from mockClasses
-  const allInstructors = Array.from(
-    new Set(mockClasses.flatMap(cls => cls.instructors.map(i => i.name))),
+  // Get unique instructors from classes
+  const allInstructors = useMemo(
+    () => Array.from(new Set(classes.flatMap(cls => cls.instructors.map(i => i.name)))),
+    [classes],
   );
 
   // Filter classes based on filters
-  const filteredClasses = mockClasses.filter((cls) => {
+  const filteredClasses = useMemo(() => classes.filter((cls) => {
     const matchesSearch = cls.name.toLowerCase().includes(filters.search.toLowerCase())
       || cls.description.toLowerCase().includes(filters.search.toLowerCase());
     const matchesTag = filters.tag === 'all' || cls.type === filters.tag || cls.style === filters.tag;
     const matchesInstructor = filters.instructor === 'all'
       || cls.instructors.some(i => i.name === filters.instructor);
     return matchesSearch && matchesTag && matchesInstructor;
-  });
+  }), [classes, filters]);
+
+  // Get filtered class IDs for schedule generation
+  const filteredClassIds = useMemo(() => new Set(filteredClasses.map(c => c.id)), [filteredClasses]);
 
   const handlePrevious = () => {
     const newDate = new Date(currentDate);
@@ -76,7 +89,20 @@ export function WeeklyView({ withFilters }: WeeklyViewProps = {}) {
     ? `${startMonth} ${weekStart.getDate()} - ${weekEnd.getDate()}`
     : `${startMonth} ${weekStart.getDate()} - ${endMonth} ${weekEnd.getDate()}`;
 
-  const weeklyEvents = generateWeeklySchedule(currentDate, filteredClasses.length > 0 ? filteredClasses : mockClasses);
+  // Generate weekly events from filtered classes
+  const classesToUse = useMemo(
+    () => filteredClassIds.size > 0
+      ? rawClasses.filter(c => filteredClassIds.has(c.id))
+      : rawClasses,
+    [rawClasses, filteredClassIds],
+  );
+  const weeklyEvents = useMemo(
+    () => generateWeeklyScheduleFromData(currentDate, classesToUse),
+    [currentDate, classesToUse],
+  );
+
+  // Build color legend from database classes
+  const classColors = useMemo(() => buildClassColorLegend(rawClasses), [rawClasses]);
 
   const getEventsForTimeSlot = (dayIndex: number, hour: number) => {
     return weeklyEvents.filter(
@@ -97,17 +123,15 @@ export function WeeklyView({ withFilters }: WeeklyViewProps = {}) {
     return `${hour - 12}:00 PM`;
   };
 
-  const classColors = {
-    'BJJ Fundamentals I': '#22c55e',
-    'BJJ Fundamentals II': '#22c55e',
-    'BJJ Intermediate': '#22c55e',
-    'BJJ Advanced': '#a855f7',
-    'Advanced No-Gi': '#a855f7',
-    'Competition Team': '#a855f7',
-    'Kids Class': '#06b6d4',
-    'Women\'s BJJ': '#ec4899',
-    'Open Mat': '#ef4444',
-  };
+  // Loading state
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-48" />
+        <Skeleton className="h-125 w-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

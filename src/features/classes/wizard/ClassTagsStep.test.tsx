@@ -1,9 +1,17 @@
 import type { AddClassWizardData } from '@/hooks/useAddClassWizard';
+import type { Tag } from '@/hooks/useTagsCache';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { page, userEvent } from 'vitest/browser';
 import { createMockScheduleInstance, createMockWizardData } from '@/test-utils/mockWizardData';
 import { ClassTagsStep } from './ClassTagsStep';
+
+// Mock class tags for testing
+const mockClassTags: Tag[] = [
+  { id: 'tag-1', name: 'Beginner', slug: 'beginner', color: '#22c55e', entityType: 'class', usageCount: 3 },
+  { id: 'tag-2', name: 'Advanced', slug: 'advanced', color: '#ef4444', entityType: 'class', usageCount: 2 },
+  { id: 'tag-3', name: 'Adults', slug: 'adults', color: '#3b82f6', entityType: 'class', usageCount: 5 },
+];
 
 // Mock next-intl with proper translations
 const translationKeys: Record<string, string> = {
@@ -72,6 +80,7 @@ describe('ClassTagsStep', () => {
         onBack={mockHandlers.onBack}
         onCancel={mockHandlers.onCancel}
         isLoading={false}
+        classTags={mockClassTags}
       />,
     );
 
@@ -89,6 +98,7 @@ describe('ClassTagsStep', () => {
         onBack={mockHandlers.onBack}
         onCancel={mockHandlers.onCancel}
         isLoading={false}
+        classTags={mockClassTags}
       />,
     );
 
@@ -106,6 +116,7 @@ describe('ClassTagsStep', () => {
         onBack={mockHandlers.onBack}
         onCancel={mockHandlers.onCancel}
         isLoading={false}
+        classTags={mockClassTags}
       />,
     );
 
@@ -123,6 +134,7 @@ describe('ClassTagsStep', () => {
         onBack={mockHandlers.onBack}
         onCancel={mockHandlers.onCancel}
         isLoading={false}
+        classTags={mockClassTags}
       />,
     );
 
@@ -145,6 +157,7 @@ describe('ClassTagsStep', () => {
         onBack={mockHandlers.onBack}
         onCancel={mockHandlers.onCancel}
         isLoading={false}
+        classTags={mockClassTags}
       />,
     );
 
@@ -167,6 +180,7 @@ describe('ClassTagsStep', () => {
         onBack={mockHandlers.onBack}
         onCancel={mockHandlers.onCancel}
         isLoading={false}
+        classTags={mockClassTags}
       />,
     );
 
@@ -185,6 +199,7 @@ describe('ClassTagsStep', () => {
         onBack={mockHandlers.onBack}
         onCancel={mockHandlers.onCancel}
         isLoading={true}
+        classTags={mockClassTags}
       />,
     );
 
@@ -203,6 +218,7 @@ describe('ClassTagsStep', () => {
         onBack={mockHandlers.onBack}
         onCancel={mockHandlers.onCancel}
         isLoading={true}
+        classTags={mockClassTags}
       />,
     );
 
@@ -221,6 +237,7 @@ describe('ClassTagsStep', () => {
         onBack={mockHandlers.onBack}
         onCancel={mockHandlers.onCancel}
         isLoading={false}
+        classTags={mockClassTags}
       />,
     );
 
@@ -244,6 +261,7 @@ describe('ClassTagsStep', () => {
         onCancel={mockHandlers.onCancel}
         isLoading={false}
         error="Something went wrong"
+        classTags={mockClassTags}
       />,
     );
 
@@ -266,6 +284,7 @@ describe('ClassTagsStep', () => {
         onBack={mockHandlers.onBack}
         onCancel={mockHandlers.onCancel}
         isLoading={false}
+        classTags={mockClassTags}
       />,
     );
 
@@ -283,6 +302,7 @@ describe('ClassTagsStep', () => {
         onBack={mockHandlers.onBack}
         onCancel={mockHandlers.onCancel}
         isLoading={false}
+        classTags={mockClassTags}
       />,
     );
 
@@ -300,6 +320,7 @@ describe('ClassTagsStep', () => {
         onBack={mockHandlers.onBack}
         onCancel={mockHandlers.onCancel}
         isLoading={false}
+        classTags={mockClassTags}
       />,
     );
 
@@ -317,6 +338,7 @@ describe('ClassTagsStep', () => {
         onBack={mockHandlers.onBack}
         onCancel={mockHandlers.onCancel}
         isLoading={false}
+        classTags={mockClassTags}
       />,
     );
 

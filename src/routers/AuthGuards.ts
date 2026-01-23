@@ -13,6 +13,43 @@ import type { AuditContext } from '@/types/Audit';
 import type { OrgRole } from '@/types/Auth';
 import { auth } from '@clerk/nextjs/server';
 import { ORPCError } from '@orpc/server';
+import { ORG_ROLE } from '@/types/Auth';
+
+/**
+ * Role hierarchy from highest to lowest privilege.
+ * Higher roles inherit all permissions of lower roles.
+ */
+const ROLE_HIERARCHY: OrgRole[] = [
+  ORG_ROLE.ADMIN,
+  ORG_ROLE.ACADEMY_OWNER,
+  ORG_ROLE.FRONT_DESK,
+  ORG_ROLE.MEMBER,
+  ORG_ROLE.INDIVIDUAL_MEMBER,
+];
+
+/**
+ * Checks if a user has at least the required role level.
+ * Admin and Academy Owner have all permissions.
+ * Front Desk has Member permissions, etc.
+ */
+const hasRoleOrHigher = (
+  has: (params: { role: OrgRole }) => boolean,
+  requiredRole: OrgRole,
+): boolean => {
+  const requiredIndex = ROLE_HIERARCHY.indexOf(requiredRole);
+  if (requiredIndex === -1) {
+    return has({ role: requiredRole });
+  }
+
+  // Check if user has the required role or any higher role
+  for (let i = 0; i <= requiredIndex; i++) {
+    const role = ROLE_HIERARCHY[i];
+    if (role && has({ role })) {
+      return true;
+    }
+  }
+  return false;
+};
 
 /**
  * Guards ORPC procedures requiring authentication.
@@ -37,16 +74,17 @@ export const guardAuth = async (): Promise<{
 
 /**
  * Guards ORPC procedures requiring specific role permissions.
+ * Implements role hierarchy: admin > academy_owner > front_desk > member > individual_member
  * Returns audit context including the verified role.
  *
- * @param role - The required organization role
+ * @param role - The minimum required organization role
  * @returns Promise containing audit context (userId, orgId, role)
  * @throws ORPCError with 401 status if not authenticated, 403 if insufficient permissions
  */
 export const guardRole = async (role: OrgRole): Promise<AuditContext> => {
   const { userId, orgId, has } = await guardAuth();
 
-  if (!has({ role })) {
+  if (!hasRoleOrHigher(has, role)) {
     throw new ORPCError('Forbidden', { status: 403 });
   }
 
