@@ -1,9 +1,36 @@
+import type { Tag } from '@/hooks/useTagsCache';
 import { describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { page, userEvent } from 'vitest/browser';
 import { I18nWrapper } from '@/lib/test-utils';
-import { mockClassTags } from './classTagsData';
 import { ClassTagsManagement } from './ClassTagsManagement';
+
+// Mock class tags for testing
+const mockClassTags: Tag[] = [
+  { id: 'tag-beginner', name: 'Beginner', slug: 'beginner', color: '#22c55e', entityType: 'class', usageCount: 4, classNames: ['BJJ Fundamentals I', 'BJJ Fundamentals II'] },
+  { id: 'tag-advanced', name: 'Advanced', slug: 'advanced', color: '#ef4444', entityType: 'class', usageCount: 3, classNames: ['BJJ Advanced', 'Competition Prep'] },
+  { id: 'tag-adults', name: 'Adults', slug: 'adults', color: '#3b82f6', entityType: 'class', usageCount: 6, classNames: ['BJJ Fundamentals I', 'BJJ Advanced'] },
+  { id: 'tag-kids', name: 'Kids', slug: 'kids', color: '#f59e0b', entityType: 'class', usageCount: 2, classNames: ['Kids BJJ'] },
+  { id: 'tag-gi', name: 'Gi', slug: 'gi', color: '#8b5cf6', entityType: 'class', usageCount: 5, classNames: ['BJJ Fundamentals I'] },
+  { id: 'tag-nogi', name: 'No-Gi', slug: 'no-gi', color: '#ec4899', entityType: 'class', usageCount: 3, classNames: ['No-Gi Class'] },
+  { id: 'tag-intermediate', name: 'Intermediate', slug: 'intermediate', color: '#06b6d4', entityType: 'class', usageCount: 2, classNames: ['BJJ Intermediate'] },
+  { id: 'tag-competition', name: 'Competition', slug: 'competition', color: '#84cc16', entityType: 'class', usageCount: 1, classNames: ['Competition Prep'] },
+];
+
+// Mock the hooks used by ClassTagsManagement
+vi.mock('@clerk/nextjs', () => ({
+  useOrganization: () => ({ organization: { id: 'test-org-123' } }),
+}));
+
+vi.mock('@/hooks/useTagsCache', () => ({
+  useTagsCache: () => ({
+    classTags: mockClassTags,
+    membershipTags: [],
+    loading: false,
+    error: null,
+    revalidate: vi.fn(),
+  }),
+}));
 
 describe('ClassTagsManagement', () => {
   describe('Sheet Display', () => {

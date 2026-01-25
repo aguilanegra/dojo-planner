@@ -3,16 +3,20 @@
 import type { ClassFilters } from './ClassFilterBar';
 import type { ClassCardProps } from '@/templates/ClassCard';
 import type { EventCardProps } from '@/templates/EventCard';
+import { useOrganization } from '@clerk/nextjs';
 import { CalendarDays, CalendarRange, Grid3x3, Plus, Tags } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ButtonGroupItem, ButtonGroupRoot } from '@/components/ui/button-group';
+import { Skeleton } from '@/components/ui/skeleton';
+import { invalidateClassesCache, useClassesCache } from '@/hooks/useClassesCache';
+import { invalidateEventsCache, useEventsCache } from '@/hooks/useEventsCache';
 import { ClassCard } from '@/templates/ClassCard';
 import { EventCard } from '@/templates/EventCard';
 import { StatsCards } from '@/templates/StatsCards';
-import { mockClasses as initialMockClasses, mockEvents as initialMockEvents } from './classesData';
+import { transformClassesToCardProps, transformEventsToCardProps } from './classDataTransformers';
 import { ClassFilterBar } from './ClassFilterBar';
 import { ClassTagsManagement } from './ClassTagsManagement';
 import { MonthlyView } from './MonthlyView';
@@ -26,6 +30,17 @@ export function ClassesPage() {
   const t = useTranslations('ClassesPage');
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { organization } = useOrganization();
+
+  // Fetch data from database with caching
+  const { classes: rawClasses, loading: classesLoading } = useClassesCache(organization?.id);
+  const { events: rawEvents, loading: eventsLoading } = useEventsCache(organization?.id);
+
+  // Transform database data to card props format
+  const classes = useMemo(() => transformClassesToCardProps(rawClasses), [rawClasses]);
+  const events = useMemo(() => transformEventsToCardProps(rawEvents), [rawEvents]);
+
+  const loading = classesLoading || eventsLoading;
 
   // Get initial view from URL or default to 'grid'
   const viewParam = searchParams.get('view');
@@ -34,8 +49,6 @@ export function ClassesPage() {
   const [viewType, setViewType] = useState<ViewType>(initialView);
   const [isTagsSheetOpen, setIsTagsSheetOpen] = useState(false);
   const [isAddClassModalOpen, setIsAddClassModalOpen] = useState(false);
-  const [classes, setClasses] = useState<ClassCardProps[]>(initialMockClasses);
-  const [events, setEvents] = useState<EventCardProps[]>(initialMockEvents);
   const [filters, setFilters] = useState<ClassFilters>({
     search: '',
     tag: 'all',
@@ -61,15 +74,15 @@ export function ClassesPage() {
     router.push(`/dashboard/classes/${id}${viewParam}`);
   }, [router, viewType]);
 
-  // Handle new class creation
-  const handleClassCreated = (newClass: ClassCardProps) => {
-    setClasses(prev => [...prev, newClass]);
-  };
+  // Handle new class creation - invalidate cache to refetch
+  const handleClassCreated = useCallback(async (_newClass: ClassCardProps) => {
+    await invalidateClassesCache();
+  }, []);
 
-  // Handle new event creation
-  const handleEventCreated = (newEvent: EventCardProps) => {
-    setEvents(prev => [...prev, newEvent]);
-  };
+  // Handle new event creation - invalidate cache to refetch
+  const handleEventCreated = useCallback(async (_newEvent: EventCardProps) => {
+    await invalidateEventsCache();
+  }, []);
 
   // Handle edit event navigation
   const handleEditEvent = useCallback((id: string) => {
@@ -128,6 +141,25 @@ export function ClassesPage() {
     { id: 'tags', label: t('total_tags_label'), value: stats.totalTags },
     { id: 'instructors', label: t('total_instructors_label'), value: stats.totalInstructors },
   ], [stats, t]);
+
+  // Loading skeleton
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid gap-4 md:grid-cols-4">
+          {[1, 2, 3, 4].map(i => (
+            <Skeleton key={i} className="h-24 w-full" />
+          ))}
+        </div>
+        <Skeleton className="h-10 w-48" />
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3, 4, 5, 6].map(i => (
+            <Skeleton key={i} className="h-64 w-full" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

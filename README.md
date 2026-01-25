@@ -48,8 +48,9 @@ A comprehensive web-based management system for martial arts dojos. Dojo Planner
 
 ### Staff & Permissions
 - Invite and manage staff members
-- Create custom roles with specific permissions
-- Role-based access control
+- Role hierarchy: Admin > Academy Owner > Front Desk > Member
+- Higher roles inherit all permissions of lower roles
+- Role-based access control for all API endpoints
 
 ### Organization Management
 - Multi-tenancy support for managing multiple locations
@@ -124,6 +125,28 @@ npm run db:generate   # Generate migration from schema changes
 npm run db:migrate    # Apply pending migrations
 npm run db:studio     # Open Drizzle Studio to explore the database
 ```
+
+### Database Seeding
+
+Populate the local database with sample data for development:
+
+```shell
+# Seed a specific organization (use your Clerk org ID)
+DATABASE_URL="file:local.db" npx tsx src/scripts/seed.ts --orgId=org_xxxxx
+
+# Seed all organizations in the database
+DATABASE_URL="file:local.db" npx tsx src/scripts/seed.ts
+
+# Clear and re-seed
+DATABASE_URL="file:local.db" npx tsx src/scripts/seed.ts --orgId=org_xxxxx --reset
+```
+
+**Finding your Organization ID:**
+1. Go to [Clerk Dashboard](https://dashboard.clerk.com) → Organizations
+2. Click on an organization
+3. Copy the Organization ID (starts with `org_`)
+
+The seed script creates sample programs, classes, events, coupons, membership plans, tags, and members.
 
 ### Stripe Integration
 

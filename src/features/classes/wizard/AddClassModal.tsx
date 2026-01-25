@@ -2,10 +2,12 @@
 
 import type { ClassCardProps, ScheduleItem } from '@/templates/ClassCard';
 import type { EventCardProps, EventSession as EventCardSession } from '@/templates/EventCard';
+import { useOrganization } from '@clerk/nextjs';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAddClassWizard } from '@/hooks/useAddClassWizard';
+import { useTagsCache } from '@/hooks/useTagsCache';
 import { ClassBasicsStep } from './ClassBasicsStep';
 import { ClassScheduleStep } from './ClassScheduleStep';
 import { ClassSuccessStep } from './ClassSuccessStep';
@@ -44,6 +46,8 @@ export const AddClassModal = ({ isOpen, onCloseAction, onClassCreated, onEventCr
   const router = useRouter();
   const wizard = useAddClassWizard();
   const t = useTranslations('AddClassWizard');
+  const { organization } = useOrganization();
+  const { classTags } = useTagsCache(organization?.id);
 
   const handleCancel = () => {
     wizard.reset();
@@ -308,6 +312,7 @@ export const AddClassModal = ({ isOpen, onCloseAction, onClassCreated, onEventCr
               onCancel={handleCancel}
               isLoading={wizard.isLoading}
               error={wizard.error}
+              classTags={classTags}
             />
           )}
 
@@ -315,6 +320,7 @@ export const AddClassModal = ({ isOpen, onCloseAction, onClassCreated, onEventCr
             <ClassSuccessStep
               data={wizard.data}
               onDone={handleSuccess}
+              classTags={classTags}
             />
           )}
         </div>

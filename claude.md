@@ -39,22 +39,30 @@ src/
 │   └── staff/             # Staff management
 │
 ├── routers/               # ORPC API handlers
-│   ├── AuthGuards.ts      # Auth middleware (guardAuth, guardRole)
+│   ├── AuthGuards.ts      # Auth middleware with role hierarchy
 │   ├── Member.ts          # Member CRUD
-│   └── Members.ts         # Members list ops
+│   ├── Members.ts         # Members list ops
+│   ├── Classes.ts         # Classes list & tags
+│   ├── Events.ts          # Events list
+│   ├── Tags.ts            # Tags (class, membership, all)
+│   └── Coupons.ts         # Coupons list & active
 │
 ├── services/              # Business logic layer
 │   ├── BillingService.ts  # Stripe integration
 │   ├── ClerkRolesService.ts # Clerk Backend API
 │   ├── MembersService.ts  # Member operations
-│   └── OrganizationService.ts # Org & Stripe customer storage
+│   ├── OrganizationService.ts # Org & Stripe customer storage
+│   ├── ClassesService.ts  # Class & schedule queries
+│   ├── EventsService.ts   # Event queries
+│   ├── TagsService.ts     # Tag queries with usage counts
+│   └── CouponsService.ts  # Coupon queries
 │
 ├── models/
-│   └── Schema.ts          # Drizzle ORM tables
+│   └── Schema.ts          # Drizzle ORM tables (25+ tables)
 │
 ├── components/ui/         # Shadcn UI components (37+)
 ├── templates/             # Page templates & cards (34)
-├── hooks/                 # React hooks (17)
+├── hooks/                 # React hooks (21+)
 ├── libs/                  # Core utilities
 │   ├── DB.ts              # Database client
 │   ├── Env.ts             # Environment validation (t3-oss)
@@ -167,10 +175,17 @@ ORG_ROLE.MEMBER           -> org:member
 ORG_ROLE.INDIVIDUAL_MEMBER -> org:individual_member
 ```
 
+**Role Hierarchy:**
+```
+ADMIN > ACADEMY_OWNER > FRONT_DESK > MEMBER > INDIVIDUAL_MEMBER
+```
+Higher roles inherit all permissions of lower roles. An admin can access any endpoint that requires `FRONT_DESK` or lower.
+
 **Auth Patterns:**
 ```
-// API route protection
-const { orgId } = await guardRole(ORG_ROLE.ADMIN)
+// API route protection (uses role hierarchy)
+const { orgId } = await guardRole(ORG_ROLE.FRONT_DESK)
+// Admin, Academy Owner, and Front Desk can all access
 
 // Page protection
 const { orgId, has } = await requireOrganization()
@@ -371,9 +386,20 @@ await deleteUserWithOrganization();
 
 **Key Tables:**
 - `organization` - Multi-tenant orgs with Stripe IDs
-- `member` - Member records
+- `member` - Member records (with optional `clerkUserId` for kiosk auth)
 - `membership_plan` - Pricing tiers
 - `member_membership` - Member-plan associations
+- `program` - Training programs (Adult BJJ, Kids, Competition)
+- `class` - Class definitions
+- `class_schedule_instance` - Recurring schedule patterns
+- `class_schedule_exception` - Schedule overrides (cancellations, modifications)
+- `event` - Special events (seminars, workshops)
+- `event_session` - Event time slots
+- `event_billing` - Event pricing tiers
+- `tag` - Polymorphic tags for classes/memberships/events
+- `coupon` - Discount codes
+- `attendance` - Check-in records
+- `audit_event` - SOC2 compliance audit logging
 - `payment_method` - Saved payment methods
 - `address` - Member addresses
 - `note` - Member notes
@@ -385,6 +411,39 @@ npm run db:generate  # Generate migrations
 npm run db:migrate   # Run migrations
 npm run db:studio    # Open Drizzle Studio
 ```
+
+### Database Seed Script
+
+The seed script (`src/scripts/seed.ts`) populates the database with sample data for development and testing. It seeds programs, classes, events, coupons, membership plans, tags, and sample members.
+
+**Usage:**
+```bash
+# Seed a specific organization (required for first-time setup)
+DATABASE_URL="file:local.db" npx tsx src/scripts/seed.ts --orgId=org_xxxxx
+
+# Seed all organizations in the database
+DATABASE_URL="file:local.db" npx tsx src/scripts/seed.ts
+
+# Clear and re-seed an organization
+DATABASE_URL="file:local.db" npx tsx src/scripts/seed.ts --orgId=org_xxxxx --reset
+```
+
+**Finding your Organization ID:**
+1. Go to [Clerk Dashboard](https://dashboard.clerk.com) → Organizations
+2. Click on an organization
+3. Copy the Organization ID (starts with `org_`)
+
+**What gets seeded:**
+- 4 programs (Adult BJJ, Kids Program, Competition Team, Special Programs)
+- 14 tags (9 class tags + 5 membership tags)
+- 9 classes with schedule instances
+- 4 schedule exceptions (cancellations, time changes)
+- 2 events with sessions and billing tiers
+- 12 coupons (various types and statuses)
+- 6 membership plans
+- 8 sample members with memberships
+
+**Note:** The seed script creates the organization record in the local database if it doesn't exist. Staff/instructor assignments require creating users in the Clerk dashboard first.
 
 ## Environment Variables
 
@@ -489,15 +548,39 @@ try {
 }
 ```
 
-**Audit Actions:**
+**Audit Actions (57 total):**
 ```typescript
-AUDIT_ACTION.MEMBER_CREATE; // member.create
-AUDIT_ACTION.MEMBER_UPDATE; // member.update
-AUDIT_ACTION.MEMBER_REMOVE; // member.remove
-AUDIT_ACTION.MEMBER_RESTORE; // member.restore
-AUDIT_ACTION.MEMBER_UPDATE_CONTACT; // member.updateContact
-AUDIT_ACTION.MEMBER_ADD_MEMBERSHIP; // member.addMembership
-AUDIT_ACTION.MEMBER_CHANGE_MEMBERSHIP; // member.changeMembership
+// Member operations
+AUDIT_ACTION.MEMBER_CREATE;
+AUDIT_ACTION.MEMBER_UPDATE;
+AUDIT_ACTION.MEMBER_REMOVE;
+AUDIT_ACTION.MEMBER_RESTORE;
+
+// Class operations
+AUDIT_ACTION.CLASS_CREATE;
+AUDIT_ACTION.CLASS_UPDATE;
+AUDIT_ACTION.CLASS_DELETE;
+AUDIT_ACTION.CLASS_SCHEDULE_CREATE;
+AUDIT_ACTION.CLASS_SCHEDULE_EXCEPTION_CREATE;
+
+// Event operations
+AUDIT_ACTION.EVENT_CREATE;
+AUDIT_ACTION.EVENT_SESSION_CREATE;
+AUDIT_ACTION.EVENT_SESSION_CANCEL;
+
+// Coupon operations
+AUDIT_ACTION.COUPON_CREATE;
+AUDIT_ACTION.COUPON_REDEEM;
+
+// Attendance operations
+AUDIT_ACTION.ATTENDANCE_CHECK_IN;
+AUDIT_ACTION.ATTENDANCE_CHECK_OUT;
+
+// Transaction operations
+AUDIT_ACTION.TRANSACTION_CREATE;
+AUDIT_ACTION.TRANSACTION_REFUND;
+
+// See src/types/Audit.ts for full list
 ```
 
 **Adding New Audit Events:**

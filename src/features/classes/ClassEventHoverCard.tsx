@@ -1,11 +1,14 @@
 'use client';
 
-import type { ClassScheduleException } from './classesData';
+import type { CalendarScheduleException } from './classDataTransformers';
+import { useOrganization } from '@clerk/nextjs';
 import { AlertCircle, Calendar, Pencil, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { mockClasses } from './classesData';
+import { useClassesCache } from '@/hooks/useClassesCache';
+import { transformClassesToCardProps } from './classDataTransformers';
 
 type ClassEventHoverCardProps = {
   classId: string;
@@ -14,7 +17,7 @@ type ClassEventHoverCardProps = {
   hour?: number;
   minute?: number;
   duration?: number;
-  exception?: ClassScheduleException;
+  exception?: CalendarScheduleException;
   children?: React.ReactNode;
   sourceView?: 'weekly' | 'monthly';
 };
@@ -37,7 +40,7 @@ function formatDuration(minutes: number): string {
   return `${hours}h ${mins}m`;
 }
 
-function getExceptionIcon(type: ClassScheduleException['type']) {
+function getExceptionIcon(type: CalendarScheduleException['type']) {
   switch (type) {
     case 'deleted':
       return <Trash2 className="h-3 w-3 text-destructive" />;
@@ -50,7 +53,7 @@ function getExceptionIcon(type: ClassScheduleException['type']) {
   }
 }
 
-function getExceptionLabel(type: ClassScheduleException['type']): string {
+function getExceptionLabel(type: CalendarScheduleException['type']): string {
   switch (type) {
     case 'deleted':
       return 'Cancelled';
@@ -75,9 +78,12 @@ export function ClassEventHoverCard({
   sourceView,
 }: ClassEventHoverCardProps) {
   const router = useRouter();
+  const { organization } = useOrganization();
+  const { classes: rawClasses } = useClassesCache(organization?.id);
 
-  // Find the full class data from mockClasses
-  const classData = mockClasses.find(c => c.id === classId);
+  // Transform and find the class data
+  const classes = useMemo(() => transformClassesToCardProps(rawClasses), [rawClasses]);
+  const classData = classes.find(c => c.id === classId);
 
   const handleClick = () => {
     const viewParam = sourceView ? `?view=${sourceView}` : '';

@@ -1,3 +1,5 @@
+import type { ClassData } from '@/hooks/useClassesCache';
+import type { EventData } from '@/hooks/useEventsCache';
 import { describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { page, userEvent } from 'vitest/browser';
@@ -14,6 +16,70 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => ({
     get: () => null,
     toString: () => '',
+  }),
+}));
+
+// Mock Clerk
+vi.mock('@clerk/nextjs', () => ({
+  useOrganization: () => ({ organization: { id: 'test-org-123' } }),
+}));
+
+// Mock classes data
+const mockClasses: ClassData[] = [
+  {
+    id: '1',
+    name: 'BJJ Fundamentals I',
+    slug: 'bjj-fundamentals-i',
+    description: 'Covers core positions, escapes, and submissions.',
+    color: null,
+    defaultDurationMinutes: 60,
+    minAge: null,
+    maxAge: null,
+    maxCapacity: 20,
+    isActive: true,
+    program: { id: 'prog-1', name: 'Adult BJJ', slug: 'adult-bjj', color: '#22c55e' },
+    tags: [
+      { id: 't1', name: 'Beginner', slug: 'beginner', color: '#22c55e' },
+      { id: 't2', name: 'Adults', slug: 'adults', color: '#3b82f6' },
+    ],
+    schedule: [{ id: 's1', dayOfWeek: 1, startTime: '06:00', endTime: '07:00', instructorClerkId: 'coach-alex' }],
+    scheduleExceptions: [],
+  },
+];
+
+const mockEvents: EventData[] = [];
+
+// Mock the caching hooks
+vi.mock('@/hooks/useClassesCache', () => ({
+  useClassesCache: () => ({
+    classes: mockClasses,
+    loading: false,
+    error: null,
+    revalidate: vi.fn(),
+  }),
+  invalidateClassesCache: vi.fn(),
+}));
+
+vi.mock('@/hooks/useEventsCache', () => ({
+  useEventsCache: () => ({
+    events: mockEvents,
+    loading: false,
+    error: null,
+    revalidate: vi.fn(),
+  }),
+  invalidateEventsCache: vi.fn(),
+}));
+
+// Mock the tags cache for ClassTagsManagement
+vi.mock('@/hooks/useTagsCache', () => ({
+  useTagsCache: () => ({
+    classTags: [
+      { id: 't1', name: 'Beginner', slug: 'beginner', color: '#22c55e', entityType: 'class', usageCount: 1 },
+    ],
+    membershipTags: [],
+    loading: false,
+    error: null,
+    revalidate: vi.fn(),
   }),
 }));
 
@@ -63,7 +129,8 @@ describe('Classes Page', () => {
   it('displays instructor names', () => {
     render(<I18nWrapper><ClassesPage /></I18nWrapper>);
 
-    const instructorName = page.getByText(/Coach Alex/).first();
+    // The transformer uses "Instructor" as placeholder when clerkId exists
+    const instructorName = page.getByText('Instructor').first();
 
     expect(instructorName).toBeInTheDocument();
   });

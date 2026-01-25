@@ -1,160 +1,16 @@
 'use client';
 
 import type { Coupon, CouponFilters, CouponFormData } from '@/features/marketing';
+import { useOrganization } from '@clerk/nextjs';
 import { ArrowDownAZ, ArrowUpZA, Edit, Plus, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useCallback, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Pagination } from '@/components/ui/pagination/Pagination';
-import { AddEditCouponModal, CouponCard, CouponFilterBar, DeleteCouponAlertDialog } from '@/features/marketing';
+import { Skeleton } from '@/components/ui/skeleton';
+import { AddEditCouponModal, CouponCard, CouponFilterBar, DeleteCouponAlertDialog, transformCouponsToUi } from '@/features/marketing';
+import { useCouponsCache } from '@/hooks/useCouponsCache';
 import { StatsCards } from '@/templates/StatsCards';
-
-const mockCoupons: Coupon[] = [
-  {
-    id: '1',
-    code: 'CTA_FAMILY_1',
-    description: 'Family Member Discount',
-    type: 'Percentage',
-    amount: '15%',
-    applyTo: 'Memberships',
-    usage: '23/100',
-    startDateTime: '2024-01-01T00:00:00',
-    endDateTime: '2024-12-31T23:59:59',
-    status: 'Active',
-  },
-  {
-    id: '2',
-    code: 'NEWSTUDENT50',
-    description: 'New Student Special',
-    type: 'Fixed Amount',
-    amount: '$50',
-    applyTo: 'Memberships',
-    usage: '8/50',
-    startDateTime: '2024-06-01T08:00:00',
-    endDateTime: '2025-03-15T18:00:00',
-    status: 'Active',
-  },
-  {
-    id: '3',
-    code: 'FREETRIAL7',
-    description: '7 Day Free Trial',
-    type: 'Free Trial',
-    amount: '7 Days',
-    applyTo: 'Memberships',
-    usage: '45/\u221E',
-    startDateTime: '2024-01-01T00:00:00',
-    endDateTime: '',
-    status: 'Active',
-  },
-  {
-    id: '4',
-    code: 'BLACKFRIDAY',
-    description: 'Black Friday Sale',
-    type: 'Percentage',
-    amount: '25%',
-    applyTo: 'Products',
-    usage: '67/200',
-    startDateTime: '2024-11-25T00:00:00',
-    endDateTime: '2024-11-30T23:59:59',
-    status: 'Expired',
-  },
-  {
-    id: '5',
-    code: 'SUMMER2024',
-    description: 'Summer Promotion',
-    type: 'Percentage',
-    amount: '20%',
-    applyTo: 'Both',
-    usage: '12/100',
-    startDateTime: '2024-06-01T00:00:00',
-    endDateTime: '2024-08-31T23:59:59',
-    status: 'Inactive',
-  },
-  {
-    id: '6',
-    code: 'HOLIDAY25',
-    description: 'Holiday Special',
-    type: 'Fixed Amount',
-    amount: '$25',
-    applyTo: 'Memberships',
-    usage: '35/75',
-    startDateTime: '2024-12-01T00:00:00',
-    endDateTime: '2024-12-25T23:59:59',
-    status: 'Active',
-  },
-  {
-    id: '7',
-    code: 'REFERRAL10',
-    description: 'Referral Bonus',
-    type: 'Percentage',
-    amount: '10%',
-    applyTo: 'Memberships',
-    usage: '102/\u221E',
-    startDateTime: '2024-01-01T00:00:00',
-    endDateTime: '',
-    status: 'Active',
-  },
-  {
-    id: '8',
-    code: 'FLASH20',
-    description: 'Flash Sale',
-    type: 'Fixed Amount',
-    amount: '$20',
-    applyTo: 'Products',
-    usage: '50/50',
-    startDateTime: '2024-12-31T12:00:00',
-    endDateTime: '2025-01-01T12:00:00',
-    status: 'Expired',
-  },
-  {
-    id: '9',
-    code: 'NEWYEAR25',
-    description: 'New Year Discount',
-    type: 'Percentage',
-    amount: '25%',
-    applyTo: 'Both',
-    usage: '0/150',
-    startDateTime: '2025-01-01T00:00:00',
-    endDateTime: '2025-01-31T23:59:59',
-    status: 'Active',
-  },
-  {
-    id: '10',
-    code: 'LOYALTY15',
-    description: 'Loyalty Reward',
-    type: 'Percentage',
-    amount: '15%',
-    applyTo: 'Memberships',
-    usage: '88/100',
-    startDateTime: '2025-01-01T00:00:00',
-    endDateTime: '2025-02-28T23:59:59',
-    status: 'Active',
-  },
-  {
-    id: '11',
-    code: 'SPRING10',
-    description: 'Spring Savings',
-    type: 'Fixed Amount',
-    amount: '$10',
-    applyTo: 'Products',
-    usage: '15/40',
-    startDateTime: '2025-03-01T00:00:00',
-    endDateTime: '2025-04-01T23:59:59',
-    status: 'Active',
-  },
-  {
-    id: '12',
-    code: 'VIP50',
-    description: 'VIP Member Exclusive',
-    type: 'Fixed Amount',
-    amount: '$50',
-    applyTo: 'Memberships',
-    usage: '5/20',
-    startDateTime: '2025-01-01T00:00:00',
-    endDateTime: '2025-05-15T23:59:59',
-    status: 'Inactive',
-  },
-];
 
 function getStatusVariant(status: string): 'default' | 'secondary' | 'destructive' | 'outline' {
   switch (status) {
@@ -257,6 +113,12 @@ type SortDirection = 'asc' | 'desc';
 
 export default function MarketingPage() {
   const t = useTranslations('MarketingPage');
+  const { organization } = useOrganization();
+  const { coupons: rawCoupons, loading } = useCouponsCache(organization?.id);
+
+  // Transform database coupons to UI format
+  const coupons = useMemo(() => transformCouponsToUi(rawCoupons), [rawCoupons]);
+
   const [currentPage, setCurrentPage] = useState(0);
   const [sortField, setSortField] = useState<SortField>('code');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -278,26 +140,26 @@ export default function MarketingPage() {
   // Compute available values from actual coupon data
   const availableStatuses = useMemo(() => {
     const statuses = new Set<string>();
-    mockCoupons.forEach((coupon) => {
+    coupons.forEach((coupon) => {
       if (coupon.status) {
         statuses.add(coupon.status);
       }
     });
     return Array.from(statuses).sort();
-  }, []);
+  }, [coupons]);
 
   const availableTypes = useMemo(() => {
     const types = new Set<string>();
-    mockCoupons.forEach((coupon) => {
+    coupons.forEach((coupon) => {
       if (coupon.type) {
         types.add(coupon.type);
       }
     });
     return Array.from(types).sort();
-  }, []);
+  }, [coupons]);
 
   // Filter coupons
-  const filteredCoupons = mockCoupons.filter((coupon) => {
+  const filteredCoupons = useMemo(() => coupons.filter((coupon) => {
     const searchLower = filters.search.toLowerCase();
     const matchesSearch = filters.search === ''
       || coupon.code.toLowerCase().includes(searchLower)
@@ -307,7 +169,7 @@ export default function MarketingPage() {
     const matchesType = filters.type === 'all' || coupon.type === filters.type;
 
     return matchesSearch && matchesStatus && matchesType;
-  });
+  }), [coupons, filters]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -372,13 +234,28 @@ export default function MarketingPage() {
     (currentPage + 1) * ROWS_PER_PAGE,
   );
 
+  // Calculate total usage from all coupons
+  const totalUsage = useMemo(() => {
+    let total = 0;
+    coupons.forEach((coupon) => {
+      const parts = coupon.usage.split('/');
+      if (parts.length === 2 && parts[0]) {
+        const used = Number.parseFloat(parts[0]);
+        if (!Number.isNaN(used)) {
+          total += used;
+        }
+      }
+    });
+    return total;
+  }, [coupons]);
+
   // Stats data
   const stats = useMemo(() => ({
-    totalCoupons: mockCoupons.length,
-    activeCoupons: mockCoupons.filter(c => c.status === 'Active').length,
-    totalSavings: '$2,450',
-    timesUsed: 156,
-  }), []);
+    totalCoupons: coupons.length,
+    activeCoupons: coupons.filter(c => c.status === 'Active').length,
+    totalSavings: 'N/A', // Would need transaction data to calculate
+    timesUsed: totalUsage,
+  }), [coupons, totalUsage]);
 
   const statsData = useMemo(() => [
     { id: 'total', label: t('total_coupons_label'), value: stats.totalCoupons },
@@ -398,11 +275,11 @@ export default function MarketingPage() {
   };
 
   const handleDeleteCoupon = useCallback((couponId: string) => {
-    const coupon = mockCoupons.find(c => c.id === couponId);
+    const coupon = coupons.find(c => c.id === couponId);
     if (coupon) {
       setDeletingCoupon({ id: coupon.id, code: coupon.code });
     }
-  }, []);
+  }, [coupons]);
 
   const handleCloseDeleteDialog = useCallback(() => {
     setDeletingCoupon(null);
@@ -425,6 +302,22 @@ export default function MarketingPage() {
     setIsModalOpen(false);
     setEditingCoupon(null);
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="w-full space-y-6">
+        <div className="grid gap-4 md:grid-cols-4">
+          {[1, 2, 3, 4].map(i => (
+            <Skeleton key={i} className="h-24 w-full" />
+          ))}
+        </div>
+        <Skeleton className="h-10 w-48" />
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-96 w-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full space-y-6">

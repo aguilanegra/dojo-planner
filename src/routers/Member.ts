@@ -17,6 +17,14 @@ export const create = os
     try {
       // Create the member record in the database with a generated UUID
       const memberId = randomUUID();
+
+      logger.info(`[Member.create] Creating member for organization: ${context.orgId}`, {
+        memberId,
+        email: input.email,
+        firstName: input.firstName,
+        lastName: input.lastName,
+      });
+
       const member = await createMember({
         id: memberId,
         firstName: input.firstName,
@@ -29,7 +37,11 @@ export const create = os
         ...(input.photoUrl && { photoUrl: input.photoUrl }),
       }, context.orgId);
 
-      logger.info(`A new member has been created: ${memberId}`);
+      logger.info(`[Member.create] Member created successfully: ${memberId}`, {
+        orgId: context.orgId,
+        resultId: member[0]?.id,
+        resultEmail: member[0]?.email,
+      });
 
       // Audit the member creation
       await audit(context, AUDIT_ACTION.MEMBER_CREATE, AUDIT_ENTITY_TYPE.MEMBER, {

@@ -1,6 +1,7 @@
 'use client';
 
-import type { MembershipTag } from './membershipTagsData';
+import type { Tag } from '@/hooks/useTagsCache';
+import { useOrganization } from '@clerk/nextjs';
 import { Plus, Search } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
@@ -12,7 +13,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { mockMembershipTags } from './membershipTagsData';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useTagsCache } from '@/hooks/useTagsCache';
 
 type MembershipTagsManagementProps = {
   open: boolean;
@@ -21,19 +23,21 @@ type MembershipTagsManagementProps = {
 
 export function MembershipTagsManagement({ open, onOpenChange }: MembershipTagsManagementProps) {
   const t = useTranslations('MembershipTagsManagement');
+  const { organization } = useOrganization();
+  const { membershipTags, loading } = useTagsCache(organization?.id);
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredTags = useMemo(() => {
     if (!searchQuery.trim()) {
-      return mockMembershipTags;
+      return membershipTags;
     }
     const query = searchQuery.toLowerCase();
-    return mockMembershipTags.filter(
+    return membershipTags.filter(
       tag =>
         tag.name.toLowerCase().includes(query)
-        || tag.membershipNames.some(membershipName => membershipName.toLowerCase().includes(query)),
+        || (tag.membershipNames && tag.membershipNames.some(membershipName => membershipName.toLowerCase().includes(query))),
     );
-  }, [searchQuery]);
+  }, [searchQuery, membershipTags]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
@@ -46,63 +50,72 @@ export function MembershipTagsManagement({ open, onOpenChange }: MembershipTagsM
           <SheetTitle className="text-xl">{t('title')}</SheetTitle>
         </SheetHeader>
 
-        <div className="flex flex-col gap-4 px-4">
-          {/* Search and Add New Tag Row */}
-          <div className="flex items-center justify-between gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder={t('search_placeholder')}
-                value={searchQuery}
-                onChange={handleSearchChange}
-                className="pl-9"
-                aria-label={t('search_placeholder')}
-              />
-            </div>
-            <Button>
-              <Plus className="mr-1 size-4" />
-              {t('add_new_tag_button')}
-            </Button>
-          </div>
+        {loading
+          ? (
+              <div className="flex flex-col gap-4 px-4">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-64 w-full" />
+              </div>
+            )
+          : (
+              <div className="flex flex-col gap-4 px-4">
+                {/* Search and Add New Tag Row */}
+                <div className="flex items-center justify-between gap-4">
+                  <div className="relative flex-1">
+                    <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      type="text"
+                      placeholder={t('search_placeholder')}
+                      value={searchQuery}
+                      onChange={handleSearchChange}
+                      className="pl-9"
+                      aria-label={t('search_placeholder')}
+                    />
+                  </div>
+                  <Button>
+                    <Plus className="mr-1 size-4" />
+                    {t('add_new_tag_button')}
+                  </Button>
+                </div>
 
-          {/* Tags Table */}
-          <div className="overflow-hidden rounded-lg border border-border bg-background">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border bg-secondary">
-                    <th className="w-[200px] px-6 py-3 text-left text-sm font-semibold text-foreground">{t('tag_name_column')}</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">{t('usage_column')}</th>
-                    <th className="w-[150px] px-6 py-3 text-right text-sm font-semibold text-foreground">{t('actions_column')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredTags.length === 0
-                    ? (
-                        <tr>
-                          <td colSpan={3} className="py-8 text-center text-muted-foreground">
-                            {t('no_tags_found')}
-                          </td>
+                {/* Tags Table */}
+                <div className="overflow-hidden rounded-lg border border-border bg-background">
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-border bg-secondary">
+                          <th className="w-[200px] px-6 py-3 text-left text-sm font-semibold text-foreground">{t('tag_name_column')}</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">{t('usage_column')}</th>
+                          <th className="w-[150px] px-6 py-3 text-right text-sm font-semibold text-foreground">{t('actions_column')}</th>
                         </tr>
-                      )
-                    : (
-                        filteredTags.map(tag => (
-                          <MembershipTagRow key={tag.id} tag={tag} />
-                        ))
-                      )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+                      </thead>
+                      <tbody>
+                        {filteredTags.length === 0
+                          ? (
+                              <tr>
+                                <td colSpan={3} className="py-8 text-center text-muted-foreground">
+                                  {t('no_tags_found')}
+                                </td>
+                              </tr>
+                            )
+                          : (
+                              filteredTags.map(tag => (
+                                <MembershipTagRow key={tag.id} tag={tag} />
+                              ))
+                            )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
       </SheetContent>
     </Sheet>
   );
 }
 
 type MembershipTagRowProps = {
-  tag: MembershipTag;
+  tag: Tag;
 };
 
 function MembershipTagRow({ tag }: MembershipTagRowProps) {
@@ -114,7 +127,7 @@ function MembershipTagRow({ tag }: MembershipTagRowProps) {
         <div className="flex items-center gap-2">
           <div
             className="size-4 rounded"
-            style={{ backgroundColor: tag.color }}
+            style={{ backgroundColor: tag.color || '#6b7280' }}
             aria-hidden="true"
           />
           <span className="font-medium text-foreground">{tag.name}</span>
@@ -123,9 +136,11 @@ function MembershipTagRow({ tag }: MembershipTagRowProps) {
       <td className="px-6 py-4">
         <div className="flex flex-col gap-0.5">
           <span className="font-medium text-primary">{tag.usageCount}</span>
-          <span className="text-sm text-muted-foreground">
-            {tag.membershipNames.join(', ')}
-          </span>
+          {tag.membershipNames && tag.membershipNames.length > 0 && (
+            <span className="text-sm text-muted-foreground">
+              {tag.membershipNames.join(', ')}
+            </span>
+          )}
         </div>
       </td>
       <td className="px-6 py-4">

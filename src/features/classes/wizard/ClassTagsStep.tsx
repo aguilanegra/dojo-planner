@@ -1,8 +1,10 @@
 'use client';
 
 import type { AddClassWizardData } from '@/hooks/useAddClassWizard';
+import type { Tag } from '@/hooks/useTagsCache';
 import { X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -12,13 +14,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { mockClassTags } from '../classTagsData';
 
 // Colors that are already used in the calendar (from classesData)
 const USED_CALENDAR_COLORS = ['#22c55e', '#a855f7', '#06b6d4', '#ec4899', '#ef4444', '#6b7280'];
 
 // Available colors for new classes (excluding used ones)
-const AVAILABLE_COLORS = [
+const BASE_AVAILABLE_COLORS = [
   { value: '#000000', label: 'Black' },
   { value: '#3b82f6', label: 'Blue' },
   { value: '#f97316', label: 'Orange' },
@@ -29,14 +30,6 @@ const AVAILABLE_COLORS = [
   { value: '#84cc16', label: 'Lime' },
 ].filter(color => !USED_CALENDAR_COLORS.includes(color.value));
 
-// Also include colors from existing tags that aren't used
-const TAG_COLORS = mockClassTags.map(tag => tag.color);
-const ALL_AVAILABLE_COLORS = [
-  ...AVAILABLE_COLORS,
-  ...TAG_COLORS.filter(c => !AVAILABLE_COLORS.some(ac => ac.value === c) && !USED_CALENDAR_COLORS.includes(c))
-    .map(c => ({ value: c, label: c })),
-];
-
 type ClassTagsStepProps = {
   data: AddClassWizardData;
   onUpdate: (updates: Partial<AddClassWizardData>) => void;
@@ -45,6 +38,7 @@ type ClassTagsStepProps = {
   onCancel: () => void;
   isLoading?: boolean;
   error?: string | null;
+  classTags: Tag[];
 };
 
 export const ClassTagsStep = ({
@@ -55,8 +49,20 @@ export const ClassTagsStep = ({
   onCancel,
   isLoading,
   error,
+  classTags,
 }: ClassTagsStepProps) => {
   const t = useTranslations('AddClassWizard.ClassTagsStep');
+
+  // Build available colors from base colors + tag colors
+  const allAvailableColors = useMemo(() => {
+    const tagColors = classTags.map(tag => tag.color).filter((c): c is string => c !== null);
+    return [
+      ...BASE_AVAILABLE_COLORS,
+      ...tagColors
+        .filter(c => !BASE_AVAILABLE_COLORS.some(ac => ac.value === c) && !USED_CALENDAR_COLORS.includes(c))
+        .map(c => ({ value: c, label: c })),
+    ];
+  }, [classTags]);
 
   const handleTagToggle = (tagId: string) => {
     const currentTags = data.tags;
@@ -70,8 +76,8 @@ export const ClassTagsStep = ({
     onUpdate({ tags: data.tags.filter(t => t !== tagId) });
   };
 
-  const selectedTagObjects = mockClassTags.filter(tag => data.tags.includes(tag.id));
-  const availableTags = mockClassTags.filter(tag => !data.tags.includes(tag.id));
+  const selectedTagObjects = classTags.filter(tag => data.tags.includes(tag.id));
+  const availableTags = classTags.filter(tag => !data.tags.includes(tag.id));
 
   return (
     <div className="space-y-6">
@@ -101,7 +107,7 @@ export const ClassTagsStep = ({
                       <div
                         key={tag.id}
                         className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm font-medium text-white"
-                        style={{ backgroundColor: tag.color }}
+                        style={{ backgroundColor: tag.color || '#6b7280' }}
                       >
                         {tag.name}
                         <button
@@ -138,7 +144,7 @@ export const ClassTagsStep = ({
                       >
                         <div
                           className="size-3 rounded-full"
-                          style={{ backgroundColor: tag.color }}
+                          style={{ backgroundColor: tag.color || '#6b7280' }}
                         />
                         {tag.name}
                         <span className="text-xs text-muted-foreground">
@@ -177,7 +183,7 @@ export const ClassTagsStep = ({
                 <SelectValue placeholder={t('calendar_color_select')} />
               </SelectTrigger>
               <SelectContent>
-                {ALL_AVAILABLE_COLORS.map(color => (
+                {allAvailableColors.map(color => (
                   <SelectItem key={color.value} value={color.value}>
                     <div className="flex items-center gap-2">
                       <div

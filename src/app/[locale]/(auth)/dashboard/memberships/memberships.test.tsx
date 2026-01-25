@@ -12,6 +12,28 @@ vi.mock('next/navigation', () => ({
   }),
 }));
 
+// Mock Clerk
+vi.mock('@clerk/nextjs', () => ({
+  useOrganization: () => ({ organization: { id: 'test-org-123' } }),
+}));
+
+// Mock the tags cache for MembershipTagsManagement
+vi.mock('@/hooks/useTagsCache', () => ({
+  useTagsCache: () => ({
+    classTags: [],
+    membershipTags: [
+      { id: 't1', name: 'Monthly', slug: 'monthly', color: '#22c55e', entityType: 'membership', usageCount: 5 },
+      { id: 't2', name: 'Trial', slug: 'trial', color: '#3b82f6', entityType: 'membership', usageCount: 2 },
+      { id: 't3', name: 'Active', slug: 'active', color: '#22c55e', entityType: 'membership', usageCount: 6 },
+      { id: 't4', name: 'Inactive', slug: 'inactive', color: '#ef4444', entityType: 'membership', usageCount: 1 },
+      { id: 't5', name: 'Punchcard', slug: 'punchcard', color: '#f59e0b', entityType: 'membership', usageCount: 1 },
+    ],
+    loading: false,
+    error: null,
+    revalidate: vi.fn(),
+  }),
+}));
+
 describe('Memberships Page', () => {
   it('renders memberships header', () => {
     render(<I18nWrapper><MembershipsPage /></I18nWrapper>);

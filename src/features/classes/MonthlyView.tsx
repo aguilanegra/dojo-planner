@@ -1,11 +1,14 @@
 'use client';
 
 import type { ClassFilters } from './ClassFilterBar';
+import { useOrganization } from '@clerk/nextjs';
 import { Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ButtonGroupItem, ButtonGroupRoot } from '@/components/ui/button-group';
-import { generateMonthlySchedule, mockClasses } from './classesData';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useClassesCache } from '@/hooks/useClassesCache';
+import { buildClassColorLegend, generateMonthlyScheduleFromData, transformClassesToCardProps } from './classDataTransformers';
 import { ClassEventHoverCard } from './ClassEventHoverCard';
 import { ClassFilterBar } from './ClassFilterBar';
 
@@ -16,12 +19,18 @@ type MonthlyViewProps = {
 };
 
 export function MonthlyView({ withFilters }: MonthlyViewProps = {}) {
-  const [currentDate, setCurrentDate] = useState(() => new Date(2025, 8, 15)); // September 15, 2025
+  const { organization } = useOrganization();
+  const { classes: rawClasses, loading } = useClassesCache(organization?.id);
+
+  const [currentDate, setCurrentDate] = useState(() => new Date());
   const [localFilters, setLocalFilters] = useState<ClassFilters>({
     search: '',
     tag: 'all',
     instructor: 'all',
   });
+
+  // Transform database data to card props for filtering
+  const classes = useMemo(() => transformClassesToCardProps(rawClasses), [rawClasses]);
 
   // Use parent filters if provided, otherwise use local filters
   const filters = withFilters || localFilters;
@@ -30,22 +39,36 @@ export function MonthlyView({ withFilters }: MonthlyViewProps = {}) {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
 
-  // Get unique instructors from mockClasses
-  const allInstructors = Array.from(
-    new Set(mockClasses.flatMap(cls => cls.instructors.map(i => i.name))),
+  // Get unique instructors from classes
+  const allInstructors = useMemo(
+    () => Array.from(new Set(classes.flatMap(cls => cls.instructors.map(i => i.name)))),
+    [classes],
   );
 
   // Filter classes based on filters
-  const filteredClasses = mockClasses.filter((cls) => {
+  const filteredClasses = useMemo(() => classes.filter((cls) => {
     const matchesSearch = cls.name.toLowerCase().includes(filters.search.toLowerCase())
       || cls.description.toLowerCase().includes(filters.search.toLowerCase());
     const matchesTag = filters.tag === 'all' || cls.type === filters.tag || cls.style === filters.tag;
     const matchesInstructor = filters.instructor === 'all'
       || cls.instructors.some(i => i.name === filters.instructor);
     return matchesSearch && matchesTag && matchesInstructor;
-  });
+  }), [classes, filters]);
 
-  const monthlyEvents = generateMonthlySchedule(year, month, filteredClasses.length > 0 ? filteredClasses : mockClasses);
+  // Get filtered class IDs for schedule generation
+  const filteredClassIds = useMemo(() => new Set(filteredClasses.map(c => c.id)), [filteredClasses]);
+
+  // Generate monthly events from filtered classes
+  const classesToUse = useMemo(
+    () => filteredClassIds.size > 0
+      ? rawClasses.filter(c => filteredClassIds.has(c.id))
+      : rawClasses,
+    [rawClasses, filteredClassIds],
+  );
+  const monthlyEvents = useMemo(
+    () => generateMonthlyScheduleFromData(year, month, classesToUse),
+    [year, month, classesToUse],
+  );
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDayOfMonth = new Date(year, month, 1).getDay();
 
@@ -84,17 +107,18 @@ export function MonthlyView({ withFilters }: MonthlyViewProps = {}) {
     });
   }
 
-  const classColors = {
-    'BJJ Fundamentals I': '#22c55e',
-    'BJJ Fundamentals II': '#22c55e',
-    'BJJ Intermediate': '#22c55e',
-    'BJJ Advanced': '#a855f7',
-    'Advanced No-Gi': '#a855f7',
-    'Competition Team': '#a855f7',
-    'Kids Class': '#06b6d4',
-    'Women\'s BJJ': '#ec4899',
-    'Open Mat': '#ef4444',
-  };
+  // Build color legend from database classes
+  const classColors = useMemo(() => buildClassColorLegend(rawClasses), [rawClasses]);
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-48" />
+        <Skeleton className="h-125 w-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

@@ -14,6 +14,63 @@ export const AUDIT_ACTION = {
   MEMBER_UPDATE_ACCESS: 'member.updateAccess',
   MEMBER_ADD_MEMBERSHIP: 'member.addMembership',
   MEMBER_CHANGE_MEMBERSHIP: 'member.changeMembership',
+
+  // Membership plan operations
+  MEMBERSHIP_PLAN_CREATE: 'membershipPlan.create',
+  MEMBERSHIP_PLAN_UPDATE: 'membershipPlan.update',
+  MEMBERSHIP_PLAN_DELETE: 'membershipPlan.delete',
+
+  // Program operations
+  PROGRAM_CREATE: 'program.create',
+  PROGRAM_UPDATE: 'program.update',
+  PROGRAM_DELETE: 'program.delete',
+
+  // Class operations
+  CLASS_CREATE: 'class.create',
+  CLASS_UPDATE: 'class.update',
+  CLASS_DELETE: 'class.delete',
+  CLASS_SCHEDULE_CREATE: 'classSchedule.create',
+  CLASS_SCHEDULE_UPDATE: 'classSchedule.update',
+  CLASS_SCHEDULE_DELETE: 'classSchedule.delete',
+  CLASS_SCHEDULE_EXCEPTION_CREATE: 'classScheduleException.create',
+
+  // Event operations
+  EVENT_CREATE: 'event.create',
+  EVENT_UPDATE: 'event.update',
+  EVENT_DELETE: 'event.delete',
+  EVENT_SESSION_CREATE: 'eventSession.create',
+  EVENT_SESSION_UPDATE: 'eventSession.update',
+  EVENT_SESSION_CANCEL: 'eventSession.cancel',
+
+  // Coupon operations
+  COUPON_CREATE: 'coupon.create',
+  COUPON_UPDATE: 'coupon.update',
+  COUPON_DELETE: 'coupon.delete',
+  COUPON_REDEEM: 'coupon.redeem',
+
+  // Enrollment & registration operations
+  CLASS_ENROLLMENT_CREATE: 'classEnrollment.create',
+  CLASS_ENROLLMENT_DROP: 'classEnrollment.drop',
+  EVENT_REGISTRATION_CREATE: 'eventRegistration.create',
+  EVENT_REGISTRATION_CANCEL: 'eventRegistration.cancel',
+
+  // Attendance operations
+  ATTENDANCE_CHECK_IN: 'attendance.checkIn',
+  ATTENDANCE_CHECK_OUT: 'attendance.checkOut',
+
+  // Transaction operations
+  TRANSACTION_CREATE: 'transaction.create',
+  TRANSACTION_REFUND: 'transaction.refund',
+  TRANSACTION_UPDATE: 'transaction.update',
+
+  // Tag operations
+  TAG_CREATE: 'tag.create',
+  TAG_UPDATE: 'tag.update',
+  TAG_DELETE: 'tag.delete',
+
+  // Image operations
+  IMAGE_UPLOAD: 'image.upload',
+  IMAGE_DELETE: 'image.delete',
 } as const;
 
 export type AuditAction = (typeof AUDIT_ACTION)[keyof typeof AUDIT_ACTION];
@@ -24,6 +81,20 @@ export type AuditAction = (typeof AUDIT_ACTION)[keyof typeof AUDIT_ACTION];
 export const AUDIT_ENTITY_TYPE = {
   MEMBER: 'member',
   MEMBERSHIP: 'membership',
+  MEMBERSHIP_PLAN: 'membershipPlan',
+  PROGRAM: 'program',
+  CLASS: 'class',
+  CLASS_SCHEDULE: 'classSchedule',
+  CLASS_SCHEDULE_EXCEPTION: 'classScheduleException',
+  EVENT: 'event',
+  EVENT_SESSION: 'eventSession',
+  COUPON: 'coupon',
+  CLASS_ENROLLMENT: 'classEnrollment',
+  EVENT_REGISTRATION: 'eventRegistration',
+  ATTENDANCE: 'attendance',
+  TRANSACTION: 'transaction',
+  TAG: 'tag',
+  IMAGE: 'image',
 } as const;
 
 export type AuditEntityType = (typeof AUDIT_ENTITY_TYPE)[keyof typeof AUDIT_ENTITY_TYPE];

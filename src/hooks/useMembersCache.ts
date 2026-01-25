@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer } from 'react';
+import { useCallback, useEffect, useReducer, useRef } from 'react';
 import { client } from '@/libs/Orpc';
 
 type MembershipPlan = {
@@ -76,7 +76,7 @@ type CacheAction
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 let cacheStore: CacheEntry | null = null;
-const revalidateCallbacks: Array<() => void> = [];
+const revalidateCallbacks: Array<() => void | Promise<void>> = [];
 
 function cacheReducer(state: CacheState, action: CacheAction): CacheState {
   switch (action.type) {
@@ -105,6 +105,9 @@ export const useMembersCache = (organizationId?: string | undefined) => {
     loading: true,
     error: null,
   });
+
+  // Use a ref to track the latest revalidate function to avoid stale closure issues
+  const revalidateRef = useRef<(() => Promise<void>) | undefined>(undefined);
 
   const isCacheValid = useCallback((cache: CacheEntry | null): boolean => {
     if (!cache) {
@@ -193,16 +196,25 @@ export const useMembersCache = (organizationId?: string | undefined) => {
     await fetchMembers();
   }, [fetchMembers]);
 
-  // Register revalidate callback for global cache invalidation
+  // Keep the ref updated with the latest revalidate function
   useEffect(() => {
-    revalidateCallbacks.push(revalidate);
+    revalidateRef.current = revalidate;
+  }, [revalidate]);
+
+  // Register a stable callback for global cache invalidation (only once on mount)
+  useEffect(() => {
+    const stableCallback = () => {
+      // Always call the latest revalidate function via ref
+      revalidateRef.current?.();
+    };
+    revalidateCallbacks.push(stableCallback);
     return () => {
-      const index = revalidateCallbacks.indexOf(revalidate);
+      const index = revalidateCallbacks.indexOf(stableCallback);
       if (index > -1) {
         revalidateCallbacks.splice(index, 1);
       }
     };
-  }, [revalidate]);
+  }, []); // Empty deps - register only once
 
   // Reset state when organization is cleared, or fetch members when it changes
   useEffect(() => {
@@ -224,9 +236,11 @@ export const useMembersCache = (organizationId?: string | undefined) => {
 
 /**
  * Invalidate members cache globally (call this when members are created, updated, or deleted)
+ * Returns a promise that resolves when all registered hooks have finished revalidating
  */
-export const invalidateMembersCache = () => {
+export const invalidateMembersCache = async () => {
   console.info('[Members Cache] Global cache invalidation triggered');
   cacheStore = null;
-  revalidateCallbacks.forEach(callback => callback());
+  // Wait for all revalidation callbacks to complete
+  await Promise.all(revalidateCallbacks.map(callback => callback()));
 };
