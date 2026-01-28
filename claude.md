@@ -26,6 +26,7 @@ src/
 ├── features/              # Feature modules (domain logic + UI)
 │   ├── auth/              # Authentication
 │   ├── billing/           # Stripe subscriptions
+│   ├── catalog/           # Product catalog (merchandise, event access)
 │   ├── classes/           # Class scheduling
 │   ├── dashboard/         # Analytics views
 │   ├── finances/          # Transaction tracking
@@ -40,6 +41,7 @@ src/
 │
 ├── routers/               # ORPC API handlers
 │   ├── AuthGuards.ts      # Auth middleware with role hierarchy
+│   ├── Catalog.ts         # Catalog items, sizes, categories, images
 │   ├── Member.ts          # Member CRUD
 │   ├── Members.ts         # Members list ops
 │   ├── Classes.ts         # Classes list & tags
@@ -49,13 +51,14 @@ src/
 │
 ├── services/              # Business logic layer
 │   ├── BillingService.ts  # Stripe integration
+│   ├── CatalogService.ts  # Catalog items, sizes, categories, images
+│   ├── ClassesService.ts  # Class & schedule queries
 │   ├── ClerkRolesService.ts # Clerk Backend API
+│   ├── CouponsService.ts  # Coupon queries
+│   ├── EventsService.ts   # Event queries
 │   ├── MembersService.ts  # Member operations
 │   ├── OrganizationService.ts # Org & Stripe customer storage
-│   ├── ClassesService.ts  # Class & schedule queries
-│   ├── EventsService.ts   # Event queries
-│   ├── TagsService.ts     # Tag queries with usage counts
-│   └── CouponsService.ts  # Coupon queries
+│   └── TagsService.ts     # Tag queries with usage counts
 │
 ├── models/
 │   └── Schema.ts          # Drizzle ORM tables (25+ tables)
@@ -123,6 +126,7 @@ docs/                      # Documentation
 | `/dashboard/transactions` | `transactions/page.tsx` | Finances |
 | `/dashboard/reports` | `reports/page.tsx` | Reports |
 | `/dashboard/marketing` | `marketing/page.tsx` | Marketing tools |
+| `/dashboard/catalog` | `catalog/page.tsx` | Product catalog |
 | `/dashboard/user-profile` | `user-profile/[[...user-profile]]/page.tsx` | Clerk UserProfile |
 | `/dashboard/organization-profile` | `organization-profile/[[...organization-profile]]/page.tsx` | Clerk OrgProfile |
 | `/dashboard/preferences` | `preferences/page.tsx` | User preferences |
@@ -404,6 +408,11 @@ await deleteUserWithOrganization();
 - `address` - Member addresses
 - `note` - Member notes
 - `family_member` - Family relationships
+- `catalog_item` - Merchandise and event access products
+- `catalog_item_size` - Size options with stock (BJJ: A0-A5, Apparel: S-XXL)
+- `catalog_category` - Product categories
+- `catalog_item_category` - Item-category associations (M:N)
+- `catalog_item_image` - Product images
 
 **Commands:**
 ```bash
@@ -767,3 +776,17 @@ npm run lint && npm run check:types && npm run check:deps && npm run check:i18n 
 ```
 
 All checks must pass without errors or warnings before committing.
+
+### 6. Documentation Updates (REQUIRED)
+
+**CRITICAL:** This file (CLAUDE.md) and README.md must be updated whenever changes are made that affect:
+
+- **Database schema changes** - Update the Schema tables section and migration documentation
+- **New services** - Add to the services section with file path and description
+- **New routers** - Add to the routers section with endpoints and auth levels
+- **New features** - Add to the features section with directory and purpose
+- **New dashboard routes** - Add to the routing section
+- **New environment variables** - Add to the Environment Variables section
+- **New audit actions** - Add to the Audit Actions section
+
+This documentation must evolve with the codebase to remain accurate and useful.

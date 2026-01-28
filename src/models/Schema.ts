@@ -478,6 +478,120 @@ export const couponUsageSchema = pgTable(
 );
 
 // =============================================================================
+// CATALOG TABLES (Merchandise & Event Access for Kiosk)
+// =============================================================================
+
+// Catalog categories for organizing products
+export const catalogCategorySchema = pgTable(
+  'catalog_category',
+  {
+    id: text('id').primaryKey(), // UUID v4
+    organizationId: text('organization_id').notNull(),
+    name: text('name').notNull(), // e.g., 'Gis', 'Belts', 'Apparel', 'Seminars'
+    slug: text('slug').notNull(),
+    description: text('description'),
+    parentId: text('parent_id'), // Self-reference for subcategories
+    sortOrder: integer('sort_order').default(0),
+    isActive: boolean('is_active').default(true),
+    createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+  },
+  table => [
+    index('catalog_category_org_idx').on(table.organizationId),
+    uniqueIndex('catalog_category_org_slug_idx').on(table.organizationId, table.slug),
+  ],
+);
+
+// Catalog items (merchandise and event access products)
+export const catalogItemSchema = pgTable(
+  'catalog_item',
+  {
+    id: text('id').primaryKey(), // UUID v4
+    organizationId: text('organization_id').notNull(),
+    type: text('type').notNull(), // 'merchandise' | 'event_access'
+    name: text('name').notNull(), // e.g., 'White Gi A2', 'Summer Seminar Pass'
+    slug: text('slug').notNull(),
+    description: text('description'), // Full product description
+    shortDescription: text('short_description'), // For list views/cards
+    sku: text('sku'), // Stock keeping unit
+    basePrice: real('base_price').notNull().default(0),
+    compareAtPrice: real('compare_at_price'), // Original price for sale display
+    eventId: text('event_id').references(() => eventSchema.id), // For event_access type
+    maxPerOrder: integer('max_per_order').default(10),
+    trackInventory: boolean('track_inventory').default(true),
+    lowStockThreshold: integer('low_stock_threshold').default(5),
+    sortOrder: integer('sort_order').default(0),
+    isActive: boolean('is_active').default(true),
+    isFeatured: boolean('is_featured').default(false),
+    showOnKiosk: boolean('show_on_kiosk').default(true),
+    // Size type determines which size options are available:
+    // 'bjj' for gis/belts (A0, A1, A2, A3, A4, A5), 'apparel' for shirts/shorts (S, M, L, XL, XXL), 'none' for patches/accessories
+    sizeType: text('size_type').default('none'), // 'bjj' | 'apparel' | 'none'
+    createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { mode: 'date' })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  table => [
+    index('catalog_item_org_idx').on(table.organizationId),
+    index('catalog_item_type_idx').on(table.organizationId, table.type),
+    uniqueIndex('catalog_item_org_slug_idx').on(table.organizationId, table.slug),
+    index('catalog_item_event_idx').on(table.eventId),
+  ],
+);
+
+// Catalog item sizes - tracks stock per size for merchandise items
+export const catalogItemSizeSchema = pgTable(
+  'catalog_item_size',
+  {
+    id: text('id').primaryKey(), // UUID v4
+    catalogItemId: text('catalog_item_id').references(() => catalogItemSchema.id).notNull(),
+    size: text('size').notNull(), // A0, A1, A2, A3, A4, A5 OR S, M, L, XL, XXL
+    stockQuantity: integer('stock_quantity').default(0),
+    sortOrder: integer('sort_order').default(0),
+    createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { mode: 'date' })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  table => [
+    index('catalog_size_item_idx').on(table.catalogItemId),
+    uniqueIndex('catalog_size_item_size_idx').on(table.catalogItemId, table.size),
+  ],
+);
+
+// Catalog item images
+export const catalogItemImageSchema = pgTable(
+  'catalog_item_image',
+  {
+    id: text('id').primaryKey(), // UUID v4
+    catalogItemId: text('catalog_item_id').references(() => catalogItemSchema.id).notNull(),
+    url: text('url').notNull(), // Full-size image URL
+    thumbnailUrl: text('thumbnail_url'), // Thumbnail for list views
+    altText: text('alt_text'),
+    isPrimary: boolean('is_primary').default(false),
+    sortOrder: integer('sort_order').default(0),
+    createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+  },
+  table => [
+    index('catalog_image_item_idx').on(table.catalogItemId),
+  ],
+);
+
+// Catalog item to category junction table (M:N)
+export const catalogItemCategorySchema = pgTable(
+  'catalog_item_category',
+  {
+    catalogItemId: text('catalog_item_id').references(() => catalogItemSchema.id).notNull(),
+    categoryId: text('category_id').references(() => catalogCategorySchema.id).notNull(),
+  },
+  table => [
+    primaryKey({ columns: [table.catalogItemId, table.categoryId] }),
+  ],
+);
+
+// =============================================================================
 // JUNCTION TABLES (M:N Relationships)
 // =============================================================================
 

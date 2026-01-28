@@ -43,6 +43,13 @@
       "when": 1769125752534,
       "tag": "0005_database-formalization",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1769566418040,
+      "tag": "0006_right_polaris",
+      "breakpoints": true
     }
   ]
 }
