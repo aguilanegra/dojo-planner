@@ -71,6 +71,20 @@ export const AUDIT_ACTION = {
   // Image operations
   IMAGE_UPLOAD: 'image.upload',
   IMAGE_DELETE: 'image.delete',
+
+  // Catalog operations
+  CATALOG_ITEM_CREATE: 'catalogItem.create',
+  CATALOG_ITEM_UPDATE: 'catalogItem.update',
+  CATALOG_ITEM_DELETE: 'catalogItem.delete',
+  CATALOG_SIZE_CREATE: 'catalogSize.create',
+  CATALOG_SIZE_UPDATE: 'catalogSize.update',
+  CATALOG_SIZE_DELETE: 'catalogSize.delete',
+  CATALOG_CATEGORY_CREATE: 'catalogCategory.create',
+  CATALOG_CATEGORY_UPDATE: 'catalogCategory.update',
+  CATALOG_CATEGORY_DELETE: 'catalogCategory.delete',
+  CATALOG_STOCK_ADJUST: 'catalogStock.adjust',
+  CATALOG_IMAGE_UPLOAD: 'catalogImage.upload',
+  CATALOG_IMAGE_DELETE: 'catalogImage.delete',
 } as const;
 
 export type AuditAction = (typeof AUDIT_ACTION)[keyof typeof AUDIT_ACTION];
@@ -95,6 +109,10 @@ export const AUDIT_ENTITY_TYPE = {
   TRANSACTION: 'transaction',
   TAG: 'tag',
   IMAGE: 'image',
+  CATALOG_ITEM: 'catalogItem',
+  CATALOG_SIZE: 'catalogSize',
+  CATALOG_CATEGORY: 'catalogCategory',
+  CATALOG_IMAGE: 'catalogImage',
 } as const;
 
 export type AuditEntityType = (typeof AUDIT_ENTITY_TYPE)[keyof typeof AUDIT_ENTITY_TYPE];

@@ -16,7 +16,13 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 
 import {
+  addressSchema,
   attendanceSchema,
+  catalogCategorySchema,
+  catalogItemCategorySchema,
+  catalogItemImageSchema,
+  catalogItemSchema,
+  catalogItemSizeSchema,
   classEnrollmentSchema,
   classInstructorSchema,
   classScheduleExceptionSchema,
@@ -32,6 +38,7 @@ import {
   memberSchema,
   membershipPlanSchema,
   membershipTagSchema,
+  noteSchema,
   organizationSchema,
   programSchema,
   tagSchema,
@@ -339,6 +346,408 @@ const membershipPlansData = [
   { name: '10-Class Punch Card', slug: '10-class-punchcard', category: 'Adult Brazilian Jiu-Jitsu', program: 'Adult', price: 200, signupFee: 0, frequency: 'None', contractLength: 'N/A', accessLevel: '10 Classes', isTrial: false },
 ];
 
+// Catalog categories
+const catalogCategoriesData = [
+  { name: 'Gis', slug: 'gis', description: 'Brazilian Jiu-Jitsu kimonos' },
+  { name: 'Belts', slug: 'belts', description: 'Ranking belts for all levels' },
+  { name: 'Apparel', slug: 'apparel', description: 'Rash guards, shorts, and training gear' },
+  { name: 'Accessories', slug: 'accessories', description: 'Gear bags, patches, and more' },
+  { name: 'Seminars & Events', slug: 'seminars-events', description: 'Access passes for special events' },
+];
+
+// Catalog items with sizes
+type SizeStock = {
+  size: string;
+  stockQuantity: number;
+};
+
+type CatalogItemData = {
+  type: 'merchandise' | 'event_access';
+  name: string;
+  slug: string;
+  description: string;
+  shortDescription: string;
+  sku?: string;
+  basePrice: number;
+  compareAtPrice?: number;
+  maxPerOrder: number;
+  trackInventory: boolean;
+  lowStockThreshold: number;
+  isFeatured: boolean;
+  categories: string[]; // category slugs
+  sizeType: 'bjj' | 'apparel' | 'none'; // determines available sizes
+  sizes: SizeStock[]; // stock per size
+  eventSlug?: string; // for event_access items
+  imageUrl?: string; // placeholder image URL
+};
+
+const catalogItemsData: CatalogItemData[] = [
+  // Gis - use BJJ sizing (A0-A5)
+  {
+    type: 'merchandise',
+    name: 'Academy White Gi',
+    slug: 'academy-white-gi',
+    description: 'Premium pearl weave gi with academy patches. Durable construction designed for daily training. Pre-shrunk cotton blend ensures a consistent fit wash after wash.',
+    shortDescription: 'Premium pearl weave gi with academy patches',
+    sku: 'GI-WHT',
+    basePrice: 129.99,
+    compareAtPrice: 159.99,
+    maxPerOrder: 3,
+    trackInventory: true,
+    lowStockThreshold: 5,
+    isFeatured: true,
+    categories: ['gis'],
+    sizeType: 'bjj',
+    sizes: [
+      { size: 'A0', stockQuantity: 8 },
+      { size: 'A1', stockQuantity: 12 },
+      { size: 'A2', stockQuantity: 15 },
+      { size: 'A3', stockQuantity: 10 },
+      { size: 'A4', stockQuantity: 6 },
+      { size: 'A5', stockQuantity: 3 },
+    ],
+    imageUrl: 'https://placehold.co/600x600/f8fafc/1e293b?text=White+Gi',
+  },
+  {
+    type: 'merchandise',
+    name: 'Academy Blue Gi',
+    slug: 'academy-blue-gi',
+    description: 'Competition-approved blue gi with reinforced stitching. Perfect for tournaments and daily training. IBJJF approved.',
+    shortDescription: 'Competition-approved blue gi',
+    sku: 'GI-BLU',
+    basePrice: 139.99,
+    maxPerOrder: 3,
+    trackInventory: true,
+    lowStockThreshold: 5,
+    isFeatured: false,
+    categories: ['gis'],
+    sizeType: 'bjj',
+    sizes: [
+      { size: 'A1', stockQuantity: 8 },
+      { size: 'A2', stockQuantity: 10 },
+      { size: 'A3', stockQuantity: 7 },
+      { size: 'A4', stockQuantity: 4 },
+    ],
+    imageUrl: 'https://placehold.co/600x600/1e40af/ffffff?text=Blue+Gi',
+  },
+  {
+    type: 'merchandise',
+    name: 'Kids Training Gi',
+    slug: 'kids-training-gi',
+    description: 'Lightweight and durable gi designed for young practitioners. Easy-care fabric that withstands frequent washing.',
+    shortDescription: 'Durable gi for young practitioners',
+    sku: 'GI-KIDS',
+    basePrice: 69.99,
+    maxPerOrder: 2,
+    trackInventory: true,
+    lowStockThreshold: 5,
+    isFeatured: false,
+    categories: ['gis'],
+    sizeType: 'bjj',
+    sizes: [
+      { size: 'A0', stockQuantity: 10 },
+      { size: 'A1', stockQuantity: 12 },
+      { size: 'A2', stockQuantity: 8 },
+      { size: 'A3', stockQuantity: 6 },
+    ],
+    imageUrl: 'https://placehold.co/600x600/f8fafc/1e293b?text=Kids+Gi',
+  },
+
+  // Belts - use BJJ sizing
+  {
+    type: 'merchandise',
+    name: 'White Belt',
+    slug: 'white-belt',
+    description: 'Standard white belt for beginners. Cotton construction with reinforced stitching.',
+    shortDescription: 'Beginner ranking belt',
+    sku: 'BELT-WHT',
+    basePrice: 15.99,
+    maxPerOrder: 2,
+    trackInventory: true,
+    lowStockThreshold: 10,
+    isFeatured: false,
+    categories: ['belts'],
+    sizeType: 'bjj',
+    sizes: [
+      { size: 'A0', stockQuantity: 20 },
+      { size: 'A1', stockQuantity: 25 },
+      { size: 'A2', stockQuantity: 30 },
+      { size: 'A3', stockQuantity: 25 },
+      { size: 'A4', stockQuantity: 15 },
+    ],
+    imageUrl: 'https://placehold.co/600x600/f8fafc/1e293b?text=White+Belt',
+  },
+  {
+    type: 'merchandise',
+    name: 'Blue Belt',
+    slug: 'blue-belt',
+    description: 'Premium blue belt for intermediate practitioners. Pearl weave construction.',
+    shortDescription: 'Intermediate ranking belt',
+    sku: 'BELT-BLU',
+    basePrice: 19.99,
+    maxPerOrder: 2,
+    trackInventory: true,
+    lowStockThreshold: 8,
+    isFeatured: false,
+    categories: ['belts'],
+    sizeType: 'bjj',
+    sizes: [
+      { size: 'A1', stockQuantity: 15 },
+      { size: 'A2', stockQuantity: 18 },
+      { size: 'A3', stockQuantity: 12 },
+      { size: 'A4', stockQuantity: 8 },
+    ],
+    imageUrl: 'https://placehold.co/600x600/1e40af/ffffff?text=Blue+Belt',
+  },
+  {
+    type: 'merchandise',
+    name: 'Purple Belt',
+    slug: 'purple-belt',
+    description: 'Premium purple belt for advanced practitioners. Pearl weave construction.',
+    shortDescription: 'Advanced ranking belt',
+    sku: 'BELT-PUR',
+    basePrice: 24.99,
+    maxPerOrder: 2,
+    trackInventory: true,
+    lowStockThreshold: 5,
+    isFeatured: false,
+    categories: ['belts'],
+    sizeType: 'bjj',
+    sizes: [
+      { size: 'A1', stockQuantity: 8 },
+      { size: 'A2', stockQuantity: 10 },
+      { size: 'A3', stockQuantity: 6 },
+      { size: 'A4', stockQuantity: 4 },
+    ],
+    imageUrl: 'https://placehold.co/600x600/7c3aed/ffffff?text=Purple+Belt',
+  },
+  {
+    type: 'merchandise',
+    name: 'Brown Belt',
+    slug: 'brown-belt',
+    description: 'Premium brown belt. Pearl weave construction with reinforced core.',
+    shortDescription: 'Expert ranking belt',
+    sku: 'BELT-BRN',
+    basePrice: 29.99,
+    maxPerOrder: 2,
+    trackInventory: true,
+    lowStockThreshold: 3,
+    isFeatured: false,
+    categories: ['belts'],
+    sizeType: 'bjj',
+    sizes: [
+      { size: 'A1', stockQuantity: 0 },
+      { size: 'A2', stockQuantity: 0 },
+      { size: 'A3', stockQuantity: 0 },
+    ],
+    imageUrl: 'https://placehold.co/600x600/78350f/ffffff?text=Brown+Belt',
+  },
+  {
+    type: 'merchandise',
+    name: 'Black Belt',
+    slug: 'black-belt',
+    description: 'Premium black belt for masters. Satin finish with embroidered bar.',
+    shortDescription: 'Master ranking belt',
+    sku: 'BELT-BLK',
+    basePrice: 49.99,
+    maxPerOrder: 1,
+    trackInventory: true,
+    lowStockThreshold: 2,
+    isFeatured: false,
+    categories: ['belts'],
+    sizeType: 'bjj',
+    sizes: [
+      { size: 'A1', stockQuantity: 0 },
+      { size: 'A2', stockQuantity: 0 },
+      { size: 'A3', stockQuantity: 0 },
+    ],
+    imageUrl: 'https://placehold.co/600x600/0f172a/ffffff?text=Black+Belt',
+  },
+
+  // Apparel - use standard apparel sizing (S, M, L, XL, XXL)
+  {
+    type: 'merchandise',
+    name: 'Academy Rash Guard - Long Sleeve',
+    slug: 'rash-guard-long-sleeve',
+    description: 'Compression fit rash guard with academy logo. Moisture-wicking fabric for no-gi training.',
+    shortDescription: 'Long sleeve compression rash guard',
+    sku: 'RG-LS',
+    basePrice: 49.99,
+    maxPerOrder: 5,
+    trackInventory: true,
+    lowStockThreshold: 5,
+    isFeatured: true,
+    categories: ['apparel'],
+    sizeType: 'apparel',
+    sizes: [
+      { size: 'S', stockQuantity: 18 },
+      { size: 'M', stockQuantity: 25 },
+      { size: 'L', stockQuantity: 20 },
+      { size: 'XL', stockQuantity: 13 },
+    ],
+    imageUrl: 'https://placehold.co/600x600/0f172a/ffffff?text=Rash+Guard',
+  },
+  {
+    type: 'merchandise',
+    name: 'Academy Rash Guard - Short Sleeve',
+    slug: 'rash-guard-short-sleeve',
+    description: 'Compression fit short sleeve rash guard. Perfect for hot training sessions.',
+    shortDescription: 'Short sleeve compression rash guard',
+    sku: 'RG-SS',
+    basePrice: 39.99,
+    maxPerOrder: 5,
+    trackInventory: true,
+    lowStockThreshold: 5,
+    isFeatured: false,
+    categories: ['apparel'],
+    sizeType: 'apparel',
+    sizes: [
+      { size: 'S', stockQuantity: 12 },
+      { size: 'M', stockQuantity: 15 },
+      { size: 'L', stockQuantity: 10 },
+      { size: 'XL', stockQuantity: 6 },
+    ],
+    imageUrl: 'https://placehold.co/600x600/0f172a/ffffff?text=Short+Sleeve',
+  },
+  {
+    type: 'merchandise',
+    name: 'No-Gi Shorts',
+    slug: 'no-gi-shorts',
+    description: 'Durable fight shorts with no pockets or zippers. Stretch fabric allows full range of motion.',
+    shortDescription: 'Grappling shorts for no-gi training',
+    sku: 'SHORTS',
+    basePrice: 44.99,
+    maxPerOrder: 5,
+    trackInventory: true,
+    lowStockThreshold: 5,
+    isFeatured: false,
+    categories: ['apparel'],
+    sizeType: 'apparel',
+    sizes: [
+      { size: 'S', stockQuantity: 10 },
+      { size: 'M', stockQuantity: 12 },
+      { size: 'L', stockQuantity: 10 },
+      { size: 'XL', stockQuantity: 6 },
+      { size: 'XXL', stockQuantity: 4 },
+    ],
+    imageUrl: 'https://placehold.co/600x600/0f172a/ffffff?text=Fight+Shorts',
+  },
+  {
+    type: 'merchandise',
+    name: 'Academy T-Shirt',
+    slug: 'academy-tshirt',
+    description: 'Soft cotton blend t-shirt with academy logo. Perfect for casual wear.',
+    shortDescription: 'Cotton t-shirt with academy logo',
+    sku: 'TSHIRT',
+    basePrice: 29.99,
+    maxPerOrder: 10,
+    trackInventory: true,
+    lowStockThreshold: 10,
+    isFeatured: false,
+    categories: ['apparel'],
+    sizeType: 'apparel',
+    sizes: [
+      { size: 'S', stockQuantity: 35 },
+      { size: 'M', stockQuantity: 43 },
+      { size: 'L', stockQuantity: 35 },
+      { size: 'XL', stockQuantity: 25 },
+    ],
+    imageUrl: 'https://placehold.co/600x600/374151/ffffff?text=T-Shirt',
+  },
+
+  // Accessories - no sizes (use ONE_SIZE for stock tracking)
+  {
+    type: 'merchandise',
+    name: 'Gear Bag',
+    slug: 'gear-bag',
+    description: 'Large capacity gear bag with ventilated compartment for wet gear. Multiple pockets for organization.',
+    shortDescription: 'Spacious bag for all your training gear',
+    sku: 'BAG',
+    basePrice: 59.99,
+    maxPerOrder: 2,
+    trackInventory: true,
+    lowStockThreshold: 5,
+    isFeatured: false,
+    categories: ['accessories'],
+    sizeType: 'none',
+    sizes: [{ size: 'ONE_SIZE', stockQuantity: 15 }],
+    imageUrl: 'https://placehold.co/600x600/1e293b/ffffff?text=Gear+Bag',
+  },
+  {
+    type: 'merchandise',
+    name: 'Academy Patch',
+    slug: 'academy-patch',
+    description: 'Embroidered academy patch for your gi. Iron-on backing for easy application.',
+    shortDescription: 'Embroidered gi patch',
+    sku: 'PATCH',
+    basePrice: 9.99,
+    maxPerOrder: 10,
+    trackInventory: true,
+    lowStockThreshold: 20,
+    isFeatured: false,
+    categories: ['accessories'],
+    sizeType: 'none',
+    sizes: [{ size: 'ONE_SIZE', stockQuantity: 50 }],
+    imageUrl: 'https://placehold.co/600x600/1e293b/ffffff?text=Patch',
+  },
+  {
+    type: 'merchandise',
+    name: 'Mouth Guard',
+    slug: 'mouth-guard',
+    description: 'Boil-and-bite mouth guard with protective case. Essential for sparring.',
+    shortDescription: 'Protective mouth guard with case',
+    sku: 'MOUTH',
+    basePrice: 14.99,
+    maxPerOrder: 3,
+    trackInventory: true,
+    lowStockThreshold: 15,
+    isFeatured: false,
+    categories: ['accessories'],
+    sizeType: 'none',
+    sizes: [{ size: 'ONE_SIZE', stockQuantity: 0 }],
+    imageUrl: 'https://placehold.co/600x600/1e293b/ffffff?text=Mouth+Guard',
+  },
+
+  // Event Access - no sizes
+  {
+    type: 'event_access',
+    name: 'BJJ Fundamentals Seminar Pass',
+    slug: 'fundamentals-seminar-pass',
+    description: 'Full access pass for the 3-day BJJ Fundamentals Seminar Series. Includes all sessions and lunch.',
+    shortDescription: '3-day seminar full access',
+    sku: 'SEM-FUND',
+    basePrice: 199.99,
+    compareAtPrice: 249.99,
+    maxPerOrder: 4,
+    trackInventory: false,
+    lowStockThreshold: 0,
+    isFeatured: true,
+    categories: ['seminars-events'],
+    sizeType: 'none',
+    sizes: [],
+    eventSlug: 'bjj-fundamentals-seminar-2026',
+    imageUrl: 'https://placehold.co/600x600/059669/ffffff?text=Seminar+Pass',
+  },
+  {
+    type: 'event_access',
+    name: 'Master Rodriguez Workshop',
+    slug: 'master-rodriguez-workshop',
+    description: 'Exclusive training session with IBJJF World Champion Master Rodriguez. Limited to 40 participants.',
+    shortDescription: 'Training with world champion',
+    sku: 'SEM-ROD',
+    basePrice: 75,
+    maxPerOrder: 2,
+    trackInventory: false,
+    lowStockThreshold: 0,
+    isFeatured: true,
+    categories: ['seminars-events'],
+    sizeType: 'none',
+    sizes: [],
+    eventSlug: 'master-rodriguez-seminar-2026',
+    imageUrl: 'https://placehold.co/600x600/7c3aed/ffffff?text=Workshop',
+  },
+];
+
 // =============================================================================
 // SEED FUNCTIONS
 // =============================================================================
@@ -358,6 +767,8 @@ async function clearSeededData(organizationId: string) {
   await db.delete(eventTagSchema).where(sql`${eventTagSchema.eventId} IN (SELECT id FROM event WHERE organization_id = ${organizationId})`);
   await db.delete(membershipTagSchema).where(sql`${membershipTagSchema.membershipPlanId} IN (SELECT id FROM membership_plan WHERE organization_id = ${organizationId})`);
   await db.delete(memberMembershipSchema).where(sql`${memberMembershipSchema.memberId} IN (SELECT id FROM member WHERE organization_id = ${organizationId})`);
+  await db.delete(addressSchema).where(sql`${addressSchema.memberId} IN (SELECT id FROM member WHERE organization_id = ${organizationId})`);
+  await db.delete(noteSchema).where(sql`${noteSchema.memberId} IN (SELECT id FROM member WHERE organization_id = ${organizationId})`);
   await db.delete(classSchema).where(eq(classSchema.organizationId, organizationId));
   await db.delete(eventSchema).where(eq(eventSchema.organizationId, organizationId));
   await db.delete(memberSchema).where(eq(memberSchema.organizationId, organizationId));
@@ -365,6 +776,13 @@ async function clearSeededData(organizationId: string) {
   await db.delete(couponSchema).where(eq(couponSchema.organizationId, organizationId));
   await db.delete(tagSchema).where(eq(tagSchema.organizationId, organizationId));
   await db.delete(programSchema).where(eq(programSchema.organizationId, organizationId));
+
+  // Clear catalog data
+  await db.delete(catalogItemCategorySchema).where(sql`${catalogItemCategorySchema.catalogItemId} IN (SELECT id FROM catalog_item WHERE organization_id = ${organizationId})`);
+  await db.delete(catalogItemImageSchema).where(sql`${catalogItemImageSchema.catalogItemId} IN (SELECT id FROM catalog_item WHERE organization_id = ${organizationId})`);
+  await db.delete(catalogItemSizeSchema).where(sql`${catalogItemSizeSchema.catalogItemId} IN (SELECT id FROM catalog_item WHERE organization_id = ${organizationId})`);
+  await db.delete(catalogItemSchema).where(eq(catalogItemSchema.organizationId, organizationId));
+  await db.delete(catalogCategorySchema).where(eq(catalogCategorySchema.organizationId, organizationId));
 }
 
 async function seedOrganization(organizationId: string) {
@@ -582,7 +1000,91 @@ async function seedOrganization(organizationId: string) {
     }
   }
 
-  console.info(`  ✅ Seeded ${programsData.length} programs, ${allTags.length} tags, ${classesData.length} classes, ${eventsData.length} events, ${couponsData.length} coupons, ${membershipPlansData.length} membership plans, ${membersData.length} members`);
+  // 8. Seed Catalog Categories
+  console.info('  🏷️  Seeding catalog categories...');
+  const categoryIdMap: Record<string, string> = {};
+  for (const category of catalogCategoriesData) {
+    const id = randomUUID();
+    categoryIdMap[category.slug] = id;
+    await db.insert(catalogCategorySchema).values({
+      id,
+      organizationId,
+      name: category.name,
+      slug: category.slug,
+      description: category.description,
+    }).onConflictDoNothing();
+  }
+
+  // 9. Seed Catalog Items with Sizes and Images
+  console.info('  📦 Seeding catalog items...');
+  // First, get the event IDs for event_access items
+  const eventIdMap: Record<string, string> = {};
+  const events = await db.select({ id: eventSchema.id, slug: eventSchema.slug }).from(eventSchema).where(eq(eventSchema.organizationId, organizationId));
+  for (const event of events) {
+    if (event.slug) {
+      eventIdMap[event.slug] = event.id;
+    }
+  }
+
+  for (const item of catalogItemsData) {
+    const itemId = randomUUID();
+
+    await db.insert(catalogItemSchema).values({
+      id: itemId,
+      organizationId,
+      type: item.type,
+      name: item.name,
+      slug: item.slug,
+      description: item.description,
+      shortDescription: item.shortDescription,
+      sku: item.sku,
+      basePrice: item.basePrice,
+      compareAtPrice: item.compareAtPrice,
+      eventId: item.eventSlug ? eventIdMap[item.eventSlug] : null,
+      maxPerOrder: item.maxPerOrder,
+      trackInventory: item.trackInventory,
+      lowStockThreshold: item.lowStockThreshold,
+      isFeatured: item.isFeatured,
+      sizeType: item.sizeType,
+    }).onConflictDoNothing();
+
+    // Link item to categories
+    for (const catSlug of item.categories) {
+      const catId = categoryIdMap[catSlug];
+      if (catId) {
+        await db.insert(catalogItemCategorySchema).values({
+          catalogItemId: itemId,
+          categoryId: catId,
+        }).onConflictDoNothing();
+      }
+    }
+
+    // Create sizes with stock
+    for (const [i, sizeStock] of item.sizes.entries()) {
+      await db.insert(catalogItemSizeSchema).values({
+        id: randomUUID(),
+        catalogItemId: itemId,
+        size: sizeStock.size,
+        stockQuantity: sizeStock.stockQuantity,
+        sortOrder: i,
+      }).onConflictDoNothing();
+    }
+
+    // Create primary image
+    if (item.imageUrl) {
+      await db.insert(catalogItemImageSchema).values({
+        id: randomUUID(),
+        catalogItemId: itemId,
+        url: item.imageUrl,
+        thumbnailUrl: item.imageUrl.replace('600x600', '200x200'),
+        altText: item.name,
+        isPrimary: true,
+        sortOrder: 0,
+      }).onConflictDoNothing();
+    }
+  }
+
+  console.info(`  ✅ Seeded ${programsData.length} programs, ${allTags.length} tags, ${classesData.length} classes, ${eventsData.length} events, ${couponsData.length} coupons, ${membershipPlansData.length} membership plans, ${membersData.length} members, ${catalogCategoriesData.length} catalog categories, ${catalogItemsData.length} catalog items`);
 }
 
 async function main() {
