@@ -1,7 +1,7 @@
 'use client';
 
 import { useClerk } from '@clerk/nextjs';
-import { BarChart3, BookMarked, Briefcase, Building, CircleUser, Home, LogOut, Mail, Map, Megaphone, Settings, Users, Users2 } from 'lucide-react';
+import { BarChart3, BookMarked, Briefcase, Building, CircleUser, Home, LogOut, Mail, Map, Megaphone, Package, Settings, Users, Users2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Badge } from '@/components/ui/badge';
 import { Sidebar, SidebarContent, SidebarHeader, SidebarRail } from '@/components/ui/sidebar';
@@ -23,6 +23,36 @@ export const AppSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
         <OrganizationSelector />
       </SidebarHeader>
       <SidebarContent>
+        <AppSidebarNav
+          label={t('business_section_label')}
+          items={[
+            {
+              title: t('performance'),
+              url: '/dashboard',
+              icon: Home,
+            },
+            {
+              title: t('reports'),
+              url: '/dashboard/reports',
+              icon: BarChart3,
+            },
+            {
+              title: t('transactions'),
+              url: '/dashboard/transactions',
+              icon: Briefcase,
+            },
+            {
+              title: t('marketing'),
+              url: '/dashboard/marketing',
+              icon: Megaphone,
+            },
+            {
+              title: t('catalog'),
+              url: '/dashboard/catalog',
+              icon: Package,
+            },
+          ]}
+        />
         <AppSidebarNav
           label={t('academy_section_label')}
           items={[
@@ -63,31 +93,6 @@ export const AppSidebar = (props: React.ComponentProps<typeof Sidebar>) => {
               badge: <Badge variant="default">40</Badge>,
               disabled: true,
               hidden: true,
-            },
-          ]}
-        />
-        <AppSidebarNav
-          label={t('business_section_label')}
-          items={[
-            {
-              title: t('performance'),
-              url: '/dashboard',
-              icon: Home,
-            },
-            {
-              title: t('reports'),
-              url: '/dashboard/reports',
-              icon: BarChart3,
-            },
-            {
-              title: t('transactions'),
-              url: '/dashboard/transactions',
-              icon: Briefcase,
-            },
-            {
-              title: t('marketing'),
-              url: '/dashboard/marketing',
-              icon: Megaphone,
             },
           ]}
         />

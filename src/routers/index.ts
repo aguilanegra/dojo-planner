@@ -1,3 +1,21 @@
+import {
+  categoryCreate,
+  categoryList,
+  categoryRemove,
+  categoryUpdate,
+  create as createCatalogItem,
+  get as getCatalogItem,
+  imageCreate,
+  imageRemove,
+  list as listCatalogItems,
+  listForKiosk as listCatalogItemsForKiosk,
+  remove as removeCatalogItem,
+  sizeCreate,
+  sizeRemove,
+  sizeUpdate,
+  stockAdjust,
+  update as updateCatalogItem,
+} from './Catalog';
 import { tags as classTags, list as listClasses } from './Classes';
 import { listActive as listActiveCoupons, list as listCoupons } from './Coupons';
 import { list as listEvents } from './Events';
@@ -35,5 +53,23 @@ export const router = {
   coupons: {
     list: listCoupons,
     listActive: listActiveCoupons,
+  },
+  catalog: {
+    list: listCatalogItems,
+    listForKiosk: listCatalogItemsForKiosk,
+    get: getCatalogItem,
+    create: createCatalogItem,
+    update: updateCatalogItem,
+    remove: removeCatalogItem,
+    sizeCreate,
+    sizeUpdate,
+    sizeRemove,
+    stockAdjust,
+    categoryList,
+    categoryCreate,
+    categoryUpdate,
+    categoryRemove,
+    imageCreate,
+    imageRemove,
   },
 };
