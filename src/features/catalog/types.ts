@@ -1,16 +1,14 @@
 export type CatalogItemType = 'merchandise' | 'event_access';
-export type CatalogSizeType = 'bjj' | 'apparel' | 'none';
 export type CatalogItemStatus = 'Active' | 'Inactive' | 'Out of Stock' | 'Low Stock';
 
-// BJJ sizes for gis and belts
-export const BJJ_SIZES = ['A0', 'A1', 'A2', 'A3', 'A4', 'A5'] as const;
-// Apparel sizes for shirts, shorts, rash guards
-export const APPAREL_SIZES = ['S', 'M', 'L', 'XL', 'XXL'] as const;
+// Maximum variants per item
+export const MAX_VARIANTS_PER_ITEM = 8;
 
-export type CatalogSize = {
+export type CatalogVariant = {
   id: string;
   catalogItemId: string;
-  size: string;
+  name: string;
+  price: number;
   stockQuantity: number;
   sortOrder: number;
 };
@@ -52,15 +50,16 @@ export type CatalogItem = {
   isActive: boolean;
   isFeatured: boolean;
   showOnKiosk: boolean;
-  sizeType: CatalogSizeType;
-  sizes: CatalogSize[];
+  variants: CatalogVariant[];
   images: CatalogItemImage[];
   categories: CatalogCategory[];
   totalStock: number;
 };
 
-export type SizeStock = {
-  size: string;
+export type VariantInput = {
+  tempId: string; // Temporary ID for React key prop
+  name: string;
+  price: number;
   stockQuantity: number;
 };
 
@@ -79,8 +78,7 @@ export type CatalogItemFormData = {
   isActive: boolean;
   isFeatured: boolean;
   showOnKiosk: boolean;
-  sizeType: CatalogSizeType;
-  sizes: SizeStock[];
+  variants: VariantInput[];
   categoryIds: string[];
   imageDataUrl: string | null;
 };
@@ -128,19 +126,4 @@ export function formatPrice(price: number): string {
     style: 'currency',
     currency: 'USD',
   }).format(price);
-}
-
-/**
- * Get available sizes based on size type
- */
-export function getAvailableSizes(sizeType: CatalogSizeType): readonly string[] {
-  switch (sizeType) {
-    case 'bjj':
-      return BJJ_SIZES;
-    case 'apparel':
-      return APPAREL_SIZES;
-    case 'none':
-    default:
-      return [];
-  }
 }

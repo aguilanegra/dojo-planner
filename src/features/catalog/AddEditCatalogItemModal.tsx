@@ -1,6 +1,8 @@
 'use client';
 
-import type { CatalogCategory, CatalogItem, CatalogItemFormData, CatalogItemType, CatalogSizeType } from './types';
+import type { CatalogCategory, CatalogItem, CatalogItemFormData, CatalogItemType, VariantInput } from './types';
+import type { EventData } from '@/hooks/useEventsCache';
+import { Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -17,14 +19,15 @@ import {
   SelectValue,
 } from '@/components/ui/select/select';
 import { Textarea } from '@/components/ui/textarea';
-import { getAvailableSizes, getPrimaryImage } from './types';
+import { getPrimaryImage, MAX_VARIANTS_PER_ITEM } from './types';
 
 type AddEditCatalogItemModalProps = {
   isOpen: boolean;
   onCloseAction: () => void;
   item?: CatalogItem | null;
   categories: CatalogCategory[];
-  onSaveAction: (formData: CatalogItemFormData, isEdit: boolean, itemId?: string) => void;
+  events: EventData[];
+  onSaveAction: (formData: CatalogItemFormData, isEdit: boolean, itemId?: string) => Promise<void>;
 };
 
 function getInitialFormData(item?: CatalogItem | null): CatalogItemFormData {
@@ -45,10 +48,8 @@ function getInitialFormData(item?: CatalogItem | null): CatalogItemFormData {
       isActive: item.isActive,
       isFeatured: item.isFeatured,
       showOnKiosk: item.showOnKiosk,
-      sizeType: item.sizeType,
-      sizes: item.sizes.map(s => ({ size: s.size, stockQuantity: s.stockQuantity })),
+      variants: item.variants.map(v => ({ tempId: v.id || crypto.randomUUID(), name: v.name, price: v.price, stockQuantity: v.stockQuantity })),
       categoryIds: item.categories.map(c => c.id),
-      // For existing items, keep the URL as-is (existing images won't be re-uploaded)
       imageDataUrl: primaryImage?.url || null,
     };
   }
@@ -68,8 +69,7 @@ function getInitialFormData(item?: CatalogItem | null): CatalogItemFormData {
     isActive: true,
     isFeatured: false,
     showOnKiosk: true,
-    sizeType: 'none',
-    sizes: [],
+    variants: [],
     categoryIds: [],
     imageDataUrl: null,
   };
@@ -78,13 +78,15 @@ function getInitialFormData(item?: CatalogItem | null): CatalogItemFormData {
 type CatalogItemFormContentProps = {
   item?: CatalogItem | null;
   categories: CatalogCategory[];
+  events: EventData[];
   onCloseAction: () => void;
-  onSaveAction: (formData: CatalogItemFormData, isEdit: boolean, itemId?: string) => void;
+  onSaveAction: (formData: CatalogItemFormData, isEdit: boolean, itemId?: string) => Promise<void>;
 };
 
 function CatalogItemFormContent({
   item,
   categories,
+  events,
   onCloseAction,
   onSaveAction,
 }: CatalogItemFormContentProps) {
@@ -93,6 +95,12 @@ function CatalogItemFormContent({
   const [errors, setErrors] = useState<Partial<Record<keyof CatalogItemFormData, string>>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // New variant form state
+  const [newVariantName, setNewVariantName] = useState('');
+  const [newVariantPrice, setNewVariantPrice] = useState(0);
+  const [newVariantStock, setNewVariantStock] = useState(0);
+  const [variantError, setVariantError] = useState<string | null>(null);
 
   const isEditMode = !!item?.id;
 
@@ -115,12 +123,14 @@ function CatalogItemFormContent({
     setIsLoading(true);
 
     try {
-      onSaveAction(formData, isEditMode, item?.id);
+      await onSaveAction(formData, isEditMode, item?.id);
       setSuccessMessage(isEditMode ? t('update_success') : t('create_success'));
 
       setTimeout(() => {
         onCloseAction();
       }, 1500);
+    } catch (error) {
+      console.error('Failed to save catalog item:', error);
     } finally {
       setIsLoading(false);
     }
@@ -148,50 +158,63 @@ function CatalogItemFormContent({
     });
   };
 
-  const handleSizeTypeChange = (sizeType: CatalogSizeType) => {
-    // When changing size type, preserve any sizes that exist in the new type
-    const availableSizes = getAvailableSizes(sizeType);
-    const preservedSizes = formData.sizes.filter(s => availableSizes.includes(s.size));
+  // Variant management functions
+  const handleAddVariant = () => {
+    setVariantError(null);
+
+    if (!newVariantName.trim()) {
+      setVariantError(t('variant_name_required'));
+      return;
+    }
+
+    if (formData.variants.length >= MAX_VARIANTS_PER_ITEM) {
+      setVariantError(t('max_variants_reached', { max: MAX_VARIANTS_PER_ITEM }));
+      return;
+    }
+
+    // Check for duplicate names
+    if (formData.variants.some(v => v.name.toLowerCase() === newVariantName.trim().toLowerCase())) {
+      setVariantError(t('variant_name_duplicate'));
+      return;
+    }
+
+    const newVariant: VariantInput = {
+      tempId: crypto.randomUUID(),
+      name: newVariantName.trim(),
+      price: newVariantPrice,
+      stockQuantity: newVariantStock,
+    };
+
     setFormData(prev => ({
       ...prev,
-      sizeType,
-      sizes: preservedSizes,
+      variants: [...prev.variants, newVariant],
+    }));
+
+    // Reset form
+    setNewVariantName('');
+    setNewVariantPrice(0);
+    setNewVariantStock(0);
+  };
+
+  const handleRemoveVariant = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      variants: prev.variants.filter((_, i) => i !== index),
     }));
   };
 
-  const handleSizeToggle = (size: string) => {
+  const handleUpdateVariant = (index: number, field: keyof VariantInput, value: string | number) => {
     setFormData((prev) => {
-      const existingSize = prev.sizes.find(s => s.size === size);
-      if (existingSize) {
-        // Remove the size
-        return {
-          ...prev,
-          sizes: prev.sizes.filter(s => s.size !== size),
-        };
-      } else {
-        // Add the size with default stock of 0
-        return {
-          ...prev,
-          sizes: [...prev.sizes, { size, stockQuantity: 0 }],
-        };
+      const updatedVariants = [...prev.variants];
+      const existing = updatedVariants[index];
+      if (existing) {
+        updatedVariants[index] = { ...existing, [field]: value };
       }
+      return { ...prev, variants: updatedVariants };
     });
   };
-
-  const handleSizeStockChange = (size: string, stockQuantity: number) => {
-    setFormData((prev) => {
-      const updatedSizes = prev.sizes.map(s =>
-        s.size === size ? { ...s, stockQuantity } : s,
-      );
-      return { ...prev, sizes: updatedSizes };
-    });
-  };
-
-  const isSizeSelected = (size: string) => formData.sizes.some(s => s.size === size);
-  const getSizeStock = (size: string) => formData.sizes.find(s => s.size === size)?.stockQuantity ?? 0;
 
   const itemTypes: CatalogItemType[] = ['merchandise', 'event_access'];
-  const sizeTypes: CatalogSizeType[] = ['none', 'bjj', 'apparel'];
   const activeCategories = categories.filter(c => c.isActive);
 
   return (
@@ -232,6 +255,29 @@ function CatalogItemFormContent({
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* Linked Event (only for event_access type) */}
+                {formData.type === 'event_access' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="item-event">{t('event_label')}</Label>
+                    <Select
+                      value={formData.eventId || ''}
+                      onValueChange={value => handleInputChange('eventId', value || null)}
+                    >
+                      <SelectTrigger id="item-event" data-testid="catalog-item-event-select">
+                        <SelectValue placeholder={t('event_placeholder')} />
+                      </SelectTrigger>
+                      <SelectContent align="start">
+                        {events.filter(e => e.isActive).map(event => (
+                          <SelectItem key={event.id} value={event.id}>
+                            {event.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">{t('event_help')}</p>
+                  </div>
+                )}
 
                 {/* Name */}
                 <div className="space-y-2">
@@ -362,76 +408,132 @@ function CatalogItemFormContent({
                   </div>
                 )}
 
-                {/* Size Type Selection */}
-                <div className="space-y-2">
-                  <Label htmlFor="item-size-type">{t('size_type_label')}</Label>
-                  <Select
-                    value={formData.sizeType}
-                    onValueChange={value => handleSizeTypeChange(value as CatalogSizeType)}
-                  >
-                    <SelectTrigger id="item-size-type" data-testid="catalog-item-size-type-select">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {sizeTypes.map(sizeType => (
-                        <SelectItem key={sizeType} value={sizeType}>
-                          {t(`size_type_${sizeType}`)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground">{t('size_type_help')}</p>
-                </div>
-
-                {/* Available Sizes Selection */}
-                {formData.sizeType !== 'none' && (
-                  <div className="space-y-2">
-                    <Label>{t('available_sizes_label')}</Label>
-                    <div className="flex flex-wrap gap-2 rounded-md border p-3">
-                      {getAvailableSizes(formData.sizeType).map(size => (
-                        <label
-                          key={size}
-                          className={`flex cursor-pointer items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition-colors ${
-                            isSizeSelected(size)
-                              ? 'border-primary bg-primary/10 hover:bg-primary/20'
-                              : 'bg-background hover:bg-muted'
-                          }`}
-                        >
-                          <Checkbox
-                            checked={isSizeSelected(size)}
-                            onCheckedChange={() => handleSizeToggle(size)}
-                            data-testid={`catalog-item-size-${size}-checkbox`}
-                          />
-                          {size}
-                        </label>
-                      ))}
-                    </div>
-                    <p className="text-xs text-muted-foreground">{t('available_sizes_help')}</p>
+                {/* Variants Section */}
+                <div className="space-y-3 rounded-md border p-3">
+                  <div className="flex items-center justify-between">
+                    <Label>{t('variants_label')}</Label>
+                    <span className="text-xs text-muted-foreground">
+                      {formData.variants.length}
+                      /
+                      {MAX_VARIANTS_PER_ITEM}
+                    </span>
                   </div>
-                )}
 
-                {/* Stock Quantities for Selected Sizes */}
-                {formData.sizeType !== 'none' && formData.sizes.length > 0 && (
-                  <div className="space-y-3 rounded-md border p-3">
-                    <Label>{t('sizes_stock_label')}</Label>
+                  {/* Existing Variants List */}
+                  {formData.variants.length > 0 && (
                     <div className="space-y-2">
-                      {formData.sizes.map(sizeStock => (
-                        <div key={sizeStock.size} className="flex items-center justify-between gap-4">
-                          <span className="text-sm font-medium">{sizeStock.size}</span>
+                      {formData.variants.map((variant, index) => (
+                        <div
+                          key={variant.tempId}
+                          className="flex items-center gap-2 rounded-md border bg-muted/30 p-2"
+                          data-testid={`variant-row-${index}`}
+                        >
                           <Input
-                            type="number"
-                            min="0"
-                            value={getSizeStock(sizeStock.size)}
-                            onChange={e => handleSizeStockChange(sizeStock.size, Number.parseInt(e.target.value, 10) || 0)}
-                            className="w-24"
-                            data-testid={`catalog-item-size-${sizeStock.size}-stock-input`}
+                            value={variant.name}
+                            onChange={e => handleUpdateVariant(index, 'name', e.target.value)}
+                            className="flex-1"
+                            placeholder={t('variant_name_placeholder')}
+                            data-testid={`variant-${index}-name-input`}
                           />
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs text-muted-foreground">$</span>
+                            <Input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={variant.price}
+                              onChange={e => handleUpdateVariant(index, 'price', Number.parseFloat(e.target.value) || 0)}
+                              className="w-28"
+                              data-testid={`variant-${index}-price-input`}
+                            />
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs text-muted-foreground">{t('variant_stock_label')}</span>
+                            <Input
+                              type="number"
+                              min="0"
+                              value={variant.stockQuantity}
+                              onChange={e => handleUpdateVariant(index, 'stockQuantity', Number.parseInt(e.target.value, 10) || 0)}
+                              className="w-16"
+                              data-testid={`variant-${index}-stock-input`}
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleRemoveVariant(index)}
+                            className="size-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                            data-testid={`variant-${index}-remove-button`}
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
                         </div>
                       ))}
                     </div>
-                    <p className="text-xs text-muted-foreground">{t('sizes_stock_help')}</p>
-                  </div>
-                )}
+                  )}
+
+                  {/* Add New Variant Form */}
+                  {formData.variants.length < MAX_VARIANTS_PER_ITEM && (
+                    <div className="space-y-2 border-t pt-3">
+                      <p className="text-sm font-medium">{t('add_variant_title')}</p>
+                      <div className="flex items-end gap-2">
+                        <div className="flex-1 space-y-1">
+                          <Label htmlFor="new-variant-name" className="text-xs">
+                            {t('variant_name_label')}
+                          </Label>
+                          <Input
+                            id="new-variant-name"
+                            value={newVariantName}
+                            onChange={e => setNewVariantName(e.target.value)}
+                            placeholder={t('variant_name_placeholder')}
+                            data-testid="new-variant-name-input"
+                          />
+                        </div>
+                        <div className="w-24 space-y-1">
+                          <Label htmlFor="new-variant-price" className="text-xs">
+                            {t('variant_price_label')}
+                          </Label>
+                          <Input
+                            id="new-variant-price"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={newVariantPrice}
+                            onChange={e => setNewVariantPrice(Number.parseFloat(e.target.value) || 0)}
+                            data-testid="new-variant-price-input"
+                          />
+                        </div>
+                        <div className="w-20 space-y-1">
+                          <Label htmlFor="new-variant-stock" className="text-xs">
+                            {t('variant_stock_label')}
+                          </Label>
+                          <Input
+                            id="new-variant-stock"
+                            type="number"
+                            min="0"
+                            value={newVariantStock}
+                            onChange={e => setNewVariantStock(Number.parseInt(e.target.value, 10) || 0)}
+                            data-testid="new-variant-stock-input"
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          onClick={handleAddVariant}
+                          data-testid="add-variant-button"
+                        >
+                          {t('add_variant_button')}
+                        </Button>
+                      </div>
+                      {variantError && (
+                        <p className="text-sm text-destructive">{variantError}</p>
+                      )}
+                    </div>
+                  )}
+
+                  <p className="text-xs text-muted-foreground">{t('variants_help')}</p>
+                </div>
 
                 {/* Inventory Settings */}
                 <div className="space-y-3 rounded-md border p-3">
@@ -531,18 +633,20 @@ export function AddEditCatalogItemModal({
   onCloseAction,
   item,
   categories,
+  events,
   onSaveAction,
 }: AddEditCatalogItemModalProps) {
   const formKey = item?.id ?? 'new';
 
   return (
     <Dialog open={isOpen} onOpenChange={open => !open && onCloseAction()}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="sm:max-w-3xl">
         {isOpen && (
           <CatalogItemFormContent
             key={formKey}
             item={item}
             categories={categories}
+            events={events}
             onCloseAction={onCloseAction}
             onSaveAction={onSaveAction}
           />

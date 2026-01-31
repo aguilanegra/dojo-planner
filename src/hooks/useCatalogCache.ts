@@ -6,12 +6,12 @@ import { client } from '@/libs/Orpc';
 // =============================================================================
 
 export type CatalogItemType = 'merchandise' | 'event_access';
-export type CatalogSizeType = 'bjj' | 'apparel' | 'none';
 
-export type CatalogSize = {
+export type CatalogVariant = {
   id: string;
   catalogItemId: string;
-  size: string;
+  name: string;
+  price: number;
   stockQuantity: number;
   sortOrder: number;
   createdAt: Date;
@@ -60,10 +60,9 @@ export type CatalogItem = {
   isActive: boolean;
   isFeatured: boolean;
   showOnKiosk: boolean;
-  sizeType: CatalogSizeType;
   createdAt: Date;
   updatedAt: Date;
-  sizes: CatalogSize[];
+  variants: CatalogVariant[];
   images: CatalogItemImage[];
   categories: CatalogCategory[];
   totalStock: number;
@@ -78,12 +77,14 @@ type CacheEntry = {
 type CacheState = {
   items: CatalogItem[];
   loading: boolean;
+  revalidating: boolean;
   error: string | null;
 };
 
 type CacheAction
   = | { type: 'RESET' }
     | { type: 'LOADING_START' }
+    | { type: 'REVALIDATING_START' }
     | { type: 'LOADING_END' }
     | { type: 'SET_ITEMS'; payload: CatalogItem[] }
     | { type: 'SET_ERROR'; payload: string };
@@ -95,15 +96,17 @@ const revalidateCallbacks: Array<() => void | Promise<void>> = [];
 function cacheReducer(state: CacheState, action: CacheAction): CacheState {
   switch (action.type) {
     case 'RESET':
-      return { items: [], loading: false, error: null };
+      return { items: [], loading: false, revalidating: false, error: null };
     case 'LOADING_START':
       return { ...state, loading: true, error: null };
+    case 'REVALIDATING_START':
+      return { ...state, revalidating: true, error: null };
     case 'LOADING_END':
-      return { ...state, loading: false };
+      return { ...state, loading: false, revalidating: false };
     case 'SET_ITEMS':
-      return { ...state, items: action.payload, loading: false, error: null };
+      return { ...state, items: action.payload, loading: false, revalidating: false, error: null };
     case 'SET_ERROR':
-      return { ...state, error: action.payload, loading: false };
+      return { ...state, error: action.payload, loading: false, revalidating: false };
     default:
       return state;
   }
@@ -116,6 +119,7 @@ export const useCatalogCache = (organizationId?: string | undefined) => {
   const [state, dispatch] = useReducer(cacheReducer, {
     items: [],
     loading: true,
+    revalidating: false,
     error: null,
   });
 
@@ -186,6 +190,7 @@ export const useCatalogCache = (organizationId?: string | undefined) => {
 
   const revalidate = useCallback(async () => {
     console.info('[Catalog Cache] Manual revalidation triggered');
+    dispatch({ type: 'REVALIDATING_START' });
     cacheStore = null;
     await fetchCatalogItems();
   }, [fetchCatalogItems]);
@@ -219,6 +224,7 @@ export const useCatalogCache = (organizationId?: string | undefined) => {
   return {
     items: state.items,
     loading: state.loading,
+    revalidating: state.revalidating,
     error: state.error,
     revalidate,
   };

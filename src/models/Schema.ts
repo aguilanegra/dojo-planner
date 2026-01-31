@@ -508,7 +508,7 @@ export const catalogItemSchema = pgTable(
     id: text('id').primaryKey(), // UUID v4
     organizationId: text('organization_id').notNull(),
     type: text('type').notNull(), // 'merchandise' | 'event_access'
-    name: text('name').notNull(), // e.g., 'White Gi A2', 'Summer Seminar Pass'
+    name: text('name').notNull(), // e.g., 'White Gi', 'Summer Seminar Pass'
     slug: text('slug').notNull(),
     description: text('description'), // Full product description
     shortDescription: text('short_description'), // For list views/cards
@@ -523,9 +523,6 @@ export const catalogItemSchema = pgTable(
     isActive: boolean('is_active').default(true),
     isFeatured: boolean('is_featured').default(false),
     showOnKiosk: boolean('show_on_kiosk').default(true),
-    // Size type determines which size options are available:
-    // 'bjj' for gis/belts (A0, A1, A2, A3, A4, A5), 'apparel' for shirts/shorts (S, M, L, XL, XXL), 'none' for patches/accessories
-    sizeType: text('size_type').default('none'), // 'bjj' | 'apparel' | 'none'
     createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { mode: 'date' })
       .defaultNow()
@@ -540,13 +537,14 @@ export const catalogItemSchema = pgTable(
   ],
 );
 
-// Catalog item sizes - tracks stock per size for merchandise items
-export const catalogItemSizeSchema = pgTable(
-  'catalog_item_size',
+// Catalog item variants - user-defined variants with name, price, and stock (max 8 per item)
+export const catalogItemVariantSchema = pgTable(
+  'catalog_item_variant',
   {
     id: text('id').primaryKey(), // UUID v4
     catalogItemId: text('catalog_item_id').references(() => catalogItemSchema.id).notNull(),
-    size: text('size').notNull(), // A0, A1, A2, A3, A4, A5 OR S, M, L, XL, XXL
+    name: text('name').notNull(), // e.g., 'A2 White', 'Large Blue', 'Standard'
+    price: real('price').notNull().default(0), // Variant-specific price (can override base price)
     stockQuantity: integer('stock_quantity').default(0),
     sortOrder: integer('sort_order').default(0),
     createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
@@ -556,8 +554,8 @@ export const catalogItemSizeSchema = pgTable(
       .notNull(),
   },
   table => [
-    index('catalog_size_item_idx').on(table.catalogItemId),
-    uniqueIndex('catalog_size_item_size_idx').on(table.catalogItemId, table.size),
+    index('catalog_variant_item_idx').on(table.catalogItemId),
+    uniqueIndex('catalog_variant_item_name_idx').on(table.catalogItemId, table.name),
   ],
 );
 

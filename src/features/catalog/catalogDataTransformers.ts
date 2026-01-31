@@ -1,4 +1,4 @@
-import type { CatalogItem, CatalogSizeType } from './types';
+import type { CatalogItem } from './types';
 import type { CatalogItem as ApiCatalogItem } from '@/hooks/useCatalogCache';
 
 /**
@@ -23,13 +23,13 @@ export function transformCatalogItemToUi(item: ApiCatalogItem): CatalogItem {
     isActive: item.isActive,
     isFeatured: item.isFeatured,
     showOnKiosk: item.showOnKiosk,
-    sizeType: item.sizeType as CatalogSizeType,
-    sizes: item.sizes.map(s => ({
-      id: s.id,
-      catalogItemId: s.catalogItemId,
-      size: s.size,
-      stockQuantity: s.stockQuantity,
-      sortOrder: s.sortOrder,
+    variants: item.variants.map(v => ({
+      id: v.id,
+      catalogItemId: v.catalogItemId,
+      name: v.name,
+      price: v.price,
+      stockQuantity: v.stockQuantity,
+      sortOrder: v.sortOrder,
     })),
     images: item.images.map(img => ({
       id: img.id,
