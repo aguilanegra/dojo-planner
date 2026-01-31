@@ -1,4 +1,5 @@
 import type { CatalogCategory, CatalogItem } from './types';
+import type { EventData } from '@/hooks/useEventsCache';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { page, userEvent } from 'vitest/browser';
@@ -41,6 +42,12 @@ describe('AddEditCatalogItemModal', () => {
     { id: 'cat-3', name: 'Inactive', slug: 'inactive', description: null, parentId: null, isActive: false },
   ];
 
+  const mockEvents: EventData[] = [
+    { id: 'event-1', name: 'Summer Seminar', slug: 'summer-seminar', description: null, eventType: 'seminar', maxCapacity: 50, isActive: true, tags: [], sessions: [], billing: [] },
+    { id: 'event-2', name: 'Winter Camp', slug: 'winter-camp', description: null, eventType: 'camp', maxCapacity: 30, isActive: true, tags: [], sessions: [], billing: [] },
+    { id: 'event-3', name: 'Inactive Event', slug: 'inactive-event', description: null, eventType: 'workshop', maxCapacity: 20, isActive: false, tags: [], sessions: [], billing: [] },
+  ];
+
   const mockItem: CatalogItem = {
     id: 'item-1',
     type: 'merchandise',
@@ -59,10 +66,9 @@ describe('AddEditCatalogItemModal', () => {
     isActive: true,
     isFeatured: true,
     showOnKiosk: true,
-    sizeType: 'bjj',
-    sizes: [
-      { id: 's1', catalogItemId: 'item-1', size: 'A1', stockQuantity: 10, sortOrder: 0 },
-      { id: 's2', catalogItemId: 'item-1', size: 'A2', stockQuantity: 15, sortOrder: 1 },
+    variants: [
+      { id: 'v1', catalogItemId: 'item-1', name: 'A1', price: 149.99, stockQuantity: 10, sortOrder: 0 },
+      { id: 'v2', catalogItemId: 'item-1', name: 'A2', price: 149.99, stockQuantity: 15, sortOrder: 1 },
     ],
     images: [
       {
@@ -91,6 +97,7 @@ describe('AddEditCatalogItemModal', () => {
           onCloseAction={mockHandlers.onCloseAction}
           onSaveAction={mockHandlers.onSaveAction}
           categories={mockCategories}
+          events={mockEvents}
         />,
       );
 
@@ -110,6 +117,7 @@ describe('AddEditCatalogItemModal', () => {
           onCloseAction={mockHandlers.onCloseAction}
           onSaveAction={mockHandlers.onSaveAction}
           categories={mockCategories}
+          events={mockEvents}
         />,
       );
 
@@ -125,6 +133,7 @@ describe('AddEditCatalogItemModal', () => {
           onCloseAction={mockHandlers.onCloseAction}
           onSaveAction={mockHandlers.onSaveAction}
           categories={mockCategories}
+          events={mockEvents}
         />,
       );
 
@@ -139,6 +148,7 @@ describe('AddEditCatalogItemModal', () => {
           onSaveAction={mockHandlers.onSaveAction}
           item={mockItem}
           categories={mockCategories}
+          events={mockEvents}
         />,
       );
 
@@ -154,6 +164,7 @@ describe('AddEditCatalogItemModal', () => {
           onCloseAction={mockHandlers.onCloseAction}
           onSaveAction={mockHandlers.onSaveAction}
           categories={mockCategories}
+          events={mockEvents}
         />,
       );
 
@@ -165,7 +176,6 @@ describe('AddEditCatalogItemModal', () => {
       await expect.element(page.getByTestId('catalog-item-base-price-input')).toBeVisible();
       await expect.element(page.getByTestId('catalog-item-compare-at-price-input')).toBeVisible();
       await expect.element(page.getByTestId('catalog-item-max-per-order-input')).toBeVisible();
-      await expect.element(page.getByTestId('catalog-item-size-type-select')).toBeVisible();
       await expect.element(page.getByTestId('catalog-item-track-inventory-checkbox')).toBeVisible();
       await expect.element(page.getByTestId('catalog-item-is-active-checkbox')).toBeVisible();
       await expect.element(page.getByTestId('catalog-item-is-featured-checkbox')).toBeVisible();
@@ -179,6 +189,7 @@ describe('AddEditCatalogItemModal', () => {
           onCloseAction={mockHandlers.onCloseAction}
           onSaveAction={mockHandlers.onSaveAction}
           categories={mockCategories}
+          events={mockEvents}
         />,
       );
 
@@ -193,6 +204,7 @@ describe('AddEditCatalogItemModal', () => {
           onSaveAction={mockHandlers.onSaveAction}
           item={mockItem}
           categories={mockCategories}
+          events={mockEvents}
         />,
       );
 
@@ -212,6 +224,7 @@ describe('AddEditCatalogItemModal', () => {
           onCloseAction={mockHandlers.onCloseAction}
           onSaveAction={mockHandlers.onSaveAction}
           categories={mockCategories}
+          events={mockEvents}
         />,
       );
 
@@ -234,6 +247,7 @@ describe('AddEditCatalogItemModal', () => {
           onCloseAction={mockHandlers.onCloseAction}
           onSaveAction={mockHandlers.onSaveAction}
           categories={mockCategories}
+          events={mockEvents}
         />,
       );
 
@@ -250,6 +264,7 @@ describe('AddEditCatalogItemModal', () => {
           onCloseAction={mockHandlers.onCloseAction}
           onSaveAction={mockHandlers.onSaveAction}
           categories={mockCategories}
+          events={mockEvents}
         />,
       );
 
@@ -268,6 +283,7 @@ describe('AddEditCatalogItemModal', () => {
           onCloseAction={mockHandlers.onCloseAction}
           onSaveAction={mockHandlers.onSaveAction}
           categories={mockCategories}
+          events={mockEvents}
         />,
       );
 
@@ -285,6 +301,7 @@ describe('AddEditCatalogItemModal', () => {
           onCloseAction={mockHandlers.onCloseAction}
           onSaveAction={mockHandlers.onSaveAction}
           categories={mockCategories}
+          events={mockEvents}
         />,
       );
 
@@ -311,6 +328,7 @@ describe('AddEditCatalogItemModal', () => {
           onCloseAction={mockHandlers.onCloseAction}
           onSaveAction={mockHandlers.onSaveAction}
           categories={mockCategories}
+          events={mockEvents}
         />,
       );
 
@@ -342,6 +360,7 @@ describe('AddEditCatalogItemModal', () => {
           onSaveAction={mockHandlers.onSaveAction}
           item={mockItem}
           categories={mockCategories}
+          events={mockEvents}
         />,
       );
 
@@ -365,6 +384,7 @@ describe('AddEditCatalogItemModal', () => {
           onCloseAction={mockHandlers.onCloseAction}
           onSaveAction={mockHandlers.onSaveAction}
           categories={mockCategories}
+          events={mockEvents}
         />,
       );
 
@@ -391,6 +411,7 @@ describe('AddEditCatalogItemModal', () => {
           onSaveAction={mockHandlers.onSaveAction}
           item={mockItem}
           categories={mockCategories}
+          events={mockEvents}
         />,
       );
 
@@ -414,6 +435,7 @@ describe('AddEditCatalogItemModal', () => {
           onCloseAction={mockHandlers.onCloseAction}
           onSaveAction={mockHandlers.onSaveAction}
           categories={mockCategories}
+          events={mockEvents}
         />,
       );
 
@@ -442,110 +464,90 @@ describe('AddEditCatalogItemModal', () => {
     });
   });
 
-  describe('Size type and sizes', () => {
-    it('should allow selecting size type', async () => {
+  describe('Variants management', () => {
+    it('should render variant management section', async () => {
       render(
         <AddEditCatalogItemModal
           isOpen={true}
           onCloseAction={mockHandlers.onCloseAction}
           onSaveAction={mockHandlers.onSaveAction}
           categories={mockCategories}
+          events={mockEvents}
         />,
       );
 
-      const sizeTypeSelect = page.getByTestId('catalog-item-size-type-select');
-      await userEvent.click(sizeTypeSelect);
-
-      const bjjOption = page.getByRole('option', { name: 'size_type_bjj' });
-      await userEvent.click(bjjOption);
-
-      // BJJ sizes should now be available
-      await expect.element(page.getByTestId('catalog-item-size-A0-checkbox')).toBeVisible();
-      await expect.element(page.getByTestId('catalog-item-size-A1-checkbox')).toBeVisible();
+      // New variant input section should be visible
+      await expect.element(page.getByTestId('new-variant-name-input')).toBeVisible();
+      await expect.element(page.getByTestId('new-variant-price-input')).toBeVisible();
+      await expect.element(page.getByTestId('new-variant-stock-input')).toBeVisible();
+      await expect.element(page.getByTestId('add-variant-button')).toBeVisible();
     });
 
-    it('should allow toggling size selection', async () => {
+    it('should allow adding a variant', async () => {
       render(
         <AddEditCatalogItemModal
           isOpen={true}
           onCloseAction={mockHandlers.onCloseAction}
           onSaveAction={mockHandlers.onSaveAction}
           categories={mockCategories}
+          events={mockEvents}
         />,
       );
 
-      // Select BJJ size type
-      const sizeTypeSelect = page.getByTestId('catalog-item-size-type-select');
-      await userEvent.click(sizeTypeSelect);
+      // Fill in variant details
+      const variantNameInput = page.getByTestId('new-variant-name-input');
+      await userEvent.fill(variantNameInput, 'A1');
 
-      const bjjOption = page.getByRole('option', { name: 'size_type_bjj' });
-      await userEvent.click(bjjOption);
+      const variantPriceInput = page.getByTestId('new-variant-price-input');
+      await userEvent.fill(variantPriceInput, '99.99');
 
-      // Toggle A1 size
-      const a1Checkbox = page.getByTestId('catalog-item-size-A1-checkbox');
-      await userEvent.click(a1Checkbox);
+      const variantStockInput = page.getByTestId('new-variant-stock-input');
+      await userEvent.fill(variantStockInput, '10');
 
-      // Stock input for A1 should appear
-      await expect.element(page.getByTestId('catalog-item-size-A1-stock-input')).toBeVisible();
+      // Add the variant
+      const addButton = page.getByTestId('add-variant-button');
+      await userEvent.click(addButton);
+
+      // Variant should appear in the list
+      await expect.element(page.getByTestId('variant-row-0')).toBeVisible();
     });
 
-    it('should allow setting stock quantity for selected sizes', async () => {
+    it('should show variants from existing item when editing', async () => {
       render(
         <AddEditCatalogItemModal
           isOpen={true}
           onCloseAction={mockHandlers.onCloseAction}
           onSaveAction={mockHandlers.onSaveAction}
+          item={mockItem}
           categories={mockCategories}
+          events={mockEvents}
         />,
       );
 
-      // Select BJJ size type
-      const sizeTypeSelect = page.getByTestId('catalog-item-size-type-select');
-      await userEvent.click(sizeTypeSelect);
-
-      const bjjOption = page.getByRole('option', { name: 'size_type_bjj' });
-      await userEvent.click(bjjOption);
-
-      // Toggle A1 size
-      const a1Checkbox = page.getByTestId('catalog-item-size-A1-checkbox');
-      await userEvent.click(a1Checkbox);
-
-      // Set stock for A1
-      const stockInput = page.getByTestId('catalog-item-size-A1-stock-input');
-      await userEvent.fill(stockInput, '25');
-
-      // Fill name and submit
-      const nameInput = page.getByTestId('catalog-item-name-input');
-      await userEvent.fill(nameInput, 'Test Product');
-
-      const saveButton = page.getByRole('button', { name: 'save_button' });
-      await userEvent.click(saveButton);
-
-      await waitFor(() => {
-        expect(mockHandlers.onSaveAction).toHaveBeenCalledWith(
-          expect.objectContaining({
-            sizes: expect.arrayContaining([
-              expect.objectContaining({ size: 'A1', stockQuantity: 25 }),
-            ]),
-          }),
-          false,
-          undefined,
-        );
-      });
+      // mockItem has 2 variants (A1 and A2)
+      await expect.element(page.getByTestId('variant-row-0')).toBeVisible();
+      await expect.element(page.getByTestId('variant-row-1')).toBeVisible();
     });
 
-    it('should not show sizes section for none size type', async () => {
+    it('should allow deleting a variant', async () => {
       render(
         <AddEditCatalogItemModal
           isOpen={true}
           onCloseAction={mockHandlers.onCloseAction}
           onSaveAction={mockHandlers.onSaveAction}
+          item={mockItem}
           categories={mockCategories}
+          events={mockEvents}
         />,
       );
 
-      // Default size type is 'none' - no size checkboxes should be visible
-      await expect.element(page.getByTestId('catalog-item-size-A0-checkbox')).not.toBeInTheDocument();
+      // Delete the first variant
+      const deleteButton = page.getByTestId('variant-0-remove-button');
+      await userEvent.click(deleteButton);
+
+      // First variant should be removed, only second remains (now at index 0)
+      await expect.element(page.getByTestId('variant-row-0')).toBeVisible();
+      await expect.element(page.getByTestId('variant-row-1')).not.toBeInTheDocument();
     });
   });
 
@@ -557,6 +559,7 @@ describe('AddEditCatalogItemModal', () => {
           onCloseAction={mockHandlers.onCloseAction}
           onSaveAction={mockHandlers.onSaveAction}
           categories={mockCategories}
+          events={mockEvents}
         />,
       );
 
@@ -576,6 +579,7 @@ describe('AddEditCatalogItemModal', () => {
           onSaveAction={mockHandlers.onSaveAction}
           item={mockItem}
           categories={mockCategories}
+          events={mockEvents}
         />,
       );
 
@@ -604,6 +608,7 @@ describe('AddEditCatalogItemModal', () => {
           onCloseAction={mockHandlers.onCloseAction}
           onSaveAction={mockHandlers.onSaveAction}
           categories={mockCategories}
+          events={mockEvents}
         />,
       );
 
@@ -618,6 +623,7 @@ describe('AddEditCatalogItemModal', () => {
           onCloseAction={mockHandlers.onCloseAction}
           onSaveAction={mockHandlers.onSaveAction}
           categories={mockCategories}
+          events={mockEvents}
         />,
       );
 
@@ -638,6 +644,7 @@ describe('AddEditCatalogItemModal', () => {
           onCloseAction={mockHandlers.onCloseAction}
           onSaveAction={mockHandlers.onSaveAction}
           categories={mockCategories}
+          events={mockEvents}
         />,
       );
 
@@ -670,6 +677,7 @@ describe('AddEditCatalogItemModal', () => {
           onCloseAction={mockHandlers.onCloseAction}
           onSaveAction={mockHandlers.onSaveAction}
           categories={mockCategories}
+          events={mockEvents}
         />,
       );
 
@@ -702,6 +710,7 @@ describe('AddEditCatalogItemModal', () => {
           onCloseAction={mockHandlers.onCloseAction}
           onSaveAction={mockHandlers.onSaveAction}
           categories={mockCategories}
+          events={mockEvents}
         />,
       );
 
@@ -736,6 +745,7 @@ describe('AddEditCatalogItemModal', () => {
           onCloseAction={mockHandlers.onCloseAction}
           onSaveAction={mockHandlers.onSaveAction}
           categories={mockCategories}
+          events={mockEvents}
         />,
       );
 
@@ -767,6 +777,7 @@ describe('AddEditCatalogItemModal', () => {
           onCloseAction={mockHandlers.onCloseAction}
           onSaveAction={mockHandlers.onSaveAction}
           categories={mockCategories}
+          events={mockEvents}
         />,
       );
 
@@ -800,11 +811,79 @@ describe('AddEditCatalogItemModal', () => {
           onCloseAction={mockHandlers.onCloseAction}
           onSaveAction={mockHandlers.onSaveAction}
           categories={[]}
+          events={mockEvents}
         />,
       );
 
       // categories_label should not be present when no categories
       await expect.element(page.getByText('categories_label')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Event selector', () => {
+    it('should show event selector when type is event_access', async () => {
+      render(
+        <AddEditCatalogItemModal
+          isOpen={true}
+          onCloseAction={mockHandlers.onCloseAction}
+          onSaveAction={mockHandlers.onSaveAction}
+          categories={mockCategories}
+          events={mockEvents}
+        />,
+      );
+
+      // Change type to event_access
+      const typeSelect = page.getByTestId('catalog-item-type-select');
+      await userEvent.click(typeSelect);
+      const eventAccessOption = page.getByText('type_event_access');
+      await userEvent.click(eventAccessOption);
+
+      // Event selector should now be visible
+      await expect.element(page.getByTestId('catalog-item-event-select')).toBeVisible();
+    });
+
+    it('should not show event selector when type is merchandise', async () => {
+      render(
+        <AddEditCatalogItemModal
+          isOpen={true}
+          onCloseAction={mockHandlers.onCloseAction}
+          onSaveAction={mockHandlers.onSaveAction}
+          categories={mockCategories}
+          events={mockEvents}
+        />,
+      );
+
+      // Default type is merchandise, event selector should not be visible
+      await expect.element(page.getByTestId('catalog-item-event-select')).not.toBeInTheDocument();
+    });
+
+    it('should only show active events in the dropdown', async () => {
+      render(
+        <AddEditCatalogItemModal
+          isOpen={true}
+          onCloseAction={mockHandlers.onCloseAction}
+          onSaveAction={mockHandlers.onSaveAction}
+          categories={mockCategories}
+          events={mockEvents}
+        />,
+      );
+
+      // Change type to event_access
+      const typeSelect = page.getByTestId('catalog-item-type-select');
+      await userEvent.click(typeSelect);
+      const eventAccessOption = page.getByText('type_event_access');
+      await userEvent.click(eventAccessOption);
+
+      // Open event selector
+      const eventSelect = page.getByTestId('catalog-item-event-select');
+      await userEvent.click(eventSelect);
+
+      // Active events should be visible
+      await expect.element(page.getByText('Summer Seminar')).toBeVisible();
+      await expect.element(page.getByText('Winter Camp')).toBeVisible();
+
+      // Inactive event should not be visible
+      await expect.element(page.getByText('Inactive Event')).not.toBeInTheDocument();
     });
   });
 });

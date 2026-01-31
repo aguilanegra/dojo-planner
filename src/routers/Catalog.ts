@@ -2,21 +2,21 @@ import { ORPCError, os } from '@orpc/server';
 import { logger } from '@/libs/Logger';
 import { audit } from '@/services/AuditService';
 import {
-  adjustSizeStock,
+  adjustVariantStock,
   createCatalogImage,
   createCatalogItem,
-  createCatalogSize,
+  createCatalogVariant,
   createCategory,
   deleteCatalogImage,
   deleteCatalogItem,
-  deleteCatalogSize,
+  deleteCatalogVariant,
   deleteCategory,
   getCatalogItemById,
   getKioskCatalogItems,
   getOrganizationCatalogItems,
   getOrganizationCategories,
   updateCatalogItem,
-  updateCatalogSize,
+  updateCatalogVariant,
   updateCategory,
 } from '@/services/CatalogService';
 import { AUDIT_ACTION, AUDIT_ENTITY_TYPE } from '@/types/Audit';
@@ -26,15 +26,15 @@ import {
   CreateCatalogImageValidation,
   CreateCatalogItemValidation,
   CreateCategoryValidation,
-  CreateSizeValidation,
+  CreateVariantValidation,
   DeleteCatalogImageValidation,
   DeleteCatalogItemValidation,
   DeleteCategoryValidation,
-  DeleteSizeValidation,
+  DeleteVariantValidation,
   GetCatalogItemValidation,
   UpdateCatalogItemValidation,
   UpdateCategoryValidation,
-  UpdateSizeValidation,
+  UpdateVariantValidation,
 } from '@/validations/CatalogValidation';
 import { guardRole } from './AuthGuards';
 
@@ -202,88 +202,88 @@ export const remove = os
   });
 
 // =============================================================================
-// SIZE HANDLERS
+// VARIANT HANDLERS
 // =============================================================================
 
 /**
- * Create a size for a catalog item
+ * Create a variant for a catalog item
  */
-export const sizeCreate = os
-  .input(CreateSizeValidation)
+export const variantCreate = os
+  .input(CreateVariantValidation)
   .handler(async ({ input }) => {
     const context = await guardRole(ORG_ROLE.ADMIN);
 
     try {
-      const size = await createCatalogSize(input);
+      const variant = await createCatalogVariant(input);
 
-      logger.info(`[Catalog.sizeCreate] Size created: ${size.id} for item: ${input.catalogItemId}`);
+      logger.info(`[Catalog.variantCreate] Variant created: ${variant.id} for item: ${input.catalogItemId}`);
 
-      await audit(context, AUDIT_ACTION.CATALOG_SIZE_CREATE, AUDIT_ENTITY_TYPE.CATALOG_SIZE, {
-        entityId: size.id,
+      await audit(context, AUDIT_ACTION.CATALOG_VARIANT_CREATE, AUDIT_ENTITY_TYPE.CATALOG_VARIANT, {
+        entityId: variant.id,
         status: 'success',
       });
 
-      return { size };
+      return { variant };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      logger.error(`Failed to create size: ${errorMessage}`);
+      logger.error(`Failed to create variant: ${errorMessage}`);
 
-      await audit(context, AUDIT_ACTION.CATALOG_SIZE_CREATE, AUDIT_ENTITY_TYPE.CATALOG_SIZE, {
+      await audit(context, AUDIT_ACTION.CATALOG_VARIANT_CREATE, AUDIT_ENTITY_TYPE.CATALOG_VARIANT, {
         status: 'failure',
         error: errorMessage,
       });
 
-      throw error instanceof ORPCError ? error : new ORPCError('Failed to create size.', { status: 500 });
+      throw error instanceof ORPCError ? error : new ORPCError('Failed to create variant.', { status: 500 });
     }
   });
 
 /**
- * Update a size
+ * Update a variant
  */
-export const sizeUpdate = os
-  .input(UpdateSizeValidation)
+export const variantUpdate = os
+  .input(UpdateVariantValidation)
   .handler(async ({ input }) => {
     const context = await guardRole(ORG_ROLE.ADMIN);
 
     try {
-      const size = await updateCatalogSize(input);
+      const variant = await updateCatalogVariant(input);
 
-      logger.info(`[Catalog.sizeUpdate] Size updated: ${input.id}`);
+      logger.info(`[Catalog.variantUpdate] Variant updated: ${input.id}`);
 
-      await audit(context, AUDIT_ACTION.CATALOG_SIZE_UPDATE, AUDIT_ENTITY_TYPE.CATALOG_SIZE, {
+      await audit(context, AUDIT_ACTION.CATALOG_VARIANT_UPDATE, AUDIT_ENTITY_TYPE.CATALOG_VARIANT, {
         entityId: input.id,
         status: 'success',
       });
 
-      return { size };
+      return { variant };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      logger.error(`Failed to update size: ${errorMessage}`);
+      logger.error(`Failed to update variant: ${errorMessage}`);
 
-      await audit(context, AUDIT_ACTION.CATALOG_SIZE_UPDATE, AUDIT_ENTITY_TYPE.CATALOG_SIZE, {
+      await audit(context, AUDIT_ACTION.CATALOG_VARIANT_UPDATE, AUDIT_ENTITY_TYPE.CATALOG_VARIANT, {
         entityId: input.id,
         status: 'failure',
         error: errorMessage,
       });
 
-      throw error instanceof ORPCError ? error : new ORPCError('Failed to update size.', { status: 500 });
+      throw error instanceof ORPCError ? error : new ORPCError('Failed to update variant.', { status: 500 });
     }
   });
 
 /**
- * Delete a size
+ * Delete a variant
  */
-export const sizeRemove = os
-  .input(DeleteSizeValidation)
+export const variantRemove = os
+  .input(DeleteVariantValidation)
   .handler(async ({ input }) => {
     const context = await guardRole(ORG_ROLE.ADMIN);
 
     try {
-      await deleteCatalogSize(input.id);
+      await deleteCatalogVariant(input.id);
 
-      logger.info(`[Catalog.sizeRemove] Size deleted: ${input.id}`);
+      logger.info(`[Catalog.variantRemove] Variant deleted: ${input.id}`);
 
-      await audit(context, AUDIT_ACTION.CATALOG_SIZE_DELETE, AUDIT_ENTITY_TYPE.CATALOG_SIZE, {
+      await audit(context, AUDIT_ACTION.CATALOG_VARIANT_DELETE, AUDIT_ENTITY_TYPE.CATALOG_VARIANT, {
         entityId: input.id,
         status: 'success',
       });
@@ -291,20 +291,20 @@ export const sizeRemove = os
       return {};
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      logger.error(`Failed to delete size: ${errorMessage}`);
+      logger.error(`Failed to delete variant: ${errorMessage}`);
 
-      await audit(context, AUDIT_ACTION.CATALOG_SIZE_DELETE, AUDIT_ENTITY_TYPE.CATALOG_SIZE, {
+      await audit(context, AUDIT_ACTION.CATALOG_VARIANT_DELETE, AUDIT_ENTITY_TYPE.CATALOG_VARIANT, {
         entityId: input.id,
         status: 'failure',
         error: errorMessage,
       });
 
-      throw error instanceof ORPCError ? error : new ORPCError('Failed to delete size.', { status: 500 });
+      throw error instanceof ORPCError ? error : new ORPCError('Failed to delete variant.', { status: 500 });
     }
   });
 
 /**
- * Adjust size stock
+ * Adjust variant stock
  */
 export const stockAdjust = os
   .input(AdjustStockValidation)
@@ -312,22 +312,22 @@ export const stockAdjust = os
     const context = await guardRole(ORG_ROLE.FRONT_DESK);
 
     try {
-      const size = await adjustSizeStock(input.sizeId, input.adjustment);
+      const variant = await adjustVariantStock(input.variantId, input.adjustment);
 
-      logger.info(`[Catalog.stockAdjust] Stock adjusted for size: ${input.sizeId}, adjustment: ${input.adjustment}, reason: ${input.reason}`);
+      logger.info(`[Catalog.stockAdjust] Stock adjusted for variant: ${input.variantId}, adjustment: ${input.adjustment}, reason: ${input.reason}`);
 
-      await audit(context, AUDIT_ACTION.CATALOG_STOCK_ADJUST, AUDIT_ENTITY_TYPE.CATALOG_SIZE, {
-        entityId: input.sizeId,
+      await audit(context, AUDIT_ACTION.CATALOG_STOCK_ADJUST, AUDIT_ENTITY_TYPE.CATALOG_VARIANT, {
+        entityId: input.variantId,
         status: 'success',
       });
 
-      return { size };
+      return { variant };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error(`Failed to adjust stock: ${errorMessage}`);
 
-      await audit(context, AUDIT_ACTION.CATALOG_STOCK_ADJUST, AUDIT_ENTITY_TYPE.CATALOG_SIZE, {
-        entityId: input.sizeId,
+      await audit(context, AUDIT_ACTION.CATALOG_STOCK_ADJUST, AUDIT_ENTITY_TYPE.CATALOG_VARIANT, {
+        entityId: input.variantId,
         status: 'failure',
         error: errorMessage,
       });

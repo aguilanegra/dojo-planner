@@ -22,7 +22,7 @@ import {
   catalogItemCategorySchema,
   catalogItemImageSchema,
   catalogItemSchema,
-  catalogItemSizeSchema,
+  catalogItemVariantSchema,
   classEnrollmentSchema,
   classInstructorSchema,
   classScheduleExceptionSchema,
@@ -355,9 +355,10 @@ const catalogCategoriesData = [
   { name: 'Seminars & Events', slug: 'seminars-events', description: 'Access passes for special events' },
 ];
 
-// Catalog items with sizes
-type SizeStock = {
-  size: string;
+// Catalog items with variants
+type VariantData = {
+  name: string;
+  price: number;
   stockQuantity: number;
 };
 
@@ -375,14 +376,13 @@ type CatalogItemData = {
   lowStockThreshold: number;
   isFeatured: boolean;
   categories: string[]; // category slugs
-  sizeType: 'bjj' | 'apparel' | 'none'; // determines available sizes
-  sizes: SizeStock[]; // stock per size
+  variants: VariantData[]; // user-defined variants with name, price, and stock
   eventSlug?: string; // for event_access items
   imageUrl?: string; // placeholder image URL
 };
 
 const catalogItemsData: CatalogItemData[] = [
-  // Gis - use BJJ sizing (A0-A5)
+  // Gis - variants by size and color
   {
     type: 'merchandise',
     name: 'Academy White Gi',
@@ -397,14 +397,13 @@ const catalogItemsData: CatalogItemData[] = [
     lowStockThreshold: 5,
     isFeatured: true,
     categories: ['gis'],
-    sizeType: 'bjj',
-    sizes: [
-      { size: 'A0', stockQuantity: 8 },
-      { size: 'A1', stockQuantity: 12 },
-      { size: 'A2', stockQuantity: 15 },
-      { size: 'A3', stockQuantity: 10 },
-      { size: 'A4', stockQuantity: 6 },
-      { size: 'A5', stockQuantity: 3 },
+    variants: [
+      { name: 'A0 White', price: 129.99, stockQuantity: 8 },
+      { name: 'A1 White', price: 129.99, stockQuantity: 12 },
+      { name: 'A2 White', price: 129.99, stockQuantity: 15 },
+      { name: 'A3 White', price: 139.99, stockQuantity: 10 },
+      { name: 'A4 White', price: 149.99, stockQuantity: 6 },
+      { name: 'A5 White', price: 159.99, stockQuantity: 3 },
     ],
     imageUrl: 'https://placehold.co/600x600/f8fafc/1e293b?text=White+Gi',
   },
@@ -421,12 +420,11 @@ const catalogItemsData: CatalogItemData[] = [
     lowStockThreshold: 5,
     isFeatured: false,
     categories: ['gis'],
-    sizeType: 'bjj',
-    sizes: [
-      { size: 'A1', stockQuantity: 8 },
-      { size: 'A2', stockQuantity: 10 },
-      { size: 'A3', stockQuantity: 7 },
-      { size: 'A4', stockQuantity: 4 },
+    variants: [
+      { name: 'A1 Blue', price: 139.99, stockQuantity: 8 },
+      { name: 'A2 Blue', price: 139.99, stockQuantity: 10 },
+      { name: 'A3 Blue', price: 149.99, stockQuantity: 7 },
+      { name: 'A4 Blue', price: 159.99, stockQuantity: 4 },
     ],
     imageUrl: 'https://placehold.co/600x600/1e40af/ffffff?text=Blue+Gi',
   },
@@ -443,17 +441,16 @@ const catalogItemsData: CatalogItemData[] = [
     lowStockThreshold: 5,
     isFeatured: false,
     categories: ['gis'],
-    sizeType: 'bjj',
-    sizes: [
-      { size: 'A0', stockQuantity: 10 },
-      { size: 'A1', stockQuantity: 12 },
-      { size: 'A2', stockQuantity: 8 },
-      { size: 'A3', stockQuantity: 6 },
+    variants: [
+      { name: 'M0 White', price: 59.99, stockQuantity: 10 },
+      { name: 'M1 White', price: 64.99, stockQuantity: 12 },
+      { name: 'M2 White', price: 69.99, stockQuantity: 8 },
+      { name: 'M3 White', price: 74.99, stockQuantity: 6 },
     ],
     imageUrl: 'https://placehold.co/600x600/f8fafc/1e293b?text=Kids+Gi',
   },
 
-  // Belts - use BJJ sizing
+  // Belts - variants by size
   {
     type: 'merchandise',
     name: 'White Belt',
@@ -467,13 +464,12 @@ const catalogItemsData: CatalogItemData[] = [
     lowStockThreshold: 10,
     isFeatured: false,
     categories: ['belts'],
-    sizeType: 'bjj',
-    sizes: [
-      { size: 'A0', stockQuantity: 20 },
-      { size: 'A1', stockQuantity: 25 },
-      { size: 'A2', stockQuantity: 30 },
-      { size: 'A3', stockQuantity: 25 },
-      { size: 'A4', stockQuantity: 15 },
+    variants: [
+      { name: 'A0', price: 15.99, stockQuantity: 20 },
+      { name: 'A1', price: 15.99, stockQuantity: 25 },
+      { name: 'A2', price: 15.99, stockQuantity: 30 },
+      { name: 'A3', price: 15.99, stockQuantity: 25 },
+      { name: 'A4', price: 15.99, stockQuantity: 15 },
     ],
     imageUrl: 'https://placehold.co/600x600/f8fafc/1e293b?text=White+Belt',
   },
@@ -490,12 +486,11 @@ const catalogItemsData: CatalogItemData[] = [
     lowStockThreshold: 8,
     isFeatured: false,
     categories: ['belts'],
-    sizeType: 'bjj',
-    sizes: [
-      { size: 'A1', stockQuantity: 15 },
-      { size: 'A2', stockQuantity: 18 },
-      { size: 'A3', stockQuantity: 12 },
-      { size: 'A4', stockQuantity: 8 },
+    variants: [
+      { name: 'A1', price: 19.99, stockQuantity: 15 },
+      { name: 'A2', price: 19.99, stockQuantity: 18 },
+      { name: 'A3', price: 19.99, stockQuantity: 12 },
+      { name: 'A4', price: 19.99, stockQuantity: 8 },
     ],
     imageUrl: 'https://placehold.co/600x600/1e40af/ffffff?text=Blue+Belt',
   },
@@ -512,12 +507,11 @@ const catalogItemsData: CatalogItemData[] = [
     lowStockThreshold: 5,
     isFeatured: false,
     categories: ['belts'],
-    sizeType: 'bjj',
-    sizes: [
-      { size: 'A1', stockQuantity: 8 },
-      { size: 'A2', stockQuantity: 10 },
-      { size: 'A3', stockQuantity: 6 },
-      { size: 'A4', stockQuantity: 4 },
+    variants: [
+      { name: 'A1', price: 24.99, stockQuantity: 8 },
+      { name: 'A2', price: 24.99, stockQuantity: 10 },
+      { name: 'A3', price: 24.99, stockQuantity: 6 },
+      { name: 'A4', price: 24.99, stockQuantity: 4 },
     ],
     imageUrl: 'https://placehold.co/600x600/7c3aed/ffffff?text=Purple+Belt',
   },
@@ -534,11 +528,10 @@ const catalogItemsData: CatalogItemData[] = [
     lowStockThreshold: 3,
     isFeatured: false,
     categories: ['belts'],
-    sizeType: 'bjj',
-    sizes: [
-      { size: 'A1', stockQuantity: 0 },
-      { size: 'A2', stockQuantity: 0 },
-      { size: 'A3', stockQuantity: 0 },
+    variants: [
+      { name: 'A1', price: 29.99, stockQuantity: 0 },
+      { name: 'A2', price: 29.99, stockQuantity: 0 },
+      { name: 'A3', price: 29.99, stockQuantity: 0 },
     ],
     imageUrl: 'https://placehold.co/600x600/78350f/ffffff?text=Brown+Belt',
   },
@@ -555,16 +548,15 @@ const catalogItemsData: CatalogItemData[] = [
     lowStockThreshold: 2,
     isFeatured: false,
     categories: ['belts'],
-    sizeType: 'bjj',
-    sizes: [
-      { size: 'A1', stockQuantity: 0 },
-      { size: 'A2', stockQuantity: 0 },
-      { size: 'A3', stockQuantity: 0 },
+    variants: [
+      { name: 'A1', price: 49.99, stockQuantity: 0 },
+      { name: 'A2', price: 49.99, stockQuantity: 0 },
+      { name: 'A3', price: 49.99, stockQuantity: 0 },
     ],
     imageUrl: 'https://placehold.co/600x600/0f172a/ffffff?text=Black+Belt',
   },
 
-  // Apparel - use standard apparel sizing (S, M, L, XL, XXL)
+  // Apparel - variants by size
   {
     type: 'merchandise',
     name: 'Academy Rash Guard - Long Sleeve',
@@ -578,12 +570,11 @@ const catalogItemsData: CatalogItemData[] = [
     lowStockThreshold: 5,
     isFeatured: true,
     categories: ['apparel'],
-    sizeType: 'apparel',
-    sizes: [
-      { size: 'S', stockQuantity: 18 },
-      { size: 'M', stockQuantity: 25 },
-      { size: 'L', stockQuantity: 20 },
-      { size: 'XL', stockQuantity: 13 },
+    variants: [
+      { name: 'Small', price: 49.99, stockQuantity: 18 },
+      { name: 'Medium', price: 49.99, stockQuantity: 25 },
+      { name: 'Large', price: 49.99, stockQuantity: 20 },
+      { name: 'X-Large', price: 54.99, stockQuantity: 13 },
     ],
     imageUrl: 'https://placehold.co/600x600/0f172a/ffffff?text=Rash+Guard',
   },
@@ -600,12 +591,11 @@ const catalogItemsData: CatalogItemData[] = [
     lowStockThreshold: 5,
     isFeatured: false,
     categories: ['apparel'],
-    sizeType: 'apparel',
-    sizes: [
-      { size: 'S', stockQuantity: 12 },
-      { size: 'M', stockQuantity: 15 },
-      { size: 'L', stockQuantity: 10 },
-      { size: 'XL', stockQuantity: 6 },
+    variants: [
+      { name: 'Small', price: 39.99, stockQuantity: 12 },
+      { name: 'Medium', price: 39.99, stockQuantity: 15 },
+      { name: 'Large', price: 39.99, stockQuantity: 10 },
+      { name: 'X-Large', price: 44.99, stockQuantity: 6 },
     ],
     imageUrl: 'https://placehold.co/600x600/0f172a/ffffff?text=Short+Sleeve',
   },
@@ -622,13 +612,12 @@ const catalogItemsData: CatalogItemData[] = [
     lowStockThreshold: 5,
     isFeatured: false,
     categories: ['apparel'],
-    sizeType: 'apparel',
-    sizes: [
-      { size: 'S', stockQuantity: 10 },
-      { size: 'M', stockQuantity: 12 },
-      { size: 'L', stockQuantity: 10 },
-      { size: 'XL', stockQuantity: 6 },
-      { size: 'XXL', stockQuantity: 4 },
+    variants: [
+      { name: 'Small Black', price: 44.99, stockQuantity: 10 },
+      { name: 'Medium Black', price: 44.99, stockQuantity: 12 },
+      { name: 'Large Black', price: 44.99, stockQuantity: 10 },
+      { name: 'X-Large Black', price: 49.99, stockQuantity: 6 },
+      { name: 'XX-Large Black', price: 54.99, stockQuantity: 4 },
     ],
     imageUrl: 'https://placehold.co/600x600/0f172a/ffffff?text=Fight+Shorts',
   },
@@ -645,17 +634,20 @@ const catalogItemsData: CatalogItemData[] = [
     lowStockThreshold: 10,
     isFeatured: false,
     categories: ['apparel'],
-    sizeType: 'apparel',
-    sizes: [
-      { size: 'S', stockQuantity: 35 },
-      { size: 'M', stockQuantity: 43 },
-      { size: 'L', stockQuantity: 35 },
-      { size: 'XL', stockQuantity: 25 },
+    variants: [
+      { name: 'Small Black', price: 29.99, stockQuantity: 20 },
+      { name: 'Medium Black', price: 29.99, stockQuantity: 25 },
+      { name: 'Large Black', price: 29.99, stockQuantity: 20 },
+      { name: 'X-Large Black', price: 29.99, stockQuantity: 15 },
+      { name: 'Small White', price: 29.99, stockQuantity: 15 },
+      { name: 'Medium White', price: 29.99, stockQuantity: 18 },
+      { name: 'Large White', price: 29.99, stockQuantity: 15 },
+      { name: 'X-Large White', price: 29.99, stockQuantity: 10 },
     ],
     imageUrl: 'https://placehold.co/600x600/374151/ffffff?text=T-Shirt',
   },
 
-  // Accessories - no sizes (use ONE_SIZE for stock tracking)
+  // Accessories - single variant or no variants
   {
     type: 'merchandise',
     name: 'Gear Bag',
@@ -669,8 +661,7 @@ const catalogItemsData: CatalogItemData[] = [
     lowStockThreshold: 5,
     isFeatured: false,
     categories: ['accessories'],
-    sizeType: 'none',
-    sizes: [{ size: 'ONE_SIZE', stockQuantity: 15 }],
+    variants: [{ name: 'Standard', price: 59.99, stockQuantity: 15 }],
     imageUrl: 'https://placehold.co/600x600/1e293b/ffffff?text=Gear+Bag',
   },
   {
@@ -686,8 +677,7 @@ const catalogItemsData: CatalogItemData[] = [
     lowStockThreshold: 20,
     isFeatured: false,
     categories: ['accessories'],
-    sizeType: 'none',
-    sizes: [{ size: 'ONE_SIZE', stockQuantity: 50 }],
+    variants: [{ name: 'Standard', price: 9.99, stockQuantity: 50 }],
     imageUrl: 'https://placehold.co/600x600/1e293b/ffffff?text=Patch',
   },
   {
@@ -703,12 +693,11 @@ const catalogItemsData: CatalogItemData[] = [
     lowStockThreshold: 15,
     isFeatured: false,
     categories: ['accessories'],
-    sizeType: 'none',
-    sizes: [{ size: 'ONE_SIZE', stockQuantity: 0 }],
+    variants: [{ name: 'Standard', price: 14.99, stockQuantity: 0 }],
     imageUrl: 'https://placehold.co/600x600/1e293b/ffffff?text=Mouth+Guard',
   },
 
-  // Event Access - no sizes
+  // Event Access - no variants needed
   {
     type: 'event_access',
     name: 'BJJ Fundamentals Seminar Pass',
@@ -723,8 +712,7 @@ const catalogItemsData: CatalogItemData[] = [
     lowStockThreshold: 0,
     isFeatured: true,
     categories: ['seminars-events'],
-    sizeType: 'none',
-    sizes: [],
+    variants: [],
     eventSlug: 'bjj-fundamentals-seminar-2026',
     imageUrl: 'https://placehold.co/600x600/059669/ffffff?text=Seminar+Pass',
   },
@@ -741,8 +729,7 @@ const catalogItemsData: CatalogItemData[] = [
     lowStockThreshold: 0,
     isFeatured: true,
     categories: ['seminars-events'],
-    sizeType: 'none',
-    sizes: [],
+    variants: [],
     eventSlug: 'master-rodriguez-seminar-2026',
     imageUrl: 'https://placehold.co/600x600/7c3aed/ffffff?text=Workshop',
   },
@@ -780,7 +767,7 @@ async function clearSeededData(organizationId: string) {
   // Clear catalog data
   await db.delete(catalogItemCategorySchema).where(sql`${catalogItemCategorySchema.catalogItemId} IN (SELECT id FROM catalog_item WHERE organization_id = ${organizationId})`);
   await db.delete(catalogItemImageSchema).where(sql`${catalogItemImageSchema.catalogItemId} IN (SELECT id FROM catalog_item WHERE organization_id = ${organizationId})`);
-  await db.delete(catalogItemSizeSchema).where(sql`${catalogItemSizeSchema.catalogItemId} IN (SELECT id FROM catalog_item WHERE organization_id = ${organizationId})`);
+  await db.delete(catalogItemVariantSchema).where(sql`${catalogItemVariantSchema.catalogItemId} IN (SELECT id FROM catalog_item WHERE organization_id = ${organizationId})`);
   await db.delete(catalogItemSchema).where(eq(catalogItemSchema.organizationId, organizationId));
   await db.delete(catalogCategorySchema).where(eq(catalogCategorySchema.organizationId, organizationId));
 }
@@ -1045,7 +1032,6 @@ async function seedOrganization(organizationId: string) {
       trackInventory: item.trackInventory,
       lowStockThreshold: item.lowStockThreshold,
       isFeatured: item.isFeatured,
-      sizeType: item.sizeType,
     }).onConflictDoNothing();
 
     // Link item to categories
@@ -1059,13 +1045,14 @@ async function seedOrganization(organizationId: string) {
       }
     }
 
-    // Create sizes with stock
-    for (const [i, sizeStock] of item.sizes.entries()) {
-      await db.insert(catalogItemSizeSchema).values({
+    // Create variants with stock
+    for (const [i, variant] of item.variants.entries()) {
+      await db.insert(catalogItemVariantSchema).values({
         id: randomUUID(),
         catalogItemId: itemId,
-        size: sizeStock.size,
-        stockQuantity: sizeStock.stockQuantity,
+        name: variant.name,
+        price: variant.price,
+        stockQuantity: variant.stockQuantity,
         sortOrder: i,
       }).onConflictDoNothing();
     }

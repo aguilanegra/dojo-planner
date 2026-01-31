@@ -25,8 +25,8 @@ const contentSecurityPolicy = [
   'connect-src \'self\' https://api.clerk.com https://*.clerk.com https://*.clerk.accounts.dev https://*.ingest.sentry.io https://o-*.ingest.sentry.io https://sentry.io https://*.upstash.io https://*.betterstack.com https://logs.betterstack.com',
   // Base URI: restrict to self
   'base-uri \'self\'',
-  // Form actions: restrict to self
-  'form-action \'self\'',
+  // Form actions: self + Clerk for OAuth/social login flows
+  'form-action \'self\' https://*.clerk.com https://*.clerk.accounts.dev',
   // Upgrade HTTP to HTTPS
   'upgrade-insecure-requests',
 ].join('; ');

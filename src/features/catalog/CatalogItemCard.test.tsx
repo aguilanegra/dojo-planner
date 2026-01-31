@@ -44,10 +44,9 @@ describe('CatalogItemCard', () => {
     isActive: true,
     isFeatured: false,
     showOnKiosk: true,
-    sizeType: 'bjj',
-    sizes: [
-      { id: 's1', catalogItemId: 'item-1', size: 'A1', stockQuantity: 10, sortOrder: 0 },
-      { id: 's2', catalogItemId: 'item-1', size: 'A2', stockQuantity: 15, sortOrder: 1 },
+    variants: [
+      { id: 'v1', catalogItemId: 'item-1', name: 'A1', price: 149.99, stockQuantity: 10, sortOrder: 0 },
+      { id: 'v2', catalogItemId: 'item-1', name: 'A2', price: 149.99, stockQuantity: 15, sortOrder: 1 },
     ],
     images: [],
     categories: [],
@@ -134,7 +133,7 @@ describe('CatalogItemCard', () => {
       await expect.element(prices).not.toBeInTheDocument();
     });
 
-    it('should render item sizes', async () => {
+    it('should render item variants', async () => {
       render(
         <CatalogItemCard
           item={mockItem}
@@ -380,29 +379,29 @@ describe('CatalogItemCard', () => {
     });
   });
 
-  describe('Size type display', () => {
-    it('should not show sizes section for none size type', async () => {
+  describe('Variants display', () => {
+    it('should not show variants section when variants array is empty', async () => {
       render(
         <CatalogItemCard
-          item={{ ...mockItem, sizeType: 'none', sizes: [] }}
+          item={{ ...mockItem, variants: [] }}
           onEdit={mockOnEdit}
           onDelete={mockOnDelete}
         />,
       );
 
-      await expect.element(page.getByText('sizes_label')).not.toBeInTheDocument();
+      await expect.element(page.getByText('variants_label')).not.toBeInTheDocument();
     });
 
-    it('should not show sizes section when sizes array is empty', async () => {
+    it('should show variants label when variants exist', async () => {
       render(
         <CatalogItemCard
-          item={{ ...mockItem, sizeType: 'bjj', sizes: [] }}
+          item={mockItem}
           onEdit={mockOnEdit}
           onDelete={mockOnDelete}
         />,
       );
 
-      await expect.element(page.getByText('sizes_label')).not.toBeInTheDocument();
+      await expect.element(page.getByText('variants_label')).toBeVisible();
     });
   });
 

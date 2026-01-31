@@ -27,10 +27,9 @@ function createMockApiCatalogItem(overrides: Partial<ApiCatalogItem> = {}): ApiC
     isActive: true,
     isFeatured: false,
     showOnKiosk: true,
-    sizeType: 'bjj',
     createdAt: new Date('2024-01-01'),
     updatedAt: new Date('2024-01-02'),
-    sizes: [],
+    variants: [],
     images: [],
     categories: [],
     totalStock: 100,
@@ -64,7 +63,6 @@ describe('transformCatalogItemToUi', () => {
     expect(result.isActive).toBe(true);
     expect(result.isFeatured).toBe(false);
     expect(result.showOnKiosk).toBe(true);
-    expect(result.sizeType).toBe('bjj');
     expect(result.totalStock).toBe(100);
   });
 
@@ -72,31 +70,31 @@ describe('transformCatalogItemToUi', () => {
     const apiItem = createMockApiCatalogItem({
       type: 'event_access',
       eventId: 'event-123',
-      sizeType: 'none',
     });
     const result = transformCatalogItemToUi(apiItem);
 
     expect(result.type).toBe('event_access');
     expect(result.eventId).toBe('event-123');
-    expect(result.sizeType).toBe('none');
   });
 
-  it('should transform sizes correctly', () => {
+  it('should transform variants correctly', () => {
     const apiItem = createMockApiCatalogItem({
-      sizes: [
+      variants: [
         {
-          id: 'size-1',
+          id: 'variant-1',
           catalogItemId: 'test-item-1',
-          size: 'A1',
+          name: 'Small',
+          price: 49.99,
           stockQuantity: 10,
           sortOrder: 0,
           createdAt: new Date('2024-01-01'),
           updatedAt: new Date('2024-01-02'),
         },
         {
-          id: 'size-2',
+          id: 'variant-2',
           catalogItemId: 'test-item-1',
-          size: 'A2',
+          name: 'Medium',
+          price: 54.99,
           stockQuantity: 15,
           sortOrder: 1,
           createdAt: new Date('2024-01-01'),
@@ -106,18 +104,20 @@ describe('transformCatalogItemToUi', () => {
     });
     const result = transformCatalogItemToUi(apiItem);
 
-    expect(result.sizes).toHaveLength(2);
-    expect(result.sizes[0]).toEqual({
-      id: 'size-1',
+    expect(result.variants).toHaveLength(2);
+    expect(result.variants[0]).toEqual({
+      id: 'variant-1',
       catalogItemId: 'test-item-1',
-      size: 'A1',
+      name: 'Small',
+      price: 49.99,
       stockQuantity: 10,
       sortOrder: 0,
     });
-    expect(result.sizes[1]).toEqual({
-      id: 'size-2',
+    expect(result.variants[1]).toEqual({
+      id: 'variant-2',
       catalogItemId: 'test-item-1',
-      size: 'A2',
+      name: 'Medium',
+      price: 54.99,
       stockQuantity: 15,
       sortOrder: 1,
     });
@@ -219,15 +219,15 @@ describe('transformCatalogItemToUi', () => {
     });
   });
 
-  it('should handle empty sizes, images, and categories', () => {
+  it('should handle empty variants, images, and categories', () => {
     const apiItem = createMockApiCatalogItem({
-      sizes: [],
+      variants: [],
       images: [],
       categories: [],
     });
     const result = transformCatalogItemToUi(apiItem);
 
-    expect(result.sizes).toEqual([]);
+    expect(result.variants).toEqual([]);
     expect(result.images).toEqual([]);
     expect(result.categories).toEqual([]);
   });
@@ -259,13 +259,14 @@ describe('transformCatalogItemToUi', () => {
     expect(result).not.toHaveProperty('organizationId');
   });
 
-  it('should strip timestamps from sizes', () => {
+  it('should strip timestamps from variants', () => {
     const apiItem = createMockApiCatalogItem({
-      sizes: [
+      variants: [
         {
-          id: 'size-1',
+          id: 'variant-1',
           catalogItemId: 'test-item-1',
-          size: 'A1',
+          name: 'Small',
+          price: 49.99,
           stockQuantity: 10,
           sortOrder: 0,
           createdAt: new Date('2024-01-01'),
@@ -275,8 +276,8 @@ describe('transformCatalogItemToUi', () => {
     });
     const result = transformCatalogItemToUi(apiItem);
 
-    expect(result.sizes[0]).not.toHaveProperty('createdAt');
-    expect(result.sizes[0]).not.toHaveProperty('updatedAt');
+    expect(result.variants[0]).not.toHaveProperty('createdAt');
+    expect(result.variants[0]).not.toHaveProperty('updatedAt');
   });
 
   it('should strip timestamps from images', () => {

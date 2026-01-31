@@ -139,13 +139,13 @@ export function CatalogItemCard({
               {item.trackInventory ? item.totalStock : t('in_stock')}
             </span>
           </div>
-          {item.sizeType !== 'none' && item.sizes.length > 0 && (
-            <div className="flex justify-between">
+          {item.variants.length > 0 && (
+            <div className="flex justify-between gap-4">
               <span className="text-sm text-muted-foreground">
-                {t('sizes_label')}
+                {t('variants_label')}
               </span>
               <span className="text-sm font-medium text-foreground">
-                {item.sizes.map(s => s.size).join(', ')}
+                {item.variants.map(v => v.name).join(', ')}
               </span>
             </div>
           )}

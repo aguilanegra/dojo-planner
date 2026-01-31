@@ -10,11 +10,11 @@ import {
   list as listCatalogItems,
   listForKiosk as listCatalogItemsForKiosk,
   remove as removeCatalogItem,
-  sizeCreate,
-  sizeRemove,
-  sizeUpdate,
   stockAdjust,
   update as updateCatalogItem,
+  variantCreate,
+  variantRemove,
+  variantUpdate,
 } from './Catalog';
 import { tags as classTags, list as listClasses } from './Classes';
 import { listActive as listActiveCoupons, list as listCoupons } from './Coupons';
@@ -61,9 +61,9 @@ export const router = {
     create: createCatalogItem,
     update: updateCatalogItem,
     remove: removeCatalogItem,
-    sizeCreate,
-    sizeUpdate,
-    sizeRemove,
+    variantCreate,
+    variantUpdate,
+    variantRemove,
     stockAdjust,
     categoryList,
     categoryCreate,

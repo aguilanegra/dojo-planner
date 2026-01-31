@@ -225,6 +225,7 @@ The application implements a strict Content Security Policy for SOC2 CC6.6 compl
 
 **Key notes:**
 - `'unsafe-inline'` is required in `script-src` (Next.js) and `style-src` (Clerk)
+- `form-action` includes Clerk domains to allow OAuth redirects for social login
 - Inter font is self-hosted via `next/font` enabling strict `font-src 'self'`
 - See `claude.md` for detailed CSP documentation and how to add new vendors
 

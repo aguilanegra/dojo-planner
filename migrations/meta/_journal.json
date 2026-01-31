@@ -50,6 +50,13 @@
       "when": 1769566418040,
       "tag": "0006_right_polaris",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1738281600000,
+      "tag": "0007_catalog-variants",
+      "breakpoints": true
     }
   ]
 }

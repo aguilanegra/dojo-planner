@@ -2,12 +2,10 @@ import type { CatalogItem, CatalogItemImage } from './types';
 
 import { describe, expect, it } from 'vitest';
 import {
-  APPAREL_SIZES,
-  BJJ_SIZES,
   formatPrice,
-  getAvailableSizes,
   getCatalogItemStatus,
   getPrimaryImage,
+  MAX_VARIANTS_PER_ITEM,
 } from './types';
 
 // =============================================================================
@@ -33,8 +31,7 @@ function createMockCatalogItem(overrides: Partial<CatalogItem> = {}): CatalogIte
     isActive: true,
     isFeatured: false,
     showOnKiosk: true,
-    sizeType: 'none',
-    sizes: [],
+    variants: [],
     images: [],
     categories: [],
     totalStock: 100,
@@ -59,24 +56,10 @@ function createMockImage(overrides: Partial<CatalogItemImage> = {}): CatalogItem
 // CONSTANTS
 // =============================================================================
 
-describe('Size constants', () => {
-  describe('BJJ_SIZES', () => {
-    it('should contain all BJJ sizes in order', () => {
-      expect(BJJ_SIZES).toEqual(['A0', 'A1', 'A2', 'A3', 'A4', 'A5']);
-    });
-
-    it('should have 6 sizes', () => {
-      expect(BJJ_SIZES).toHaveLength(6);
-    });
-  });
-
-  describe('APPAREL_SIZES', () => {
-    it('should contain all apparel sizes in order', () => {
-      expect(APPAREL_SIZES).toEqual(['S', 'M', 'L', 'XL', 'XXL']);
-    });
-
-    it('should have 5 sizes', () => {
-      expect(APPAREL_SIZES).toHaveLength(5);
+describe('Constants', () => {
+  describe('MAX_VARIANTS_PER_ITEM', () => {
+    it('should be 8', () => {
+      expect(MAX_VARIANTS_PER_ITEM).toBe(8);
     });
   });
 });
@@ -234,32 +217,5 @@ describe('formatPrice', () => {
     // Intl.NumberFormat rounds to 2 decimal places
     expect(formatPrice(49.999)).toBe('$50.00');
     expect(formatPrice(49.994)).toBe('$49.99');
-  });
-});
-
-// =============================================================================
-// getAvailableSizes
-// =============================================================================
-
-describe('getAvailableSizes', () => {
-  it('should return BJJ sizes for bjj type', () => {
-    expect(getAvailableSizes('bjj')).toEqual(BJJ_SIZES);
-  });
-
-  it('should return apparel sizes for apparel type', () => {
-    expect(getAvailableSizes('apparel')).toEqual(APPAREL_SIZES);
-  });
-
-  it('should return empty array for none type', () => {
-    expect(getAvailableSizes('none')).toEqual([]);
-  });
-
-  it('should return readonly arrays', () => {
-    const bjjSizes = getAvailableSizes('bjj');
-    const apparelSizes = getAvailableSizes('apparel');
-
-    // These should be the same references as the constants
-    expect(bjjSizes).toBe(BJJ_SIZES);
-    expect(apparelSizes).toBe(APPAREL_SIZES);
   });
 });

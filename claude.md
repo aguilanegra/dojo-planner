@@ -41,7 +41,7 @@ src/
 │
 ├── routers/               # ORPC API handlers
 │   ├── AuthGuards.ts      # Auth middleware with role hierarchy
-│   ├── Catalog.ts         # Catalog items, sizes, categories, images
+│   ├── Catalog.ts         # Catalog items, variants, categories, images
 │   ├── Member.ts          # Member CRUD
 │   ├── Members.ts         # Members list ops
 │   ├── Classes.ts         # Classes list & tags
@@ -51,7 +51,7 @@ src/
 │
 ├── services/              # Business logic layer
 │   ├── BillingService.ts  # Stripe integration
-│   ├── CatalogService.ts  # Catalog items, sizes, categories, images
+│   ├── CatalogService.ts  # Catalog items, variants, categories, images
 │   ├── ClassesService.ts  # Class & schedule queries
 │   ├── ClerkRolesService.ts # Clerk Backend API
 │   ├── CouponsService.ts  # Coupon queries
@@ -409,7 +409,7 @@ await deleteUserWithOrganization();
 - `note` - Member notes
 - `family_member` - Family relationships
 - `catalog_item` - Merchandise and event access products
-- `catalog_item_size` - Size options with stock (BJJ: A0-A5, Apparel: S-XXL)
+- `catalog_item_variant` - Product variants with custom name, price, and stock quantity (max 8 per item)
 - `catalog_category` - Product categories
 - `catalog_item_category` - Item-category associations (M:N)
 - `catalog_item_image` - Product images
@@ -421,20 +421,63 @@ npm run db:migrate   # Run migrations
 npm run db:studio    # Open Drizzle Studio
 ```
 
+### Drizzle Migrations
+
+**Location:** `migrations/` directory
+
+**Workflow:**
+1. Modify schema in `src/models/Schema.ts`
+2. Generate migration: `npm run db:generate`
+3. Review generated SQL in `migrations/XXXX_migration_name/`
+4. Apply migration: `npm run db:migrate`
+
+**Migration Files:**
+- `migrations/meta/_journal.json` - Migration history tracking
+- `migrations/XXXX_*/` - Individual migration folders with SQL
+
+**Best Practices:**
+- Always review generated migrations before applying
+- Test migrations on a copy of production data when possible
+- Migrations are applied automatically in development via `npm run dev`
+- For breaking changes, consider data migration scripts
+
+**Rollback:** Drizzle doesn't support automatic rollbacks. For rollbacks:
+1. Create a new migration that reverses the changes
+2. Or restore from database backup
+
 ### Database Seed Script
 
 The seed script (`src/scripts/seed.ts`) populates the database with sample data for development and testing. It seeds programs, classes, events, coupons, membership plans, tags, and sample members.
 
 **Usage:**
+
+The seed script requires a running PGLite server. Use two terminal windows:
+
 ```bash
-# Seed a specific organization (required for first-time setup)
-DATABASE_URL="file:local.db" npx tsx src/scripts/seed.ts --orgId=org_xxxxx
+# Terminal 1: Start the PGLite database server
+npm run db-server:file
 
-# Seed all organizations in the database
-DATABASE_URL="file:local.db" npx tsx src/scripts/seed.ts
+# Terminal 2: Run the seed script (while db-server is running)
+DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5432/postgres" npx tsx src/scripts/seed.ts --orgId=org_xxxxx
+```
 
-# Clear and re-seed an organization
-DATABASE_URL="file:local.db" npx tsx src/scripts/seed.ts --orgId=org_xxxxx --reset
+**Re-seeding from scratch (reset local database):**
+```bash
+# 1. Stop the db-server if running (Ctrl+C in Terminal 1)
+
+# 2. Delete the local database
+rm -rf local.db
+
+# 3. Start the db-server (this runs migrations automatically)
+npm run db-server:file
+
+# 4. In another terminal, seed the organization
+DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5432/postgres" npx tsx src/scripts/seed.ts --orgId=org_xxxxx
+```
+
+**Alternative: Seed with reset flag (keeps database, clears org data):**
+```bash
+DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5432/postgres" npx tsx src/scripts/seed.ts --orgId=org_xxxxx --reset
 ```
 
 **Finding your Organization ID:**
@@ -451,6 +494,7 @@ DATABASE_URL="file:local.db" npx tsx src/scripts/seed.ts --orgId=org_xxxxx --res
 - 12 coupons (various types and statuses)
 - 6 membership plans
 - 8 sample members with memberships
+- Catalog items with variants, categories, and images
 
 **Note:** The seed script creates the organization record in the local database if it doesn't exist. Staff/instructor assignments require creating users in the Clerk dashboard first.
 
@@ -677,7 +721,7 @@ This approach:
 
 | Vendor | Domains | Directives |
 |--------|---------|------------|
-| **Clerk** | `api.clerk.com`, `cdn.clerk.com`, `*.clerk.com`, `*.clerk.accounts.dev` | script-src, style-src, connect-src, frame-src |
+| **Clerk** | `api.clerk.com`, `cdn.clerk.com`, `*.clerk.com`, `*.clerk.accounts.dev` | script-src, style-src, connect-src, frame-src, form-action |
 | **Sentry** | `*.ingest.sentry.io`, `o-*.ingest.sentry.io`, `sentry.io`, `www.sentry-cdn.com` | connect-src, script-src |
 | **Better Stack** | `*.betterstack.com`, `logs.betterstack.com` | connect-src |
 | **Upstash** | `*.upstash.io` | connect-src |
@@ -691,6 +735,7 @@ When integrating a new service, update the CSP in `next.config.ts`:
    - `style-src` - External stylesheets
    - `connect-src` - API calls (fetch, XHR, WebSocket)
    - `frame-src` - Embedded iframes
+   - `form-action` - Form submission targets (OAuth redirects)
    - `img-src` - Images
    - `font-src` - Web fonts
 
@@ -705,10 +750,14 @@ When integrating a new service, update the CSP in `next.config.ts`:
 'connect-src \'self\' https://api.clerk.com https://api.analytics.com',
 ```
 
+**OAuth/Social Login:**
+
+The `form-action` directive includes Clerk domains to allow OAuth redirects for social login (Google, Facebook, GitHub, etc.). Without this, browsers block the redirect to OAuth providers, causing CORS-like errors during social authentication.
+
 **Testing CSP:**
 - Use `Content-Security-Policy-Report-Only` header during testing
 - Check browser console for CSP violations
-- Test: sign-in, sign-up, organization switching, error reporting
+- Test: sign-in, sign-up, **social login (OAuth)**, organization switching, error reporting
 
 ### Auth Guards (Enhanced for Audit)
 

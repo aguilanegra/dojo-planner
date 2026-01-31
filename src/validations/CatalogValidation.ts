@@ -4,13 +4,13 @@ import * as z from 'zod';
 export const CatalogItemTypeEnum = z.enum(['merchandise', 'event_access']);
 export type CatalogItemType = z.infer<typeof CatalogItemTypeEnum>;
 
-// Catalog size type enum
-export const CatalogSizeTypeEnum = z.enum(['bjj', 'apparel', 'none']);
-export type CatalogSizeType = z.infer<typeof CatalogSizeTypeEnum>;
+// Maximum variants per item
+export const MAX_VARIANTS_PER_ITEM = 8;
 
-// Size stock input for create/update
-const SizeStockInput = z.object({
-  size: z.string().min(1),
+// Variant input for create/update
+const VariantInput = z.object({
+  name: z.string().min(1, 'Variant name is required'),
+  price: z.number().min(0, 'Price must be positive').default(0),
   stockQuantity: z.number().min(0).default(0),
 });
 
@@ -31,9 +31,8 @@ export const CreateCatalogItemValidation = z.object({
   isActive: z.boolean().default(true),
   isFeatured: z.boolean().default(false),
   showOnKiosk: z.boolean().default(true),
-  sizeType: CatalogSizeTypeEnum.default('none'),
   categoryIds: z.array(z.string()).optional(),
-  sizes: z.array(SizeStockInput).optional(),
+  variants: z.array(VariantInput).max(MAX_VARIANTS_PER_ITEM, `Maximum ${MAX_VARIANTS_PER_ITEM} variants allowed`).optional(),
 });
 
 // Update catalog item validation
@@ -54,9 +53,8 @@ export const UpdateCatalogItemValidation = z.object({
   isActive: z.boolean().optional(),
   isFeatured: z.boolean().optional(),
   showOnKiosk: z.boolean().optional(),
-  sizeType: CatalogSizeTypeEnum.optional(),
   categoryIds: z.array(z.string()).optional(),
-  sizes: z.array(SizeStockInput).optional(),
+  variants: z.array(VariantInput).max(MAX_VARIANTS_PER_ITEM, `Maximum ${MAX_VARIANTS_PER_ITEM} variants allowed`).optional(),
 });
 
 // Delete catalog item validation
@@ -64,28 +62,30 @@ export const DeleteCatalogItemValidation = z.object({
   id: z.string().min(1),
 });
 
-// Create size validation
-export const CreateSizeValidation = z.object({
+// Create variant validation
+export const CreateVariantValidation = z.object({
   catalogItemId: z.string().min(1),
-  size: z.string().min(1, 'Size is required'),
+  name: z.string().min(1, 'Variant name is required'),
+  price: z.number().min(0, 'Price must be positive').default(0),
   stockQuantity: z.number().min(0).default(0),
 });
 
-// Update size validation
-export const UpdateSizeValidation = z.object({
+// Update variant validation
+export const UpdateVariantValidation = z.object({
   id: z.string().min(1),
-  size: z.string().min(1).optional(),
+  name: z.string().min(1).optional(),
+  price: z.number().min(0).optional(),
   stockQuantity: z.number().min(0).optional(),
 });
 
-// Delete size validation
-export const DeleteSizeValidation = z.object({
+// Delete variant validation
+export const DeleteVariantValidation = z.object({
   id: z.string().min(1),
 });
 
 // Stock adjustment validation
 export const AdjustStockValidation = z.object({
-  sizeId: z.string().min(1),
+  variantId: z.string().min(1),
   adjustment: z.number(), // Can be positive or negative
   reason: z.string().min(1, 'Reason is required'),
 });
