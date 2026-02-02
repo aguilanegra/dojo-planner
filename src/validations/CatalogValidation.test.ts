@@ -2,19 +2,19 @@ import { describe, expect, it } from 'vitest';
 import {
   AdjustStockValidation,
   CatalogItemTypeEnum,
-  CatalogSizeTypeEnum,
   CreateCatalogImageValidation,
   CreateCatalogItemValidation,
   CreateCategoryValidation,
-  CreateSizeValidation,
+  CreateVariantValidation,
   DeleteCatalogImageValidation,
   DeleteCatalogItemValidation,
   DeleteCategoryValidation,
-  DeleteSizeValidation,
+  DeleteVariantValidation,
   GetCatalogItemValidation,
+  MAX_VARIANTS_PER_ITEM,
   UpdateCatalogItemValidation,
   UpdateCategoryValidation,
-  UpdateSizeValidation,
+  UpdateVariantValidation,
 } from './CatalogValidation';
 
 describe('CatalogValidation', () => {
@@ -38,29 +38,9 @@ describe('CatalogValidation', () => {
     });
   });
 
-  describe('CatalogSizeTypeEnum', () => {
-    it('should accept bjj type', () => {
-      const result = CatalogSizeTypeEnum.safeParse('bjj');
-
-      expect(result.success).toBe(true);
-    });
-
-    it('should accept apparel type', () => {
-      const result = CatalogSizeTypeEnum.safeParse('apparel');
-
-      expect(result.success).toBe(true);
-    });
-
-    it('should accept none type', () => {
-      const result = CatalogSizeTypeEnum.safeParse('none');
-
-      expect(result.success).toBe(true);
-    });
-
-    it('should reject invalid type', () => {
-      const result = CatalogSizeTypeEnum.safeParse('invalid');
-
-      expect(result.success).toBe(false);
+  describe('MAX_VARIANTS_PER_ITEM', () => {
+    it('should be 8', () => {
+      expect(MAX_VARIANTS_PER_ITEM).toBe(8);
     });
   });
 
@@ -92,11 +72,10 @@ describe('CatalogValidation', () => {
         isActive: true,
         isFeatured: true,
         showOnKiosk: true,
-        sizeType: 'bjj' as const,
         categoryIds: ['cat-1', 'cat-2'],
-        sizes: [
-          { size: 'A1', stockQuantity: 10 },
-          { size: 'A2', stockQuantity: 15 },
+        variants: [
+          { name: 'Small', price: 29.99, stockQuantity: 10 },
+          { name: 'Medium', price: 34.99, stockQuantity: 15 },
         ],
       };
       const result = CreateCatalogItemValidation.safeParse(completeItem);
@@ -200,41 +179,80 @@ describe('CatalogValidation', () => {
         expect(result.data.isActive).toBe(true);
         expect(result.data.isFeatured).toBe(false);
         expect(result.data.showOnKiosk).toBe(true);
-        expect(result.data.sizeType).toBe('none');
       }
     });
 
-    it('should validate sizes array with valid entries', () => {
-      const itemWithSizes = {
+    it('should validate variants array with valid entries', () => {
+      const itemWithVariants = {
         ...validItem,
-        sizes: [
-          { size: 'S', stockQuantity: 5 },
-          { size: 'M', stockQuantity: 10 },
+        variants: [
+          { name: 'Small', price: 25, stockQuantity: 5 },
+          { name: 'Medium', price: 30, stockQuantity: 10 },
         ],
       };
-      const result = CreateCatalogItemValidation.safeParse(itemWithSizes);
+      const result = CreateCatalogItemValidation.safeParse(itemWithVariants);
 
       expect(result.success).toBe(true);
     });
 
-    it('should fail when size entry has empty size', () => {
-      const itemWithInvalidSize = {
+    it('should fail when variant has empty name', () => {
+      const itemWithInvalidVariant = {
         ...validItem,
-        sizes: [{ size: '', stockQuantity: 5 }],
+        variants: [{ name: '', price: 25, stockQuantity: 5 }],
       };
-      const result = CreateCatalogItemValidation.safeParse(itemWithInvalidSize);
+      const result = CreateCatalogItemValidation.safeParse(itemWithInvalidVariant);
 
       expect(result.success).toBe(false);
     });
 
-    it('should fail when size entry has negative stockQuantity', () => {
-      const itemWithInvalidSize = {
+    it('should fail when variant has negative price', () => {
+      const itemWithInvalidVariant = {
         ...validItem,
-        sizes: [{ size: 'S', stockQuantity: -1 }],
+        variants: [{ name: 'Small', price: -10, stockQuantity: 5 }],
       };
-      const result = CreateCatalogItemValidation.safeParse(itemWithInvalidSize);
+      const result = CreateCatalogItemValidation.safeParse(itemWithInvalidVariant);
 
       expect(result.success).toBe(false);
+    });
+
+    it('should fail when variant has negative stockQuantity', () => {
+      const itemWithInvalidVariant = {
+        ...validItem,
+        variants: [{ name: 'Small', price: 25, stockQuantity: -1 }],
+      };
+      const result = CreateCatalogItemValidation.safeParse(itemWithInvalidVariant);
+
+      expect(result.success).toBe(false);
+    });
+
+    it('should fail when variants exceed MAX_VARIANTS_PER_ITEM', () => {
+      const tooManyVariants = Array.from({ length: 9 }, (_, i) => ({
+        name: `Variant ${i + 1}`,
+        price: 25,
+        stockQuantity: 5,
+      }));
+      const itemWithTooManyVariants = {
+        ...validItem,
+        variants: tooManyVariants,
+      };
+      const result = CreateCatalogItemValidation.safeParse(itemWithTooManyVariants);
+
+      expect(result.success).toBe(false);
+    });
+
+    it('should accept maximum allowed variants', () => {
+      const maxVariants = Array.from({ length: MAX_VARIANTS_PER_ITEM }, (_, i) => ({
+        name: `Variant ${i + 1}`,
+        price: 25,
+        stockQuantity: 5,
+      }));
+      const itemWithMaxVariants = {
+        ...validItem,
+        variants: maxVariants,
+      };
+      const result = CreateCatalogItemValidation.safeParse(itemWithMaxVariants);
+
+      expect(result.success).toBe(true);
     });
   });
 
@@ -295,13 +313,27 @@ describe('CatalogValidation', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should validate sizes update', () => {
+    it('should validate variants update', () => {
       const result = UpdateCatalogItemValidation.safeParse({
         id: 'item-123',
-        sizes: [{ size: 'L', stockQuantity: 20 }],
+        variants: [{ name: 'Large', price: 35, stockQuantity: 20 }],
       });
 
       expect(result.success).toBe(true);
+    });
+
+    it('should fail when variants exceed maximum', () => {
+      const tooManyVariants = Array.from({ length: 9 }, (_, i) => ({
+        name: `Variant ${i + 1}`,
+        price: 25,
+        stockQuantity: 5,
+      }));
+      const result = UpdateCatalogItemValidation.safeParse({
+        id: 'item-123',
+        variants: tooManyVariants,
+      });
+
+      expect(result.success).toBe(false);
     });
   });
 
@@ -325,11 +357,12 @@ describe('CatalogValidation', () => {
     });
   });
 
-  describe('CreateSizeValidation', () => {
-    it('should validate a valid size', () => {
-      const result = CreateSizeValidation.safeParse({
+  describe('CreateVariantValidation', () => {
+    it('should validate a valid variant', () => {
+      const result = CreateVariantValidation.safeParse({
         catalogItemId: 'item-123',
-        size: 'A2',
+        name: 'Medium',
+        price: 29.99,
         stockQuantity: 10,
       });
 
@@ -337,9 +370,9 @@ describe('CatalogValidation', () => {
     });
 
     it('should apply default stockQuantity of 0', () => {
-      const result = CreateSizeValidation.safeParse({
+      const result = CreateVariantValidation.safeParse({
         catalogItemId: 'item-123',
-        size: 'A2',
+        name: 'Small',
       });
 
       expect(result.success).toBe(true);
@@ -349,19 +382,45 @@ describe('CatalogValidation', () => {
       }
     });
 
+    it('should apply default price of 0', () => {
+      const result = CreateVariantValidation.safeParse({
+        catalogItemId: 'item-123',
+        name: 'Small',
+      });
+
+      expect(result.success).toBe(true);
+
+      if (result.success) {
+        expect(result.data.price).toBe(0);
+      }
+    });
+
     it('should fail when catalogItemId is missing', () => {
-      const result = CreateSizeValidation.safeParse({
-        size: 'A2',
+      const result = CreateVariantValidation.safeParse({
+        name: 'Medium',
+        price: 29.99,
         stockQuantity: 10,
       });
 
       expect(result.success).toBe(false);
     });
 
-    it('should fail when size is empty', () => {
-      const result = CreateSizeValidation.safeParse({
+    it('should fail when name is empty', () => {
+      const result = CreateVariantValidation.safeParse({
         catalogItemId: 'item-123',
-        size: '',
+        name: '',
+        price: 29.99,
+        stockQuantity: 10,
+      });
+
+      expect(result.success).toBe(false);
+    });
+
+    it('should fail when price is negative', () => {
+      const result = CreateVariantValidation.safeParse({
+        catalogItemId: 'item-123',
+        name: 'Medium',
+        price: -10,
         stockQuantity: 10,
       });
 
@@ -369,9 +428,10 @@ describe('CatalogValidation', () => {
     });
 
     it('should fail when stockQuantity is negative', () => {
-      const result = CreateSizeValidation.safeParse({
+      const result = CreateVariantValidation.safeParse({
         catalogItemId: 'item-123',
-        size: 'A2',
+        name: 'Medium',
+        price: 29.99,
         stockQuantity: -5,
       });
 
@@ -379,25 +439,34 @@ describe('CatalogValidation', () => {
     });
   });
 
-  describe('UpdateSizeValidation', () => {
+  describe('UpdateVariantValidation', () => {
     it('should validate with only id', () => {
-      const result = UpdateSizeValidation.safeParse({ id: 'size-123' });
+      const result = UpdateVariantValidation.safeParse({ id: 'variant-123' });
 
       expect(result.success).toBe(true);
     });
 
-    it('should validate with id and size update', () => {
-      const result = UpdateSizeValidation.safeParse({
-        id: 'size-123',
-        size: 'A3',
+    it('should validate with id and name update', () => {
+      const result = UpdateVariantValidation.safeParse({
+        id: 'variant-123',
+        name: 'Large',
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it('should validate with id and price update', () => {
+      const result = UpdateVariantValidation.safeParse({
+        id: 'variant-123',
+        price: 39.99,
       });
 
       expect(result.success).toBe(true);
     });
 
     it('should validate with id and stockQuantity update', () => {
-      const result = UpdateSizeValidation.safeParse({
-        id: 'size-123',
+      const result = UpdateVariantValidation.safeParse({
+        id: 'variant-123',
         stockQuantity: 15,
       });
 
@@ -405,27 +474,36 @@ describe('CatalogValidation', () => {
     });
 
     it('should fail when id is missing', () => {
-      const result = UpdateSizeValidation.safeParse({ size: 'A3' });
+      const result = UpdateVariantValidation.safeParse({ name: 'Large' });
 
       expect(result.success).toBe(false);
     });
 
     it('should fail when id is empty', () => {
-      const result = UpdateSizeValidation.safeParse({ id: '' });
+      const result = UpdateVariantValidation.safeParse({ id: '' });
+
+      expect(result.success).toBe(false);
+    });
+
+    it('should fail when price is negative', () => {
+      const result = UpdateVariantValidation.safeParse({
+        id: 'variant-123',
+        price: -10,
+      });
 
       expect(result.success).toBe(false);
     });
   });
 
-  describe('DeleteSizeValidation', () => {
+  describe('DeleteVariantValidation', () => {
     it('should validate with valid id', () => {
-      const result = DeleteSizeValidation.safeParse({ id: 'size-123' });
+      const result = DeleteVariantValidation.safeParse({ id: 'variant-123' });
 
       expect(result.success).toBe(true);
     });
 
     it('should fail when id is empty', () => {
-      const result = DeleteSizeValidation.safeParse({ id: '' });
+      const result = DeleteVariantValidation.safeParse({ id: '' });
 
       expect(result.success).toBe(false);
     });
@@ -434,7 +512,7 @@ describe('CatalogValidation', () => {
   describe('AdjustStockValidation', () => {
     it('should validate a positive adjustment', () => {
       const result = AdjustStockValidation.safeParse({
-        sizeId: 'size-123',
+        variantId: 'variant-123',
         adjustment: 10,
         reason: 'Received new inventory',
       });
@@ -444,7 +522,7 @@ describe('CatalogValidation', () => {
 
     it('should validate a negative adjustment', () => {
       const result = AdjustStockValidation.safeParse({
-        sizeId: 'size-123',
+        variantId: 'variant-123',
         adjustment: -5,
         reason: 'Damaged items removed',
       });
@@ -454,7 +532,7 @@ describe('CatalogValidation', () => {
 
     it('should validate zero adjustment', () => {
       const result = AdjustStockValidation.safeParse({
-        sizeId: 'size-123',
+        variantId: 'variant-123',
         adjustment: 0,
         reason: 'Inventory count correction',
       });
@@ -462,7 +540,7 @@ describe('CatalogValidation', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should fail when sizeId is missing', () => {
+    it('should fail when variantId is missing', () => {
       const result = AdjustStockValidation.safeParse({
         adjustment: 10,
         reason: 'Test',
@@ -473,7 +551,7 @@ describe('CatalogValidation', () => {
 
     it('should fail when reason is empty', () => {
       const result = AdjustStockValidation.safeParse({
-        sizeId: 'size-123',
+        variantId: 'variant-123',
         adjustment: 10,
         reason: '',
       });
@@ -483,7 +561,7 @@ describe('CatalogValidation', () => {
 
     it('should fail when reason is missing', () => {
       const result = AdjustStockValidation.safeParse({
-        sizeId: 'size-123',
+        variantId: 'variant-123',
         adjustment: 10,
       });
 
@@ -648,15 +726,6 @@ describe('CatalogValidation', () => {
         thumbnailUrl: 'https://example.com/thumb.jpg',
         altText: 'Product image',
         isPrimary: true,
-      });
-
-      expect(result.success).toBe(true);
-    });
-
-    it('should validate data URL for image', () => {
-      const result = CreateCatalogImageValidation.safeParse({
-        catalogItemId: 'item-123',
-        url: 'data:image/jpeg;base64,/9j/4AAQSkZJRg==',
       });
 
       expect(result.success).toBe(true);

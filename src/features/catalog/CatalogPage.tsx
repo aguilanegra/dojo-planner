@@ -8,6 +8,7 @@ import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCatalogCache, useCatalogCategoriesCache } from '@/hooks/useCatalogCache';
+import { useEventsCache } from '@/hooks/useEventsCache';
 import { client } from '@/libs/Orpc';
 import { StatsCards } from '@/templates/StatsCards';
 import { AddEditCatalogItemModal } from './AddEditCatalogItemModal';
@@ -41,12 +42,16 @@ function LoadingSkeleton() {
 
 export function CatalogPage({ organizationId }: CatalogPageProps) {
   const t = useTranslations('CatalogPage');
-  const { items, loading, error, revalidate } = useCatalogCache(organizationId);
+  const { items, loading, revalidating, error, revalidate } = useCatalogCache(organizationId);
   const {
     categories,
     loading: categoriesLoading,
     revalidate: revalidateCategories,
   } = useCatalogCategoriesCache(organizationId);
+  const {
+    events,
+    loading: eventsLoading,
+  } = useEventsCache(organizationId);
 
   // State
   const [filters, setFilters] = useState<CatalogFilters>({
@@ -243,7 +248,11 @@ export function CatalogPage({ organizationId }: CatalogPageProps) {
     }
   }, [revalidateCategories]);
 
-  if (loading || categoriesLoading) {
+  // Only show skeleton on initial load, not during revalidation
+  // This prevents modals from being unmounted during background data refresh
+  const isInitialLoading = (loading && !revalidating) || categoriesLoading || eventsLoading;
+
+  if (isInitialLoading) {
     return <LoadingSkeleton />;
   }
 
@@ -319,6 +328,7 @@ export function CatalogPage({ organizationId }: CatalogPageProps) {
         onCloseAction={() => setIsAddEditModalOpen(false)}
         item={editingItem}
         categories={categories}
+        events={events}
         onSaveAction={handleSaveItem}
       />
 

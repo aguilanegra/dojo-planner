@@ -22,16 +22,13 @@ export type {
   CatalogItemImage,
   CatalogItemStatus,
   CatalogItemType,
-  CatalogSize,
-  CatalogSizeType,
-  SizeStock,
+  CatalogVariant,
+  VariantInput,
 } from './types';
 
 export {
-  APPAREL_SIZES,
-  BJJ_SIZES,
   formatPrice,
-  getAvailableSizes,
   getCatalogItemStatus,
   getPrimaryImage,
+  MAX_VARIANTS_PER_ITEM,
 } from './types';

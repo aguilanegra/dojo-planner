@@ -31,7 +31,7 @@ vi.mock('@/models/Schema', () => ({
   catalogItemCategorySchema: { catalogItemId: 'catalogItemId', categoryId: 'categoryId' },
   catalogItemImageSchema: { id: 'id', catalogItemId: 'catalogItemId' },
   catalogItemSchema: { id: 'id', organizationId: 'organizationId', type: 'type', name: 'name' },
-  catalogItemSizeSchema: { id: 'id', catalogItemId: 'catalogItemId' },
+  catalogItemVariantSchema: { id: 'id', catalogItemId: 'catalogItemId' },
 }));
 
 describe('CatalogService', () => {
@@ -41,16 +41,10 @@ describe('CatalogService', () => {
   });
 
   describe('Constants', () => {
-    it('should export BJJ_SIZES array', async () => {
-      const { BJJ_SIZES } = await import('./CatalogService');
+    it('should export MAX_VARIANTS_PER_ITEM as 8', async () => {
+      const { MAX_VARIANTS_PER_ITEM } = await import('./CatalogService');
 
-      expect(BJJ_SIZES).toEqual(['A0', 'A1', 'A2', 'A3', 'A4', 'A5']);
-    });
-
-    it('should export APPAREL_SIZES array', async () => {
-      const { APPAREL_SIZES } = await import('./CatalogService');
-
-      expect(APPAREL_SIZES).toEqual(['S', 'M', 'L', 'XL', 'XXL']);
+      expect(MAX_VARIANTS_PER_ITEM).toBe(8);
     });
   });
 
@@ -90,15 +84,15 @@ describe('CatalogService', () => {
         isActive: true,
         isFeatured: false,
         showOnKiosk: true,
-        sizeType: 'apparel',
         createdAt: new Date(),
         updatedAt: new Date(),
       };
 
-      const mockSize = {
-        id: 'size-1',
+      const mockVariant = {
+        id: 'variant-1',
         catalogItemId: 'item-1',
-        size: 'M',
+        name: 'Medium',
+        price: 29.99,
         stockQuantity: 10,
         sortOrder: 0,
         createdAt: new Date(),
@@ -138,12 +132,12 @@ describe('CatalogService', () => {
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockImplementation(() => {
             callCount++;
-            // First call: items, Second: sizes, Third: images, Fourth: item categories, Fifth: all categories
+            // First call: items, Second: variants, Third: images, Fourth: item categories, Fifth: all categories
             if (callCount === 1) {
               return Promise.resolve([mockItem]);
             }
             if (callCount === 2) {
-              return Promise.resolve([mockSize]);
+              return Promise.resolve([mockVariant]);
             }
             if (callCount === 3) {
               return Promise.resolve([mockImage]);
@@ -164,7 +158,7 @@ describe('CatalogService', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0]?.name).toBe('Test Product');
-      expect(result[0]?.sizes).toHaveLength(1);
+      expect(result[0]?.variants).toHaveLength(1);
       expect(result[0]?.images).toHaveLength(1);
       expect(result[0]?.categories).toHaveLength(1);
       expect(result[0]?.totalStock).toBe(10);
@@ -191,7 +185,6 @@ describe('CatalogService', () => {
         isActive: null,
         isFeatured: null,
         showOnKiosk: null,
-        sizeType: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -219,7 +212,6 @@ describe('CatalogService', () => {
       expect(result[0]?.isActive).toBe(true);
       expect(result[0]?.isFeatured).toBe(false);
       expect(result[0]?.showOnKiosk).toBe(true);
-      expect(result[0]?.sizeType).toBe('none');
     });
   });
 
@@ -259,7 +251,6 @@ describe('CatalogService', () => {
         isActive: true,
         isFeatured: false,
         showOnKiosk: true,
-        sizeType: 'none',
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -397,11 +388,6 @@ describe('CatalogService', () => {
   });
 
   describe('createCatalogItem', () => {
-    // Note: Due to the complexity of mocking with vi.resetModules() and dynamic imports,
-    // we focus on testing that createCatalogItem correctly throws when getCatalogItemById
-    // returns null, which validates the error handling path.
-    // The successful creation path is tested via integration/e2e tests.
-
     it('should throw error when item creation fails', async () => {
       const { db } = await import('@/libs/DB');
 
@@ -559,43 +545,86 @@ describe('CatalogService', () => {
       const { deleteCatalogItem } = await import('./CatalogService');
       await deleteCatalogItem('item-1', 'test-org-123');
 
-      // Should delete categories, images, sizes, and the item itself (4 calls)
+      // Should delete categories, images, variants, and the item itself (4 calls)
       expect(db.delete).toHaveBeenCalledTimes(4);
     });
   });
 
-  describe('createCatalogSize', () => {
-    it('should create a size', async () => {
+  describe('createCatalogVariant', () => {
+    it('should create a variant', async () => {
       const { db } = await import('@/libs/DB');
-      const mockSize = {
-        id: 'size-1',
+      const mockVariant = {
+        id: 'variant-1',
         catalogItemId: 'item-1',
-        size: 'M',
+        name: 'Medium',
+        price: 29.99,
         stockQuantity: 10,
         sortOrder: 0,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
 
-      vi.mocked(db.insert).mockReturnValue({
-        values: vi.fn().mockReturnValue({
-          returning: vi.fn().mockResolvedValue([mockSize]),
+      vi.mocked(db.select).mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([]),
         }),
       } as any);
 
-      const { createCatalogSize } = await import('./CatalogService');
-      const result = await createCatalogSize({
+      vi.mocked(db.insert).mockReturnValue({
+        values: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([mockVariant]),
+        }),
+      } as any);
+
+      const { createCatalogVariant } = await import('./CatalogService');
+      const result = await createCatalogVariant({
         catalogItemId: 'item-1',
-        size: 'M',
+        name: 'Medium',
+        price: 29.99,
         stockQuantity: 10,
       });
 
-      expect(result.size).toBe('M');
+      expect(result.name).toBe('Medium');
+      expect(result.price).toBe(29.99);
       expect(result.stockQuantity).toBe(10);
+    });
+
+    it('should throw error when max variants exceeded', async () => {
+      const { db } = await import('@/libs/DB');
+
+      // Mock 8 existing variants
+      const existingVariants = Array.from({ length: 8 }, (_, i) => ({
+        id: `variant-${i}`,
+        catalogItemId: 'item-1',
+        name: `Variant ${i}`,
+        price: 25,
+        stockQuantity: 5,
+        sortOrder: i,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }));
+
+      vi.mocked(db.select).mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue(existingVariants),
+        }),
+      } as any);
+
+      const { createCatalogVariant } = await import('./CatalogService');
+
+      await expect(
+        createCatalogVariant({ catalogItemId: 'item-1', name: 'New', price: 30 }),
+      ).rejects.toThrow('Maximum 8 variants allowed per item');
     });
 
     it('should throw error when creation fails', async () => {
       const { db } = await import('@/libs/DB');
+
+      vi.mocked(db.select).mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([]),
+        }),
+      } as any);
 
       vi.mocked(db.insert).mockReturnValue({
         values: vi.fn().mockReturnValue({
@@ -603,21 +632,22 @@ describe('CatalogService', () => {
         }),
       } as any);
 
-      const { createCatalogSize } = await import('./CatalogService');
+      const { createCatalogVariant } = await import('./CatalogService');
 
       await expect(
-        createCatalogSize({ catalogItemId: 'item-1', size: 'M' }),
-      ).rejects.toThrow('Failed to create size');
+        createCatalogVariant({ catalogItemId: 'item-1', name: 'Medium', price: 29.99 }),
+      ).rejects.toThrow('Failed to create variant');
     });
   });
 
-  describe('updateCatalogSize', () => {
-    it('should update a size', async () => {
+  describe('updateCatalogVariant', () => {
+    it('should update a variant', async () => {
       const { db } = await import('@/libs/DB');
-      const mockSize = {
-        id: 'size-1',
+      const mockVariant = {
+        id: 'variant-1',
         catalogItemId: 'item-1',
-        size: 'L',
+        name: 'Large',
+        price: 34.99,
         stockQuantity: 15,
         sortOrder: 0,
         createdAt: new Date(),
@@ -627,19 +657,20 @@ describe('CatalogService', () => {
       vi.mocked(db.update).mockReturnValue({
         set: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
-            returning: vi.fn().mockResolvedValue([mockSize]),
+            returning: vi.fn().mockResolvedValue([mockVariant]),
           }),
         }),
       } as any);
 
-      const { updateCatalogSize } = await import('./CatalogService');
-      const result = await updateCatalogSize({ id: 'size-1', size: 'L', stockQuantity: 15 });
+      const { updateCatalogVariant } = await import('./CatalogService');
+      const result = await updateCatalogVariant({ id: 'variant-1', name: 'Large', price: 34.99, stockQuantity: 15 });
 
-      expect(result.size).toBe('L');
+      expect(result.name).toBe('Large');
+      expect(result.price).toBe(34.99);
       expect(result.stockQuantity).toBe(15);
     });
 
-    it('should throw error when size not found', async () => {
+    it('should throw error when variant not found', async () => {
       const { db } = await import('@/libs/DB');
 
       vi.mocked(db.update).mockReturnValue({
@@ -650,133 +681,136 @@ describe('CatalogService', () => {
         }),
       } as any);
 
-      const { updateCatalogSize } = await import('./CatalogService');
+      const { updateCatalogVariant } = await import('./CatalogService');
 
       await expect(
-        updateCatalogSize({ id: 'nonexistent' }),
-      ).rejects.toThrow('Size not found');
+        updateCatalogVariant({ id: 'nonexistent' }),
+      ).rejects.toThrow('Variant not found');
     });
   });
 
-  describe('deleteCatalogSize', () => {
-    it('should delete a size', async () => {
+  describe('deleteCatalogVariant', () => {
+    it('should delete a variant', async () => {
       const { db } = await import('@/libs/DB');
 
       vi.mocked(db.delete).mockReturnValue({
         where: vi.fn().mockResolvedValue(undefined),
       } as any);
 
-      const { deleteCatalogSize } = await import('./CatalogService');
-      await deleteCatalogSize('size-1');
+      const { deleteCatalogVariant } = await import('./CatalogService');
+      await deleteCatalogVariant('variant-1');
 
       expect(db.delete).toHaveBeenCalled();
     });
   });
 
-  describe('adjustSizeStock', () => {
+  describe('adjustVariantStock', () => {
     it('should increase stock by positive adjustment', async () => {
       const { db } = await import('@/libs/DB');
-      const mockSize = {
-        id: 'size-1',
+      const mockVariant = {
+        id: 'variant-1',
         catalogItemId: 'item-1',
-        size: 'M',
+        name: 'Medium',
+        price: 29.99,
         stockQuantity: 10,
         sortOrder: 0,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
 
-      const mockUpdatedSize = { ...mockSize, stockQuantity: 15 };
+      const mockUpdatedVariant = { ...mockVariant, stockQuantity: 15 };
 
       vi.mocked(db.select).mockReturnValue({
         from: vi.fn().mockReturnValue({
-          where: vi.fn().mockResolvedValue([mockSize]),
+          where: vi.fn().mockResolvedValue([mockVariant]),
         }),
       } as any);
 
       vi.mocked(db.update).mockReturnValue({
         set: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
-            returning: vi.fn().mockResolvedValue([mockUpdatedSize]),
+            returning: vi.fn().mockResolvedValue([mockUpdatedVariant]),
           }),
         }),
       } as any);
 
-      const { adjustSizeStock } = await import('./CatalogService');
-      const result = await adjustSizeStock('size-1', 5);
+      const { adjustVariantStock } = await import('./CatalogService');
+      const result = await adjustVariantStock('variant-1', 5);
 
       expect(result.stockQuantity).toBe(15);
     });
 
     it('should decrease stock by negative adjustment', async () => {
       const { db } = await import('@/libs/DB');
-      const mockSize = {
-        id: 'size-1',
+      const mockVariant = {
+        id: 'variant-1',
         catalogItemId: 'item-1',
-        size: 'M',
+        name: 'Medium',
+        price: 29.99,
         stockQuantity: 10,
         sortOrder: 0,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
 
-      const mockUpdatedSize = { ...mockSize, stockQuantity: 5 };
+      const mockUpdatedVariant = { ...mockVariant, stockQuantity: 5 };
 
       vi.mocked(db.select).mockReturnValue({
         from: vi.fn().mockReturnValue({
-          where: vi.fn().mockResolvedValue([mockSize]),
+          where: vi.fn().mockResolvedValue([mockVariant]),
         }),
       } as any);
 
       vi.mocked(db.update).mockReturnValue({
         set: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
-            returning: vi.fn().mockResolvedValue([mockUpdatedSize]),
+            returning: vi.fn().mockResolvedValue([mockUpdatedVariant]),
           }),
         }),
       } as any);
 
-      const { adjustSizeStock } = await import('./CatalogService');
-      const result = await adjustSizeStock('size-1', -5);
+      const { adjustVariantStock } = await import('./CatalogService');
+      const result = await adjustVariantStock('variant-1', -5);
 
       expect(result.stockQuantity).toBe(5);
     });
 
     it('should not allow stock to go below zero', async () => {
       const { db } = await import('@/libs/DB');
-      const mockSize = {
-        id: 'size-1',
+      const mockVariant = {
+        id: 'variant-1',
         catalogItemId: 'item-1',
-        size: 'M',
+        name: 'Medium',
+        price: 29.99,
         stockQuantity: 5,
         sortOrder: 0,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
 
-      const mockUpdatedSize = { ...mockSize, stockQuantity: 0 };
+      const mockUpdatedVariant = { ...mockVariant, stockQuantity: 0 };
 
       vi.mocked(db.select).mockReturnValue({
         from: vi.fn().mockReturnValue({
-          where: vi.fn().mockResolvedValue([mockSize]),
+          where: vi.fn().mockResolvedValue([mockVariant]),
         }),
       } as any);
 
       vi.mocked(db.update).mockReturnValue({
         set: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
-            returning: vi.fn().mockResolvedValue([mockUpdatedSize]),
+            returning: vi.fn().mockResolvedValue([mockUpdatedVariant]),
           }),
         }),
       } as any);
 
-      const { adjustSizeStock } = await import('./CatalogService');
-      const result = await adjustSizeStock('size-1', -10);
+      const { adjustVariantStock } = await import('./CatalogService');
+      const result = await adjustVariantStock('variant-1', -10);
 
       expect(result.stockQuantity).toBe(0);
     });
 
-    it('should throw error when size not found', async () => {
+    it('should throw error when variant not found', async () => {
       const { db } = await import('@/libs/DB');
 
       vi.mocked(db.select).mockReturnValue({
@@ -785,17 +819,18 @@ describe('CatalogService', () => {
         }),
       } as any);
 
-      const { adjustSizeStock } = await import('./CatalogService');
+      const { adjustVariantStock } = await import('./CatalogService');
 
-      await expect(adjustSizeStock('nonexistent', 5)).rejects.toThrow('Size not found');
+      await expect(adjustVariantStock('nonexistent', 5)).rejects.toThrow('Variant not found');
     });
 
     it('should throw error when update fails', async () => {
       const { db } = await import('@/libs/DB');
-      const mockSize = {
-        id: 'size-1',
+      const mockVariant = {
+        id: 'variant-1',
         catalogItemId: 'item-1',
-        size: 'M',
+        name: 'Medium',
+        price: 29.99,
         stockQuantity: 10,
         sortOrder: 0,
         createdAt: new Date(),
@@ -804,7 +839,7 @@ describe('CatalogService', () => {
 
       vi.mocked(db.select).mockReturnValue({
         from: vi.fn().mockReturnValue({
-          where: vi.fn().mockResolvedValue([mockSize]),
+          where: vi.fn().mockResolvedValue([mockVariant]),
         }),
       } as any);
 
@@ -816,9 +851,9 @@ describe('CatalogService', () => {
         }),
       } as any);
 
-      const { adjustSizeStock } = await import('./CatalogService');
+      const { adjustVariantStock } = await import('./CatalogService');
 
-      await expect(adjustSizeStock('size-1', 5)).rejects.toThrow('Failed to update stock');
+      await expect(adjustVariantStock('variant-1', 5)).rejects.toThrow('Failed to update stock');
     });
   });
 

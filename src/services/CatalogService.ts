@@ -6,7 +6,7 @@ import {
   catalogItemCategorySchema,
   catalogItemImageSchema,
   catalogItemSchema,
-  catalogItemSizeSchema,
+  catalogItemVariantSchema,
 } from '@/models/Schema';
 
 // =============================================================================
@@ -14,17 +14,15 @@ import {
 // =============================================================================
 
 export type CatalogItemType = 'merchandise' | 'event_access';
-export type CatalogSizeType = 'bjj' | 'apparel' | 'none';
 
-// BJJ sizes for gis and belts
-export const BJJ_SIZES = ['A0', 'A1', 'A2', 'A3', 'A4', 'A5'] as const;
-// Apparel sizes for shirts, shorts, rash guards
-export const APPAREL_SIZES = ['S', 'M', 'L', 'XL', 'XXL'] as const;
+// Maximum number of variants allowed per catalog item
+export const MAX_VARIANTS_PER_ITEM = 8;
 
-export type CatalogSize = {
+export type CatalogVariant = {
   id: string;
   catalogItemId: string;
-  size: string;
+  name: string;
+  price: number;
   stockQuantity: number;
   sortOrder: number;
   createdAt: Date;
@@ -73,10 +71,9 @@ export type CatalogItem = {
   isActive: boolean;
   isFeatured: boolean;
   showOnKiosk: boolean;
-  sizeType: CatalogSizeType;
   createdAt: Date;
   updatedAt: Date;
-  sizes: CatalogSize[];
+  variants: CatalogVariant[];
   images: CatalogItemImage[];
   categories: CatalogCategory[];
   totalStock: number;
@@ -99,9 +96,8 @@ type CreateCatalogItemInput = {
   isActive?: boolean;
   isFeatured?: boolean;
   showOnKiosk?: boolean;
-  sizeType?: CatalogSizeType;
   categoryIds?: string[];
-  sizes?: Array<{ size: string; stockQuantity: number }>;
+  variants?: Array<{ name: string; price: number; stockQuantity: number }>;
 };
 
 type UpdateCatalogItemInput = {
@@ -121,21 +117,22 @@ type UpdateCatalogItemInput = {
   isActive?: boolean;
   isFeatured?: boolean;
   showOnKiosk?: boolean;
-  sizeType?: CatalogSizeType;
   categoryIds?: string[];
-  sizes?: Array<{ size: string; stockQuantity: number }>;
+  variants?: Array<{ name: string; price: number; stockQuantity: number }>;
 };
 
-type CreateSizeInput = {
+type CreateVariantInput = {
   id?: string;
   catalogItemId: string;
-  size: string;
+  name: string;
+  price: number;
   stockQuantity?: number;
 };
 
-type UpdateSizeInput = {
+type UpdateVariantInput = {
   id: string;
-  size?: string;
+  name?: string;
+  price?: number;
   stockQuantity?: number;
 };
 
@@ -182,7 +179,7 @@ function generateSlug(name: string): string {
 // =============================================================================
 
 /**
- * Get all catalog items for an organization with sizes, images, and categories
+ * Get all catalog items for an organization with variants, images, and categories
  */
 export async function getOrganizationCatalogItems(organizationId: string): Promise<CatalogItem[]> {
   const items = await db
@@ -197,8 +194,8 @@ export async function getOrganizationCatalogItems(organizationId: string): Promi
   const itemIds = items.map(item => item.id);
 
   // Fetch all related data in parallel
-  const [sizes, images, itemCategories, allCategories] = await Promise.all([
-    db.select().from(catalogItemSizeSchema).where(inArray(catalogItemSizeSchema.catalogItemId, itemIds)),
+  const [variants, images, itemCategories, allCategories] = await Promise.all([
+    db.select().from(catalogItemVariantSchema).where(inArray(catalogItemVariantSchema.catalogItemId, itemIds)),
     db.select().from(catalogItemImageSchema).where(inArray(catalogItemImageSchema.catalogItemId, itemIds)),
     db.select().from(catalogItemCategorySchema).where(inArray(catalogItemCategorySchema.catalogItemId, itemIds)),
     db.select().from(catalogCategorySchema).where(eq(catalogCategorySchema.organizationId, organizationId)),
@@ -220,20 +217,21 @@ export async function getOrganizationCatalogItems(organizationId: string): Promi
     });
   });
 
-  // Group sizes by item
-  const sizesByItem = new Map<string, CatalogSize[]>();
-  sizes.forEach((s) => {
-    const existing = sizesByItem.get(s.catalogItemId) || [];
+  // Group variants by item
+  const variantsByItem = new Map<string, CatalogVariant[]>();
+  variants.forEach((v) => {
+    const existing = variantsByItem.get(v.catalogItemId) || [];
     existing.push({
-      id: s.id,
-      catalogItemId: s.catalogItemId,
-      size: s.size,
-      stockQuantity: s.stockQuantity ?? 0,
-      sortOrder: s.sortOrder ?? 0,
-      createdAt: s.createdAt,
-      updatedAt: s.updatedAt,
+      id: v.id,
+      catalogItemId: v.catalogItemId,
+      name: v.name,
+      price: v.price,
+      stockQuantity: v.stockQuantity ?? 0,
+      sortOrder: v.sortOrder ?? 0,
+      createdAt: v.createdAt,
+      updatedAt: v.updatedAt,
     });
-    sizesByItem.set(s.catalogItemId, existing);
+    variantsByItem.set(v.catalogItemId, existing);
   });
 
   // Group images by item
@@ -265,8 +263,8 @@ export async function getOrganizationCatalogItems(organizationId: string): Promi
   });
 
   return items.map((item) => {
-    const itemSizes = sizesByItem.get(item.id) || [];
-    const totalStock = itemSizes.reduce((sum, s) => sum + s.stockQuantity, 0);
+    const itemVariants = variantsByItem.get(item.id) || [];
+    const totalStock = itemVariants.reduce((sum, v) => sum + v.stockQuantity, 0);
 
     return {
       id: item.id,
@@ -287,10 +285,9 @@ export async function getOrganizationCatalogItems(organizationId: string): Promi
       isActive: item.isActive ?? true,
       isFeatured: item.isFeatured ?? false,
       showOnKiosk: item.showOnKiosk ?? true,
-      sizeType: (item.sizeType as CatalogSizeType) ?? 'none',
       createdAt: item.createdAt,
       updatedAt: item.updatedAt,
-      sizes: itemSizes.sort((a, b) => a.sortOrder - b.sortOrder),
+      variants: itemVariants.sort((a, b) => a.sortOrder - b.sortOrder),
       images: (imagesByItem.get(item.id) || []).sort((a, b) => a.sortOrder - b.sortOrder),
       categories: categoriesByItem.get(item.id) || [],
       totalStock,
@@ -326,9 +323,14 @@ export async function getKioskCatalogItems(organizationId: string): Promise<Cata
  * Create a new catalog item
  */
 export async function createCatalogItem(input: CreateCatalogItemInput, organizationId: string): Promise<CatalogItem> {
-  const { categoryIds, sizes, ...itemData } = input;
+  const { categoryIds, variants, ...itemData } = input;
   const itemId = itemData.id || randomUUID();
   const slug = itemData.slug || generateSlug(itemData.name);
+
+  // Validate variant count
+  if (variants && variants.length > MAX_VARIANTS_PER_ITEM) {
+    throw new Error(`Maximum ${MAX_VARIANTS_PER_ITEM} variants allowed per item`);
+  }
 
   await db.insert(catalogItemSchema).values({
     id: itemId,
@@ -348,7 +350,6 @@ export async function createCatalogItem(input: CreateCatalogItemInput, organizat
     isActive: itemData.isActive ?? true,
     isFeatured: itemData.isFeatured ?? false,
     showOnKiosk: itemData.showOnKiosk ?? true,
-    sizeType: itemData.sizeType ?? 'none',
   });
 
   // Add category associations
@@ -361,14 +362,15 @@ export async function createCatalogItem(input: CreateCatalogItemInput, organizat
     );
   }
 
-  // Add sizes if provided
-  if (sizes && sizes.length > 0) {
-    await db.insert(catalogItemSizeSchema).values(
-      sizes.map((size, index) => ({
+  // Add variants if provided
+  if (variants && variants.length > 0) {
+    await db.insert(catalogItemVariantSchema).values(
+      variants.map((variant, index) => ({
         id: randomUUID(),
         catalogItemId: itemId,
-        size: size.size,
-        stockQuantity: size.stockQuantity,
+        name: variant.name,
+        price: variant.price,
+        stockQuantity: variant.stockQuantity,
         sortOrder: index,
       })),
     );
@@ -385,7 +387,12 @@ export async function createCatalogItem(input: CreateCatalogItemInput, organizat
  * Update an existing catalog item
  */
 export async function updateCatalogItem(input: UpdateCatalogItemInput, organizationId: string): Promise<CatalogItem> {
-  const { id, categoryIds, sizes, ...updateData } = input;
+  const { id, categoryIds, variants, ...updateData } = input;
+
+  // Validate variant count
+  if (variants && variants.length > MAX_VARIANTS_PER_ITEM) {
+    throw new Error(`Maximum ${MAX_VARIANTS_PER_ITEM} variants allowed per item`);
+  }
 
   // Generate slug if name is being updated and slug is not provided
   const dataToUpdate: Record<string, unknown> = { ...updateData };
@@ -414,19 +421,20 @@ export async function updateCatalogItem(input: UpdateCatalogItemInput, organizat
     }
   }
 
-  // Update sizes if provided
-  if (sizes !== undefined) {
-    // Remove existing sizes
-    await db.delete(catalogItemSizeSchema).where(eq(catalogItemSizeSchema.catalogItemId, id));
+  // Update variants if provided
+  if (variants !== undefined) {
+    // Remove existing variants
+    await db.delete(catalogItemVariantSchema).where(eq(catalogItemVariantSchema.catalogItemId, id));
 
-    // Add new sizes
-    if (sizes.length > 0) {
-      await db.insert(catalogItemSizeSchema).values(
-        sizes.map((size, index) => ({
+    // Add new variants
+    if (variants.length > 0) {
+      await db.insert(catalogItemVariantSchema).values(
+        variants.map((variant, index) => ({
           id: randomUUID(),
           catalogItemId: id,
-          size: size.size,
-          stockQuantity: size.stockQuantity,
+          name: variant.name,
+          price: variant.price,
+          stockQuantity: variant.stockQuantity,
           sortOrder: index,
         })),
       );
@@ -441,13 +449,13 @@ export async function updateCatalogItem(input: UpdateCatalogItemInput, organizat
 }
 
 /**
- * Delete a catalog item (and all associated sizes, images, category associations)
+ * Delete a catalog item (and all associated variants, images, category associations)
  */
 export async function deleteCatalogItem(itemId: string, organizationId: string): Promise<void> {
   // Delete associated data first
   await db.delete(catalogItemCategorySchema).where(eq(catalogItemCategorySchema.catalogItemId, itemId));
   await db.delete(catalogItemImageSchema).where(eq(catalogItemImageSchema.catalogItemId, itemId));
-  await db.delete(catalogItemSizeSchema).where(eq(catalogItemSizeSchema.catalogItemId, itemId));
+  await db.delete(catalogItemVariantSchema).where(eq(catalogItemVariantSchema.catalogItemId, itemId));
 
   // Delete the item itself
   await db
@@ -456,97 +464,111 @@ export async function deleteCatalogItem(itemId: string, organizationId: string):
 }
 
 // =============================================================================
-// SIZE SERVICE FUNCTIONS
+// VARIANT SERVICE FUNCTIONS
 // =============================================================================
 
 /**
- * Create a size for a catalog item
+ * Create a variant for a catalog item
  */
-export async function createCatalogSize(input: CreateSizeInput): Promise<CatalogSize> {
-  const sizeId = input.id || randomUUID();
+export async function createCatalogVariant(input: CreateVariantInput): Promise<CatalogVariant> {
+  const variantId = input.id || randomUUID();
+
+  // Check variant count for the item
+  const existingVariants = await db
+    .select()
+    .from(catalogItemVariantSchema)
+    .where(eq(catalogItemVariantSchema.catalogItemId, input.catalogItemId));
+
+  if (existingVariants.length >= MAX_VARIANTS_PER_ITEM) {
+    throw new Error(`Maximum ${MAX_VARIANTS_PER_ITEM} variants allowed per item`);
+  }
 
   const result = await db
-    .insert(catalogItemSizeSchema)
+    .insert(catalogItemVariantSchema)
     .values({
-      id: sizeId,
+      id: variantId,
       catalogItemId: input.catalogItemId,
-      size: input.size,
+      name: input.name,
+      price: input.price,
       stockQuantity: input.stockQuantity ?? 0,
+      sortOrder: existingVariants.length,
     })
     .returning();
 
-  const size = result[0];
-  if (!size) {
-    throw new Error('Failed to create size');
+  const variant = result[0];
+  if (!variant) {
+    throw new Error('Failed to create variant');
   }
 
   return {
-    id: size.id,
-    catalogItemId: size.catalogItemId,
-    size: size.size,
-    stockQuantity: size.stockQuantity ?? 0,
-    sortOrder: size.sortOrder ?? 0,
-    createdAt: size.createdAt,
-    updatedAt: size.updatedAt,
+    id: variant.id,
+    catalogItemId: variant.catalogItemId,
+    name: variant.name,
+    price: variant.price,
+    stockQuantity: variant.stockQuantity ?? 0,
+    sortOrder: variant.sortOrder ?? 0,
+    createdAt: variant.createdAt,
+    updatedAt: variant.updatedAt,
   };
 }
 
 /**
- * Update a size
+ * Update a variant
  */
-export async function updateCatalogSize(input: UpdateSizeInput): Promise<CatalogSize> {
+export async function updateCatalogVariant(input: UpdateVariantInput): Promise<CatalogVariant> {
   const { id, ...updateData } = input;
 
   const result = await db
-    .update(catalogItemSizeSchema)
+    .update(catalogItemVariantSchema)
     .set(updateData)
-    .where(eq(catalogItemSizeSchema.id, id))
+    .where(eq(catalogItemVariantSchema.id, id))
     .returning();
 
-  const size = result[0];
-  if (!size) {
-    throw new Error('Size not found');
+  const variant = result[0];
+  if (!variant) {
+    throw new Error('Variant not found');
   }
 
   return {
-    id: size.id,
-    catalogItemId: size.catalogItemId,
-    size: size.size,
-    stockQuantity: size.stockQuantity ?? 0,
-    sortOrder: size.sortOrder ?? 0,
-    createdAt: size.createdAt,
-    updatedAt: size.updatedAt,
+    id: variant.id,
+    catalogItemId: variant.catalogItemId,
+    name: variant.name,
+    price: variant.price,
+    stockQuantity: variant.stockQuantity ?? 0,
+    sortOrder: variant.sortOrder ?? 0,
+    createdAt: variant.createdAt,
+    updatedAt: variant.updatedAt,
   };
 }
 
 /**
- * Delete a size
+ * Delete a variant
  */
-export async function deleteCatalogSize(sizeId: string): Promise<void> {
-  await db.delete(catalogItemSizeSchema).where(eq(catalogItemSizeSchema.id, sizeId));
+export async function deleteCatalogVariant(variantId: string): Promise<void> {
+  await db.delete(catalogItemVariantSchema).where(eq(catalogItemVariantSchema.id, variantId));
 }
 
 /**
- * Adjust size stock quantity
+ * Adjust variant stock quantity
  */
-export async function adjustSizeStock(sizeId: string, adjustment: number): Promise<CatalogSize> {
+export async function adjustVariantStock(variantId: string, adjustment: number): Promise<CatalogVariant> {
   // Get current stock
-  const sizes = await db
+  const variants = await db
     .select()
-    .from(catalogItemSizeSchema)
-    .where(eq(catalogItemSizeSchema.id, sizeId));
+    .from(catalogItemVariantSchema)
+    .where(eq(catalogItemVariantSchema.id, variantId));
 
-  const size = sizes[0];
-  if (!size) {
-    throw new Error('Size not found');
+  const variant = variants[0];
+  if (!variant) {
+    throw new Error('Variant not found');
   }
 
-  const newStock = Math.max(0, (size.stockQuantity ?? 0) + adjustment);
+  const newStock = Math.max(0, (variant.stockQuantity ?? 0) + adjustment);
 
   const result = await db
-    .update(catalogItemSizeSchema)
+    .update(catalogItemVariantSchema)
     .set({ stockQuantity: newStock })
-    .where(eq(catalogItemSizeSchema.id, sizeId))
+    .where(eq(catalogItemVariantSchema.id, variantId))
     .returning();
 
   const updated = result[0];
@@ -557,7 +579,8 @@ export async function adjustSizeStock(sizeId: string, adjustment: number): Promi
   return {
     id: updated.id,
     catalogItemId: updated.catalogItemId,
-    size: updated.size,
+    name: updated.name,
+    price: updated.price,
     stockQuantity: updated.stockQuantity ?? 0,
     sortOrder: updated.sortOrder ?? 0,
     createdAt: updated.createdAt,
