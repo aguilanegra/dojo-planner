@@ -210,8 +210,9 @@ describe('MonthlyView', () => {
         </I18nWrapper>,
       );
 
-      // Check for current month (January 2026)
-      const dateText = page.getByText(/January/i);
+      // Check for current month dynamically
+      const currentMonth = new Date().toLocaleString('en-US', { month: 'long' });
+      const dateText = page.getByText(new RegExp(currentMonth, 'i'));
 
       expect(dateText).toBeInTheDocument();
     });
