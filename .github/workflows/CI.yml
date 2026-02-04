@@ -84,7 +84,7 @@ jobs:
       - name: Security audit
         # Using critical level due to transitive dependencies with high vulns that require breaking changes to fix
         # Review periodically and upgrade to --audit-level=high when dependencies are updated
-        run: npm audit --audit-level=critical
+        run: npm audit --audit-level=high
 
   unit:
     strategy:
