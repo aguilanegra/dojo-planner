@@ -1,7 +1,7 @@
 # Dojo Planner
 
-[![CI](https://github.com/aguilanegra/dojo-planner/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/aguilanegra/dojo-planner/actions/workflows/CI.yml)
-[![Release](https://github.com/aguilanegra/dojo-planner/actions/workflows/release.yml/badge.svg)](https://github.com/aguilanegra/dojo-planner/actions/workflows/release.yml)
+[![CI](https://github.com/rccn-llc/dojo-planner/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/rccn-llc/dojo-planner/actions/workflows/CI.yml)
+[![Release](https://github.com/rccn-llc/dojo-planner/actions/workflows/release.yml/badge.svg)](https://github.com/rccn-llc/dojo-planner/actions/workflows/release.yml)
 
 A comprehensive web-based management system for martial arts dojos. Dojo Planner helps school owners and managers organize classes, track members, handle billing, and run their martial arts business efficiently.
 
