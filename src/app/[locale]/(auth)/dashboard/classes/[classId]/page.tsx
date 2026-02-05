@@ -1,12 +1,15 @@
 'use client';
 
-import type { ScheduleException, ScheduleInstance } from '@/hooks/useAddClassWizard';
+import type { DayOfWeek, ScheduleException, ScheduleInstance } from '@/hooks/useAddClassWizard';
+import type { ClassData } from '@/hooks/useClassesCache';
+import { useOrganization } from '@clerk/nextjs';
 import { ArrowLeft, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { use, useState } from 'react';
+import { use, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { ClassBasicsCard } from '@/features/classes/details/ClassBasicsCard';
 import { ClassScheduleCard } from '@/features/classes/details/ClassScheduleCard';
 import { ClassSettingsCard } from '@/features/classes/details/ClassSettingsCard';
@@ -16,6 +19,7 @@ import { EditClassBasicsModal } from '@/features/classes/details/EditClassBasics
 import { EditClassScheduleModal } from '@/features/classes/details/EditClassScheduleModal';
 import { EditClassSettingsModal } from '@/features/classes/details/EditClassSettingsModal';
 import { EditScheduleInstanceModal } from '@/features/classes/details/EditScheduleInstanceModal';
+import { useClassesCache } from '@/hooks/useClassesCache';
 
 export type ClassLevel = 'Beginner' | 'Intermediate' | 'Advanced' | 'All Levels';
 export type ClassType = 'Adults' | 'Kids' | 'Women' | 'Open' | 'Competition';
@@ -55,285 +59,94 @@ export type ClassDetailData = {
   totalSessions: number;
 };
 
-// Mock data for classes
-const mockClassDetails: Record<string, ClassDetailData> = {
-  1: {
-    id: '1',
-    className: 'BJJ Fundamentals I',
-    program: 'adult-bjj',
-    description: 'Covers core positions, escapes, and submissions. Ideal for students in their first 6 months.',
-    level: 'Beginner',
-    type: 'Adults',
-    style: 'Gi',
-    scheduleInstances: [
-      { id: 'si-1-1', dayOfWeek: 'Monday', timeHour: 6, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'coach-alex', assistantStaff: 'professor-jessica' },
-      { id: 'si-1-2', dayOfWeek: 'Wednesday', timeHour: 6, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'coach-alex', assistantStaff: '' },
-      { id: 'si-1-3', dayOfWeek: 'Friday', timeHour: 6, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'professor-jessica', assistantStaff: '' },
-    ],
-    scheduleExceptions: [
-      {
-        id: 'exc-1-1',
-        scheduleInstanceId: 'si-1-1',
-        date: '2025-01-06',
-        type: 'modified',
-        overrides: {
-          staffMember: 'professor-jessica',
-          assistantStaff: '',
-        },
-        note: 'Coach Alex out sick, Professor Jessica covering',
-        createdAt: '2025-01-05T10:00:00Z',
-      },
-      {
-        id: 'exc-1-2',
-        scheduleInstanceId: 'si-1-2',
-        date: '2025-01-08',
-        type: 'deleted',
-        note: 'Gym closed for maintenance',
-        createdAt: '2025-01-02T14:30:00Z',
-      },
-      {
-        id: 'exc-1-3',
-        scheduleInstanceId: 'si-1-3',
-        date: '2025-01-10',
-        type: 'modified',
-        overrides: {
-          timeHour: 7,
-          timeMinute: 0,
-          timeAmPm: 'PM',
-          durationHours: 1,
-          durationMinutes: 30,
-        },
-        note: 'Extended class, moved to later slot',
-        createdAt: '2025-01-08T09:00:00Z',
-      },
-    ],
-    location: 'Downtown HQ',
-    calendarColor: '#22c55e',
-    instructors: [
-      { id: '1', name: 'Coach Alex', photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex', role: 'primary' },
-      { id: '2', name: 'Professor Jessica', photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jessica', role: 'assistant' },
-    ],
-    maximumCapacity: 25,
-    minimumAge: 16,
-    allowWalkIns: 'Yes',
-    activeEnrollments: 45,
-    averageAttendance: 18,
-    totalSessions: 156,
-  },
-  2: {
-    id: '2',
-    className: 'BJJ Fundamentals II',
-    program: 'adult-bjj',
-    description: 'Learn core BJJ techniques like sweeps, submissions, and escapes. Ideal for building a strong grappling foundation.',
-    level: 'Beginner',
-    type: 'Adults',
-    style: 'Gi',
-    scheduleInstances: [
-      { id: 'si-2-1', dayOfWeek: 'Tuesday', timeHour: 6, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 30, staffMember: 'professor-ivan', assistantStaff: '' },
-      { id: 'si-2-2', dayOfWeek: 'Thursday', timeHour: 6, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 30, staffMember: 'professor-ivan', assistantStaff: '' },
-    ],
-    scheduleExceptions: [],
-    location: 'Downtown HQ',
-    calendarColor: '#22c55e',
-    instructors: [
-      { id: '3', name: 'Professor Ivan', photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ivan', role: 'primary' },
-    ],
-    maximumCapacity: 20,
-    minimumAge: 16,
-    allowWalkIns: 'Yes',
-    activeEnrollments: 38,
-    averageAttendance: 15,
-    totalSessions: 124,
-  },
-  3: {
-    id: '3',
-    className: 'BJJ Intermediate',
-    program: 'adult-bjj',
-    description: 'Covers our intermediate curriculum. Builds on what was learned in Fundamentals I and II. Has rolling after.',
-    level: 'Intermediate',
-    type: 'Adults',
-    style: 'Gi',
-    scheduleInstances: [
-      { id: 'si-3-1', dayOfWeek: 'Monday', timeHour: 7, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'professor-joao', assistantStaff: '' },
-      { id: 'si-3-2', dayOfWeek: 'Wednesday', timeHour: 7, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'professor-joao', assistantStaff: '' },
-    ],
-    scheduleExceptions: [],
-    location: 'Downtown HQ',
-    calendarColor: '#6b7280',
-    instructors: [
-      { id: '4', name: 'Professor Joao', photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Joao', role: 'primary' },
-    ],
-    maximumCapacity: 20,
-    minimumAge: 16,
-    allowWalkIns: 'No',
-    activeEnrollments: 28,
-    averageAttendance: 12,
-    totalSessions: 98,
-  },
-  4: {
-    id: '4',
-    className: 'BJJ Advanced',
-    program: 'adult-bjj',
-    description: 'Advanced curriculum that requires at least blue belt level to attend. Builds on previous curriculum. Has rolling after.',
-    level: 'Advanced',
-    type: 'Adults',
-    style: 'No Gi',
-    scheduleInstances: [
-      { id: 'si-4-1', dayOfWeek: 'Wednesday', timeHour: 7, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'coach-alex', assistantStaff: '' },
-      { id: 'si-4-2', dayOfWeek: 'Friday', timeHour: 7, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'coach-alex', assistantStaff: '' },
-    ],
-    scheduleExceptions: [],
-    location: 'Downtown HQ',
-    calendarColor: '#a855f7',
-    instructors: [
-      { id: '1', name: 'Coach Alex', photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex', role: 'primary' },
-    ],
-    maximumCapacity: 15,
-    minimumAge: 18,
-    allowWalkIns: 'No',
-    activeEnrollments: 16,
-    averageAttendance: 10,
-    totalSessions: 76,
-  },
-  5: {
-    id: '5',
-    className: 'Kids Class',
-    program: 'kids-bjj',
-    description: 'Builds coordination, focus, and basic grappling skills through games and technique. Emphasis on safety and fun.',
-    level: 'Beginner',
-    type: 'Kids',
-    style: 'Gi',
-    scheduleInstances: [
-      { id: 'si-5-1', dayOfWeek: 'Tuesday', timeHour: 4, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'coach-liza', assistantStaff: '' },
-      { id: 'si-5-2', dayOfWeek: 'Thursday', timeHour: 4, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'coach-liza', assistantStaff: '' },
-    ],
-    scheduleExceptions: [],
-    location: 'Downtown HQ',
-    calendarColor: '#06b6d4',
-    instructors: [
-      { id: '5', name: 'Coach Liza', photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Liza', role: 'primary' },
-    ],
-    maximumCapacity: 20,
-    minimumAge: 5,
-    allowWalkIns: 'Yes',
-    activeEnrollments: 34,
-    averageAttendance: 16,
-    totalSessions: 112,
-  },
-  6: {
-    id: '6',
-    className: 'Advanced No-Gi',
-    program: 'adult-bjj',
-    description: 'Explores high percentage transitions, leg entanglements, and situational sparring. Best for experienced students.',
-    level: 'Advanced',
-    type: 'Adults',
-    style: 'No Gi',
-    scheduleInstances: [
-      { id: 'si-6-1', dayOfWeek: 'Saturday', timeHour: 12, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'professor-joao', assistantStaff: '' },
-      { id: 'si-6-2', dayOfWeek: 'Sunday', timeHour: 12, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'professor-joao', assistantStaff: '' },
-    ],
-    scheduleExceptions: [],
-    location: 'Downtown HQ',
-    calendarColor: '#a855f7',
-    instructors: [
-      { id: '4', name: 'Professor Joao', photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Joao', role: 'primary' },
-    ],
-    maximumCapacity: 15,
-    minimumAge: 18,
-    allowWalkIns: 'No',
-    activeEnrollments: 12,
-    averageAttendance: 8,
-    totalSessions: 48,
-  },
-  7: {
-    id: '7',
-    className: 'Women\'s BJJ',
-    program: 'womens-bjj',
-    description: 'Technique focused class with optional sparring, designed to create a welcoming space for women to build skills and confidence.',
-    level: 'All Levels',
-    type: 'Women',
-    style: 'Gi',
-    scheduleInstances: [
-      { id: 'si-7-1', dayOfWeek: 'Tuesday', timeHour: 5, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'professor-jessica', assistantStaff: '' },
-    ],
-    scheduleExceptions: [],
-    location: 'Downtown HQ',
-    calendarColor: '#ec4899',
-    instructors: [
-      { id: '2', name: 'Professor Jessica', photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jessica', role: 'primary' },
-    ],
-    maximumCapacity: 15,
-    minimumAge: 16,
-    allowWalkIns: 'Yes',
-    activeEnrollments: 22,
-    averageAttendance: 10,
-    totalSessions: 52,
-  },
-  8: {
-    id: '8',
-    className: 'Open Mat',
-    program: 'adult-bjj',
-    description: 'Open training session. Bring your skill level to practice freely.',
-    level: 'All Levels',
-    type: 'Open',
-    style: 'Gi',
-    scheduleInstances: [
-      { id: 'si-8-1', dayOfWeek: 'Saturday', timeHour: 10, timeMinute: 0, timeAmPm: 'AM', durationHours: 2, durationMinutes: 0, staffMember: '', assistantStaff: '' },
-      { id: 'si-8-2', dayOfWeek: 'Sunday', timeHour: 10, timeMinute: 0, timeAmPm: 'AM', durationHours: 2, durationMinutes: 0, staffMember: '', assistantStaff: '' },
-    ],
-    scheduleExceptions: [],
-    location: 'Downtown HQ',
-    calendarColor: '#ef4444',
+const DAY_NAMES: DayOfWeek[] = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+const LEVEL_TAGS = new Set(['beginner', 'intermediate', 'advanced', 'all levels']);
+const TYPE_TAGS = new Set(['adults', 'kids', 'women', 'open', 'competition']);
+const STYLE_TAGS = new Set(['gi', 'no gi', 'no-gi']);
+
+function deriveTagValue<T extends string>(tags: ClassData['tags'], knownSet: Set<string>, fallback: T): T {
+  const match = tags.find(t => knownSet.has(t.name.toLowerCase()));
+  return (match?.name ?? fallback) as T;
+}
+
+function transformScheduleInstance(schedule: ClassData['schedule'][number]): ScheduleInstance {
+  const hour24 = Number.parseInt(schedule.startTime.split(':')[0]!, 10);
+  const minute = Number.parseInt(schedule.startTime.split(':')[1]!, 10);
+  const endHour = Number.parseInt(schedule.endTime.split(':')[0]!, 10);
+  const endMinute = Number.parseInt(schedule.endTime.split(':')[1]!, 10);
+  const totalMinutes = (endHour * 60 + endMinute) - (hour24 * 60 + minute);
+
+  const amPm: 'AM' | 'PM' = hour24 >= 12 ? 'PM' : 'AM';
+  const displayHour = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
+
+  return {
+    id: schedule.id,
+    dayOfWeek: DAY_NAMES[schedule.dayOfWeek]!,
+    timeHour: displayHour,
+    timeMinute: minute,
+    timeAmPm: amPm,
+    durationHours: Math.floor(totalMinutes / 60),
+    durationMinutes: totalMinutes % 60,
+    staffMember: schedule.instructorClerkId ?? '',
+    assistantStaff: '',
+  };
+}
+
+function transformScheduleException(exc: ClassData['scheduleExceptions'][number]): ScheduleException {
+  const date = exc.exceptionDate;
+  const dateStr = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`;
+
+  return {
+    id: exc.id,
+    scheduleInstanceId: exc.classScheduleInstanceId,
+    date: dateStr,
+    type: exc.exceptionType as ScheduleException['type'],
+    overrides: exc.newStartTime
+      ? {
+          timeHour: Number.parseInt(exc.newStartTime.split(':')[0]!, 10) > 12
+            ? Number.parseInt(exc.newStartTime.split(':')[0]!, 10) - 12
+            : Number.parseInt(exc.newStartTime.split(':')[0]!, 10) || 12,
+          timeMinute: Number.parseInt(exc.newStartTime.split(':')[1]!, 10),
+          timeAmPm: Number.parseInt(exc.newStartTime.split(':')[0]!, 10) >= 12 ? 'PM' as const : 'AM' as const,
+          ...(exc.newEndTime && exc.newStartTime
+            ? {
+                durationHours: Math.floor(((Number.parseInt(exc.newEndTime.split(':')[0]!, 10) * 60 + Number.parseInt(exc.newEndTime.split(':')[1]!, 10)) - (Number.parseInt(exc.newStartTime.split(':')[0]!, 10) * 60 + Number.parseInt(exc.newStartTime.split(':')[1]!, 10))) / 60),
+                durationMinutes: ((Number.parseInt(exc.newEndTime.split(':')[0]!, 10) * 60 + Number.parseInt(exc.newEndTime.split(':')[1]!, 10)) - (Number.parseInt(exc.newStartTime.split(':')[0]!, 10) * 60 + Number.parseInt(exc.newStartTime.split(':')[1]!, 10))) % 60,
+              }
+            : {}),
+          ...(exc.newInstructorClerkId ? { staffMember: exc.newInstructorClerkId } : {}),
+        }
+      : undefined,
+    note: exc.reason ?? undefined,
+    createdAt: new Date().toISOString(),
+  };
+}
+
+function transformClassData(classData: ClassData): ClassDetailData {
+  const styleName = deriveTagValue<ClassStyle>(classData.tags, STYLE_TAGS, 'Gi');
+
+  return {
+    id: classData.id,
+    className: classData.name,
+    program: classData.program?.slug ?? '',
+    description: classData.description ?? '',
+    level: deriveTagValue<ClassLevel>(classData.tags, LEVEL_TAGS, 'All Levels'),
+    type: deriveTagValue<ClassType>(classData.tags, TYPE_TAGS, 'Adults'),
+    style: styleName.toLowerCase() === 'no-gi' ? 'No Gi' : styleName,
+    scheduleInstances: classData.schedule.map(transformScheduleInstance),
+    scheduleExceptions: classData.scheduleExceptions.map(transformScheduleException),
+    location: '',
+    calendarColor: classData.color ?? classData.program?.color ?? '#6b7280',
     instructors: [],
-    maximumCapacity: null,
-    minimumAge: null,
+    maximumCapacity: classData.maxCapacity,
+    minimumAge: classData.minAge,
     allowWalkIns: 'Yes',
-    activeEnrollments: 89,
-    averageAttendance: 25,
-    totalSessions: 104,
-  },
-  9: {
-    id: '9',
-    className: 'Competition Team',
-    program: 'competition',
-    description: 'Advanced training for competition preparation.',
-    level: 'Advanced',
-    type: 'Competition',
-    style: 'Gi',
-    scheduleInstances: [
-      { id: 'si-9-1', dayOfWeek: 'Monday', timeHour: 8, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'coach-alex', assistantStaff: '' },
-      { id: 'si-9-2', dayOfWeek: 'Wednesday', timeHour: 8, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'coach-alex', assistantStaff: '' },
-      { id: 'si-9-3', dayOfWeek: 'Friday', timeHour: 8, timeMinute: 0, timeAmPm: 'PM', durationHours: 1, durationMinutes: 0, staffMember: 'coach-alex', assistantStaff: '' },
-    ],
-    scheduleExceptions: [
-      {
-        id: 'exc-9-1',
-        scheduleInstanceId: 'si-9-1',
-        date: '2025-01-13',
-        type: 'modified-forward',
-        overrides: {
-          timeHour: 7,
-          timeMinute: 30,
-          timeAmPm: 'PM',
-        },
-        effectiveFromDate: '2025-01-13',
-        note: 'Permanent time change for Monday competition classes',
-        createdAt: '2025-01-10T16:00:00Z',
-      },
-    ],
-    location: 'Downtown HQ',
-    calendarColor: '#a855f7',
-    instructors: [
-      { id: '1', name: 'Coach Alex', photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex', role: 'primary' },
-    ],
-    maximumCapacity: 12,
-    minimumAge: 16,
-    allowWalkIns: 'No',
-    activeEnrollments: 16,
-    averageAttendance: 12,
-    totalSessions: 156,
-  },
-};
+    activeEnrollments: 0,
+    averageAttendance: 0,
+    totalSessions: 0,
+  };
+}
 
 type PageParams = {
   classId: string;
@@ -350,6 +163,8 @@ export default function ClassDetailPage({ params }: { params: Promise<PageParams
   const t = useTranslations('ClassDetailPage');
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { organization } = useOrganization();
+  const { classes, loading } = useClassesCache(organization?.id);
 
   // Get the view param to preserve when navigating back
   const viewParam = searchParams.get('view');
@@ -363,10 +178,20 @@ export default function ClassDetailPage({ params }: { params: Promise<PageParams
   const [isEditInstanceOpen, setIsEditInstanceOpen] = useState(false);
   const [instanceEditState, setInstanceEditState] = useState<InstanceEditState>(null);
 
-  // Get class data (in real app, this would come from an API)
-  const [classData, setClassData] = useState<ClassDetailData | null>(
-    mockClassDetails[resolvedParams.classId] || null,
-  );
+  // Find class from cache and transform
+  const initialClassData = useMemo(() => {
+    const raw = classes.find(c => c.id === resolvedParams.classId);
+    return raw ? transformClassData(raw) : null;
+  }, [classes, resolvedParams.classId]);
+
+  const [classData, setClassData] = useState<ClassDetailData | null>(null);
+
+  // Sync initial data when it becomes available
+  const [lastInitialId, setLastInitialId] = useState<string | null>(null);
+  if (initialClassData && initialClassData.id !== lastInitialId) {
+    setClassData(initialClassData);
+    setLastInitialId(initialClassData.id);
+  }
 
   // Handler for updating class data
   const handleUpdateClass = (updates: Partial<ClassDetailData>) => {
@@ -377,7 +202,6 @@ export default function ClassDetailPage({ params }: { params: Promise<PageParams
 
   // Handler for deleting class
   const handleDeleteClass = () => {
-    // In a real app, this would call an API to delete the class
     router.push(backToClassesUrl);
   };
 
@@ -432,6 +256,25 @@ export default function ClassDetailPage({ params }: { params: Promise<PageParams
       scheduleExceptions: updatedExceptions,
     });
   };
+
+  if (loading) {
+    return (
+      <div className="w-full space-y-6">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-10 w-64" />
+        <div className="grid gap-4 md:grid-cols-4">
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+        </div>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Skeleton className="h-64" />
+          <Skeleton className="h-64" />
+        </div>
+      </div>
+    );
+  }
 
   if (!classData) {
     return (

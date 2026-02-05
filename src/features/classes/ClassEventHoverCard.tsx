@@ -20,6 +20,8 @@ type ClassEventHoverCardProps = {
   exception?: CalendarScheduleException;
   children?: React.ReactNode;
   sourceView?: 'weekly' | 'monthly';
+  isEvent?: boolean;
+  eventId?: string;
 };
 
 function formatTime(hour: number, minute: number): string {
@@ -76,18 +78,24 @@ export function ClassEventHoverCard({
   exception,
   children,
   sourceView,
+  isEvent,
+  eventId,
 }: ClassEventHoverCardProps) {
   const router = useRouter();
   const { organization } = useOrganization();
   const { classes: rawClasses } = useClassesCache(organization?.id);
 
-  // Transform and find the class data
+  // Transform and find the class data (only for classes, not events)
   const classes = useMemo(() => transformClassesToCardProps(rawClasses), [rawClasses]);
-  const classData = classes.find(c => c.id === classId);
+  const classData = isEvent ? undefined : classes.find(c => c.id === classId);
 
   const handleClick = () => {
     const viewParam = sourceView ? `?view=${sourceView}` : '';
-    router.push(`/dashboard/classes/${classId}${viewParam}`);
+    if (isEvent && eventId) {
+      router.push(`/dashboard/classes/events/${eventId}${viewParam}`);
+    } else {
+      router.push(`/dashboard/classes/${classId}${viewParam}`);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -221,9 +229,16 @@ export function ClassEventHoverCard({
             </div>
           )}
 
+          {/* Event badge */}
+          {isEvent && (
+            <Badge variant="default" className="bg-primary text-[10px] text-primary-foreground">
+              Event
+            </Badge>
+          )}
+
           {/* Click hint */}
           <div className="border-t border-border pt-2 text-[10px] text-muted-foreground">
-            Click to view class details
+            {isEvent ? 'Click to view event details' : 'Click to view class details'}
           </div>
         </div>
       </TooltipContent>

@@ -1,11 +1,13 @@
 'use client';
 
 import type { EventDetailData } from './eventData';
+import type { EventData } from '@/hooks/useEventsCache';
+import { useOrganization } from '@clerk/nextjs';
 import { ArrowLeft, Calendar, Edit, MapPin, Trash2, Users } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { use, useState } from 'react';
+import { use, useMemo, useState } from 'react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,7 +22,59 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { formatPrice, getInitials, mockEventDetails } from './eventData';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useEventsCache } from '@/hooks/useEventsCache';
+import { formatPrice, getInitials } from './eventData';
+
+function formatSessionDate(date: Date): string {
+  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
+}
+
+function formatSessionTime(startTime: string, endTime: string): string {
+  const formatTime = (t: string) => {
+    const [h, m] = t.split(':').map(Number);
+    const amPm = h! >= 12 ? 'PM' : 'AM';
+    const displayHour = h === 0 ? 12 : h! > 12 ? h! - 12 : h;
+    return `${displayHour}:${String(m).padStart(2, '0')} ${amPm}`;
+  };
+  return `${formatTime(startTime)} - ${formatTime(endTime)}`;
+}
+
+function transformEventData(event: EventData): EventDetailData {
+  const sortedSessions = [...event.sessions].sort(
+    (a, b) => new Date(a.sessionDate).getTime() - new Date(b.sessionDate).getTime(),
+  );
+
+  const startDate = sortedSessions.length > 0 ? formatSessionDate(new Date(sortedSessions[0]!.sessionDate)) : '';
+  const endDate = sortedSessions.length > 0 ? formatSessionDate(new Date(sortedSessions[sortedSessions.length - 1]!.sessionDate)) : '';
+
+  const regularBilling = event.billing.find(b => !b.validUntil);
+  const earlyBirdBilling = event.billing.find(b => b.validUntil !== null);
+
+  return {
+    id: event.id,
+    name: event.name,
+    description: event.description ?? '',
+    eventType: event.eventType,
+    startDate,
+    endDate,
+    sessions: sortedSessions.map(s => ({
+      date: formatSessionDate(new Date(s.sessionDate)),
+      time: formatSessionTime(s.startTime, s.endTime),
+    })),
+    location: '',
+    instructors: [],
+    price: regularBilling?.price ?? (event.billing[0]?.price ?? null),
+    maxCapacity: event.maxCapacity,
+    currentRegistrations: 0,
+    earlyBirdPrice: earlyBirdBilling?.price ?? null,
+    earlyBirdDeadline: earlyBirdBilling?.validUntil
+      ? formatSessionDate(new Date(earlyBirdBilling.validUntil))
+      : null,
+    memberDiscount: null,
+    memberDiscountType: null,
+  };
+}
 
 type PageParams = {
   eventId: string;
@@ -31,6 +85,8 @@ export default function EventDetailPage({ params }: { params: Promise<PageParams
   const t = useTranslations('EventDetailPage');
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { organization } = useOrganization();
+  const { events, loading } = useEventsCache(organization?.id);
 
   // Get the view param to preserve when navigating back
   const viewParam = searchParams.get('view');
@@ -39,16 +95,35 @@ export default function EventDetailPage({ params }: { params: Promise<PageParams
   // Modal states
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  // Get event data (in real app, this would come from an API)
-  const [eventData] = useState<EventDetailData | null>(
-    mockEventDetails[resolvedParams.eventId] || null,
-  );
+  // Find event from cache and transform
+  const eventData = useMemo(() => {
+    const raw = events.find(e => e.id === resolvedParams.eventId);
+    return raw ? transformEventData(raw) : null;
+  }, [events, resolvedParams.eventId]);
 
   // Handler for deleting event
   const handleDeleteEvent = () => {
-    // In a real app, this would call an API to delete the event
     router.push(backToClassesUrl);
   };
+
+  if (loading) {
+    return (
+      <div className="w-full space-y-6">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-10 w-64" />
+        <div className="grid gap-4 md:grid-cols-4">
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+        </div>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Skeleton className="h-64" />
+          <Skeleton className="h-64" />
+        </div>
+      </div>
+    );
+  }
 
   if (!eventData) {
     return (
@@ -128,13 +203,15 @@ export default function EventDetailPage({ params }: { params: Promise<PageParams
                 <p className="text-sm text-muted-foreground">{t('dates_label')}</p>
                 <p className="font-medium text-foreground">{dateDisplay}</p>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">{t('location_label')}</p>
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <p className="font-medium text-foreground">{eventData.location}</p>
+              {eventData.location && (
+                <div>
+                  <p className="text-sm text-muted-foreground">{t('location_label')}</p>
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <p className="font-medium text-foreground">{eventData.location}</p>
+                  </div>
                 </div>
-              </div>
+              )}
               <div>
                 <p className="text-sm text-muted-foreground">{t('event_type_label')}</p>
                 <p className="font-medium text-foreground">{eventData.eventType}</p>

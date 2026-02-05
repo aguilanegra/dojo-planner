@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { ButtonGroupItem, ButtonGroupRoot } from '@/components/ui/button-group';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useClassesCache } from '@/hooks/useClassesCache';
-import { buildClassColorLegend, generateWeeklyScheduleFromData, transformClassesToCardProps } from './classDataTransformers';
+import { useEventsCache } from '@/hooks/useEventsCache';
+import { buildClassColorLegend, generateWeeklyEventScheduleFromData, generateWeeklyScheduleFromData, transformClassesToCardProps } from './classDataTransformers';
 import { ClassEventHoverCard } from './ClassEventHoverCard';
 import { ClassFilterBar } from './ClassFilterBar';
 
@@ -21,7 +22,9 @@ type WeeklyViewProps = {
 
 export function WeeklyView({ withFilters }: WeeklyViewProps = {}) {
   const { organization } = useOrganization();
-  const { classes: rawClasses, loading } = useClassesCache(organization?.id);
+  const { classes: rawClasses, loading: classesLoading } = useClassesCache(organization?.id);
+  const { events: rawEvents, loading: eventsLoading } = useEventsCache(organization?.id);
+  const loading = classesLoading || eventsLoading;
 
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [localFilters, setLocalFilters] = useState<ClassFilters>({
@@ -96,13 +99,21 @@ export function WeeklyView({ withFilters }: WeeklyViewProps = {}) {
       : rawClasses,
     [rawClasses, filteredClassIds],
   );
-  const weeklyEvents = useMemo(
+  const weeklyClassEvents = useMemo(
     () => generateWeeklyScheduleFromData(currentDate, classesToUse),
     [currentDate, classesToUse],
   );
+  const weeklyEventSessions = useMemo(
+    () => generateWeeklyEventScheduleFromData(currentDate, rawEvents),
+    [currentDate, rawEvents],
+  );
+  const weeklyEvents = useMemo(
+    () => [...weeklyClassEvents, ...weeklyEventSessions],
+    [weeklyClassEvents, weeklyEventSessions],
+  );
 
-  // Build color legend from database classes
-  const classColors = useMemo(() => buildClassColorLegend(rawClasses), [rawClasses]);
+  // Build color legend from database classes and events
+  const classColors = useMemo(() => buildClassColorLegend(rawClasses, rawEvents), [rawClasses, rawEvents]);
 
   const getEventsForTimeSlot = (dayIndex: number, hour: number) => {
     return weeklyEvents.filter(
@@ -254,6 +265,8 @@ export function WeeklyView({ withFilters }: WeeklyViewProps = {}) {
                           duration={event.duration}
                           exception={event.exception}
                           sourceView="weekly"
+                          isEvent={event.isEvent}
+                          eventId={event.eventId}
                         >
                           {event.className}
                         </ClassEventHoverCard>
