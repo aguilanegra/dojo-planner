@@ -61,10 +61,13 @@ export const MemberDetailsStep = ({ data, onUpdate, onNext, onBack, onCancel, er
       && data.address?.zipCode
       && data.address?.country;
 
+  const isDateOfBirthInvalid = touched.dateOfBirth && !data.dateOfBirth;
+
   const isFormValid
     = data.firstName
       && data.lastName
       && data.phone
+      && data.dateOfBirth
       && isValidEmail(data.email)
       && isAddressValid;
 
@@ -151,6 +154,21 @@ export const MemberDetailsStep = ({ data, onUpdate, onNext, onBack, onCancel, er
           />
           {isPhoneInvalid && (
             <p className="text-xs text-destructive">Please enter a phone number.</p>
+          )}
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-foreground">{t('date_of_birth_label')}</label>
+          <Input
+            type="date"
+            placeholder={t('date_of_birth_placeholder')}
+            value={data.dateOfBirth ? data.dateOfBirth.toISOString().split('T')[0] : ''}
+            onChange={e => onUpdate({ dateOfBirth: e.target.value ? new Date(e.target.value) : undefined })}
+            onBlur={() => handleInputBlur('dateOfBirth')}
+            error={isDateOfBirthInvalid}
+          />
+          {isDateOfBirthInvalid && (
+            <p className="text-xs text-destructive">Please enter a date of birth.</p>
           )}
         </div>
 

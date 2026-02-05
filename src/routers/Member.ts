@@ -31,6 +31,7 @@ export const create = os
         lastName: input.lastName,
         email: input.email,
         phone: input.phone,
+        dateOfBirth: input.dateOfBirth,
         memberType: input.memberType,
         status: input.status || 'active',
         address: input.address,

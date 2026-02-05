@@ -14,6 +14,7 @@ describe('MemberValidation', () => {
         firstName: 'John',
         lastName: 'Doe',
         phone: '(555) 123-4567',
+        dateOfBirth: new Date('1990-01-15'),
         memberType: 'individual' as const,
       };
 
@@ -27,6 +28,7 @@ describe('MemberValidation', () => {
         email: 'invalid-email',
         firstName: 'John',
         lastName: 'Doe',
+        dateOfBirth: new Date('1990-01-15'),
       };
 
       const result = MemberValidation.safeParse(invalidData);
@@ -39,6 +41,7 @@ describe('MemberValidation', () => {
         email: 'john.doe@example.com',
         firstName: '',
         lastName: 'Doe',
+        dateOfBirth: new Date('1990-01-15'),
       };
 
       const result = MemberValidation.safeParse(invalidData);
@@ -46,11 +49,41 @@ describe('MemberValidation', () => {
       expect(result.success).toBe(false);
     });
 
+    it('should fail when dateOfBirth is missing', () => {
+      const invalidData = {
+        email: 'john.doe@example.com',
+        firstName: 'John',
+        lastName: 'Doe',
+      };
+
+      const result = MemberValidation.safeParse(invalidData);
+
+      expect(result.success).toBe(false);
+    });
+
+    it('should coerce dateOfBirth from string', () => {
+      const validData = {
+        email: 'john.doe@example.com',
+        firstName: 'John',
+        lastName: 'Doe',
+        dateOfBirth: '1990-01-15',
+      };
+
+      const result = MemberValidation.safeParse(validData);
+
+      expect(result.success).toBe(true);
+
+      if (result.success) {
+        expect(result.data.dateOfBirth).toBeInstanceOf(Date);
+      }
+    });
+
     it('should validate with optional address', () => {
       const validData = {
         email: 'john.doe@example.com',
         firstName: 'John',
         lastName: 'Doe',
+        dateOfBirth: new Date('1990-01-15'),
         address: {
           street: '123 Main St',
           city: 'San Francisco',

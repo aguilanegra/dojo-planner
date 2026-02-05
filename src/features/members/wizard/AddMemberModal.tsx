@@ -12,6 +12,7 @@ import { MemberPaymentStep } from './MemberPaymentStep';
 import { MemberPhotoStep } from './MemberPhotoStep';
 import { MemberSuccessStep } from './MemberSuccessStep';
 import { MemberTypeStep } from './MemberTypeStep';
+import { MemberWaiverStep } from './MemberWaiverStep';
 
 type AddMemberModalProps = {
   isOpen: boolean;
@@ -104,6 +105,7 @@ export const AddMemberModal = ({ isOpen, onCloseAction, availableCoupons = [] }:
         firstName: wizard.data.firstName,
         lastName: wizard.data.lastName,
         phone: wizard.data.phone,
+        dateOfBirth: wizard.data.dateOfBirth!,
         ...(wizard.data.memberType && { memberType: wizard.data.memberType }),
         ...(wizard.data.membershipPlanId && { membershipPlanId: wizard.data.membershipPlanId }),
         ...(addressPayload && { address: addressPayload }),
@@ -132,6 +134,44 @@ export const AddMemberModal = ({ isOpen, onCloseAction, availableCoupons = [] }:
         timestamp: new Date().toISOString(),
         result,
       });
+
+      // Create signed waiver record if waiver was signed during the wizard
+      if (
+        result.id
+        && wizard.data.waiverTemplateId
+        && wizard.data.waiverSignatureDataUrl
+        && wizard.data.waiverRenderedContent
+        && !wizard.data.waiverSkipped
+      ) {
+        // Calculate age at signing
+        let memberAgeAtSigning: number | undefined;
+        if (wizard.data.dateOfBirth) {
+          const today = new Date();
+          let age = today.getFullYear() - wizard.data.dateOfBirth.getFullYear();
+          const monthDiff = today.getMonth() - wizard.data.dateOfBirth.getMonth();
+          if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < wizard.data.dateOfBirth.getDate())) {
+            age--;
+          }
+          memberAgeAtSigning = age;
+        }
+
+        await client.waivers.createSignedWaiver({
+          waiverTemplateId: wizard.data.waiverTemplateId,
+          memberId: result.id,
+          signatureDataUrl: wizard.data.waiverSignatureDataUrl,
+          signedByName: wizard.data.waiverSignedByName || wizard.data.firstName,
+          signedByRelationship: wizard.data.waiverSignedByRelationship || 'self',
+          ...(wizard.data.waiverGuardianEmail && { signedByEmail: wizard.data.waiverGuardianEmail }),
+          memberFirstName: wizard.data.firstName,
+          memberLastName: wizard.data.lastName,
+          memberEmail: wizard.data.email,
+          ...(wizard.data.dateOfBirth && { memberDateOfBirth: wizard.data.dateOfBirth }),
+          ...(memberAgeAtSigning !== undefined && { memberAgeAtSigning }),
+          renderedContent: wizard.data.waiverRenderedContent,
+        });
+
+        console.info('[Add Member Wizard] Signed waiver created for member:', result.id);
+      }
 
       // Move to success step
       wizard.setStep('success');
@@ -183,6 +223,7 @@ export const AddMemberModal = ({ isOpen, onCloseAction, availableCoupons = [] }:
             {wizard.step === 'details' && 'Add Member Details'}
             {wizard.step === 'photo' && 'Add Member Photo'}
             {wizard.step === 'subscription' && 'Choose Membership Plan'}
+            {wizard.step === 'waiver' && 'Sign Waiver'}
             {wizard.step === 'payment' && 'Payment Information'}
             {wizard.step === 'success' && 'Success'}
           </DialogTitle>
@@ -227,6 +268,18 @@ export const AddMemberModal = ({ isOpen, onCloseAction, availableCoupons = [] }:
               onBack={wizard.previousStep}
               onCancel={handleCancel}
               isLoading={wizard.isLoading}
+            />
+          )}
+
+          {wizard.step === 'waiver' && (
+            <MemberWaiverStep
+              data={wizard.data}
+              onUpdate={wizard.updateData}
+              onNext={wizard.nextStep}
+              onBack={wizard.previousStep}
+              onCancel={handleCancel}
+              isLoading={wizard.isLoading}
+              memberDateOfBirth={wizard.data.dateOfBirth}
             />
           )}
 

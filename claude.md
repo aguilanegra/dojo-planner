@@ -37,7 +37,8 @@ src/
 │   ├── reports/           # Analytics/reporting
 │   ├── roles/             # RBAC
 │   ├── settings/          # Org settings
-│   └── staff/             # Staff management
+│   ├── staff/             # Staff management
+│   └── waivers/           # Waiver templates & signing
 │
 ├── routers/               # ORPC API handlers
 │   ├── AuthGuards.ts      # Auth middleware with role hierarchy
@@ -47,7 +48,8 @@ src/
 │   ├── Classes.ts         # Classes list & tags
 │   ├── Events.ts          # Events list
 │   ├── Tags.ts            # Tags (class, membership, all)
-│   └── Coupons.ts         # Coupons list & active
+│   ├── Coupons.ts         # Coupons list & active
+│   └── Waivers.ts         # Waiver templates, signing, versioning, membership associations, merge fields
 │
 ├── services/              # Business logic layer
 │   ├── BillingService.ts  # Stripe integration
@@ -58,7 +60,9 @@ src/
 │   ├── EventsService.ts   # Event queries
 │   ├── MembersService.ts  # Member operations
 │   ├── OrganizationService.ts # Org & Stripe customer storage
-│   └── TagsService.ts     # Tag queries with usage counts
+│   ├── TagsService.ts     # Tag queries with usage counts
+│   ├── WaiversService.ts  # Waiver template CRUD, versioning, signed waivers, merge fields, placeholder resolution
+│   └── WaiverPdfService.ts # On-demand PDF generation for signed waivers
 │
 ├── models/
 │   └── Schema.ts          # Drizzle ORM tables (25+ tables)
@@ -112,7 +116,7 @@ docs/                      # Documentation
 | `/dashboard` | `dashboard/page.tsx` | Main dashboard |
 | `/dashboard/members` | `members/page.tsx` | Members list |
 | `/dashboard/members/[memberId]` | `members/[memberId]/page.tsx` | Member detail |
-| `/dashboard/members/[memberId]/edit` | `members/[memberId]/edit/page.tsx` | Edit member |
+| `/dashboard/members/[memberId]/edit` | `members/[memberId]/edit/page.tsx` | Edit member — contact info, membership details (actual dates), signed waivers with version, billing |
 | `/dashboard/classes` | `classes/page.tsx` | Classes list |
 | `/dashboard/classes/[classId]` | `classes/[classId]/page.tsx` | Class detail |
 | `/dashboard/programs` | `programs/page.tsx` | Programs list |
@@ -127,6 +131,7 @@ docs/                      # Documentation
 | `/dashboard/reports` | `reports/page.tsx` | Reports |
 | `/dashboard/marketing` | `marketing/page.tsx` | Marketing tools |
 | `/dashboard/catalog` | `catalog/page.tsx` | Product catalog |
+| `/dashboard/waivers` | `waivers/page.tsx` | Waiver templates list |
 | `/dashboard/user-profile` | `user-profile/[[...user-profile]]/page.tsx` | Clerk UserProfile |
 | `/dashboard/organization-profile` | `organization-profile/[[...organization-profile]]/page.tsx` | Clerk OrgProfile |
 | `/dashboard/preferences` | `preferences/page.tsx` | User preferences |
@@ -156,6 +161,36 @@ RootLayout (theme, i18n, migrations)
     ├── CenterLayout (sign-in/sign-up)
     └── DashboardLayout (sidebar, nav)
 ```
+
+## Key Workflows
+
+### Add Member Wizard
+
+The Add Member flow is a multi-step modal wizard (`AddMemberModal.tsx`) using the `useAddMemberWizard` hook for state management.
+
+**Steps:**
+1. **Member Type** — Select member type (adult, child, etc.)
+2. **Details** — Name, email, phone, date of birth (required), address
+3. **Photo** — Optional member photo upload
+4. **Subscription** — Choose membership plan
+5. **Waiver** — Sign applicable waiver(s) for the selected membership plan (auto-skipped if none required)
+6. **Payment** — Payment information
+7. **Success** — Confirmation
+
+**Key Files:**
+- `src/features/members/wizard/AddMemberModal.tsx` — Wizard orchestrator, handles member + signed waiver creation
+- `src/features/members/wizard/MemberWaiverStep.tsx` — Fetches waivers for membership, resolves merge field placeholders, captures signature
+- `src/features/waivers/signing/SignatureCanvas.tsx` — Reusable signature capture (react-signature-canvas, supports mouse + touch)
+- `src/hooks/useAddMemberWizard.ts` — Wizard state management hook (step navigation, data, loading, error)
+
+### Member Detail Page
+
+The member detail/edit page (`members/[memberId]/edit/page.tsx`) displays:
+- Contact information (name, email, phone, date of birth, address)
+- Membership details with actual dates from DB (registration, start, next payment)
+- Signed waivers with template name and version, with PDF download
+- Payment method and billing history
+- Attendance records and notes
 
 ## Vendor Integrations
 
@@ -390,9 +425,9 @@ await deleteUserWithOrganization();
 
 **Key Tables:**
 - `organization` - Multi-tenant orgs with Stripe IDs
-- `member` - Member records (with optional `clerkUserId` for kiosk auth)
+- `member` - Member records with dateOfBirth, optional `clerkUserId` for kiosk auth
 - `membership_plan` - Pricing tiers
-- `member_membership` - Member-plan associations
+- `member_membership` - Member-plan associations with startDate, endDate, firstPaymentDate, nextPaymentDate
 - `program` - Training programs (Adult BJJ, Kids, Competition)
 - `class` - Class definitions
 - `class_schedule_instance` - Recurring schedule patterns
@@ -413,6 +448,10 @@ await deleteUserWithOrganization();
 - `catalog_category` - Product categories
 - `catalog_item_category` - Item-category associations (M:N)
 - `catalog_item_image` - Product images
+- `waiver_template` - Waiver templates with placeholders, guardian settings, and immutable versioning (`parentId` for archive rows)
+- `signed_waiver` - Signed waiver records with signature data and rendered content
+- `membership_waiver` - Junction table linking memberships to required waivers
+- `waiver_merge_field` - Configurable placeholder fields for waiver templates
 
 **Commands:**
 ```bash
@@ -495,6 +534,8 @@ DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5432/postgres" npx tsx sr
 - 6 membership plans
 - 8 sample members with memberships
 - Catalog items with variants, categories, and images
+- 3 waiver templates (Standard Adult, Kids Program, Free Trial) with membership associations
+- 2 waiver merge fields (academy, academy_owners)
 
 **Note:** The seed script creates the organization record in the local database if it doesn't exist. Staff/instructor assignments require creating users in the Clerk dashboard first.
 
@@ -601,7 +642,7 @@ try {
 }
 ```
 
-**Audit Actions (57 total):**
+**Audit Actions (64 total):**
 ```typescript
 // Member operations
 AUDIT_ACTION.MEMBER_CREATE;
@@ -632,6 +673,19 @@ AUDIT_ACTION.ATTENDANCE_CHECK_OUT;
 // Transaction operations
 AUDIT_ACTION.TRANSACTION_CREATE;
 AUDIT_ACTION.TRANSACTION_REFUND;
+
+// Waiver operations
+AUDIT_ACTION.WAIVER_TEMPLATE_CREATE;
+AUDIT_ACTION.WAIVER_TEMPLATE_UPDATE;
+AUDIT_ACTION.WAIVER_TEMPLATE_DELETE;
+AUDIT_ACTION.WAIVER_TEMPLATE_VERSION_CREATE;
+AUDIT_ACTION.WAIVER_SIGNED;
+AUDIT_ACTION.MEMBERSHIP_WAIVER_SET;
+AUDIT_ACTION.MEMBERSHIP_WAIVER_ADD;
+AUDIT_ACTION.MEMBERSHIP_WAIVER_REMOVE;
+AUDIT_ACTION.MERGE_FIELD_CREATE;
+AUDIT_ACTION.MERGE_FIELD_UPDATE;
+AUDIT_ACTION.MERGE_FIELD_DELETE;
 
 // See src/types/Audit.ts for full list
 ```
@@ -786,10 +840,17 @@ When adding new features, ensure:
 
 After completing any code changes, always run the following verification steps:
 
-### 1. Create/Update Unit Tests
-- Add tests for new functionality in co-located `*.test.ts` files
-- Update existing tests to reflect changed behavior
+### 1. Create/Update Unit Tests (MANDATORY — DO THIS FIRST)
+
+**CRITICAL:** Unit tests MUST be written BEFORE running lint/type checks. This is NOT optional. Every new or modified file requires corresponding tests.
+
+- **New service functions** → Add tests in co-located `*.test.ts` (e.g., `WaiversService.test.ts`)
+- **New/modified router handlers** → Add tests in co-located `*.test.ts` (e.g., `Waivers.test.ts`)
+- **New validation schemas** → Add tests in co-located `*.test.ts` (e.g., `WaiverValidation.test.ts`)
+- **New UI components** → Add tests in co-located `*.test.tsx` (e.g., `ViewVersionModal.test.tsx`)
+- **Modified UI components** → Update existing tests to cover new behavior
 - Ensure mocks are properly configured
+- Do NOT skip this step and jump to running checks
 
 ### 2. Run All Checks
 ```bash

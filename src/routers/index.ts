@@ -22,6 +22,28 @@ import { list as listEvents } from './Events';
 import { addMembership, changeMembership, create as createMember, listMembershipPlans, remove as removeMember, restore as restoreMember, updateLastAccessed, update as updateMember, updateContactInfo as updateMemberContactInfo } from './Member';
 import { list as listMembers } from './Members';
 import { listAll as listAllTags, listClassTags, listMembershipTags } from './Tags';
+import {
+  addWaiverToMembership,
+  createMergeFieldHandler,
+  createSignedWaiverRecord,
+  createTemplate as createWaiverTemplate,
+  deleteMergeFieldHandler,
+  deleteTemplate as deleteWaiverTemplate,
+  getSignedWaiver,
+  getWaiversForMembership,
+  getTemplate as getWaiverTemplate,
+  getTemplateVersion as getWaiverTemplateVersion,
+  listActiveTemplates as listActiveWaiverTemplates,
+  listMemberSignedWaivers,
+  listMergeFields,
+  listTemplates as listWaiverTemplates,
+  listTemplateVersions as listWaiverTemplateVersions,
+  removeWaiverFromMembership,
+  resolveTemplatePlaceholders,
+  setMembershipWaiverAssociations,
+  updateMergeFieldHandler,
+  updateTemplate as updateWaiverTemplate,
+} from './Waivers';
 
 export const router = {
   members: {
@@ -71,5 +93,27 @@ export const router = {
     categoryRemove,
     imageCreate,
     imageRemove,
+  },
+  waivers: {
+    listTemplates: listWaiverTemplates,
+    listActiveTemplates: listActiveWaiverTemplates,
+    getTemplate: getWaiverTemplate,
+    createTemplate: createWaiverTemplate,
+    updateTemplate: updateWaiverTemplate,
+    deleteTemplate: deleteWaiverTemplate,
+    listMemberSignedWaivers,
+    getSignedWaiver,
+    createSignedWaiver: createSignedWaiverRecord,
+    getWaiversForMembership,
+    setMembershipWaivers: setMembershipWaiverAssociations,
+    addWaiverToMembership,
+    removeWaiverFromMembership,
+    listTemplateVersions: listWaiverTemplateVersions,
+    getTemplateVersion: getWaiverTemplateVersion,
+    resolvePlaceholders: resolveTemplatePlaceholders,
+    listMergeFields,
+    createMergeField: createMergeFieldHandler,
+    updateMergeField: updateMergeFieldHandler,
+    deleteMergeField: deleteMergeFieldHandler,
   },
 };

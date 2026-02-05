@@ -38,10 +38,14 @@ import {
   memberSchema,
   membershipPlanSchema,
   membershipTagSchema,
+  membershipWaiverSchema,
   noteSchema,
   organizationSchema,
   programSchema,
+  signedWaiverSchema,
   tagSchema,
+  waiverMergeFieldSchema,
+  waiverTemplateSchema,
 } from '../models/Schema';
 
 // Parse command line arguments
@@ -735,6 +739,85 @@ const catalogItemsData: CatalogItemData[] = [
   },
 ];
 
+// Waiver templates
+const waiverTemplatesData = [
+  {
+    name: 'Standard Adult Waiver',
+    slug: 'standard-adult-waiver',
+    version: 1,
+    content: `WAIVER AND RELEASE OF LIABILITY
+
+By signing this waiver of liability and assumption of risk agreement, I acknowledge that participation in martial arts training at <academy> involves inherent risks, including but not limited to: physical contact, falls, sprains, strains, fractures, and other injuries.
+
+I, the undersigned, hereby release, waive, discharge, and covenant not to sue <academy>, its owners (<academy_owners>), instructors, staff, and agents from any and all liability, claims, demands, actions, or causes of action arising out of any loss, damage, or injury, including death, that may be sustained by me while participating in any martial arts training or activities.
+
+I understand and agree that:
+1. I am voluntarily participating in these activities with full knowledge of the risks involved
+2. I am physically fit and have no medical conditions that would prevent safe participation
+3. I will follow all safety rules and instructions provided by instructors
+4. I will notify the academy immediately of any injuries or health concerns
+5. This waiver applies to all current and future training sessions and activities
+
+I have read this waiver, fully understand its terms, and sign it voluntarily.`,
+    description: 'Standard liability waiver for adult members (16+)',
+    isActive: true,
+    isDefault: true,
+    requiresGuardian: true,
+    guardianAgeThreshold: 16,
+    membershipSlugs: ['12-month-gold', 'month-to-month-gold', 'competition-team', '10-class-punchcard'],
+  },
+  {
+    name: 'Kids Program Waiver',
+    slug: 'kids-program-waiver',
+    version: 1,
+    content: `YOUTH PARTICIPANT WAIVER AND RELEASE OF LIABILITY
+
+As the parent or legal guardian of the minor participant, I acknowledge that participation in martial arts training at <academy> involves inherent risks appropriate for youth activities, including but not limited to: physical contact during supervised training, controlled falls, and minor bumps or bruises.
+
+I, the undersigned parent/guardian, hereby release, waive, discharge, and covenant not to sue <academy>, its owners (<academy_owners>), instructors, staff, and agents from any and all liability, claims, demands, actions, or causes of action arising out of any loss, damage, or injury that may be sustained by my child while participating in youth martial arts training.
+
+I understand and agree that:
+1. My child is voluntarily participating with my full knowledge and consent
+2. My child is physically fit to participate in age-appropriate martial arts activities
+3. I will ensure my child follows all safety rules and instructions
+4. I will inform the academy of any medical conditions, allergies, or special needs
+5. I authorize emergency medical treatment if needed and I cannot be reached
+6. This waiver applies to all current and future training sessions
+
+I have read this waiver, fully understand its terms, and sign it voluntarily as the parent/legal guardian.`,
+    description: 'Waiver for kids program requiring parent/guardian signature',
+    isActive: true,
+    isDefault: false,
+    requiresGuardian: true,
+    guardianAgeThreshold: 18,
+    membershipSlugs: ['kids-monthly'],
+  },
+  {
+    name: 'Free Trial Waiver',
+    slug: 'free-trial-waiver',
+    version: 1,
+    content: `TRIAL PARTICIPANT WAIVER AND RELEASE OF LIABILITY
+
+By signing this waiver, I acknowledge that I am participating in a trial session at <academy> and understand that martial arts training involves physical contact and inherent risks.
+
+I, the undersigned, hereby release <academy>, its owners (<academy_owners>), instructors, and staff from any liability for injuries that may occur during my trial period.
+
+I confirm that:
+1. I am physically capable of participating in introductory martial arts training
+2. I will follow all safety instructions provided
+3. I understand this is a trial to evaluate the program
+4. I will notify staff immediately of any health concerns
+
+I have read and agree to these terms.`,
+    description: 'Simplified waiver for trial members',
+    isActive: true,
+    isDefault: false,
+    requiresGuardian: true,
+    guardianAgeThreshold: 16,
+    membershipSlugs: ['7-day-trial'],
+  },
+];
+
 // =============================================================================
 // SEED FUNCTIONS
 // =============================================================================
@@ -743,6 +826,21 @@ async function clearSeededData(organizationId: string) {
   console.info(`  🗑️  Clearing existing seed data for org ${organizationId}...`);
 
   // Delete in reverse dependency order
+
+  // Clear catalog data first (catalog_item references event)
+  await db.delete(catalogItemCategorySchema).where(sql`${catalogItemCategorySchema.catalogItemId} IN (SELECT id FROM catalog_item WHERE organization_id = ${organizationId})`);
+  await db.delete(catalogItemImageSchema).where(sql`${catalogItemImageSchema.catalogItemId} IN (SELECT id FROM catalog_item WHERE organization_id = ${organizationId})`);
+  await db.delete(catalogItemVariantSchema).where(sql`${catalogItemVariantSchema.catalogItemId} IN (SELECT id FROM catalog_item WHERE organization_id = ${organizationId})`);
+  await db.delete(catalogItemSchema).where(eq(catalogItemSchema.organizationId, organizationId));
+  await db.delete(catalogCategorySchema).where(eq(catalogCategorySchema.organizationId, organizationId));
+
+  // Clear waiver data (signed_waiver and membership_waiver reference waiver_template)
+  await db.delete(signedWaiverSchema).where(eq(signedWaiverSchema.organizationId, organizationId));
+  await db.delete(membershipWaiverSchema).where(sql`${membershipWaiverSchema.waiverTemplateId} IN (SELECT id FROM waiver_template WHERE organization_id = ${organizationId})`);
+  await db.delete(waiverMergeFieldSchema).where(eq(waiverMergeFieldSchema.organizationId, organizationId));
+  await db.delete(waiverTemplateSchema).where(eq(waiverTemplateSchema.organizationId, organizationId));
+
+  // Clear class and event dependencies
   await db.delete(attendanceSchema).where(eq(attendanceSchema.organizationId, organizationId));
   await db.delete(classEnrollmentSchema).where(sql`${classEnrollmentSchema.classId} IN (SELECT id FROM class WHERE organization_id = ${organizationId})`);
   await db.delete(classScheduleExceptionSchema).where(sql`${classScheduleExceptionSchema.classScheduleInstanceId} IN (SELECT csi.id FROM class_schedule_instance csi JOIN class c ON csi.class_id = c.id WHERE c.organization_id = ${organizationId})`);
@@ -763,13 +861,6 @@ async function clearSeededData(organizationId: string) {
   await db.delete(couponSchema).where(eq(couponSchema.organizationId, organizationId));
   await db.delete(tagSchema).where(eq(tagSchema.organizationId, organizationId));
   await db.delete(programSchema).where(eq(programSchema.organizationId, organizationId));
-
-  // Clear catalog data
-  await db.delete(catalogItemCategorySchema).where(sql`${catalogItemCategorySchema.catalogItemId} IN (SELECT id FROM catalog_item WHERE organization_id = ${organizationId})`);
-  await db.delete(catalogItemImageSchema).where(sql`${catalogItemImageSchema.catalogItemId} IN (SELECT id FROM catalog_item WHERE organization_id = ${organizationId})`);
-  await db.delete(catalogItemVariantSchema).where(sql`${catalogItemVariantSchema.catalogItemId} IN (SELECT id FROM catalog_item WHERE organization_id = ${organizationId})`);
-  await db.delete(catalogItemSchema).where(eq(catalogItemSchema.organizationId, organizationId));
-  await db.delete(catalogCategorySchema).where(eq(catalogCategorySchema.organizationId, organizationId));
 }
 
 async function seedOrganization(organizationId: string) {
@@ -1071,7 +1162,123 @@ async function seedOrganization(organizationId: string) {
     }
   }
 
-  console.info(`  ✅ Seeded ${programsData.length} programs, ${allTags.length} tags, ${classesData.length} classes, ${eventsData.length} events, ${couponsData.length} coupons, ${membershipPlansData.length} membership plans, ${membersData.length} members, ${catalogCategoriesData.length} catalog categories, ${catalogItemsData.length} catalog items`);
+  // 10. Seed Waiver Templates
+  console.info('  📜 Seeding waiver templates...');
+  const waiverIdMap: Record<string, string> = {};
+  for (const waiver of waiverTemplatesData) {
+    const id = randomUUID();
+    waiverIdMap[waiver.slug] = id;
+    await db.insert(waiverTemplateSchema).values({
+      id,
+      organizationId,
+      name: waiver.name,
+      slug: waiver.slug,
+      version: waiver.version,
+      content: waiver.content,
+      description: waiver.description,
+      isActive: waiver.isActive,
+      isDefault: waiver.isDefault,
+      requiresGuardian: waiver.requiresGuardian,
+      guardianAgeThreshold: waiver.guardianAgeThreshold,
+    }).onConflictDoNothing();
+
+    // Link waiver to membership plans
+    for (const membershipSlug of waiver.membershipSlugs) {
+      const membershipPlanId = membershipPlanIdMap[membershipSlug];
+      const waiverTemplateId = waiverIdMap[waiver.slug];
+      if (membershipPlanId && waiverTemplateId) {
+        await db.insert(membershipWaiverSchema).values({
+          membershipPlanId,
+          waiverTemplateId,
+          isRequired: true,
+          sortOrder: 0,
+        }).onConflictDoNothing();
+      }
+    }
+  }
+
+  // 11. Seed Signed Waivers for active/trial members
+  console.info('  ✍️  Seeding signed waivers...');
+  const defaultWaiver = waiverTemplatesData.find(w => w.isDefault);
+  let signedWaiverCount = 0;
+  if (defaultWaiver) {
+    const defaultWaiverTemplateId = waiverIdMap[defaultWaiver.slug];
+    // Resolve placeholders in waiver content using default merge field values
+    const renderedContent = defaultWaiver.content
+      .replace(/<academy>/g, 'Your Academy')
+      .replace(/<academy_owners>/g, 'Academy Owners');
+
+    // Minimal valid 1x1 transparent PNG as signature placeholder
+    const placeholderSignature = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+
+    if (defaultWaiverTemplateId) {
+      for (let i = 0; i < membersData.length; i++) {
+        const member = membersData[i]!;
+        const memberIdValue = memberIds[i]!;
+
+        // Only create signed waivers for active/trial members (matches membership assignment logic)
+        if (member.status !== 'active' && member.status !== 'trial') {
+          continue;
+        }
+
+        const dob = member.dateOfBirth ? new Date(member.dateOfBirth) : null;
+        const signingDate = new Date('2025-09-01');
+        let ageAtSigning: number | null = null;
+        if (dob) {
+          ageAtSigning = signingDate.getFullYear() - dob.getFullYear();
+          const monthDiff = signingDate.getMonth() - dob.getMonth();
+          if (monthDiff < 0 || (monthDiff === 0 && signingDate.getDate() < dob.getDate())) {
+            ageAtSigning--;
+          }
+        }
+
+        const isMinor = ageAtSigning !== null && ageAtSigning < defaultWaiver.guardianAgeThreshold;
+
+        await db.insert(signedWaiverSchema).values({
+          id: randomUUID(),
+          organizationId,
+          waiverTemplateId: defaultWaiverTemplateId,
+          waiverTemplateVersion: defaultWaiver.version,
+          memberId: memberIdValue,
+          memberMembershipId: null,
+          signatureDataUrl: placeholderSignature,
+          signedByName: isMinor ? `Guardian of ${member.firstName}` : `${member.firstName} ${member.lastName}`,
+          signedByEmail: member.email,
+          signedByRelationship: isMinor ? 'parent' : null,
+          memberFirstName: member.firstName,
+          memberLastName: member.lastName,
+          memberEmail: member.email,
+          memberDateOfBirth: dob,
+          memberAgeAtSigning: ageAtSigning,
+          renderedContent,
+          ipAddress: '127.0.0.1',
+          userAgent: 'seed-script',
+          signedAt: signingDate,
+        }).onConflictDoNothing();
+
+        signedWaiverCount++;
+      }
+    }
+  }
+
+  // 12. Seed Waiver Merge Fields
+  console.info('  🔖 Seeding waiver merge fields...');
+  const mergeFieldsData = [
+    { key: 'academy', label: 'Academy Name', defaultValue: 'Your Academy', description: 'The name of your martial arts academy' },
+    { key: 'academy_owners', label: 'Academy Owners', defaultValue: 'Academy Owners', description: 'Names of the academy owner(s)' },
+  ];
+  for (const field of mergeFieldsData) {
+    await db.insert(waiverMergeFieldSchema).values({
+      id: randomUUID(),
+      organizationId,
+      key: field.key,
+      label: field.label,
+      defaultValue: field.defaultValue,
+      description: field.description,
+    }).onConflictDoNothing();
+  }
+
+  console.info(`  ✅ Seeded ${programsData.length} programs, ${allTags.length} tags, ${classesData.length} classes, ${eventsData.length} events, ${couponsData.length} coupons, ${membershipPlansData.length} membership plans, ${membersData.length} members, ${catalogCategoriesData.length} catalog categories, ${catalogItemsData.length} catalog items, ${waiverTemplatesData.length} waiver templates, ${signedWaiverCount} signed waivers, ${mergeFieldsData.length} merge fields`);
 }
 
 async function main() {

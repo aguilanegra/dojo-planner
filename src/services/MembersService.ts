@@ -51,6 +51,8 @@ type MemberMembership = {
   status: string;
   startDate: Date;
   endDate: Date | null;
+  firstPaymentDate: Date | null;
+  nextPaymentDate: Date | null;
   createdAt: Date;
 };
 
@@ -79,6 +81,7 @@ type CreateMemberInput = {
   lastName: string;
   email: string;
   phone?: string;
+  dateOfBirth: Date;
   memberType?: string;
   photoUrl?: string;
   status: string;
@@ -198,6 +201,8 @@ export async function getOrganizationMembers(
       status: membership.status,
       startDate: membership.startDate,
       endDate: membership.endDate,
+      firstPaymentDate: membership.firstPaymentDate,
+      nextPaymentDate: membership.nextPaymentDate,
       createdAt: membership.createdAt,
     };
 

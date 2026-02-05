@@ -143,6 +143,7 @@ describe('MemberMembershipStep', () => {
     email: 'john@example.com',
     phone: '555-1234',
     membershipPlanId: null,
+    waiverTemplateId: null,
   };
 
   const mockHandlers = {

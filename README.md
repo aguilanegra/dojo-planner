@@ -31,6 +31,14 @@ A comprehensive web-based management system for martial arts dojos. Dojo Planner
 - Offer free trial periods
 - Track active memberships and revenue per tier
 
+### Waivers
+- Create and manage waiver templates with customizable content
+- Support placeholders (`{academy}`, `{academy_owners}`) for dynamic content
+- Configure guardian signature requirements with age thresholds
+- Capture digital signatures during member onboarding
+- Generate signed waiver PDFs on-demand (no storage required)
+- Associate waivers with membership plans
+
 ### Events
 - Create and schedule special events separate from regular classes
 - Configure event billing and track attendance
@@ -67,6 +75,8 @@ A comprehensive web-based management system for martial arts dojos. Dojo Planner
 - **Database**: PostgreSQL via DrizzleORM
 - **Payments**: Stripe
 - **Error Monitoring**: Sentry
+- **Signatures**: react-signature-canvas (touch + mouse support)
+- **PDF Generation**: jsPDF (client-side, on-demand)
 
 ## Getting Started
 
@@ -146,7 +156,7 @@ DATABASE_URL="file:local.db" npx tsx src/scripts/seed.ts --orgId=org_xxxxx --res
 2. Click on an organization
 3. Copy the Organization ID (starts with `org_`)
 
-The seed script creates sample programs, classes, events, coupons, membership plans, tags, and members.
+The seed script creates sample programs, classes, events, coupons, membership plans, tags, members, and waiver templates.
 
 ### Stripe Integration
 

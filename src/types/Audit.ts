@@ -85,6 +85,25 @@ export const AUDIT_ACTION = {
   CATALOG_STOCK_ADJUST: 'catalogStock.adjust',
   CATALOG_IMAGE_UPLOAD: 'catalogImage.upload',
   CATALOG_IMAGE_DELETE: 'catalogImage.delete',
+
+  // Waiver template operations
+  WAIVER_TEMPLATE_CREATE: 'waiverTemplate.create',
+  WAIVER_TEMPLATE_UPDATE: 'waiverTemplate.update',
+  WAIVER_TEMPLATE_DELETE: 'waiverTemplate.delete',
+  WAIVER_TEMPLATE_VERSION_CREATE: 'waiverTemplate.versionCreate',
+
+  // Signed waiver operations
+  WAIVER_SIGNED: 'waiver.signed',
+
+  // Membership-waiver association operations
+  MEMBERSHIP_WAIVER_SET: 'membershipWaiver.set',
+  MEMBERSHIP_WAIVER_ADD: 'membershipWaiver.add',
+  MEMBERSHIP_WAIVER_REMOVE: 'membershipWaiver.remove',
+
+  // Merge field operations
+  MERGE_FIELD_CREATE: 'mergeField.create',
+  MERGE_FIELD_UPDATE: 'mergeField.update',
+  MERGE_FIELD_DELETE: 'mergeField.delete',
 } as const;
 
 export type AuditAction = (typeof AUDIT_ACTION)[keyof typeof AUDIT_ACTION];
@@ -113,6 +132,10 @@ export const AUDIT_ENTITY_TYPE = {
   CATALOG_VARIANT: 'catalogVariant',
   CATALOG_CATEGORY: 'catalogCategory',
   CATALOG_IMAGE: 'catalogImage',
+  WAIVER_TEMPLATE: 'waiverTemplate',
+  SIGNED_WAIVER: 'signedWaiver',
+  MEMBERSHIP_WAIVER: 'membershipWaiver',
+  WAIVER_MERGE_FIELD: 'waiverMergeField',
 } as const;
 
 export type AuditEntityType = (typeof AUDIT_ENTITY_TYPE)[keyof typeof AUDIT_ENTITY_TYPE];

@@ -3,6 +3,7 @@
 import type { AttendanceRecord, PunchcardInfo } from '@/features/members/details/MemberDetailAttendance';
 import type { MemberNote } from '@/features/members/details/MemberDetailNotes';
 import type { Member } from '@/hooks/useMembersCache';
+import type { SignedWaiverWithTemplateName } from '@/services/WaiversService';
 import { useOrganization } from '@clerk/nextjs';
 import { Download, Plus, Trash2 } from 'lucide-react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
@@ -17,6 +18,8 @@ import { EditContactInfoModal } from '@/features/members/details/EditContactInfo
 import { MemberDetailAttendance } from '@/features/members/details/MemberDetailAttendance';
 import { MemberDetailNotes } from '@/features/members/details/MemberDetailNotes';
 import { useMembersCache } from '@/hooks/useMembersCache';
+import { client } from '@/libs/Orpc';
+import { generateAndDownloadWaiverPdf, generatePdfFilename } from '@/services/WaiverPdfService';
 import {
   formatCurrency,
   getBrandIcon,
@@ -31,6 +34,7 @@ type Tab = 'overview' | 'attendance' | 'notes';
 type ContactInfo = {
   phone?: string;
   email?: string;
+  dateOfBirth?: string;
   street?: string;
   city?: string;
   state?: string;
@@ -80,11 +84,6 @@ type PaymentMethod = {
   };
 };
 
-type Agreement = {
-  signedDate: string;
-  status: 'signed' | 'unsigned' | 'expired';
-};
-
 type BillingHistoryItem = {
   id: string;
   date: string;
@@ -109,7 +108,6 @@ type MemberData = {
   familyMembers: FamilyMember[];
   membershipDetails: MembershipDetailsData;
   paymentMethod: PaymentMethod;
-  agreement: Agreement;
   billingHistory: BillingHistoryItem[];
 };
 
@@ -239,10 +237,6 @@ const BASE_MOCK_DATA = {
       description: 'New member discount',
     },
   },
-  agreement: {
-    signedDate: 'Sep 01, 2025',
-    status: 'signed' as const,
-  },
   billingHistory: [] as BillingHistoryItem[],
 };
 
@@ -321,21 +315,38 @@ type MembershipPlanInfo = {
   isTrial?: boolean | null;
 };
 
+type MembershipDates = {
+  startDate?: Date;
+  createdAt?: Date;
+  nextPaymentDate?: Date | null;
+};
+
+function formatMembershipDate(date?: Date | null): string {
+  if (!date) {
+    return 'N/A';
+  }
+  return new Date(date).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
 function buildMembershipDetails(
   membershipType?: string,
   status?: string,
   program?: string,
   plan?: MembershipPlanInfo | null,
+  dates?: MembershipDates,
 ): MembershipDetailsData {
   const memberStatus = getMemberStatus(status);
   const isFreeOrTrial = plan?.isTrial || membershipType === 'free' || membershipType === 'free-trial' || plan?.price === 0;
 
   // Use actual program from member data, or N/A if not set
   const displayProgram = program || 'N/A';
-  // Use N/A for dates if not set
-  const hasMembership = plan?.name || membershipType;
-  const registrationDate = hasMembership ? 'Sep 01, 2025' : 'N/A';
-  const startDate = hasMembership ? 'Sep 01, 2025' : 'N/A';
+  // Use actual dates from membership record
+  const registrationDate = formatMembershipDate(dates?.createdAt);
+  const startDate = formatMembershipDate(dates?.startDate);
 
   // Base membership details
   const baseDetails = {
@@ -353,7 +364,7 @@ function buildMembershipDetails(
       membershipType: plan.name,
       membershipFee: plan.price || 0,
       paymentFrequency: plan.frequency || 'N/A',
-      nextPaymentDate: isPaid ? 'Oct 01, 2025' : 'N/A',
+      nextPaymentDate: isPaid ? formatMembershipDate(dates?.nextPaymentDate) : 'N/A',
       nextPaymentAmount: plan.price || 0,
     };
   }
@@ -388,7 +399,7 @@ function buildMembershipDetails(
     membershipType: membershipType === 'annual' ? 'Annual' : 'Month-to-Month',
     membershipFee: membershipType === 'annual' ? 1800 : 300,
     paymentFrequency: membershipType === 'annual' ? 'Annual' : 'Monthly',
-    nextPaymentDate: 'Oct 01, 2025',
+    nextPaymentDate: formatMembershipDate(dates?.nextPaymentDate),
     nextPaymentAmount: membershipType === 'annual' ? 1800 : 300,
   };
 }
@@ -419,6 +430,9 @@ function buildMemberDataFromAPI(apiMember: Member & { membershipType?: string; p
     contactInfo: {
       phone: apiMember.phone || '',
       email: apiMember.email || '',
+      dateOfBirth: apiMember.dateOfBirth
+        ? new Date(apiMember.dateOfBirth).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+        : undefined,
       street: apiMember.address?.street || '',
       city: apiMember.address?.city || '',
       state: apiMember.address?.state || '',
@@ -433,9 +447,12 @@ function buildMemberDataFromAPI(apiMember: Member & { membershipType?: string; p
       lastPayment: isFreeOrTrial ? undefined : 'Last payment: N/A',
     },
     familyMembers: BASE_MOCK_DATA.familyMembers,
-    membershipDetails: buildMembershipDetails(membershipTypeStr, apiMember.status, planProgram, currentPlan),
+    membershipDetails: buildMembershipDetails(membershipTypeStr, apiMember.status, planProgram, currentPlan, {
+      startDate: apiMember.currentMembership?.startDate,
+      createdAt: apiMember.currentMembership?.createdAt,
+      nextPaymentDate: apiMember.currentMembership?.nextPaymentDate,
+    }),
     paymentMethod: BASE_MOCK_DATA.paymentMethod,
-    agreement: BASE_MOCK_DATA.agreement,
     billingHistory: BASE_MOCK_DATA.billingHistory,
   };
 }
@@ -556,6 +573,10 @@ export default function EditMemberPage() {
   const [isChangeMembershipModalOpen, setIsChangeMembershipModalOpen] = useState(false);
   const [membershipModalMode, setMembershipModalMode] = useState<'add' | 'change'>('add');
 
+  // State for signed waivers
+  const [signedWaivers, setSignedWaivers] = useState<SignedWaiverWithTemplateName[]>([]);
+  const [isLoadingWaivers, setIsLoadingWaivers] = useState(true);
+
   // Get the current member from cache for membership info
   const currentMember: Member | undefined = members?.find(m => m.id === memberId);
   const currentMembership = currentMember?.currentMembership;
@@ -628,6 +649,55 @@ export default function EditMemberPage() {
   useEffect(() => {
     loadMemberData();
   }, [loadMemberData]);
+
+  // Fetch signed waivers for this member
+  useEffect(() => {
+    const fetchSignedWaivers = async () => {
+      if (!memberId) {
+        return;
+      }
+      setIsLoadingWaivers(true);
+      try {
+        const result = await client.waivers.listMemberSignedWaivers({ memberId });
+        setSignedWaivers(result.waivers);
+      } catch (err) {
+        console.warn('[Edit Member] Failed to fetch signed waivers:', err);
+        setSignedWaivers([]);
+      } finally {
+        setIsLoadingWaivers(false);
+      }
+    };
+    fetchSignedWaivers();
+  }, [memberId]);
+
+  const handleDownloadWaiver = useCallback((waiver: SignedWaiverWithTemplateName) => {
+    if (!organization?.name) {
+      return;
+    }
+
+    const signedAt = new Date(waiver.signedAt);
+    generateAndDownloadWaiverPdf(
+      {
+        organizationName: organization.name,
+        waiverName: waiver.waiverName,
+        waiverVersion: waiver.waiverTemplateVersion,
+        renderedContent: waiver.renderedContent,
+        memberFirstName: waiver.memberFirstName,
+        memberLastName: waiver.memberLastName,
+        memberEmail: waiver.memberEmail,
+        signatureDataUrl: waiver.signatureDataUrl,
+        signedByName: waiver.signedByName,
+        signedByRelationship: waiver.signedByRelationship,
+        signedAt,
+        ipAddress: waiver.ipAddress,
+      },
+      generatePdfFilename({
+        memberFirstName: waiver.memberFirstName,
+        memberLastName: waiver.memberLastName,
+        signedAt,
+      }),
+    );
+  }, [organization?.name]);
 
   const handleRemoveFamilyMember = useCallback((familyMemberId: string) => {
     dispatch({ type: 'REMOVE_FAMILY_MEMBER', payload: familyMemberId });
@@ -769,6 +839,12 @@ export default function EditMemberPage() {
                     <p className="text-xs font-medium text-muted-foreground">Email:</p>
                     <p className="text-sm text-foreground">{state.currentData.contactInfo.email || '—'}</p>
                   </div>
+                  {state.currentData.contactInfo.dateOfBirth && (
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground">Date of Birth:</p>
+                      <p className="text-sm text-foreground">{state.currentData.contactInfo.dateOfBirth}</p>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="mt-auto flex justify-end pt-6">
@@ -971,25 +1047,52 @@ export default function EditMemberPage() {
             </Card>
 
             {/* Agreement & Waiver */}
-            <Card className="flex flex-col border-green-200 bg-green-50 p-6 dark:border-green-900 dark:bg-green-950">
-              <div>
-                <h2 className="mb-2 text-lg font-semibold text-foreground">Agreement & Waiver</h2>
-                <p className="text-sm text-muted-foreground">
-                  Signed on
-                  {' '}
-                  {state.currentData.agreement.signedDate}
-                </p>
-              </div>
-              <div className="mt-auto flex justify-end pt-6">
-                <Button
-                  size="sm"
-                  onClick={() => console.info('Download agreement')}
-                  className="w-fit gap-2 bg-foreground text-background hover:bg-foreground/90"
-                >
-                  <Download className="h-4 w-4" />
-                  Download
-                </Button>
-              </div>
+            <Card className={`flex flex-col p-6 ${signedWaivers.length > 0 ? 'border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950' : ''}`}>
+              <h2 className="mb-2 text-lg font-semibold text-foreground">Agreement & Waiver</h2>
+              {isLoadingWaivers
+                ? (
+                    <p className="text-sm text-muted-foreground">Loading waivers...</p>
+                  )
+                : signedWaivers.length === 0
+                  ? (
+                      <p className="text-sm text-muted-foreground">No waivers signed</p>
+                    )
+                  : (
+                      <div className="space-y-3">
+                        {signedWaivers.map(waiver => (
+                          <div key={waiver.id} className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-medium text-foreground">
+                                {waiver.waiverName}
+                                {' '}
+                                <span className="text-xs font-normal text-muted-foreground">
+                                  (v
+                                  {waiver.waiverTemplateVersion}
+                                  )
+                                </span>
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                Signed on
+                                {' '}
+                                {new Date(waiver.signedAt).toLocaleDateString('en-US', {
+                                  year: 'numeric',
+                                  month: 'short',
+                                  day: 'numeric',
+                                })}
+                              </p>
+                            </div>
+                            <Button
+                              size="sm"
+                              onClick={() => handleDownloadWaiver(waiver)}
+                              className="w-fit gap-2 bg-foreground text-background hover:bg-foreground/90"
+                            >
+                              <Download className="h-4 w-4" />
+                              Download
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
             </Card>
           </div>
 

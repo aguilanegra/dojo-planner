@@ -16,6 +16,8 @@ export type AppliedCoupon = {
   description: string;
 };
 
+export type SignerRelationship = 'self' | 'parent' | 'guardian' | 'legal_guardian';
+
 export type AddMemberWizardData = {
   // Step 1: Member Type
   memberType: MemberType | null;
@@ -25,6 +27,7 @@ export type AddMemberWizardData = {
   lastName: string;
   email: string;
   phone: string;
+  dateOfBirth?: Date;
   address?: {
     street: string;
     apartment?: string;
@@ -48,7 +51,17 @@ export type AddMemberWizardData = {
   subscriptionPlan?: SubscriptionPlan | null;
   subscriptionId?: string;
 
-  // Step 5: Payment (only for monthly/annual plans)
+  // Step 5: Waiver (required when membership has associated waiver)
+  waiverTemplateId: string | null;
+  waiverSignatureDataUrl?: string;
+  waiverSignedByName?: string;
+  waiverSignedByRelationship?: SignerRelationship;
+  waiverGuardianEmail?: string;
+  waiverSignedAt?: Date;
+  waiverSkipped?: boolean;
+  waiverRenderedContent?: string;
+
+  // Step 6: Payment (only for monthly/annual plans)
   paymentMethod?: PaymentMethod;
   billingType?: BillingType; // autopay (recurring) or one-time payment
   cardholderName?: string;
@@ -68,7 +81,7 @@ export type AddMemberWizardData = {
   paymentProcessed?: boolean;
 };
 
-export type WizardStep = 'member-type' | 'details' | 'photo' | 'subscription' | 'payment' | 'success';
+export type WizardStep = 'member-type' | 'details' | 'photo' | 'subscription' | 'waiver' | 'payment' | 'success';
 
 export const useAddMemberWizard = () => {
   const [step, setStep] = useState<WizardStep>('member-type');
@@ -79,6 +92,7 @@ export const useAddMemberWizard = () => {
     email: '',
     phone: '',
     membershipPlanId: null,
+    waiverTemplateId: null,
   });
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -92,7 +106,7 @@ export const useAddMemberWizard = () => {
   };
 
   const nextStep = () => {
-    const steps: WizardStep[] = ['member-type', 'details', 'photo', 'subscription', 'payment', 'success'];
+    const steps: WizardStep[] = ['member-type', 'details', 'photo', 'subscription', 'waiver', 'payment', 'success'];
     const currentIndex = steps.indexOf(step);
     if (currentIndex < steps.length - 1 && currentIndex !== -1) {
       const nextStepValue = steps[currentIndex + 1];
@@ -104,7 +118,7 @@ export const useAddMemberWizard = () => {
   };
 
   const previousStep = () => {
-    const steps: WizardStep[] = ['member-type', 'details', 'photo', 'subscription', 'payment', 'success'];
+    const steps: WizardStep[] = ['member-type', 'details', 'photo', 'subscription', 'waiver', 'payment', 'success'];
     const currentIndex = steps.indexOf(step);
     if (currentIndex > 0) {
       const prevStepValue = steps[currentIndex - 1];
@@ -132,6 +146,14 @@ export const useAddMemberWizard = () => {
       email: '',
       phone: '',
       membershipPlanId: null,
+      waiverTemplateId: null,
+      waiverSignatureDataUrl: undefined,
+      waiverSignedByName: undefined,
+      waiverSignedByRelationship: undefined,
+      waiverGuardianEmail: undefined,
+      waiverSignedAt: undefined,
+      waiverSkipped: undefined,
+      waiverRenderedContent: undefined,
       paymentMethod: undefined,
       billingType: undefined,
       cardholderName: undefined,

@@ -117,6 +117,17 @@ describe('useAddMemberWizard hook', () => {
       expect(result.current.data.achAccountNumber).toBe('987654321');
     });
 
+    it('should update dateOfBirth', async () => {
+      const { result, act } = await renderHook(() => useAddMemberWizard());
+
+      const dob = new Date('1990-01-15');
+      act(() => {
+        result.current.updateData({ dateOfBirth: dob });
+      });
+
+      expect(result.current.data.dateOfBirth).toEqual(dob);
+    });
+
     it('should update applied coupon', async () => {
       const { result, act } = await renderHook(() => useAddMemberWizard());
 
@@ -195,6 +206,12 @@ describe('useAddMemberWizard hook', () => {
         result.current.nextStep();
       });
 
+      expect(result.current.step).toBe('waiver');
+
+      act(() => {
+        result.current.nextStep();
+      });
+
       expect(result.current.step).toBe('payment');
 
       act(() => {
@@ -260,6 +277,12 @@ describe('useAddMemberWizard hook', () => {
       });
 
       expect(result.current.step).toBe('payment');
+
+      act(() => {
+        result.current.previousStep();
+      });
+
+      expect(result.current.step).toBe('waiver');
 
       act(() => {
         result.current.previousStep();
@@ -452,6 +475,7 @@ describe('useAddMemberWizard types and exports', () => {
       email: 'john@example.com',
       phone: '1234567890',
       membershipPlanId: null,
+      waiverTemplateId: null,
       subscriptionPlan: 'monthly',
     };
 
@@ -489,14 +513,16 @@ describe('useAddMemberWizard types and exports', () => {
   });
 
   it('should support all wizard steps', () => {
-    const steps: WizardStep[] = ['member-type', 'details', 'photo', 'subscription', 'success'];
+    const steps: WizardStep[] = ['member-type', 'details', 'photo', 'subscription', 'waiver', 'payment', 'success'];
 
-    expect(steps).toHaveLength(5);
+    expect(steps).toHaveLength(7);
     expect(steps[0]).toBe('member-type');
     expect(steps[1]).toBe('details');
     expect(steps[2]).toBe('photo');
     expect(steps[3]).toBe('subscription');
-    expect(steps[4]).toBe('success');
+    expect(steps[4]).toBe('waiver');
+    expect(steps[5]).toBe('payment');
+    expect(steps[6]).toBe('success');
   });
 
   it('should allow creating data with optional address', () => {
@@ -507,6 +533,7 @@ describe('useAddMemberWizard types and exports', () => {
       email: 'john@example.com',
       phone: '1234567890',
       membershipPlanId: null,
+      waiverTemplateId: null,
       subscriptionPlan: 'monthly',
       address: {
         street: '123 Main St',
@@ -531,6 +558,7 @@ describe('useAddMemberWizard types and exports', () => {
       email: 'john@example.com',
       phone: '1234567890',
       membershipPlanId: null,
+      waiverTemplateId: null,
       subscriptionPlan: 'monthly',
       photoFile: mockFile,
     };
@@ -547,6 +575,7 @@ describe('useAddMemberWizard types and exports', () => {
       email: '',
       phone: '',
       membershipPlanId: null,
+      waiverTemplateId: null,
     };
 
     expect(minimalData.memberType).toBeNull();
