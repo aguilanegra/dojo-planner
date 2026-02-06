@@ -138,7 +138,7 @@ export function CatalogPage({ organizationId }: CatalogPageProps) {
 
   const handleSaveItem = useCallback(async (formData: CatalogItemFormData, isEdit: boolean, itemId?: string) => {
     try {
-      let savedItemId = itemId;
+      let savedItemId: string | undefined;
 
       if (isEdit && itemId) {
         // Update existing item

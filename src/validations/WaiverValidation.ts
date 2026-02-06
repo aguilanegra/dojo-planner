@@ -17,12 +17,15 @@ export const CreateWaiverTemplateValidation = z.object({
 export const UpdateWaiverTemplateValidation = z.object({
   id: z.string(),
   name: z.string().min(1).max(100).optional(),
-  content: z.string().min(100).max(50000).optional(),
+  content: z.string()
+    .min(100, 'Waiver content must be at least 100 characters')
+    .max(50000, 'Waiver content must be 50,000 characters or less')
+    .optional(),
   description: z.string().max(500).nullable().optional(),
   isActive: z.boolean().optional(),
   isDefault: z.boolean().optional(),
   requiresGuardian: z.boolean().optional(),
-  guardianAgeThreshold: z.number().min(13).max(21).optional(),
+  guardianAgeThreshold: z.number().min(13, 'Minimum age threshold is 13').max(21, 'Maximum age threshold is 21').optional(),
 });
 
 export const DeleteWaiverTemplateValidation = z.object({
@@ -125,7 +128,7 @@ export const CreateMergeFieldValidation = z.object({
 export const UpdateMergeFieldValidation = z.object({
   id: z.string(),
   label: z.string().min(1).max(100).optional(),
-  defaultValue: z.string().min(1).max(500).optional(),
+  defaultValue: z.string().min(1, 'Default value is required').max(500, 'Default value must be 500 characters or less').optional(),
   description: z.string().max(500).nullable().optional(),
 });
 
