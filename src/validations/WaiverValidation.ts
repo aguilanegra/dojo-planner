@@ -125,7 +125,7 @@ export const CreateMergeFieldValidation = z.object({
 export const UpdateMergeFieldValidation = z.object({
   id: z.string(),
   label: z.string().min(1).max(100).optional(),
-  defaultValue: z.string().min(1).max(500).optional(),
+  defaultValue: z.string().min(1, 'Default value is required').max(500, 'Default value must be 500 characters or less').optional(),
   description: z.string().max(500).nullable().optional(),
 });
 
