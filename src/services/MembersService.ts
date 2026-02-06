@@ -474,3 +474,31 @@ export async function getMembershipPlans(organizationId: string): Promise<Member
     isActive: plan.isActive,
   }));
 }
+
+/**
+ * Get all membership plans for an organization (including inactive)
+ * @param organizationId - The organization ID
+ * @returns Array of all membership plans
+ */
+export async function getAllMembershipPlans(organizationId: string): Promise<MembershipPlanData[]> {
+  const plans = await db
+    .select()
+    .from(membershipPlanSchema)
+    .where(eq(membershipPlanSchema.organizationId, organizationId));
+
+  return plans.map(plan => ({
+    id: plan.id,
+    name: plan.name,
+    slug: plan.slug,
+    category: plan.category,
+    program: plan.program,
+    price: plan.price,
+    signupFee: plan.signupFee,
+    frequency: plan.frequency,
+    contractLength: plan.contractLength,
+    accessLevel: plan.accessLevel,
+    description: plan.description,
+    isTrial: plan.isTrial,
+    isActive: plan.isActive,
+  }));
+}

@@ -3,7 +3,7 @@ import { ORPCError, os } from '@orpc/server';
 import { z } from 'zod';
 import { logger } from '@/libs/Logger';
 import { audit } from '@/services/AuditService';
-import { addMemberMembership, changeMemberMembership, createMember, getMembershipPlans, updateMember, updateMemberContactInfo, updateMemberStatus } from '@/services/MembersService';
+import { addMemberMembership, changeMemberMembership, createMember, getAllMembershipPlans, getMembershipPlans, updateMember, updateMemberContactInfo, updateMemberStatus } from '@/services/MembersService';
 import { AUDIT_ACTION, AUDIT_ENTITY_TYPE } from '@/types/Audit';
 import { ORG_ROLE } from '@/types/Auth';
 import { DeleteMemberValidation, EditMemberValidation, MemberValidation, UpdateMemberContactInfoValidation } from '@/validations/MemberValidation';
@@ -341,6 +341,20 @@ export const listMembershipPlans = os
 
     try {
       const plans = await getMembershipPlans(context.orgId);
+      return { plans };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error(`Failed to fetch membership plans: ${errorMessage}`);
+      throw error instanceof ORPCError ? error : new ORPCError('Failed to fetch membership plans. Please try again.', { status: 500 });
+    }
+  });
+
+export const listAllMembershipPlans = os
+  .handler(async () => {
+    const context = await guardRole(ORG_ROLE.ADMIN);
+
+    try {
+      const plans = await getAllMembershipPlans(context.orgId);
       return { plans };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';

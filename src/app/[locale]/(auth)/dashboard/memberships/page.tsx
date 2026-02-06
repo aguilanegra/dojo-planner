@@ -1,25 +1,27 @@
 'use client';
 
 import type { AvailableTag, MembershipFilters } from '@/features/memberships/MembershipFilterBar';
+import type { MembershipPlanData } from '@/hooks/useMembershipPlansCache';
 import type { MembershipCardProps, MembershipStatus } from '@/templates/MembershipCard';
+import { useOrganization } from '@clerk/nextjs';
 import { Plus, Tags } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { MembershipFilterBar } from '@/features/memberships/MembershipFilterBar';
 import { MembershipTagsManagement } from '@/features/memberships/MembershipTagsManagement';
 import { AddMembershipModal } from '@/features/memberships/wizard/AddMembershipModal';
+import { invalidateMembershipPlansCache, useMembershipPlansCache } from '@/hooks/useMembershipPlansCache';
 import { MembershipCard } from '@/templates/MembershipCard';
 import { StatsCards } from '@/templates/StatsCards';
-
-type ProgramType = 'Adult' | 'Kids' | 'Women' | 'Competition';
 
 type Membership = {
   id: string;
   name: string;
   category: string;
-  program: ProgramType;
+  program: string;
   status: MembershipStatus;
   isTrial?: boolean;
   isMonthly?: boolean;
@@ -33,135 +35,64 @@ type Membership = {
   revenue: string;
 };
 
-const mockMemberships: Membership[] = [
-  {
-    id: '1',
-    name: '12 Month Commitment (Gold)',
-    category: 'Adult Brazilian Jiu-Jitsu',
-    program: 'Adult',
-    status: 'Active',
-    isMonthly: true,
-    price: '$150.00/mo',
-    signupFee: '$35 signup fee',
-    frequency: 'Monthly',
-    contract: '12 Months',
-    access: 'Unlimited',
-    activeCount: 89,
-    revenue: '$13,350/mo revenue',
-  },
-  {
-    id: '2',
-    name: 'Month to Month (Gold)',
-    category: 'Adult Brazilian Jiu-Jitsu',
-    program: 'Adult',
-    status: 'Active',
-    isMonthly: true,
-    price: '$170.00/mo',
-    signupFee: '$35 signup fee',
-    frequency: 'Monthly',
-    contract: 'Month-to-Month',
-    access: 'Unlimited',
-    activeCount: 52,
-    revenue: '$9,100/mo revenue',
-  },
-  {
-    id: '3',
-    name: '7-Day Free Trial',
-    category: 'Adult Brazilian Jiu-Jitsu',
-    program: 'Adult',
-    status: 'Active',
-    isTrial: true,
-    price: 'Free',
-    signupFee: 'No signup fee',
-    frequency: 'None',
-    contract: '7 Days',
-    access: '3 Classes Total',
-    activeCount: 23,
-    revenue: '15 Converted This Month',
-  },
-  {
-    id: '4',
-    name: 'Kids Monthly',
-    category: 'Kids Program',
-    program: 'Kids',
-    status: 'Active',
-    isMonthly: true,
-    price: '$95.00/mo',
-    signupFee: '$25 signup fee',
-    frequency: 'Monthly',
-    contract: 'Month-to-Month',
-    access: '8 Classes/mo',
-    activeCount: 34,
-    revenue: '$3,230/mo revenue',
-  },
-  {
-    id: '5',
-    name: 'Kids Free Trial Week',
-    category: 'Kids Program',
-    program: 'Kids',
-    status: 'Active',
-    isTrial: true,
-    price: 'Free',
-    signupFee: 'No signup fee',
-    frequency: 'None',
-    contract: '7 Days',
-    access: '2 Classes Total',
-    activeCount: 8,
-    revenue: '6 Converted This Month',
-  },
-  {
-    id: '6',
-    name: 'Competition Team',
-    category: 'Competition Team',
-    program: 'Competition',
-    status: 'Active',
-    isMonthly: true,
-    price: '$200.00/mo',
-    signupFee: '$50 signup fee',
-    frequency: 'Monthly',
-    contract: '6 Months',
-    access: 'Unlimited',
-    activeCount: 16,
-    revenue: '$3,200/mo revenue',
-  },
-  {
-    id: '7',
-    name: '6 Month Commitment (Silver)',
-    category: 'Adult Brazilian Jiu-Jitsu',
-    program: 'Adult',
-    status: 'Inactive',
-    isMonthly: true,
-    price: '$165.00/mo',
-    signupFee: '$35 signup fee',
-    frequency: 'Monthly',
-    contract: '6 Months',
-    access: 'Unlimited',
+function formatPrice(plan: MembershipPlanData): string {
+  if (plan.isTrial || plan.price === 0) {
+    return 'Free';
+  }
+  const formatted = `$${plan.price.toFixed(2)}`;
+  switch (plan.frequency) {
+    case 'Monthly':
+      return `${formatted}/mo`;
+    case 'Weekly':
+      return `${formatted}/wk`;
+    case 'Annual':
+    case 'Annually':
+      return `${formatted}/yr`;
+    default:
+      return formatted;
+  }
+}
+
+function formatSignupFee(plan: MembershipPlanData): string {
+  if (plan.signupFee === 0) {
+    return plan.frequency === 'None' ? 'One-time purchase' : 'No signup fee';
+  }
+  return `$${plan.signupFee.toFixed(0)} signup fee`;
+}
+
+function transformPlanToMembership(plan: MembershipPlanData): Membership {
+  const isPunchcard = plan.frequency === 'None' && !plan.isTrial;
+  const isMonthly = plan.frequency === 'Monthly' || plan.frequency === 'Weekly' || plan.frequency === 'Annual' || plan.frequency === 'Annually';
+
+  return {
+    id: plan.id,
+    name: plan.name,
+    category: plan.category,
+    program: plan.program,
+    status: plan.isActive ? 'Active' : 'Inactive',
+    isTrial: plan.isTrial ?? false,
+    isMonthly: isMonthly && !plan.isTrial,
+    isPunchcard,
+    price: formatPrice(plan),
+    signupFee: formatSignupFee(plan),
+    frequency: plan.frequency,
+    contract: plan.contractLength,
+    access: plan.accessLevel,
     activeCount: 0,
-    revenue: 'Discontinued',
-  },
-  {
-    id: '8',
-    name: '10-Class Punch Card',
-    category: 'Adult Brazilian Jiu-Jitsu',
-    program: 'Adult',
-    status: 'Active',
-    isPunchcard: true,
-    price: '$200.00',
-    signupFee: 'One-time purchase',
-    frequency: 'One-time',
-    contract: '10 Classes',
-    access: '10 Classes Total',
-    activeCount: 12,
-    revenue: '$2,400 total',
-  },
-];
+    revenue: '$0/mo revenue',
+  };
+}
 
 export default function MembershipsPage() {
   const t = useTranslations('MembershipsPage');
   const router = useRouter();
+  const { organization } = useOrganization();
+  const { plans, loading } = useMembershipPlansCache(organization?.id);
   const [isTagsSheetOpen, setIsTagsSheetOpen] = useState(false);
   const [isAddMembershipModalOpen, setIsAddMembershipModalOpen] = useState(false);
-  const [memberships, setMemberships] = useState<Membership[]>(mockMemberships);
+
+  const memberships = useMemo(() => plans.map(transformPlanToMembership), [plans]);
+
   const [filters, setFilters] = useState<MembershipFilters>({
     search: '',
     tag: 'all',
@@ -172,25 +103,9 @@ export default function MembershipsPage() {
     router.push(`/dashboard/memberships/${id}`);
   }, [router]);
 
-  const handleMembershipCreated = useCallback((newMembership: MembershipCardProps) => {
-    const membership: Membership = {
-      id: newMembership.id,
-      name: newMembership.name,
-      category: newMembership.category,
-      program: 'Adult', // Default program for new memberships
-      status: newMembership.status,
-      isTrial: newMembership.isTrial,
-      isMonthly: newMembership.isMonthly,
-      isPunchcard: newMembership.isPunchcard,
-      price: newMembership.price,
-      signupFee: newMembership.signupFee,
-      frequency: newMembership.frequency,
-      contract: newMembership.contract,
-      access: newMembership.access,
-      activeCount: newMembership.activeCount,
-      revenue: newMembership.revenue,
-    };
-    setMemberships(prev => [membership, ...prev]);
+  const handleMembershipCreated = useCallback((_newMembership: MembershipCardProps) => {
+    // Once the wizard persists to DB, invalidate the cache to refetch
+    invalidateMembershipPlansCache();
   }, []);
 
   // Get unique programs from memberships
@@ -311,6 +226,26 @@ export default function MembershipsPage() {
     { id: 'trials', label: t('trial_options_label'), value: stats.trialOptions },
     { id: 'members', label: t('total_members_label'), value: stats.totalMembers },
   ], [stats, t]);
+
+  if (loading) {
+    return (
+      <div className="w-full space-y-6">
+        <div className="grid gap-4 md:grid-cols-4">
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+        </div>
+        <Skeleton className="h-10 w-64" />
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <Skeleton className="h-64" />
+          <Skeleton className="h-64" />
+          <Skeleton className="h-64" />
+          <Skeleton className="h-64" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full space-y-6">

@@ -8,12 +8,15 @@ import type {
   MembershipType,
   PaymentFrequency,
 } from '@/hooks/useAddMembershipWizard';
+import type { MembershipPlanData } from '@/hooks/useMembershipPlansCache';
+import { useOrganization } from '@clerk/nextjs';
 import { ArrowLeft, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { use, useMemo, useState } from 'react';
+import { use, useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { DeleteMembershipAlertDialog } from '@/features/memberships/details/DeleteMembershipAlertDialog';
 import { EditAssociatedProgramModal } from '@/features/memberships/details/EditAssociatedProgramModal';
 import { EditContractTermsModal } from '@/features/memberships/details/EditContractTermsModal';
@@ -24,6 +27,8 @@ import { MembershipBasicsCard } from '@/features/memberships/details/MembershipB
 import { MembershipContractTermsCard } from '@/features/memberships/details/MembershipContractTermsCard';
 import { MembershipPaymentDetailsCard } from '@/features/memberships/details/MembershipPaymentDetailsCard';
 import { MembershipStatsCard } from '@/features/memberships/details/MembershipStatsCard';
+import { useMembershipPlansCache } from '@/hooks/useMembershipPlansCache';
+import { client } from '@/libs/Orpc';
 
 // Membership data type matching the wizard data structure
 export type MembershipDetailData = {
@@ -37,6 +42,9 @@ export type MembershipDetailData = {
   // Associated Program
   associatedProgramId: string | null;
   associatedProgramName: string | null;
+  // Associated Waiver
+  associatedWaiverId: string | null;
+  associatedWaiverName: string | null;
   // Payment Details
   signUpFee: number | null;
   chargeSignUpFee: ChargeSignUpFeeOption;
@@ -53,156 +61,70 @@ export type MembershipDetailData = {
   revenue: string;
 };
 
-// Mock data for memberships - matching the landing page mock data
-const mockMembershipDetails: Record<string, MembershipDetailData> = {
-  1: {
-    id: '1',
-    membershipName: '12 Month Commitment (Gold)',
-    status: 'active',
-    membershipType: 'standard',
-    description: 'Our most popular membership option for dedicated practitioners. Includes unlimited access to all adult BJJ classes with a 12-month commitment for the best monthly rate.',
-    category: 'Adult Brazilian Jiu-Jitsu',
-    associatedProgramId: '1',
-    associatedProgramName: 'Adult Brazilian Jiu-jitsu',
-    signUpFee: 35,
+function mapFrequency(frequency: string): PaymentFrequency {
+  switch (frequency.toLowerCase()) {
+    case 'monthly':
+      return 'monthly';
+    case 'weekly':
+      return 'weekly';
+    case 'annual':
+    case 'annually':
+      return 'annually';
+    default:
+      return 'monthly';
+  }
+}
+
+function mapContractLength(contractLength: string): ContractLength {
+  switch (contractLength.toLowerCase()) {
+    case '12 months':
+      return '12-months';
+    case '6 months':
+      return '6-months';
+    case '3 months':
+      return '3-months';
+    case 'month-to-month':
+      return 'month-to-month';
+    default:
+      return 'month-to-month';
+  }
+}
+
+function mapMembershipType(plan: MembershipPlanData): MembershipType {
+  if (plan.isTrial) {
+    return 'trial';
+  }
+  if (plan.frequency === 'None' && !plan.isTrial) {
+    return 'punchcard';
+  }
+  return 'standard';
+}
+
+function transformPlanToDetailData(plan: MembershipPlanData): MembershipDetailData {
+  return {
+    id: plan.id,
+    membershipName: plan.name,
+    status: plan.isActive ? 'active' : 'inactive',
+    membershipType: mapMembershipType(plan),
+    description: plan.description ?? '',
+    category: plan.category,
+    associatedProgramId: null,
+    associatedProgramName: plan.category,
+    associatedWaiverId: null,
+    associatedWaiverName: null,
+    signUpFee: plan.signupFee === 0 ? null : plan.signupFee,
     chargeSignUpFee: 'at-registration',
-    monthlyFee: 150,
-    paymentFrequency: 'monthly',
-    proRateFirstPayment: true,
-    contractLength: '12-months',
-    autoRenewal: 'month-to-month',
-    cancellationFee: 300,
-    holdLimitPerYear: 2,
-    activeCount: 89,
-    revenue: '$13,350/mo revenue',
-  },
-  2: {
-    id: '2',
-    membershipName: 'Month to Month (Gold)',
-    status: 'active',
-    membershipType: 'standard',
-    description: 'Flexible month-to-month membership with no long-term commitment. Perfect for those who need flexibility in their training schedule.',
-    category: 'Adult Brazilian Jiu-Jitsu',
-    associatedProgramId: '1',
-    associatedProgramName: 'Adult Brazilian Jiu-jitsu',
-    signUpFee: 35,
-    chargeSignUpFee: 'at-registration',
-    monthlyFee: 170,
-    paymentFrequency: 'monthly',
+    monthlyFee: plan.price === 0 ? null : plan.price,
+    paymentFrequency: mapFrequency(plan.frequency),
     proRateFirstPayment: false,
-    contractLength: 'month-to-month',
-    autoRenewal: 'none',
-    cancellationFee: null,
-    holdLimitPerYear: 1,
-    activeCount: 52,
-    revenue: '$9,100/mo revenue',
-  },
-  3: {
-    id: '3',
-    membershipName: '7-Day Free Trial',
-    status: 'active',
-    membershipType: 'trial',
-    description: 'Experience our academy for free! New students can try up to 3 classes over 7 days to see if BJJ is right for them.',
-    category: 'Adult Brazilian Jiu-Jitsu',
-    associatedProgramId: '1',
-    associatedProgramName: 'Adult Brazilian Jiu-jitsu',
-    signUpFee: null,
-    chargeSignUpFee: 'at-registration',
-    monthlyFee: null,
-    paymentFrequency: 'monthly',
-    proRateFirstPayment: false,
-    contractLength: 'month-to-month',
-    autoRenewal: 'none',
-    cancellationFee: null,
-    holdLimitPerYear: null,
-    activeCount: 23,
-    revenue: '15 Converted This Month',
-  },
-  4: {
-    id: '4',
-    membershipName: 'Kids Monthly',
-    status: 'active',
-    membershipType: 'standard',
-    description: 'Monthly membership for our kids program. Includes access to all kids BJJ classes with age-appropriate instruction.',
-    category: 'Kids Program',
-    associatedProgramId: '2',
-    associatedProgramName: 'Kids Program',
-    signUpFee: 25,
-    chargeSignUpFee: 'at-registration',
-    monthlyFee: 95,
-    paymentFrequency: 'monthly',
-    proRateFirstPayment: false,
-    contractLength: 'month-to-month',
-    autoRenewal: 'none',
-    cancellationFee: null,
-    holdLimitPerYear: 2,
-    activeCount: 34,
-    revenue: '$3,230/mo revenue',
-  },
-  5: {
-    id: '5',
-    membershipName: 'Kids Free Trial Week',
-    status: 'active',
-    membershipType: 'trial',
-    description: 'Let your child try BJJ for free! Two classes over one week to see if they enjoy training.',
-    category: 'Kids Program',
-    associatedProgramId: '2',
-    associatedProgramName: 'Kids Program',
-    signUpFee: null,
-    chargeSignUpFee: 'at-registration',
-    monthlyFee: null,
-    paymentFrequency: 'monthly',
-    proRateFirstPayment: false,
-    contractLength: 'month-to-month',
+    contractLength: mapContractLength(plan.contractLength),
     autoRenewal: 'none',
     cancellationFee: null,
     holdLimitPerYear: null,
-    activeCount: 8,
-    revenue: '6 Converted This Month',
-  },
-  6: {
-    id: '6',
-    membershipName: 'Competition Team',
-    status: 'active',
-    membershipType: 'standard',
-    description: 'For serious competitors. Includes unlimited access to all classes plus exclusive competition team training sessions.',
-    category: 'Competition Team',
-    associatedProgramId: '3',
-    associatedProgramName: 'Competition Team',
-    signUpFee: 50,
-    chargeSignUpFee: 'at-registration',
-    monthlyFee: 200,
-    paymentFrequency: 'monthly',
-    proRateFirstPayment: true,
-    contractLength: '6-months',
-    autoRenewal: 'month-to-month',
-    cancellationFee: 200,
-    holdLimitPerYear: 1,
-    activeCount: 16,
-    revenue: '$3,200/mo revenue',
-  },
-  7: {
-    id: '7',
-    membershipName: '6 Month Commitment (Silver)',
-    status: 'inactive',
-    membershipType: 'standard',
-    description: 'Previously offered 6-month commitment plan. This membership is no longer available for new sign-ups.',
-    category: 'Adult Brazilian Jiu-Jitsu',
-    associatedProgramId: '1',
-    associatedProgramName: 'Adult Brazilian Jiu-jitsu',
-    signUpFee: 35,
-    chargeSignUpFee: 'at-registration',
-    monthlyFee: 165,
-    paymentFrequency: 'monthly',
-    proRateFirstPayment: false,
-    contractLength: '6-months',
-    autoRenewal: 'none',
-    cancellationFee: 150,
-    holdLimitPerYear: 1,
     activeCount: 0,
-    revenue: 'Discontinued',
-  },
-};
+    revenue: '$0/mo revenue',
+  };
+}
 
 type PageParams = {
   membershipId: string;
@@ -212,6 +134,8 @@ export default function MembershipDetailPage({ params }: { params: Promise<PageP
   const resolvedParams = use(params);
   const t = useTranslations('MembershipDetailPage');
   const router = useRouter();
+  const { organization } = useOrganization();
+  const { plans, loading } = useMembershipPlansCache(organization?.id);
 
   // Modal states
   const [isEditBasicsOpen, setIsEditBasicsOpen] = useState(false);
@@ -220,10 +144,57 @@ export default function MembershipDetailPage({ params }: { params: Promise<PageP
   const [isEditContractOpen, setIsEditContractOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  // Get membership data (in real app, this would come from an API)
-  const [membershipData, setMembershipData] = useState<MembershipDetailData | null>(
-    mockMembershipDetails[resolvedParams.membershipId] || null,
-  );
+  // Find plan from cache and transform
+  const initialMembershipData = useMemo(() => {
+    const raw = plans.find(p => p.id === resolvedParams.membershipId);
+    return raw ? transformPlanToDetailData(raw) : null;
+  }, [plans, resolvedParams.membershipId]);
+
+  // Local overrides (from edit modals)
+  const [localOverrides, setLocalOverrides] = useState<Partial<MembershipDetailData>>({});
+
+  // Waiver data fetched from DB
+  const [waiverData, setWaiverData] = useState<{ id: string; name: string } | null>(null);
+
+  // Fetch waiver associations from DB
+  const planId = initialMembershipData?.id;
+  useEffect(() => {
+    if (!planId) {
+      return;
+    }
+
+    let cancelled = false;
+    const fetchWaivers = async () => {
+      try {
+        const result = await client.waivers.getWaiversForMembership({ membershipPlanId: planId });
+        const waivers = result.waivers || [];
+        if (!cancelled && waivers.length > 0) {
+          const waiver = waivers[0] as { id: string; name: string; version: number };
+          setWaiverData({ id: waiver.id, name: `${waiver.name} (v${waiver.version})` });
+        }
+      } catch {
+        // Waiver fetch failed silently — card will show "No waiver"
+      }
+    };
+
+    fetchWaivers();
+    return () => {
+      cancelled = true;
+    };
+  }, [planId]);
+
+  // Compose final membership data from cache + waiver fetch + local overrides
+  const membershipData = useMemo(() => {
+    if (!initialMembershipData) {
+      return null;
+    }
+    return {
+      ...initialMembershipData,
+      associatedWaiverId: waiverData?.id ?? null,
+      associatedWaiverName: waiverData?.name ?? null,
+      ...localOverrides,
+    };
+  }, [initialMembershipData, waiverData, localOverrides]);
 
   const isTrial = membershipData?.membershipType === 'trial';
 
@@ -232,14 +203,11 @@ export default function MembershipDetailPage({ params }: { params: Promise<PageP
 
   // Handler for updating membership data
   const handleUpdateMembership = (updates: Partial<MembershipDetailData>) => {
-    if (membershipData) {
-      setMembershipData({ ...membershipData, ...updates });
-    }
+    setLocalOverrides(prev => ({ ...prev, ...updates }));
   };
 
   // Handler for deleting membership
   const handleDeleteMembership = () => {
-    // In a real app, this would call an API to delete the membership
     router.push('/dashboard/memberships');
   };
 
@@ -258,6 +226,26 @@ export default function MembershipDetailPage({ params }: { params: Promise<PageP
     }[membershipData.paymentFrequency];
     return `$${membershipData.monthlyFee.toFixed(2)}${frequencySuffix}`;
   }, [membershipData, t]);
+
+  if (loading) {
+    return (
+      <div className="w-full space-y-6">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-10 w-64" />
+        <div className="grid gap-4 md:grid-cols-3">
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+        </div>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Skeleton className="h-64" />
+          <Skeleton className="h-64" />
+          <Skeleton className="h-64" />
+          <Skeleton className="h-64" />
+        </div>
+      </div>
+    );
+  }
 
   if (!membershipData) {
     return (
@@ -304,10 +292,12 @@ export default function MembershipDetailPage({ params }: { params: Promise<PageP
           onEdit={() => setIsEditBasicsOpen(true)}
         />
 
-        {/* Associated Program Card */}
+        {/* Associated Program/Waiver Card */}
         <MembershipAssociatedProgramCard
           associatedProgramId={membershipData.associatedProgramId}
           associatedProgramName={membershipData.associatedProgramName}
+          associatedWaiverId={membershipData.associatedWaiverId}
+          associatedWaiverName={membershipData.associatedWaiverName}
           onEdit={() => setIsEditAssociatedProgramOpen(true)}
         />
 
@@ -350,6 +340,8 @@ export default function MembershipDetailPage({ params }: { params: Promise<PageP
         isOpen={isEditAssociatedProgramOpen}
         onClose={() => setIsEditAssociatedProgramOpen(false)}
         associatedProgramId={membershipData.associatedProgramId}
+        associatedWaiverId={membershipData.associatedWaiverId}
+        membershipPlanId={membershipData.id}
         onSave={(data) => {
           handleUpdateMembership(data);
           setIsEditAssociatedProgramOpen(false);

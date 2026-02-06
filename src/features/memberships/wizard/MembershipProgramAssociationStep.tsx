@@ -2,6 +2,7 @@
 
 import type { AddMembershipWizardData } from '@/hooks/useAddMembershipWizard';
 import { useTranslations } from 'next-intl';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -10,6 +11,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { client } from '@/libs/Orpc';
+
+type WaiverOption = {
+  id: string;
+  name: string;
+  version: number;
+};
 
 type MembershipProgramAssociationStepProps = {
   data: AddMembershipWizardData;
@@ -41,6 +49,29 @@ export const MembershipProgramAssociationStep = ({
   error,
 }: MembershipProgramAssociationStepProps) => {
   const t = useTranslations('AddMembershipWizard.MembershipProgramAssociationStep');
+  const [waiverOptions, setWaiverOptions] = useState<WaiverOption[]>([]);
+  const [waiversLoading, setWaiversLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchWaivers = async () => {
+      try {
+        setWaiversLoading(true);
+        const result = await client.waivers.listActiveTemplates();
+        const options: WaiverOption[] = (result.templates || []).map((template: { id: string; name: string; version: number }) => ({
+          id: template.id,
+          name: template.name,
+          version: template.version,
+        }));
+        setWaiverOptions(options);
+      } catch {
+        setWaiverOptions([]);
+      } finally {
+        setWaiversLoading(false);
+      }
+    };
+
+    fetchWaivers();
+  }, []);
 
   const handleProgramChange = (programId: string) => {
     const selectedProgram = ACTIVE_PROGRAMS.find(p => p.id === programId);
@@ -50,7 +81,17 @@ export const MembershipProgramAssociationStep = ({
     });
   };
 
-  const isFormValid = data.associatedProgramId !== null && data.associatedProgramId !== '';
+  const handleWaiverChange = (waiverId: string) => {
+    const selectedWaiver = waiverOptions.find(w => w.id === waiverId);
+    onUpdate({
+      associatedWaiverId: waiverId,
+      associatedWaiverName: selectedWaiver ? `${selectedWaiver.name} (v${selectedWaiver.version})` : null,
+    });
+  };
+
+  const isProgramSelected = data.associatedProgramId !== null && data.associatedProgramId !== '';
+  const isWaiverSelected = data.associatedWaiverId !== null && data.associatedWaiverId !== '';
+  const isFormValid = isProgramSelected && isWaiverSelected;
 
   return (
     <div className="space-y-6">
@@ -85,6 +126,32 @@ export const MembershipProgramAssociationStep = ({
             </SelectContent>
           </Select>
           <p className="text-xs text-muted-foreground">{t('program_help')}</p>
+        </div>
+
+        {/* Waiver Selection */}
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-foreground">{t('waiver_label')}</label>
+          <Select
+            value={data.associatedWaiverId ?? ''}
+            onValueChange={handleWaiverChange}
+            disabled={waiversLoading}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={waiversLoading ? t('waiver_loading') : t('waiver_placeholder')} />
+            </SelectTrigger>
+            <SelectContent>
+              {waiverOptions.map(waiver => (
+                <SelectItem key={waiver.id} value={waiver.id}>
+                  {waiver.name}
+                  {' '}
+                  (v
+                  {waiver.version}
+                  )
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">{t('waiver_help')}</p>
         </div>
       </div>
 

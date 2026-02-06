@@ -19,7 +19,7 @@ import {
 import { tags as classTags, list as listClasses } from './Classes';
 import { listActive as listActiveCoupons, list as listCoupons } from './Coupons';
 import { list as listEvents } from './Events';
-import { addMembership, changeMembership, create as createMember, listMembershipPlans, remove as removeMember, restore as restoreMember, updateLastAccessed, update as updateMember, updateContactInfo as updateMemberContactInfo } from './Member';
+import { addMembership, changeMembership, create as createMember, listAllMembershipPlans, listMembershipPlans, remove as removeMember, restore as restoreMember, updateLastAccessed, update as updateMember, updateContactInfo as updateMemberContactInfo } from './Member';
 import { list as listMembers } from './Members';
 import { listAll as listAllTags, listClassTags, listMembershipTags } from './Tags';
 import {
@@ -56,6 +56,7 @@ export const router = {
     addMembership,
     changeMembership,
     listMembershipPlans,
+    listAllMembershipPlans,
     remove: removeMember,
     restore: restoreMember,
     updateLastAccessed,

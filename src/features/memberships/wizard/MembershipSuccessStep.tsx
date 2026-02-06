@@ -133,6 +133,12 @@ export const MembershipSuccessStep = ({ data, onDone }: MembershipSuccessStepPro
               {data.associatedProgramName ?? t('no_program')}
             </span>
           </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">{t('summary_associated_waiver')}</span>
+            <span className="font-medium text-foreground">
+              {data.associatedWaiverName ?? t('no_waiver')}
+            </span>
+          </div>
           {data.cancellationFee !== null && data.cancellationFee > 0 && (
             <div className="flex justify-between">
               <span className="text-muted-foreground">{t('summary_cancellation_fee')}</span>

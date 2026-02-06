@@ -17,6 +17,7 @@ const translationKeys: Record<string, string> = {
   summary_frequency: 'Payment Frequency',
   summary_contract: 'Contract Length',
   summary_associated_program: 'Associated Program',
+  summary_associated_waiver: 'Associated Waiver',
   summary_cancellation_fee: 'Cancellation Fee',
   summary_hold_limit: 'Hold Limit',
   summary_classes_included: 'Classes Included',
@@ -36,6 +37,7 @@ const translationKeys: Record<string, string> = {
   contract_6_months: '6 Months',
   contract_12_months: '12 Months',
   no_program: 'No program assigned',
+  no_waiver: 'No waiver assigned',
   per_year: 'per year',
   done_button: 'Done',
 };
@@ -60,6 +62,8 @@ describe('MembershipSuccessStep', () => {
     description: 'A great membership',
     associatedProgramId: '1',
     associatedProgramName: 'Adult Brazilian Jiu-jitsu',
+    associatedWaiverId: null,
+    associatedWaiverName: null,
     signUpFee: 35,
     chargeSignUpFee: 'at-registration',
     monthlyFee: 150,
@@ -183,6 +187,8 @@ describe('MembershipSuccessStep', () => {
       ...mockData,
       associatedProgramId: null,
       associatedProgramName: null,
+      associatedWaiverId: null,
+      associatedWaiverName: null,
     };
 
     render(<MembershipSuccessStep data={noProgramData} onDone={mockOnDone} />);
@@ -225,11 +231,43 @@ describe('MembershipSuccessStep', () => {
     expect(mockOnDone).toHaveBeenCalled();
   });
 
+  it('should display waiver summary row', () => {
+    render(<MembershipSuccessStep data={mockData} onDone={mockOnDone} />);
+
+    const waiverLabel = page.getByText('Associated Waiver');
+
+    expect(waiverLabel).toBeTruthy();
+  });
+
+  it('should display no waiver message when waiver is not assigned', () => {
+    render(<MembershipSuccessStep data={mockData} onDone={mockOnDone} />);
+
+    const noWaiver = page.getByText('No waiver assigned');
+
+    expect(noWaiver).toBeTruthy();
+  });
+
+  it('should display waiver name when waiver is assigned', () => {
+    const dataWithWaiver: AddMembershipWizardData = {
+      ...mockData,
+      associatedWaiverId: 'waiver-1',
+      associatedWaiverName: 'Standard Adult Waiver (v1)',
+    };
+
+    render(<MembershipSuccessStep data={dataWithWaiver} onDone={mockOnDone} />);
+
+    const waiverName = page.getByText('Standard Adult Waiver (v1)');
+
+    expect(waiverName).toBeTruthy();
+  });
+
   it('should display Free when monthly fee is 0', () => {
     const freeData: AddMembershipWizardData = {
       ...mockData,
       monthlyFee: 0,
       signUpFee: 0,
+      associatedWaiverId: null,
+      associatedWaiverName: null,
     };
 
     render(<MembershipSuccessStep data={freeData} onDone={mockOnDone} />);
@@ -243,6 +281,8 @@ describe('MembershipSuccessStep', () => {
     const nullFeeData: AddMembershipWizardData = {
       ...mockData,
       monthlyFee: null,
+      associatedWaiverId: null,
+      associatedWaiverName: null,
     };
 
     render(<MembershipSuccessStep data={nullFeeData} onDone={mockOnDone} />);
@@ -256,6 +296,8 @@ describe('MembershipSuccessStep', () => {
     const trialData: AddMembershipWizardData = {
       ...mockData,
       membershipType: 'trial',
+      associatedWaiverId: null,
+      associatedWaiverName: null,
     };
 
     render(<MembershipSuccessStep data={trialData} onDone={mockOnDone} />);
@@ -269,6 +311,8 @@ describe('MembershipSuccessStep', () => {
     const inactiveData: AddMembershipWizardData = {
       ...mockData,
       status: 'inactive',
+      associatedWaiverId: null,
+      associatedWaiverName: null,
     };
 
     render(<MembershipSuccessStep data={inactiveData} onDone={mockOnDone} />);
@@ -282,6 +326,8 @@ describe('MembershipSuccessStep', () => {
     const noSignupFeeData: AddMembershipWizardData = {
       ...mockData,
       signUpFee: 0,
+      associatedWaiverId: null,
+      associatedWaiverName: null,
     };
 
     render(<MembershipSuccessStep data={noSignupFeeData} onDone={mockOnDone} />);
@@ -298,6 +344,8 @@ describe('MembershipSuccessStep', () => {
     const noCancellationFeeData: AddMembershipWizardData = {
       ...mockData,
       cancellationFee: 0,
+      associatedWaiverId: null,
+      associatedWaiverName: null,
     };
 
     render(<MembershipSuccessStep data={noCancellationFeeData} onDone={mockOnDone} />);
@@ -314,6 +362,8 @@ describe('MembershipSuccessStep', () => {
     const noHoldLimitData: AddMembershipWizardData = {
       ...mockData,
       holdLimitPerYear: 0,
+      associatedWaiverId: null,
+      associatedWaiverName: null,
     };
 
     render(<MembershipSuccessStep data={noHoldLimitData} onDone={mockOnDone} />);
@@ -330,6 +380,8 @@ describe('MembershipSuccessStep', () => {
     const weeklyData: AddMembershipWizardData = {
       ...mockData,
       paymentFrequency: 'weekly',
+      associatedWaiverId: null,
+      associatedWaiverName: null,
     };
 
     render(<MembershipSuccessStep data={weeklyData} onDone={mockOnDone} />);
@@ -343,6 +395,8 @@ describe('MembershipSuccessStep', () => {
     const annuallyData: AddMembershipWizardData = {
       ...mockData,
       paymentFrequency: 'annually',
+      associatedWaiverId: null,
+      associatedWaiverName: null,
     };
 
     render(<MembershipSuccessStep data={annuallyData} onDone={mockOnDone} />);
@@ -356,6 +410,8 @@ describe('MembershipSuccessStep', () => {
     const monthToMonthData: AddMembershipWizardData = {
       ...mockData,
       contractLength: 'month-to-month',
+      associatedWaiverId: null,
+      associatedWaiverName: null,
     };
 
     render(<MembershipSuccessStep data={monthToMonthData} onDone={mockOnDone} />);
@@ -369,6 +425,8 @@ describe('MembershipSuccessStep', () => {
     const threeMonthsData: AddMembershipWizardData = {
       ...mockData,
       contractLength: '3-months',
+      associatedWaiverId: null,
+      associatedWaiverName: null,
     };
 
     render(<MembershipSuccessStep data={threeMonthsData} onDone={mockOnDone} />);
@@ -382,6 +440,8 @@ describe('MembershipSuccessStep', () => {
     const sixMonthsData: AddMembershipWizardData = {
       ...mockData,
       contractLength: '6-months',
+      associatedWaiverId: null,
+      associatedWaiverName: null,
     };
 
     render(<MembershipSuccessStep data={sixMonthsData} onDone={mockOnDone} />);
@@ -397,6 +457,8 @@ describe('MembershipSuccessStep', () => {
       membershipType: 'punchcard',
       classesIncluded: 10,
       punchcardPrice: 200,
+      associatedWaiverId: null,
+      associatedWaiverName: null,
     };
 
     render(<MembershipSuccessStep data={punchcardData} onDone={mockOnDone} />);
@@ -412,6 +474,8 @@ describe('MembershipSuccessStep', () => {
       membershipType: 'punchcard',
       classesIncluded: 10,
       punchcardPrice: 200,
+      associatedWaiverId: null,
+      associatedWaiverName: null,
     };
 
     render(<MembershipSuccessStep data={punchcardData} onDone={mockOnDone} />);
@@ -429,6 +493,8 @@ describe('MembershipSuccessStep', () => {
       membershipType: 'punchcard',
       classesIncluded: 10,
       punchcardPrice: 200,
+      associatedWaiverId: null,
+      associatedWaiverName: null,
     };
 
     render(<MembershipSuccessStep data={punchcardData} onDone={mockOnDone} />);
@@ -446,6 +512,8 @@ describe('MembershipSuccessStep', () => {
       membershipType: 'punchcard',
       classesIncluded: 10,
       punchcardPrice: 200,
+      associatedWaiverId: null,
+      associatedWaiverName: null,
     };
 
     render(<MembershipSuccessStep data={punchcardData} onDone={mockOnDone} />);

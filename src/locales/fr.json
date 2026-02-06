@@ -1518,15 +1518,21 @@
       "description_label": "Description"
     },
     "AssociatedProgramCard": {
-      "title": "Programme associé",
+      "title": "Programme/décharge associé",
       "program_label": "Programme",
-      "no_program": "Aucun programme assigné"
+      "no_program": "Aucun programme assigné",
+      "waiver_label": "Décharge",
+      "no_waiver": "Aucune décharge assignée"
     },
     "EditAssociatedProgramModal": {
-      "title": "Modifier le programme associé",
+      "title": "Modifier le programme/décharge associé",
       "program_label": "Programme associé",
       "program_placeholder": "Sélectionnez un programme",
       "program_help": "Les membres avec cette adhésion auront accès à ce programme",
+      "waiver_label": "Décharge associée",
+      "waiver_placeholder": "Sélectionnez une décharge",
+      "waiver_loading": "Chargement des décharges...",
+      "waiver_help": "Les membres s'inscrivant à cette adhésion devront signer cette décharge",
       "cancel_button": "Annuler",
       "save_button": "Enregistrer les modifications",
       "saving_button": "Enregistrement..."
@@ -1634,7 +1640,7 @@
   "AddMembershipWizard": {
     "modal_title": "Ajouter une nouvelle adhésion",
     "step_basics_title": "Informations de base",
-    "step_program_association_title": "Association au programme",
+    "step_program_association_title": "Association programme/décharge",
     "step_payment_details_title": "Détails de paiement",
     "step_contract_terms_title": "Conditions du contrat",
     "step_success_title": "Succès",
@@ -1662,11 +1668,15 @@
       "next_button": "Suivant"
     },
     "MembershipProgramAssociationStep": {
-      "title": "Association au programme",
-      "subtitle": "Sélectionnez le programme auquel cette adhésion est associée",
+      "title": "Association programme/décharge",
+      "subtitle": "Sélectionnez le programme et la décharge associés à cette adhésion",
       "program_label": "Programme associé",
       "program_placeholder": "Sélectionnez un programme",
       "program_help": "Les membres avec cette adhésion auront accès à ce programme",
+      "waiver_label": "Décharge associée",
+      "waiver_placeholder": "Sélectionnez une décharge",
+      "waiver_loading": "Chargement des décharges...",
+      "waiver_help": "Les membres s'inscrivant à cette adhésion devront signer cette décharge",
       "cancel_button": "Annuler",
       "back_button": "Retour",
       "next_button": "Suivant"
@@ -1740,6 +1750,8 @@
       "summary_frequency": "Fréquence de paiement",
       "summary_contract": "Durée du contrat",
       "summary_associated_program": "Programme associé",
+      "summary_associated_waiver": "Décharge associée",
+      "no_waiver": "Aucune décharge assignée",
       "summary_cancellation_fee": "Frais d'annulation",
       "summary_hold_limit": "Limite de suspension",
       "price_free": "Gratuit",

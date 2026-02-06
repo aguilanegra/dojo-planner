@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -16,6 +16,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { client } from '@/libs/Orpc';
+
+type WaiverOption = {
+  id: string;
+  name: string;
+  version: number;
+};
 
 // Mock programs data - in real app, this would come from API
 const MOCK_PROGRAMS = [
@@ -33,9 +40,13 @@ type EditAssociatedProgramModalProps = {
   isOpen: boolean;
   onClose: () => void;
   associatedProgramId: string | null;
+  associatedWaiverId: string | null;
+  membershipPlanId: string;
   onSave: (data: {
     associatedProgramId: string | null;
     associatedProgramName: string | null;
+    associatedWaiverId: string | null;
+    associatedWaiverName: string | null;
   }) => void;
 };
 
@@ -43,34 +54,76 @@ export function EditAssociatedProgramModal({
   isOpen,
   onClose,
   associatedProgramId: initialProgramId,
+  associatedWaiverId: initialWaiverId,
+  membershipPlanId,
   onSave,
 }: EditAssociatedProgramModalProps) {
   const t = useTranslations('MembershipDetailPage.EditAssociatedProgramModal');
 
   const [selectedProgramId, setSelectedProgramId] = useState<string | null>(initialProgramId);
+  const [selectedWaiverId, setSelectedWaiverId] = useState<string | null>(initialWaiverId);
+  const [waiverOptions, setWaiverOptions] = useState<WaiverOption[]>([]);
+  const [waiversLoading, setWaiversLoading] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const fetchWaivers = async () => {
+      try {
+        setWaiversLoading(true);
+        const result = await client.waivers.listActiveTemplates();
+        const options: WaiverOption[] = (result.templates || []).map((template: { id: string; name: string; version: number }) => ({
+          id: template.id,
+          name: template.name,
+          version: template.version,
+        }));
+        setWaiverOptions(options);
+      } catch {
+        setWaiverOptions([]);
+      } finally {
+        setWaiversLoading(false);
+      }
+    };
+
+    fetchWaivers();
+  }, [isOpen]);
+
   const selectedProgram = ACTIVE_PROGRAMS.find(p => p.id === selectedProgramId);
+  const selectedWaiver = waiverOptions.find(w => w.id === selectedWaiverId);
 
   const handleSubmit = async () => {
     setIsLoading(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
-    onSave({
-      associatedProgramId: selectedProgramId,
-      associatedProgramName: selectedProgram?.name ?? null,
-    });
-    setIsLoading(false);
+    try {
+      // Persist waiver association to DB
+      await client.waivers.setMembershipWaivers({
+        membershipPlanId,
+        waiverTemplateIds: selectedWaiverId ? [selectedWaiverId] : [],
+      });
+
+      onSave({
+        associatedProgramId: selectedProgramId,
+        associatedProgramName: selectedProgram?.name ?? null,
+        associatedWaiverId: selectedWaiverId,
+        associatedWaiverName: selectedWaiver ? `${selectedWaiver.name} (v${selectedWaiver.version})` : null,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleCancel = () => {
     setSelectedProgramId(initialProgramId);
+    setSelectedWaiverId(initialWaiverId);
     onClose();
   };
 
   const handleOpenChange = (open: boolean) => {
     if (open) {
       setSelectedProgramId(initialProgramId);
+      setSelectedWaiverId(initialWaiverId);
     } else {
       handleCancel();
     }
@@ -103,6 +156,32 @@ export function EditAssociatedProgramModal({
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">{t('program_help')}</p>
+          </div>
+
+          {/* Waiver Selection */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-foreground">{t('waiver_label')}</label>
+            <Select
+              value={selectedWaiverId ?? ''}
+              onValueChange={(value: string) => setSelectedWaiverId(value || null)}
+              disabled={waiversLoading}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={waiversLoading ? t('waiver_loading') : t('waiver_placeholder')} />
+              </SelectTrigger>
+              <SelectContent>
+                {waiverOptions.map(waiver => (
+                  <SelectItem key={waiver.id} value={waiver.id}>
+                    {waiver.name}
+                    {' '}
+                    (v
+                    {waiver.version}
+                    )
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">{t('waiver_help')}</p>
           </div>
 
           {/* Action Buttons */}

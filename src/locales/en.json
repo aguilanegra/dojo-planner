@@ -1509,15 +1509,21 @@
       "description_label": "Description"
     },
     "AssociatedProgramCard": {
-      "title": "Associated Program",
+      "title": "Associated Program/Waiver",
       "program_label": "Program",
-      "no_program": "No program assigned"
+      "no_program": "No program assigned",
+      "waiver_label": "Waiver",
+      "no_waiver": "No waiver assigned"
     },
     "EditAssociatedProgramModal": {
-      "title": "Edit Associated Program",
+      "title": "Edit Associated Program/Waiver",
       "program_label": "Associated Program",
       "program_placeholder": "Select a program",
       "program_help": "Members with this membership will have access to this program",
+      "waiver_label": "Associated Waiver",
+      "waiver_placeholder": "Select a waiver",
+      "waiver_loading": "Loading waivers...",
+      "waiver_help": "Members signing up for this membership will need to sign this waiver",
       "cancel_button": "Cancel",
       "save_button": "Save Changes",
       "saving_button": "Saving..."
@@ -1625,7 +1631,7 @@
   "AddMembershipWizard": {
     "modal_title": "Add New Membership",
     "step_basics_title": "Membership Basics",
-    "step_program_association_title": "Program Association",
+    "step_program_association_title": "Program/Waiver Association",
     "step_payment_details_title": "Payment Details",
     "step_contract_terms_title": "Contract Terms",
     "step_success_title": "Success",
@@ -1653,11 +1659,15 @@
       "next_button": "Next"
     },
     "MembershipProgramAssociationStep": {
-      "title": "Program Association",
-      "subtitle": "Select the program this membership is associated with",
+      "title": "Program/Waiver Association",
+      "subtitle": "Select the program and waiver this membership is associated with",
       "program_label": "Associated Program",
       "program_placeholder": "Select a program",
       "program_help": "Members with this membership will have access to this program",
+      "waiver_label": "Associated Waiver",
+      "waiver_placeholder": "Select a waiver",
+      "waiver_loading": "Loading waivers...",
+      "waiver_help": "Members signing up for this membership will need to sign this waiver",
       "cancel_button": "Cancel",
       "back_button": "Back",
       "next_button": "Next"
@@ -1731,6 +1741,8 @@
       "summary_frequency": "Payment Frequency",
       "summary_contract": "Contract Length",
       "summary_associated_program": "Associated Program",
+      "summary_associated_waiver": "Associated Waiver",
+      "no_waiver": "No waiver assigned",
       "summary_cancellation_fee": "Cancellation Fee",
       "summary_hold_limit": "Hold Limit",
       "price_free": "Free",
