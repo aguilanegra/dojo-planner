@@ -25,7 +25,7 @@ export async function GET(
     const planDetails = determineSubscriptionPlan(subscription);
 
     // Map plan ID to subscription type for display
-    let subscriptionType: 'free' | 'free_trial' | 'monthly' | 'annual' = 'free';
+    let subscriptionType: 'free' | 'free_trial' | 'monthly' | 'annual';
 
     switch (planDetails.plan.id) {
       case PLAN_ID.ANNUAL:
