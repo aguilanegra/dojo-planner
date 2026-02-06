@@ -51,6 +51,8 @@ type MemberMembership = {
   status: string;
   startDate: Date;
   endDate: Date | null;
+  firstPaymentDate: Date | null;
+  nextPaymentDate: Date | null;
   createdAt: Date;
 };
 
@@ -79,6 +81,7 @@ type CreateMemberInput = {
   lastName: string;
   email: string;
   phone?: string;
+  dateOfBirth: Date;
   memberType?: string;
   photoUrl?: string;
   status: string;
@@ -198,6 +201,8 @@ export async function getOrganizationMembers(
       status: membership.status,
       startDate: membership.startDate,
       endDate: membership.endDate,
+      firstPaymentDate: membership.firstPaymentDate,
+      nextPaymentDate: membership.nextPaymentDate,
       createdAt: membership.createdAt,
     };
 
@@ -452,6 +457,34 @@ export async function getMembershipPlans(organizationId: string): Promise<Member
       eq(membershipPlanSchema.organizationId, organizationId),
       eq(membershipPlanSchema.isActive, true),
     ));
+
+  return plans.map(plan => ({
+    id: plan.id,
+    name: plan.name,
+    slug: plan.slug,
+    category: plan.category,
+    program: plan.program,
+    price: plan.price,
+    signupFee: plan.signupFee,
+    frequency: plan.frequency,
+    contractLength: plan.contractLength,
+    accessLevel: plan.accessLevel,
+    description: plan.description,
+    isTrial: plan.isTrial,
+    isActive: plan.isActive,
+  }));
+}
+
+/**
+ * Get all membership plans for an organization (including inactive)
+ * @param organizationId - The organization ID
+ * @returns Array of all membership plans
+ */
+export async function getAllMembershipPlans(organizationId: string): Promise<MembershipPlanData[]> {
+  const plans = await db
+    .select()
+    .from(membershipPlanSchema)
+    .where(eq(membershipPlanSchema.organizationId, organizationId));
 
   return plans.map(plan => ({
     id: plan.id,

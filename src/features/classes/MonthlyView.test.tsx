@@ -113,6 +113,16 @@ vi.mock('@/hooks/useClassesCache', () => ({
   invalidateClassesCache: vi.fn(),
 }));
 
+vi.mock('@/hooks/useEventsCache', () => ({
+  useEventsCache: () => ({
+    events: [],
+    loading: false,
+    error: null,
+    revalidate: vi.fn(),
+  }),
+  invalidateEventsCache: vi.fn(),
+}));
+
 describe('MonthlyView', () => {
   describe('Page Header', () => {
     it('should render the page title', () => {

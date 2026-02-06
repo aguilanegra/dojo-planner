@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { ButtonGroupItem, ButtonGroupRoot } from '@/components/ui/button-group';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useClassesCache } from '@/hooks/useClassesCache';
-import { buildClassColorLegend, generateMonthlyScheduleFromData, transformClassesToCardProps } from './classDataTransformers';
+import { useEventsCache } from '@/hooks/useEventsCache';
+import { buildClassColorLegend, generateMonthlyEventScheduleFromData, generateMonthlyScheduleFromData, transformClassesToCardProps } from './classDataTransformers';
 import { ClassEventHoverCard } from './ClassEventHoverCard';
 import { ClassFilterBar } from './ClassFilterBar';
 
@@ -20,7 +21,9 @@ type MonthlyViewProps = {
 
 export function MonthlyView({ withFilters }: MonthlyViewProps = {}) {
   const { organization } = useOrganization();
-  const { classes: rawClasses, loading } = useClassesCache(organization?.id);
+  const { classes: rawClasses, loading: classesLoading } = useClassesCache(organization?.id);
+  const { events: rawEvents, loading: eventsLoading } = useEventsCache(organization?.id);
+  const loading = classesLoading || eventsLoading;
 
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [localFilters, setLocalFilters] = useState<ClassFilters>({
@@ -65,10 +68,21 @@ export function MonthlyView({ withFilters }: MonthlyViewProps = {}) {
       : rawClasses,
     [rawClasses, filteredClassIds],
   );
-  const monthlyEvents = useMemo(
+  const monthlyClassEvents = useMemo(
     () => generateMonthlyScheduleFromData(year, month, classesToUse),
     [year, month, classesToUse],
   );
+  const monthlyEventSessions = useMemo(
+    () => generateMonthlyEventScheduleFromData(year, month, rawEvents),
+    [year, month, rawEvents],
+  );
+  const monthlyEvents = useMemo(() => {
+    const merged = { ...monthlyClassEvents };
+    for (const [day, events] of Object.entries(monthlyEventSessions)) {
+      merged[day] = [...(merged[day] || []), ...events];
+    }
+    return merged;
+  }, [monthlyClassEvents, monthlyEventSessions]);
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDayOfMonth = new Date(year, month, 1).getDay();
 
@@ -107,8 +121,8 @@ export function MonthlyView({ withFilters }: MonthlyViewProps = {}) {
     });
   }
 
-  // Build color legend from database classes
-  const classColors = useMemo(() => buildClassColorLegend(rawClasses), [rawClasses]);
+  // Build color legend from database classes and events
+  const classColors = useMemo(() => buildClassColorLegend(rawClasses, rawEvents), [rawClasses, rawEvents]);
 
   // Loading state
   if (loading) {
@@ -223,12 +237,14 @@ export function MonthlyView({ withFilters }: MonthlyViewProps = {}) {
                         <div className="flex flex-col gap-1">
                           {monthlyEvents[day.toString()]?.slice(0, 3).map(event => (
                             <ClassEventHoverCard
-                              key={`${event.classId}-${day}-${event.date ?? ''}`}
+                              key={`${event.classId}-${day}-${event.hour}-${event.minute}`}
                               classId={event.classId}
                               className={event.className}
                               color={event.color}
                               exception={event.exception}
                               sourceView="monthly"
+                              isEvent={event.isEvent}
+                              eventId={event.eventId}
                             >
                               <span className="truncate">{event.className}</span>
                             </ClassEventHoverCard>

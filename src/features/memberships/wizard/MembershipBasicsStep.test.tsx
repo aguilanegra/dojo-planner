@@ -49,6 +49,8 @@ describe('MembershipBasicsStep', () => {
     description: '',
     associatedProgramId: null,
     associatedProgramName: null,
+    associatedWaiverId: null,
+    associatedWaiverName: null,
     signUpFee: null,
     chargeSignUpFee: 'at-registration',
     monthlyFee: null,

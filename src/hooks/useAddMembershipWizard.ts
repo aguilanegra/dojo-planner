@@ -15,9 +15,11 @@ export type AddMembershipWizardData = {
   membershipType: MembershipType;
   description: string;
 
-  // Step 2: Program Association
+  // Step 2: Program/Waiver Association
   associatedProgramId: string | null;
   associatedProgramName: string | null;
+  associatedWaiverId: string | null;
+  associatedWaiverName: string | null;
 
   // Step 3: Payment Details
   signUpFee: number | null;
@@ -48,6 +50,8 @@ const initialData: AddMembershipWizardData = {
   description: '',
   associatedProgramId: null,
   associatedProgramName: null,
+  associatedWaiverId: null,
+  associatedWaiverName: null,
   signUpFee: null,
   chargeSignUpFee: 'at-registration',
   monthlyFee: null,

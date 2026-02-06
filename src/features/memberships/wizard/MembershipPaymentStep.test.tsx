@@ -60,6 +60,8 @@ describe('MembershipPaymentStep', () => {
     description: 'A great membership',
     associatedProgramId: '1',
     associatedProgramName: 'Adult Brazilian Jiu-jitsu',
+    associatedWaiverId: null,
+    associatedWaiverName: null,
     signUpFee: null,
     chargeSignUpFee: 'at-registration',
     monthlyFee: null,

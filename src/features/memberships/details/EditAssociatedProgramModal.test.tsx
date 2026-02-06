@@ -1,21 +1,25 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { page, userEvent } from 'vitest/browser';
+import { client } from '@/libs/Orpc';
 import { EditAssociatedProgramModal } from './EditAssociatedProgramModal';
 
 // Mock next-intl with proper translations
-const translationKeys: Record<string, string> = {
-  title: 'Edit Associated Program',
-  program_label: 'Associated Program',
-  program_placeholder: 'Select a program',
-  program_help: 'Members with this membership will have access to this program',
-  cancel_button: 'Cancel',
-  save_button: 'Save Changes',
-  saving_button: 'Saving...',
-};
-
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string, params?: Record<string, string | number>) => {
+    const translationKeys: Record<string, string> = {
+      title: 'Edit Associated Program',
+      program_label: 'Associated Program',
+      program_placeholder: 'Select a program',
+      program_help: 'Members with this membership will have access to this program',
+      waiver_label: 'Waiver',
+      waiver_placeholder: 'Select a waiver',
+      waiver_loading: 'Loading waivers...',
+      waiver_help: 'Required waiver for this membership',
+      cancel_button: 'Cancel',
+      save_button: 'Save Changes',
+      saving_button: 'Saving...',
+    };
     let result = translationKeys[key] || key;
     if (params) {
       Object.entries(params).forEach(([paramKey, paramValue]) => {
@@ -26,12 +30,66 @@ vi.mock('next-intl', () => ({
   },
 }));
 
+// Mock @/libs/Orpc
+vi.mock('@/libs/Orpc', () => ({
+  client: {
+    waivers: {
+      listActiveTemplates: vi.fn(),
+      setMembershipWaivers: vi.fn(),
+    },
+  },
+}));
+
 describe('EditAssociatedProgramModal', () => {
   const mockOnClose = vi.fn();
   const mockOnSave = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default mock implementations
+    vi.mocked(client.waivers.listActiveTemplates).mockResolvedValue({
+      templates: [
+        {
+          id: 'waiver-1',
+          organizationId: 'test-org',
+          name: 'Standard Adult Waiver',
+          slug: 'standard-adult-waiver',
+          version: 1,
+          content: 'Test content',
+          description: null,
+          isActive: true,
+          isDefault: false,
+          requiresGuardian: false,
+          guardianAgeThreshold: 18,
+          sortOrder: 0,
+          parentId: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          signedCount: 0,
+          membershipCount: 0,
+        },
+        {
+          id: 'waiver-2',
+          organizationId: 'test-org',
+          name: 'Kids Waiver',
+          slug: 'kids-waiver',
+          version: 1,
+          content: 'Test content',
+          description: null,
+          isActive: true,
+          isDefault: false,
+          requiresGuardian: true,
+          guardianAgeThreshold: 18,
+          sortOrder: 1,
+          parentId: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          signedCount: 0,
+          membershipCount: 0,
+        },
+      ],
+    });
+    vi.mocked(client.waivers.setMembershipWaivers).mockResolvedValue({});
   });
 
   it('should render modal with title when open', () => {
@@ -40,6 +98,8 @@ describe('EditAssociatedProgramModal', () => {
         isOpen={true}
         onClose={mockOnClose}
         associatedProgramId="1"
+        associatedWaiverId={null}
+        membershipPlanId="test-plan-1"
         onSave={mockOnSave}
       />,
     );
@@ -55,6 +115,8 @@ describe('EditAssociatedProgramModal', () => {
         isOpen={false}
         onClose={mockOnClose}
         associatedProgramId="1"
+        associatedWaiverId={null}
+        membershipPlanId="test-plan-1"
         onSave={mockOnSave}
       />,
     );
@@ -70,6 +132,8 @@ describe('EditAssociatedProgramModal', () => {
         isOpen={true}
         onClose={mockOnClose}
         associatedProgramId="1"
+        associatedWaiverId={null}
+        membershipPlanId="test-plan-1"
         onSave={mockOnSave}
       />,
     );
@@ -85,6 +149,8 @@ describe('EditAssociatedProgramModal', () => {
         isOpen={true}
         onClose={mockOnClose}
         associatedProgramId="1"
+        associatedWaiverId={null}
+        membershipPlanId="test-plan-1"
         onSave={mockOnSave}
       />,
     );
@@ -100,6 +166,8 @@ describe('EditAssociatedProgramModal', () => {
         isOpen={true}
         onClose={mockOnClose}
         associatedProgramId="1"
+        associatedWaiverId={null}
+        membershipPlanId="test-plan-1"
         onSave={mockOnSave}
       />,
     );
@@ -115,6 +183,8 @@ describe('EditAssociatedProgramModal', () => {
         isOpen={true}
         onClose={mockOnClose}
         associatedProgramId="1"
+        associatedWaiverId={null}
+        membershipPlanId="test-plan-1"
         onSave={mockOnSave}
       />,
     );
@@ -130,6 +200,8 @@ describe('EditAssociatedProgramModal', () => {
         isOpen={true}
         onClose={mockOnClose}
         associatedProgramId="1"
+        associatedWaiverId={null}
+        membershipPlanId="test-plan-1"
         onSave={mockOnSave}
       />,
     );
@@ -146,6 +218,8 @@ describe('EditAssociatedProgramModal', () => {
         isOpen={true}
         onClose={mockOnClose}
         associatedProgramId={null}
+        associatedWaiverId={null}
+        membershipPlanId="test-plan-1"
         onSave={mockOnSave}
       />,
     );
@@ -162,6 +236,8 @@ describe('EditAssociatedProgramModal', () => {
         isOpen={true}
         onClose={mockOnClose}
         associatedProgramId="1"
+        associatedWaiverId={null}
+        membershipPlanId="test-plan-1"
         onSave={mockOnSave}
       />,
     );
@@ -178,6 +254,8 @@ describe('EditAssociatedProgramModal', () => {
         isOpen={true}
         onClose={mockOnClose}
         associatedProgramId="1"
+        associatedWaiverId={null}
+        membershipPlanId="test-plan-1"
         onSave={mockOnSave}
       />,
     );
@@ -193,6 +271,8 @@ describe('EditAssociatedProgramModal', () => {
         isOpen={true}
         onClose={mockOnClose}
         associatedProgramId="1"
+        associatedWaiverId={null}
+        membershipPlanId="test-plan-1"
         onSave={mockOnSave}
       />,
     );
@@ -213,6 +293,8 @@ describe('EditAssociatedProgramModal', () => {
         isOpen={true}
         onClose={mockOnClose}
         associatedProgramId="1"
+        associatedWaiverId={null}
+        membershipPlanId="test-plan-1"
         onSave={mockOnSave}
       />,
     );
@@ -226,9 +308,16 @@ describe('EditAssociatedProgramModal', () => {
       // Wait for async operation
       await new Promise(resolve => setTimeout(resolve, 600));
 
+      expect(client.waivers.setMembershipWaivers).toHaveBeenCalledWith({
+        membershipPlanId: 'test-plan-1',
+        waiverTemplateIds: [],
+      });
+
       expect(mockOnSave).toHaveBeenCalledWith({
         associatedProgramId: '1',
         associatedProgramName: 'Adult Brazilian Jiu-jitsu',
+        associatedWaiverId: null,
+        associatedWaiverName: null,
       });
     }
   });
@@ -239,6 +328,8 @@ describe('EditAssociatedProgramModal', () => {
         isOpen={true}
         onClose={mockOnClose}
         associatedProgramId="1"
+        associatedWaiverId={null}
+        membershipPlanId="test-plan-1"
         onSave={mockOnSave}
       />,
     );
@@ -262,6 +353,8 @@ describe('EditAssociatedProgramModal', () => {
         expect(mockOnSave).toHaveBeenCalledWith({
           associatedProgramId: '2',
           associatedProgramName: 'Kids Program',
+          associatedWaiverId: null,
+          associatedWaiverName: null,
         });
       }
     }
@@ -273,6 +366,8 @@ describe('EditAssociatedProgramModal', () => {
         isOpen={true}
         onClose={mockOnClose}
         associatedProgramId="1"
+        associatedWaiverId={null}
+        membershipPlanId="test-plan-1"
         onSave={mockOnSave}
       />,
     );
@@ -298,6 +393,8 @@ describe('EditAssociatedProgramModal', () => {
         isOpen={true}
         onClose={mockOnClose}
         associatedProgramId="1"
+        associatedWaiverId={null}
+        membershipPlanId="test-plan-1"
         onSave={mockOnSave}
       />,
     );
@@ -322,6 +419,8 @@ describe('EditAssociatedProgramModal', () => {
         isOpen={true}
         onClose={mockOnClose}
         associatedProgramId="1"
+        associatedWaiverId={null}
+        membershipPlanId="test-plan-1"
         onSave={mockOnSave}
       />,
     );
@@ -349,6 +448,8 @@ describe('EditAssociatedProgramModal', () => {
         isOpen={true}
         onClose={mockOnClose}
         associatedProgramId="1"
+        associatedWaiverId={null}
+        membershipPlanId="test-plan-1"
         onSave={mockOnSave}
       />,
     );
@@ -361,6 +462,91 @@ describe('EditAssociatedProgramModal', () => {
       const allOptions = Array.from(document.querySelectorAll('[role="option"]'));
 
       expect(allOptions.length).toBe(4);
+    }
+  });
+
+  it('should render waiver dropdown', async () => {
+    render(
+      <EditAssociatedProgramModal
+        isOpen={true}
+        onClose={mockOnClose}
+        associatedProgramId="1"
+        associatedWaiverId={null}
+        membershipPlanId="test-plan-1"
+        onSave={mockOnSave}
+      />,
+    );
+
+    // Wait for waivers to load
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    const waiverLabel = page.getByText('Waiver');
+
+    expect(waiverLabel).toBeTruthy();
+  });
+
+  it('should show waiver options when dropdown is clicked', async () => {
+    render(
+      <EditAssociatedProgramModal
+        isOpen={true}
+        onClose={mockOnClose}
+        associatedProgramId="1"
+        associatedWaiverId={null}
+        membershipPlanId="test-plan-1"
+        onSave={mockOnSave}
+      />,
+    );
+
+    // Wait for waivers to load
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    const selectTriggers = document.querySelectorAll('[role="combobox"]');
+    const waiverSelect = selectTriggers[1]; // Second combobox is the waiver dropdown
+
+    if (waiverSelect) {
+      await userEvent.click(waiverSelect);
+
+      const adultWaiver = page.getByText('Standard Adult Waiver');
+
+      expect(adultWaiver).toBeTruthy();
+    }
+  });
+
+  it('should call onSave with selected waiver when Save is clicked', async () => {
+    render(
+      <EditAssociatedProgramModal
+        isOpen={true}
+        onClose={mockOnClose}
+        associatedProgramId="1"
+        associatedWaiverId="waiver-1"
+        membershipPlanId="test-plan-1"
+        onSave={mockOnSave}
+      />,
+    );
+
+    // Wait for waivers to load
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    const buttons = Array.from(document.querySelectorAll('button'));
+    const saveButton = buttons.find(btn => btn.textContent?.includes('Save Changes'));
+
+    if (saveButton) {
+      await userEvent.click(saveButton);
+
+      // Wait for async operation
+      await new Promise(resolve => setTimeout(resolve, 600));
+
+      expect(client.waivers.setMembershipWaivers).toHaveBeenCalledWith({
+        membershipPlanId: 'test-plan-1',
+        waiverTemplateIds: ['waiver-1'],
+      });
+
+      expect(mockOnSave).toHaveBeenCalledWith({
+        associatedProgramId: '1',
+        associatedProgramName: 'Adult Brazilian Jiu-jitsu',
+        associatedWaiverId: 'waiver-1',
+        associatedWaiverName: 'Standard Adult Waiver (v1)',
+      });
     }
   });
 });

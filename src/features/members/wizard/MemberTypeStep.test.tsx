@@ -38,6 +38,7 @@ describe('MemberTypeStep', () => {
     email: '',
     phone: '',
     membershipPlanId: null,
+    waiverTemplateId: null,
   };
 
   const mockHandlers = {

@@ -49,6 +49,8 @@ describe('MembershipContractStep', () => {
     description: 'A great membership',
     associatedProgramId: '1',
     associatedProgramName: 'Adult Brazilian Jiu-jitsu',
+    associatedWaiverId: null,
+    associatedWaiverName: null,
     signUpFee: 35,
     chargeSignUpFee: 'at-registration',
     monthlyFee: 150,

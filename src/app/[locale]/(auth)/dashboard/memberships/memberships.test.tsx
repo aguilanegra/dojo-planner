@@ -17,6 +17,141 @@ vi.mock('@clerk/nextjs', () => ({
   useOrganization: () => ({ organization: { id: 'test-org-123' } }),
 }));
 
+// Mock membership plans data matching MembershipPlanData type
+const mockPlans = [
+  {
+    id: 'plan-uuid-1',
+    name: '12 Month Commitment (Gold)',
+    slug: '12-month-gold',
+    category: 'Adult Brazilian Jiu-Jitsu',
+    program: 'Adult',
+    price: 150,
+    signupFee: 35,
+    frequency: 'Monthly',
+    contractLength: '12 Months',
+    accessLevel: 'Unlimited',
+    description: null,
+    isTrial: false,
+    isActive: true,
+  },
+  {
+    id: 'plan-uuid-2',
+    name: 'Month to Month (Gold)',
+    slug: 'month-to-month-gold',
+    category: 'Adult Brazilian Jiu-Jitsu',
+    program: 'Adult',
+    price: 170,
+    signupFee: 35,
+    frequency: 'Monthly',
+    contractLength: 'Month-to-Month',
+    accessLevel: 'Unlimited',
+    description: null,
+    isTrial: false,
+    isActive: true,
+  },
+  {
+    id: 'plan-uuid-3',
+    name: '7-Day Free Trial',
+    slug: '7-day-trial',
+    category: 'Adult Brazilian Jiu-Jitsu',
+    program: 'Adult',
+    price: 0,
+    signupFee: 0,
+    frequency: 'None',
+    contractLength: '7 Days',
+    accessLevel: '3 Classes Total',
+    description: null,
+    isTrial: true,
+    isActive: true,
+  },
+  {
+    id: 'plan-uuid-4',
+    name: 'Kids Monthly',
+    slug: 'kids-monthly',
+    category: 'Kids Program',
+    program: 'Kids',
+    price: 95,
+    signupFee: 25,
+    frequency: 'Monthly',
+    contractLength: 'Month-to-Month',
+    accessLevel: '8 Classes/mo',
+    description: null,
+    isTrial: false,
+    isActive: true,
+  },
+  {
+    id: 'plan-uuid-5',
+    name: 'Kids Free Trial Week',
+    slug: 'kids-trial',
+    category: 'Kids Program',
+    program: 'Kids',
+    price: 0,
+    signupFee: 0,
+    frequency: 'None',
+    contractLength: '7 Days',
+    accessLevel: '2 Classes Total',
+    description: null,
+    isTrial: true,
+    isActive: true,
+  },
+  {
+    id: 'plan-uuid-6',
+    name: 'Competition Team',
+    slug: 'competition-team',
+    category: 'Competition Team',
+    program: 'Competition',
+    price: 200,
+    signupFee: 50,
+    frequency: 'Monthly',
+    contractLength: '6 Months',
+    accessLevel: 'Unlimited',
+    description: null,
+    isTrial: false,
+    isActive: true,
+  },
+  {
+    id: 'plan-uuid-7',
+    name: '6 Month Commitment (Silver)',
+    slug: '6-month-silver',
+    category: 'Adult Brazilian Jiu-Jitsu',
+    program: 'Adult',
+    price: 165,
+    signupFee: 35,
+    frequency: 'Monthly',
+    contractLength: '6 Months',
+    accessLevel: 'Unlimited',
+    description: null,
+    isTrial: false,
+    isActive: false,
+  },
+  {
+    id: 'plan-uuid-8',
+    name: '10-Class Punch Card',
+    slug: '10-class-punchcard',
+    category: 'Adult Brazilian Jiu-Jitsu',
+    program: 'Adult',
+    price: 200,
+    signupFee: 0,
+    frequency: 'None',
+    contractLength: '10 Classes',
+    accessLevel: '10 Classes Total',
+    description: null,
+    isTrial: false,
+    isActive: true,
+  },
+];
+
+// Mock useMembershipPlansCache
+vi.mock('@/hooks/useMembershipPlansCache', () => ({
+  useMembershipPlansCache: () => ({
+    plans: mockPlans,
+    loading: false,
+    error: null,
+    revalidate: vi.fn(),
+  }),
+  invalidateMembershipPlansCache: vi.fn(),
+}));
+
 // Mock the tags cache for MembershipTagsManagement
 vi.mock('@/hooks/useTagsCache', () => ({
   useTagsCache: () => ({
@@ -58,8 +193,7 @@ describe('Memberships Page', () => {
   it('renders statistics values', () => {
     render(<I18nWrapper><MembershipsPage /></I18nWrapper>);
 
-    // Stats should show dynamic values from mock data
-    // Total memberships count of 8 appears in stats card (7 original + 1 punchcard)
+    // Total memberships count of 8
     const statValues = page.getByText('8', { exact: true }).elements();
 
     expect(statValues.length).toBeGreaterThan(0);
@@ -115,14 +249,6 @@ describe('Memberships Page', () => {
     const price = page.getByText(/\$150.00\/mo/);
 
     expect(price).toBeInTheDocument();
-  });
-
-  it('renders membership card active members count', () => {
-    render(<I18nWrapper><MembershipsPage /></I18nWrapper>);
-
-    const activeMembers = page.getByText(/89 Active Members/);
-
-    expect(activeMembers).toBeInTheDocument();
   });
 
   it('renders membership card details labels', () => {

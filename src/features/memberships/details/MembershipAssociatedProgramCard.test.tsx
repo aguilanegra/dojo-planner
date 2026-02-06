@@ -8,6 +8,8 @@ const translationKeys: Record<string, string> = {
   title: 'Associated Program',
   program_label: 'Program',
   no_program: 'No program assigned',
+  waiver_label: 'Waiver',
+  no_waiver: 'No waiver assigned',
 };
 
 vi.mock('next-intl', () => ({
@@ -34,6 +36,8 @@ describe('MembershipAssociatedProgramCard', () => {
       <MembershipAssociatedProgramCard
         associatedProgramId="1"
         associatedProgramName="Adult Brazilian Jiu-jitsu"
+        associatedWaiverId={null}
+        associatedWaiverName={null}
         onEdit={mockOnEdit}
       />,
     );
@@ -48,6 +52,8 @@ describe('MembershipAssociatedProgramCard', () => {
       <MembershipAssociatedProgramCard
         associatedProgramId="1"
         associatedProgramName="Adult Brazilian Jiu-jitsu"
+        associatedWaiverId={null}
+        associatedWaiverName={null}
         onEdit={mockOnEdit}
       />,
     );
@@ -62,6 +68,8 @@ describe('MembershipAssociatedProgramCard', () => {
       <MembershipAssociatedProgramCard
         associatedProgramId={null}
         associatedProgramName={null}
+        associatedWaiverId={null}
+        associatedWaiverName={null}
         onEdit={mockOnEdit}
       />,
     );
@@ -76,6 +84,8 @@ describe('MembershipAssociatedProgramCard', () => {
       <MembershipAssociatedProgramCard
         associatedProgramId={null}
         associatedProgramName="Some Program"
+        associatedWaiverId={null}
+        associatedWaiverName={null}
         onEdit={mockOnEdit}
       />,
     );
@@ -90,6 +100,8 @@ describe('MembershipAssociatedProgramCard', () => {
       <MembershipAssociatedProgramCard
         associatedProgramId="1"
         associatedProgramName="Adult Brazilian Jiu-jitsu"
+        associatedWaiverId={null}
+        associatedWaiverName={null}
         onEdit={mockOnEdit}
       />,
     );
@@ -104,6 +116,8 @@ describe('MembershipAssociatedProgramCard', () => {
       <MembershipAssociatedProgramCard
         associatedProgramId="1"
         associatedProgramName="Adult Brazilian Jiu-jitsu"
+        associatedWaiverId={null}
+        associatedWaiverName={null}
         onEdit={mockOnEdit}
       />,
     );
@@ -118,6 +132,8 @@ describe('MembershipAssociatedProgramCard', () => {
       <MembershipAssociatedProgramCard
         associatedProgramId="1"
         associatedProgramName="Adult Brazilian Jiu-jitsu"
+        associatedWaiverId={null}
+        associatedWaiverName={null}
         onEdit={mockOnEdit}
       />,
     );
@@ -135,6 +151,8 @@ describe('MembershipAssociatedProgramCard', () => {
       <MembershipAssociatedProgramCard
         associatedProgramId="2"
         associatedProgramName="Kids Program"
+        associatedWaiverId={null}
+        associatedWaiverName={null}
         onEdit={mockOnEdit}
       />,
     );
@@ -149,6 +167,8 @@ describe('MembershipAssociatedProgramCard', () => {
       <MembershipAssociatedProgramCard
         associatedProgramId="3"
         associatedProgramName="Competition Team"
+        associatedWaiverId={null}
+        associatedWaiverName={null}
         onEdit={mockOnEdit}
       />,
     );
@@ -163,6 +183,8 @@ describe('MembershipAssociatedProgramCard', () => {
       <MembershipAssociatedProgramCard
         associatedProgramId="1"
         associatedProgramName="Adult Brazilian Jiu-jitsu"
+        associatedWaiverId={null}
+        associatedWaiverName={null}
         onEdit={mockOnEdit}
       />,
     );
@@ -170,5 +192,69 @@ describe('MembershipAssociatedProgramCard', () => {
     const card = document.querySelector('.p-6');
 
     expect(card).toBeTruthy();
+  });
+
+  it('should display waiver label', () => {
+    render(
+      <MembershipAssociatedProgramCard
+        associatedProgramId="1"
+        associatedProgramName="Adult Brazilian Jiu-jitsu"
+        associatedWaiverId="waiver-1"
+        associatedWaiverName="Standard Adult Waiver (v1)"
+        onEdit={mockOnEdit}
+      />,
+    );
+
+    const label = page.getByText('Waiver');
+
+    expect(label).toBeTruthy();
+  });
+
+  it('should display waiver name when waiver is associated', () => {
+    render(
+      <MembershipAssociatedProgramCard
+        associatedProgramId="1"
+        associatedProgramName="Adult Brazilian Jiu-jitsu"
+        associatedWaiverId="waiver-1"
+        associatedWaiverName="Standard Adult Waiver (v1)"
+        onEdit={mockOnEdit}
+      />,
+    );
+
+    const waiverName = page.getByText('Standard Adult Waiver (v1)');
+
+    expect(waiverName).toBeTruthy();
+  });
+
+  it('should display no waiver message when no waiver is associated', () => {
+    render(
+      <MembershipAssociatedProgramCard
+        associatedProgramId="1"
+        associatedProgramName="Adult Brazilian Jiu-jitsu"
+        associatedWaiverId={null}
+        associatedWaiverName={null}
+        onEdit={mockOnEdit}
+      />,
+    );
+
+    const noWaiver = page.getByText('No waiver assigned');
+
+    expect(noWaiver).toBeTruthy();
+  });
+
+  it('should display no waiver message when waiver ID is null but name exists', () => {
+    render(
+      <MembershipAssociatedProgramCard
+        associatedProgramId="1"
+        associatedProgramName="Adult Brazilian Jiu-jitsu"
+        associatedWaiverId={null}
+        associatedWaiverName="Some Waiver"
+        onEdit={mockOnEdit}
+      />,
+    );
+
+    const noWaiver = page.getByText('No waiver assigned');
+
+    expect(noWaiver).toBeTruthy();
   });
 });

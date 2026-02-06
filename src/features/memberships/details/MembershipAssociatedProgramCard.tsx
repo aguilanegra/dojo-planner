@@ -8,12 +8,16 @@ import { Card } from '@/components/ui/card';
 type MembershipAssociatedProgramCardProps = {
   associatedProgramId: string | null;
   associatedProgramName: string | null;
+  associatedWaiverId: string | null;
+  associatedWaiverName: string | null;
   onEdit: () => void;
 };
 
 export function MembershipAssociatedProgramCard({
   associatedProgramId,
   associatedProgramName,
+  associatedWaiverId,
+  associatedWaiverName,
   onEdit,
 }: MembershipAssociatedProgramCardProps) {
   const t = useTranslations('MembershipDetailPage.AssociatedProgramCard');
@@ -29,6 +33,14 @@ export function MembershipAssociatedProgramCard({
             {associatedProgramId && associatedProgramName
               ? associatedProgramName
               : t('no_program')}
+          </p>
+        </div>
+        <div>
+          <span className="text-sm font-medium text-muted-foreground">{t('waiver_label')}</span>
+          <p className="mt-1 text-foreground">
+            {associatedWaiverId && associatedWaiverName
+              ? associatedWaiverName
+              : t('no_waiver')}
           </p>
         </div>
       </div>

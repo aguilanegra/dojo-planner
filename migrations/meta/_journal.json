@@ -57,6 +57,13 @@
       "when": 1738281600000,
       "tag": "0007_catalog-variants",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1738627200000,
+      "tag": "0008_waiver-tables",
+      "breakpoints": true
     }
   ]
 }

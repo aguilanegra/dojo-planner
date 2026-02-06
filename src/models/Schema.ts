@@ -225,6 +225,121 @@ export const memberMembershipSchema = pgTable(
   ],
 );
 
+// =============================================================================
+// WAIVER TABLES
+// =============================================================================
+
+// Waiver templates - text templates for liability waivers
+export const waiverTemplateSchema = pgTable(
+  'waiver_template',
+  {
+    id: text('id').primaryKey(), // UUID v4
+    organizationId: text('organization_id').notNull(),
+    name: text('name').notNull(), // e.g., 'Standard Adult Waiver', 'Kids Program Waiver'
+    slug: text('slug').notNull(),
+    version: integer('version').notNull().default(1), // Version tracking for legal compliance
+    content: text('content').notNull(), // Full waiver text with placeholders like <academy>, <academy_owners>
+    description: text('description'), // Internal description for staff
+    isActive: boolean('is_active').default(true),
+    isDefault: boolean('is_default').default(false), // Default waiver for new memberships
+    requiresGuardian: boolean('requires_guardian').default(true), // If signer under threshold needs guardian
+    guardianAgeThreshold: integer('guardian_age_threshold').default(16), // Age below which guardian is required
+    sortOrder: integer('sort_order').default(0),
+    parentId: text('parent_id'), // NULL = root (current/latest), non-NULL = archive version pointing to root
+    createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { mode: 'date' })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  table => [
+    index('waiver_template_org_idx').on(table.organizationId),
+    uniqueIndex('waiver_template_org_slug_version_idx').on(table.organizationId, table.slug, table.version),
+    index('waiver_template_parent_idx').on(table.parentId),
+  ],
+);
+
+// Signed waivers - records of signed waivers with signature data
+export const signedWaiverSchema = pgTable(
+  'signed_waiver',
+  {
+    id: text('id').primaryKey(), // UUID v4
+    organizationId: text('organization_id').notNull(),
+    waiverTemplateId: text('waiver_template_id').references(() => waiverTemplateSchema.id).notNull(),
+    waiverTemplateVersion: integer('waiver_template_version').notNull(), // Snapshot of version at signing
+    memberId: text('member_id').references(() => memberSchema.id).notNull(),
+    memberMembershipId: text('member_membership_id').references(() => memberMembershipSchema.id), // Optional link to specific membership
+
+    // Signature data
+    signatureDataUrl: text('signature_data_url').notNull(), // Base64 signature image from canvas
+    signedByName: text('signed_by_name').notNull(), // Name of the person who signed
+    signedByEmail: text('signed_by_email'), // Email of signer (for minors, guardian email)
+    signedByRelationship: text('signed_by_relationship'), // null = self, or 'parent', 'guardian', 'legal_guardian'
+
+    // Member details at time of signing (snapshot for legal compliance)
+    memberFirstName: text('member_first_name').notNull(),
+    memberLastName: text('member_last_name').notNull(),
+    memberEmail: text('member_email').notNull(),
+    memberDateOfBirth: timestamp('member_date_of_birth', { mode: 'date' }),
+    memberAgeAtSigning: integer('member_age_at_signing'),
+
+    // Content snapshot (waiver text with placeholders substituted)
+    renderedContent: text('rendered_content').notNull(), // Full waiver text as it appeared when signed
+
+    // Metadata
+    ipAddress: text('ip_address'),
+    userAgent: text('user_agent'),
+    signedAt: timestamp('signed_at', { mode: 'date' }).defaultNow().notNull(),
+    createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+  },
+  table => [
+    index('signed_waiver_org_idx').on(table.organizationId),
+    index('signed_waiver_member_idx').on(table.memberId),
+    index('signed_waiver_template_idx').on(table.waiverTemplateId),
+    index('signed_waiver_membership_idx').on(table.memberMembershipId),
+  ],
+);
+
+// Junction table: MembershipPlan-to-WaiverTemplate (M:N)
+// Each membership plan can require specific waivers
+export const membershipWaiverSchema = pgTable(
+  'membership_waiver',
+  {
+    membershipPlanId: text('membership_plan_id').references(() => membershipPlanSchema.id).notNull(),
+    waiverTemplateId: text('waiver_template_id').references(() => waiverTemplateSchema.id).notNull(),
+    isRequired: boolean('is_required').default(true), // Whether this waiver must be signed
+    sortOrder: integer('sort_order').default(0),
+    createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+  },
+  table => [
+    primaryKey({ columns: [table.membershipPlanId, table.waiverTemplateId] }),
+  ],
+);
+
+// Waiver merge fields - configurable placeholders for waiver templates
+// Each organization can define custom merge fields (e.g., <academy>, <academy_owners>)
+export const waiverMergeFieldSchema = pgTable(
+  'waiver_merge_field',
+  {
+    id: text('id').primaryKey(), // UUID v4
+    organizationId: text('organization_id').notNull(),
+    key: text('key').notNull(), // e.g., 'academy', 'academy_owners' (stored without angle brackets)
+    label: text('label').notNull(), // Display name e.g., 'Academy Name'
+    defaultValue: text('default_value').notNull(), // Value to substitute in templates
+    description: text('description'), // Help text for admins
+    sortOrder: integer('sort_order').default(0),
+    createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { mode: 'date' })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  table => [
+    index('waiver_merge_field_org_idx').on(table.organizationId),
+    uniqueIndex('waiver_merge_field_org_key_idx').on(table.organizationId, table.key),
+  ],
+);
+
 export const addressSchema = pgTable('address', {
   id: text('id').primaryKey(),
   memberId: text('member_id').references(() => memberSchema.id).notNull(),

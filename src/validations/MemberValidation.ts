@@ -5,6 +5,7 @@ export const MemberValidation = z.object({
   firstName: z.string().min(1),
   lastName: z.string().min(1),
   phone: z.string().optional(),
+  dateOfBirth: z.coerce.date(),
   memberType: z.enum(['individual', 'family-member', 'head-of-household']).optional(),
   membershipPlanId: z.string().optional(),
   address: z.object({

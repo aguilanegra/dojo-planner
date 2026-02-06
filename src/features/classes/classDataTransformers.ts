@@ -139,6 +139,7 @@ export function transformEventToCardProps(eventData: EventData): EventCardProps 
       weekday: 'short',
       month: 'short',
       day: 'numeric',
+      timeZone: 'UTC',
     }),
     time: `${formatTime(s.startTime)} - ${formatTime(s.endTime)}`,
   }));
@@ -222,6 +223,8 @@ export type CalendarEvent = {
   color: string;
   date?: string; // YYYY-MM-DD format for specific instances
   exception?: CalendarScheduleException;
+  isEvent?: boolean; // true for events (seminars, workshops), false/undefined for classes
+  eventId?: string; // event ID when isEvent is true
 };
 
 /**
@@ -282,9 +285,9 @@ function getClassColor(classData: ClassData): string {
  * Format date as YYYY-MM-DD
  */
 function formatDateStr(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
+  const y = date.getUTCFullYear();
+  const m = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const d = String(date.getUTCDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
 }
 
@@ -326,8 +329,11 @@ export function generateWeeklyScheduleFromData(
 ): CalendarEvent[] {
   const events: CalendarEvent[] = [];
   const dayOfWeek = startDate.getDay();
-  const weekStart = new Date(startDate);
-  weekStart.setDate(startDate.getDate() - dayOfWeek);
+  const weekStart = new Date(Date.UTC(
+    startDate.getFullYear(),
+    startDate.getMonth(),
+    startDate.getDate() - dayOfWeek,
+  ));
 
   // Collect all exceptions from all classes
   const allExceptions: CalendarScheduleException[] = classes.flatMap(transformExceptions);
@@ -345,8 +351,11 @@ export function generateWeeklyScheduleFromData(
       const duration = calculateDuration(schedule.startTime, schedule.endTime);
 
       // Calculate the actual date for this event in the current week
-      const eventDate = new Date(weekStart);
-      eventDate.setDate(weekStart.getDate() + schedule.dayOfWeek);
+      const eventDate = new Date(Date.UTC(
+        weekStart.getUTCFullYear(),
+        weekStart.getUTCMonth(),
+        weekStart.getUTCDate() + schedule.dayOfWeek,
+      ));
       const dateStr = formatDateStr(eventDate);
 
       // Check if there's an exception for this class on this date
@@ -425,8 +434,8 @@ export function generateMonthlyScheduleFromData(
   }
 
   for (let day = 1; day <= daysInMonth; day++) {
-    const date = new Date(year, month, day);
-    const dayOfWeek = date.getDay();
+    const date = new Date(Date.UTC(year, month, day));
+    const dayOfWeek = date.getUTCDay();
     const dateStr = formatDateStr(date);
     monthlyEvents[day.toString()] = [];
 
@@ -459,14 +468,159 @@ export function generateMonthlyScheduleFromData(
   return monthlyEvents;
 }
 
+// =============================================================================
+// EVENT CALENDAR FUNCTIONS
+// =============================================================================
+
+const EVENT_COLOR = '#f97316'; // orange for events
+
 /**
- * Build a color legend from classes
+ * Get a color for an event based on its type
  */
-export function buildClassColorLegend(classes: ClassData[]): Record<string, string> {
+function getEventColor(eventData: EventData): string {
+  const type = eventData.eventType.toLowerCase();
+  if (type.includes('seminar')) {
+    return '#f97316'; // orange
+  }
+  if (type.includes('workshop')) {
+    return '#8b5cf6'; // violet
+  }
+  if (type.includes('tournament') || type.includes('competition')) {
+    return '#ef4444'; // red
+  }
+  return EVENT_COLOR;
+}
+
+/**
+ * Generate weekly schedule entries from event sessions.
+ * Events have specific dates (not recurring), so we only include sessions
+ * that fall within the given week.
+ */
+export function generateWeeklyEventScheduleFromData(
+  startDate: Date,
+  events: EventData[],
+): CalendarEvent[] {
+  const result: CalendarEvent[] = [];
+  const dayOfWeek = startDate.getDay();
+  const weekStart = new Date(Date.UTC(
+    startDate.getFullYear(),
+    startDate.getMonth(),
+    startDate.getDate() - dayOfWeek,
+  ));
+  const weekEnd = new Date(Date.UTC(
+    weekStart.getUTCFullYear(),
+    weekStart.getUTCMonth(),
+    weekStart.getUTCDate() + 7,
+  ));
+
+  for (const eventData of events) {
+    if (eventData.isActive === false) {
+      continue;
+    }
+
+    const color = getEventColor(eventData);
+
+    for (const session of eventData.sessions) {
+      const sessionDate = new Date(session.sessionDate);
+      const dateStr = formatDateStr(sessionDate);
+
+      // Check if session falls within the current week
+      if (sessionDate >= weekStart && sessionDate < weekEnd) {
+        const { hour, minute } = parseTime(session.startTime);
+        const duration = calculateDuration(session.startTime, session.endTime);
+        const sessionDayOfWeek = sessionDate.getUTCDay();
+
+        result.push({
+          classId: eventData.id,
+          className: eventData.name,
+          dayOfWeek: sessionDayOfWeek,
+          hour,
+          minute,
+          duration,
+          color,
+          date: dateStr,
+          isEvent: true,
+          eventId: eventData.id,
+        });
+      }
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Generate monthly schedule entries from event sessions.
+ * Events have specific dates, so we only include sessions in the given month.
+ */
+export function generateMonthlyEventScheduleFromData(
+  year: number,
+  month: number,
+  events: EventData[],
+): Record<string, CalendarEvent[]> {
+  const monthlyEvents: Record<string, CalendarEvent[]> = {};
+
+  for (const eventData of events) {
+    if (eventData.isActive === false) {
+      continue;
+    }
+
+    const color = getEventColor(eventData);
+
+    for (const session of eventData.sessions) {
+      const sessionDate = new Date(session.sessionDate);
+      const sessionYear = sessionDate.getUTCFullYear();
+      const sessionMonth = sessionDate.getUTCMonth();
+      const sessionDay = sessionDate.getUTCDate();
+
+      // Only include sessions in the target month
+      if (sessionYear === year && sessionMonth === month) {
+        const { hour, minute } = parseTime(session.startTime);
+        const duration = calculateDuration(session.startTime, session.endTime);
+        const dateStr = formatDateStr(sessionDate);
+        const dayKey = sessionDay.toString();
+
+        if (!monthlyEvents[dayKey]) {
+          monthlyEvents[dayKey] = [];
+        }
+
+        monthlyEvents[dayKey].push({
+          classId: eventData.id,
+          className: eventData.name,
+          dayOfWeek: sessionDate.getUTCDay(),
+          hour,
+          minute,
+          duration,
+          color,
+          date: dateStr,
+          isEvent: true,
+          eventId: eventData.id,
+        });
+      }
+    }
+  }
+
+  return monthlyEvents;
+}
+
+/**
+ * Build a color legend from classes and events
+ */
+export function buildClassColorLegend(
+  classes: ClassData[],
+  events?: EventData[],
+): Record<string, string> {
   const legend: Record<string, string> = {};
   for (const classData of classes) {
     if (classData.isActive !== false) {
       legend[classData.name] = getClassColor(classData);
+    }
+  }
+  if (events) {
+    for (const eventData of events) {
+      if (eventData.isActive !== false) {
+        legend[eventData.name] = getEventColor(eventData);
+      }
     }
   }
   return legend;

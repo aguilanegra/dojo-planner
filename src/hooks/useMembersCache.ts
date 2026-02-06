@@ -24,6 +24,8 @@ type MemberMembership = {
   status: string;
   startDate: Date;
   endDate: Date | null;
+  firstPaymentDate: Date | null;
+  nextPaymentDate: Date | null;
   createdAt: Date;
 };
 
