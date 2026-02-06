@@ -22,7 +22,7 @@ export const UpdateWaiverTemplateValidation = z.object({
   isActive: z.boolean().optional(),
   isDefault: z.boolean().optional(),
   requiresGuardian: z.boolean().optional(),
-  guardianAgeThreshold: z.number().min(13).max(21).optional(),
+  guardianAgeThreshold: z.number().min(13, 'Minimum age threshold is 13').max(21, 'Maximum age threshold is 21').optional(),
 });
 
 export const DeleteWaiverTemplateValidation = z.object({
