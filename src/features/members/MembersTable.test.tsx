@@ -170,7 +170,7 @@ describe('MembersTable', () => {
     });
 
     it('should display Past Due status with correct label', () => {
-      const mockMembers = [createMockMember({ status: 'past due' })];
+      const mockMembers = [createMockMember({ status: 'past_due' })];
       const mockOnRowClick = vi.fn();
 
       render(

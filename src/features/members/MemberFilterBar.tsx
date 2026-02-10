@@ -65,7 +65,7 @@ export function MemberFilterBar({
         return t('status_trial');
       case 'cancelled':
         return t('status_cancelled');
-      case 'past due':
+      case 'past_due':
         return t('status_past_due');
       default:
         return status.charAt(0).toUpperCase() + status.slice(1);

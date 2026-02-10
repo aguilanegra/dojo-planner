@@ -133,11 +133,7 @@ export const useMembersCache = (organizationId?: string | undefined) => {
           organizationId,
           cacheAge: Date.now() - (cacheStore?.timestamp || 0),
         });
-        const mappedMembers = cacheStore!.data.map(member => ({
-          ...member,
-          membershipType: (member as any).subscriptionPlan as any || member.membershipType,
-        }));
-        dispatch({ type: 'SET_MEMBERS', payload: mappedMembers });
+        dispatch({ type: 'SET_MEMBERS', payload: cacheStore!.data });
         return;
       }
 
@@ -146,11 +142,39 @@ export const useMembersCache = (organizationId?: string | undefined) => {
       const membersData = await client.members.list();
       const rawMembers = (membersData.members || []) as any[];
 
-      // Map subscriptionPlan from backend to membershipType for frontend
-      const detailedMembers: Member[] = rawMembers.map(member => ({
-        ...member,
-        membershipType: member.subscriptionPlan as any,
-      }));
+      // Derive membershipType, amountDue, and nextPayment from currentMembership
+      const detailedMembers: Member[] = rawMembers.map((member: any) => {
+        const plan = member.currentMembership?.membershipPlan;
+        const membership = member.currentMembership;
+
+        let membershipType: Member['membershipType'];
+        if (plan) {
+          if (plan.isTrial) {
+            membershipType = 'free-trial';
+          } else if (plan.frequency === 'Monthly') {
+            membershipType = 'monthly';
+          } else if (plan.frequency === 'Annual') {
+            membershipType = 'annual';
+          } else {
+            membershipType = 'free';
+          }
+        }
+
+        const amountDue = plan?.price != null && plan.price > 0
+          ? Number(plan.price).toFixed(2)
+          : undefined;
+
+        const nextPayment = membership?.nextPaymentDate
+          ? new Date(membership.nextPaymentDate)
+          : undefined;
+
+        return {
+          ...member,
+          membershipType,
+          amountDue,
+          nextPayment,
+        };
+      });
 
       // Update cache
       cacheStore = {

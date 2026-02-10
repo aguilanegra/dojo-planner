@@ -39,6 +39,43 @@ vi.mock('@/features/dashboard/DashboardCharts', async () => {
   };
 });
 
+// Mock useDashboardCache hook
+vi.mock('@/hooks/useDashboardCache', () => ({
+  useDashboardCache: () => ({
+    membershipStats: {
+      totalPeople: 462,
+      totalStudents: 111,
+      totalFamilies: 92,
+      newStudentsLast30Days: 8,
+      autopayOn: 85,
+      autopayOff: 26,
+      membershipsOnHold: 3,
+      cancelledLast30Days: 2,
+      membershipNetChange30Days: 6,
+    },
+    financialStats: {
+      autopaysSuspended: 2,
+      expiringCreditCards60Days: 5,
+      amountDueNext30Days: 14394.20,
+      pastDueTotal: 450.62,
+      paymentsLast30Days: 13150.44,
+      paymentsPending: 0,
+      failedPaymentsLast30Days: 1834.67,
+      incomePerStudent30Days: 118.47,
+    },
+    memberAverageData: {
+      monthly: [{ month: 'Jan', value: 100, previousYearValue: 90 }],
+      yearly: [{ year: '2024', value: 100 }],
+    },
+    earningsData: {
+      monthly: [{ month: 'Jan', value: 10000, previousYearValue: 9000 }],
+      yearly: [{ year: '2024', value: 120000 }],
+    },
+    loading: false,
+    error: null,
+  }),
+}));
+
 describe('Dashboard Page', () => {
   it('renders performance header', () => {
     render(<DashboardPage />);

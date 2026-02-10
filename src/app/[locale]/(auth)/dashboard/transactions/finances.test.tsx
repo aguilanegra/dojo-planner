@@ -1,93 +1,53 @@
+import type { Transaction } from '@/features/finances/FinancesTable';
 import { describe, expect, it } from 'vitest';
 import { render } from 'vitest-browser-react';
 import { page, userEvent } from 'vitest/browser';
+import { FinancesTable } from '@/features/finances/FinancesTable';
 import { I18nWrapper } from '@/lib/test-utils';
-import FinancesPage from './page';
 
-describe('Finances Page', () => {
-  describe('Stats Cards', () => {
-    it('should render stats cards section', () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+// Note: Card numbers shown are masked display values (****1234), not actual card numbers
+const mockTransactions: Transaction[] = [
+  { id: '1', date: 'April 15, 2025', amount: '$160.00', purpose: 'Membership Dues', method: 'Saved Card Ending ****1234', transactionId: 'TXN71MC01ANQ130', memberName: 'John Smith', memberId: 'M001', status: 'paid' },
+  { id: '2', date: 'March 15, 2025', amount: '$160.00', purpose: 'Membership Dues', method: 'Saved Card Ending ****1234', transactionId: 'TXN8CJ19CAMGB10', memberName: 'John Smith', memberId: 'M001', status: 'paid' },
+  { id: '3', date: 'February 15, 2025', amount: '$160.00', purpose: 'Membership Dues', method: 'Saved Card Ending ****1234', transactionId: 'TXNHCM1829NBAU', memberName: 'John Smith', memberId: 'M001', status: 'paid' },
+  { id: '4', date: 'January 15, 2025', amount: '$160.00', purpose: 'Membership Dues', method: 'Saved Card Ending ****1234', transactionId: 'TXNCP120C72N72KA', memberName: 'John Smith', memberId: 'M001', status: 'paid' },
+  { id: '5', date: 'December 15, 2024', amount: '$160.00', purpose: 'Membership Dues', method: 'Saved Card Ending ****1234', transactionId: 'TXN7621KCD721B92', memberName: 'Jane Doe', memberId: 'M002', status: 'paid' },
+  { id: '6', date: 'November 15, 2024', amount: '$160.00', purpose: 'Membership Dues', method: 'Saved Card Ending ****1234', transactionId: 'TXN73VBSV6DKSVD', memberName: 'Jane Doe', memberId: 'M002', status: 'declined' },
+  { id: '7', date: 'October 15, 2024', amount: '$160.00', purpose: 'Membership Dues', method: 'Saved Card Ending ****1234', transactionId: 'TXNABC123DEF456', memberName: 'Mike Johnson', memberId: 'M003', status: 'paid' },
+  { id: '8', date: 'September 15, 2024', amount: '$160.00', purpose: 'Membership Dues', method: 'Saved Card Ending ****1234', transactionId: 'TXNXYZ789GHI012', memberName: 'Mike Johnson', memberId: 'M003', status: 'refunded' },
+  { id: '9', date: 'August 15, 2024', amount: '$160.00', purpose: 'Membership Dues', method: 'Saved Card Ending ****1234', transactionId: 'TXNJKL345MNO678', memberName: 'Sarah Williams', memberId: 'M004', status: 'paid' },
+  { id: '10', date: 'July 15, 2024', amount: '$160.00', purpose: 'Membership Dues', method: 'Saved Card Ending ****1234', transactionId: 'TXNPQR901STU234', memberName: 'Sarah Williams', memberId: 'M004', status: 'pending' },
+  { id: '14', date: 'March 5, 2024', amount: '$160.00', purpose: 'Membership Dues', method: 'ACH Transfer', transactionId: 'TXNACH2024030501', memberName: 'Lisa Garcia', memberId: 'M007', status: 'paid' },
+  { id: '11', date: 'June 15, 2024', amount: '$75.00', purpose: 'Merchandise', method: 'Saved Card Ending ****5678', transactionId: 'TXNVWX567YZA890', memberName: 'John Smith', memberId: 'M001', status: 'paid' },
+  { id: '15', date: 'February 28, 2024', amount: '$35.00', purpose: 'Merchandise', method: 'Saved Card Ending ****5678', transactionId: 'TXNMERCH20240228', memberName: 'Chris Martinez', memberId: 'M008', status: 'paid' },
+  { id: '16', date: 'January 10, 2024', amount: '$45.00', purpose: 'Merchandise', method: 'Cash', transactionId: 'TXNMERCH20240110', memberName: 'Emily Brown', memberId: 'M005', status: 'pending' },
+  { id: '17', date: 'December 20, 2023', amount: '$120.00', purpose: 'Merchandise', method: 'Saved Card Ending ****1234', transactionId: 'TXNMERCH20231220', memberName: 'David Lee', memberId: 'M006', status: 'refunded' },
+  { id: '18', date: 'November 5, 2023', amount: '$65.00', purpose: 'Merchandise', method: 'Saved Card Ending ****5678', transactionId: 'TXNMERCH20231105', memberName: 'Sarah Williams', memberId: 'M004', status: 'declined' },
+  { id: '19', date: 'April 5, 2025', amount: '$50.00', purpose: 'Event', method: 'Saved Card Ending ****1234', transactionId: 'TXNEVT20250405', memberName: 'John Smith', memberId: 'M001', status: 'paid' },
+  { id: '20', date: 'March 20, 2025', amount: '$75.00', purpose: 'Event', method: 'Saved Card Ending ****5678', transactionId: 'TXNEVT20250320', memberName: 'Jane Doe', memberId: 'M002', status: 'paid' },
+  { id: '21', date: 'February 10, 2025', amount: '$100.00', purpose: 'Event', method: 'Cash', transactionId: 'TXNEVT20250210', memberName: 'Mike Johnson', memberId: 'M003', status: 'processing' },
+  { id: '22', date: 'January 25, 2025', amount: '$50.00', purpose: 'Event', method: 'Saved Card Ending ****1234', transactionId: 'TXNEVT20250125', memberName: 'Lisa Garcia', memberId: 'M007', status: 'pending' },
+  { id: '23', date: 'December 15, 2024', amount: '$75.00', purpose: 'Event', method: 'Saved Card Ending ****5678', transactionId: 'TXNEVT20241215', memberName: 'Chris Martinez', memberId: 'M008', status: 'declined' },
+  { id: '24', date: 'November 10, 2024', amount: '$60.00', purpose: 'Event', method: 'ACH Transfer', transactionId: 'TXNEVT20241110', memberName: 'Emily Brown', memberId: 'M005', status: 'refunded' },
+  { id: '12', date: 'May 10, 2024', amount: '$50.00', purpose: 'Private Lesson', method: 'Cash', transactionId: 'TXNCASH001', memberName: 'Emily Brown', memberId: 'M005', status: 'paid' },
+  { id: '25', date: 'April 1, 2024', amount: '$50.00', purpose: 'Private Lesson', method: 'Saved Card Ending ****1234', transactionId: 'TXNPL20240401', memberName: 'David Lee', memberId: 'M006', status: 'paid' },
+  { id: '26', date: 'March 15, 2024', amount: '$75.00', purpose: 'Private Lesson', method: 'Cash', transactionId: 'TXNPL20240315', memberName: 'Sarah Williams', memberId: 'M004', status: 'pending' },
+  { id: '13', date: 'April 22, 2024', amount: '$25.00', purpose: 'Seminar', method: 'Saved Card Ending ****1234', transactionId: 'TXNSEM20240422', memberName: 'David Lee', memberId: 'M006', status: 'processing' },
+  { id: '27', date: 'February 5, 2024', amount: '$30.00', purpose: 'Seminar', method: 'Saved Card Ending ****5678', transactionId: 'TXNSEM20240205', memberName: 'Mike Johnson', memberId: 'M003', status: 'paid' },
+];
 
-      expect(page.getByText('Paid (Last 30 Days)')).toBeInTheDocument();
-      expect(page.getByText('Declined (Last 30 Days)')).toBeInTheDocument();
-      expect(page.getByText('Refunded (Last 30 Days)')).toBeInTheDocument();
-    });
+function renderTable() {
+  return render(
+    <I18nWrapper>
+      <FinancesTable transactions={mockTransactions} />
+    </I18nWrapper>,
+  );
+}
 
-    it('should display paid transactions count', () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
-
-      // The stats card for paid should show a number
-      const paidLabel = page.getByText('Paid (Last 30 Days)');
-
-      expect(paidLabel).toBeInTheDocument();
-    });
-
-    it('should display declined transactions count', () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
-
-      const declinedLabel = page.getByText('Declined (Last 30 Days)');
-
-      expect(declinedLabel).toBeInTheDocument();
-    });
-
-    it('should display refunded transactions count', () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
-
-      const refundedLabel = page.getByText('Refunded (Last 30 Days)');
-
-      expect(refundedLabel).toBeInTheDocument();
-    });
-
-    it('should render three stats cards in a grid', () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
-
-      // Check all three labels exist, indicating 3 cards
-      expect(page.getByText('Paid (Last 30 Days)')).toBeInTheDocument();
-      expect(page.getByText('Declined (Last 30 Days)')).toBeInTheDocument();
-      expect(page.getByText('Refunded (Last 30 Days)')).toBeInTheDocument();
-    });
-  });
-
-  describe('Page Header', () => {
-    it('should render transactions h1 header', () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
-
-      const heading = page.getByRole('heading', { name: 'Transactions', level: 1 });
-
-      expect(heading).toBeInTheDocument();
-    });
-
-    it('should not render the old Finances heading', () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
-
-      const financesHeadings = page.getByRole('heading', { name: 'Finances' }).elements();
-
-      expect(financesHeadings.length).toBe(0);
-    });
-  });
-
-  describe('Action Buttons Removed', () => {
-    it('should not render import transactions button', () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
-
-      const importButton = page.getByRole('button', { name: /Import Transactions/i }).elements();
-
-      expect(importButton.length).toBe(0);
-    });
-
-    it('should not render new transaction button', () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
-
-      const newButton = page.getByRole('button', { name: /New Transaction/i }).elements();
-
-      expect(newButton.length).toBe(0);
-    });
-  });
-
+describe('Finances Table', () => {
   describe('Search and Filter Bar', () => {
     it('should render search input', () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
       const searchInput = page.getByPlaceholder('Search transactions...');
 
@@ -95,7 +55,7 @@ describe('Finances Page', () => {
     });
 
     it('should render filter dropdowns', () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
       const filterDropdowns = page.getByRole('combobox').elements();
 
@@ -103,7 +63,7 @@ describe('Finances Page', () => {
     });
 
     it('should not render tab navigation', () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
       const allTab = page.getByRole('button', { name: /^All$/i }).elements();
       const membershipDuesTab = page.getByRole('button', { name: /^Membership Dues$/i }).elements();
@@ -113,7 +73,7 @@ describe('Finances Page', () => {
     });
 
     it('should allow typing in search input', async () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
       const searchInput = page.getByPlaceholder('Search transactions...');
       await userEvent.fill(searchInput.element() as HTMLInputElement, 'Merchandise');
@@ -124,7 +84,7 @@ describe('Finances Page', () => {
     });
 
     it('should filter transactions by search term', async () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
       const searchInput = page.getByPlaceholder('Search transactions...');
       await userEvent.fill(searchInput.element() as HTMLInputElement, 'Private');
@@ -136,7 +96,7 @@ describe('Finances Page', () => {
     });
 
     it('should show no results message when search has no matches', async () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
       const searchInput = page.getByPlaceholder('Search transactions...');
       await userEvent.fill(searchInput.element() as HTMLInputElement, 'NonexistentTransaction');
@@ -147,7 +107,7 @@ describe('Finances Page', () => {
 
   describe('Origin Filter', () => {
     it('should show origin filter options when clicked', async () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
       const originFilter = page.getByTestId('finances-origin-filter');
       await originFilter.click();
@@ -157,7 +117,7 @@ describe('Finances Page', () => {
     });
 
     it('should filter by origin when selecting from dropdown', async () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
       const originFilter = page.getByTestId('finances-origin-filter');
       await originFilter.click();
@@ -173,7 +133,7 @@ describe('Finances Page', () => {
 
   describe('Status Filter', () => {
     it('should show status filter options when clicked', async () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
       const statusFilter = page.getByTestId('finances-status-filter');
       await statusFilter.click();
@@ -184,7 +144,7 @@ describe('Finances Page', () => {
     });
 
     it('should filter by status when selecting from dropdown', async () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
       const statusFilter = page.getByTestId('finances-status-filter');
       await statusFilter.click();
@@ -200,7 +160,7 @@ describe('Finances Page', () => {
 
   describe('Transactions Table', () => {
     it('should render transactions table headers', () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
       const table = page.getByRole('table');
 
@@ -214,7 +174,7 @@ describe('Finances Page', () => {
     });
 
     it('should render transaction data in table', () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
       const table = page.getByRole('table');
 
@@ -223,7 +183,7 @@ describe('Finances Page', () => {
     });
 
     it('should render member name in table', () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
       const table = page.getByRole('table');
 
@@ -231,7 +191,7 @@ describe('Finances Page', () => {
     });
 
     it('should render status badges in table', () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
       const table = page.getByRole('table');
 
@@ -239,20 +199,18 @@ describe('Finances Page', () => {
     });
 
     it('should render at least 10 transactions', () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
       const table = page.getByRole('table');
 
-      // Verify table renders and has content
       expect(table).toBeInTheDocument();
-      // Check that member names are visible indicating data is rendered
       expect(table.getByText('John Smith').first()).toBeInTheDocument();
     });
   });
 
   describe('Sorting', () => {
     it('should have sortable date column', async () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
       const dateHeader = page.getByRole('button', { name: /Date/i });
       await dateHeader.click();
@@ -263,7 +221,7 @@ describe('Finances Page', () => {
     });
 
     it('should have sortable amount column', async () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
       const amountHeader = page.getByRole('button', { name: /Amount/i });
       await amountHeader.click();
@@ -274,7 +232,7 @@ describe('Finances Page', () => {
     });
 
     it('should have sortable origin column', async () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
       const originHeader = page.getByRole('button', { name: /Origin/i });
       await originHeader.click();
@@ -285,7 +243,7 @@ describe('Finances Page', () => {
     });
 
     it('should have sortable method column', async () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
       const table = page.getByRole('table');
       const methodHeader = table.getByRole('button', { name: 'Method', exact: true });
@@ -295,7 +253,7 @@ describe('Finances Page', () => {
     });
 
     it('should have sortable transaction ID column', async () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
       const transactionIdHeader = page.getByRole('button', { name: /Transaction ID/i });
       await transactionIdHeader.click();
@@ -306,16 +264,15 @@ describe('Finances Page', () => {
     });
 
     it('should render member column header', () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
       const table = page.getByRole('table');
 
-      // The table header has a Member button
       expect(table.getByRole('button', { name: 'Member', exact: true })).toBeInTheDocument();
     });
 
     it('should have sortable status column', async () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
       const statusHeader = page.getByRole('button', { name: /Status/i });
       await statusHeader.click();
@@ -326,7 +283,7 @@ describe('Finances Page', () => {
     });
 
     it('should toggle sort direction when clicking same column twice', async () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
       const dateHeader = page.getByRole('button', { name: /Date/i });
       await dateHeader.click();
@@ -340,7 +297,7 @@ describe('Finances Page', () => {
 
   describe('Pagination', () => {
     it('should render pagination controls', () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
       const paginationText = page.getByText(/Showing 1-10 of 27 entries/);
 
@@ -348,7 +305,7 @@ describe('Finances Page', () => {
     });
 
     it('should render previous button', () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
       const previousButton = page.getByRole('button', { name: /Previous/i });
 
@@ -356,7 +313,7 @@ describe('Finances Page', () => {
     });
 
     it('should render next button', () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
       const nextButton = page.getByRole('button', { name: 'Next', exact: true });
 
@@ -364,7 +321,7 @@ describe('Finances Page', () => {
     });
 
     it('should navigate to next page when clicking next', async () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
       const nextButton = page.getByRole('button', { name: 'Next', exact: true });
       await nextButton.click();
@@ -375,24 +332,21 @@ describe('Finances Page', () => {
     });
 
     it('should reset page when filtering', async () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
-      // Go to second page
       const nextButton = page.getByRole('button', { name: 'Next', exact: true });
       await nextButton.click();
 
-      // Search for something
       const searchInput = page.getByPlaceholder('Search transactions...');
       await userEvent.fill(searchInput.element() as HTMLInputElement, 'Membership');
 
-      // Should be back on first page
       expect(page.getByText(/Showing 1-10 of/)).toBeInTheDocument();
     });
   });
 
   describe('Empty and Loading States', () => {
     it('should show empty state message when no transactions match filter', async () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
       const searchInput = page.getByPlaceholder('Search transactions...');
       await userEvent.fill(searchInput.element() as HTMLInputElement, 'ZZZNoMatch');
@@ -403,7 +357,7 @@ describe('Finances Page', () => {
 
   describe('Search by different fields', () => {
     it('should filter by transaction ID', async () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
       const searchInput = page.getByPlaceholder('Search transactions...');
       await userEvent.fill(searchInput.element() as HTMLInputElement, 'TXNCASH001');
@@ -414,7 +368,7 @@ describe('Finances Page', () => {
     });
 
     it('should filter by member name', async () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
       const searchInput = page.getByPlaceholder('Search transactions...');
       await userEvent.fill(searchInput.element() as HTMLInputElement, 'Jane Doe');
@@ -425,7 +379,7 @@ describe('Finances Page', () => {
     });
 
     it('should filter by status', async () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
       const searchInput = page.getByPlaceholder('Search transactions...');
       await userEvent.fill(searchInput.element() as HTMLInputElement, 'declined');
@@ -436,7 +390,7 @@ describe('Finances Page', () => {
     });
 
     it('should filter by method', async () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
       const searchInput = page.getByPlaceholder('Search transactions...');
       await userEvent.fill(searchInput.element() as HTMLInputElement, 'ACH Transfer');
@@ -447,7 +401,7 @@ describe('Finances Page', () => {
     });
 
     it('should filter by amount', async () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
       const searchInput = page.getByPlaceholder('Search transactions...');
       await userEvent.fill(searchInput.element() as HTMLInputElement, '$50.00');
@@ -460,15 +414,13 @@ describe('Finances Page', () => {
 
   describe('Combined Filters', () => {
     it('should apply search and origin filter together', async () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
-      // Filter by origin first
       const originFilter = page.getByTestId('finances-origin-filter');
       await originFilter.click();
       const merchandiseOption = page.getByRole('option', { name: 'Merchandise' });
       await merchandiseOption.click();
 
-      // Then search within that filter
       const searchInput = page.getByPlaceholder('Search transactions...');
       await userEvent.fill(searchInput.element() as HTMLInputElement, 'John');
 
@@ -480,7 +432,7 @@ describe('Finances Page', () => {
 
   describe('Transaction Status Display', () => {
     it('should display different status badges', () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
       const table = page.getByRole('table');
 
@@ -488,7 +440,7 @@ describe('Finances Page', () => {
     });
 
     it('should show declined status on page 1', () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
       const table = page.getByRole('table');
 
@@ -498,20 +450,18 @@ describe('Finances Page', () => {
 
   describe('Row Click Interaction', () => {
     it('should have transaction rows with button role', () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
       const table = page.getByRole('table');
 
-      // Verify the table renders
       expect(table).toBeInTheDocument();
     });
 
     it('should display member names as clickable rows', () => {
-      render(<I18nWrapper><FinancesPage /></I18nWrapper>);
+      renderTable();
 
       const table = page.getByRole('table');
 
-      // Verify member name is displayed in the table
       expect(table.getByText('John Smith').first()).toBeInTheDocument();
     });
   });

@@ -41,9 +41,11 @@ import {
   membershipWaiverSchema,
   noteSchema,
   organizationSchema,
+  paymentMethodSchema,
   programSchema,
   signedWaiverSchema,
   tagSchema,
+  transactionSchema,
   waiverMergeFieldSchema,
   waiverTemplateSchema,
 } from '../models/Schema';
@@ -840,6 +842,10 @@ async function clearSeededData(organizationId: string) {
   await db.delete(waiverMergeFieldSchema).where(eq(waiverMergeFieldSchema.organizationId, organizationId));
   await db.delete(waiverTemplateSchema).where(eq(waiverTemplateSchema.organizationId, organizationId));
 
+  // Clear transaction and payment data (references member)
+  await db.delete(transactionSchema).where(eq(transactionSchema.organizationId, organizationId));
+  await db.delete(paymentMethodSchema).where(sql`${paymentMethodSchema.memberId} IN (SELECT id FROM member WHERE organization_id = ${organizationId})`);
+
   // Clear class and event dependencies
   await db.delete(attendanceSchema).where(eq(attendanceSchema.organizationId, organizationId));
   await db.delete(classEnrollmentSchema).where(sql`${classEnrollmentSchema.classId} IN (SELECT id FROM class WHERE organization_id = ${organizationId})`);
@@ -1278,7 +1284,286 @@ async function seedOrganization(organizationId: string) {
     }).onConflictDoNothing();
   }
 
-  console.info(`  ✅ Seeded ${programsData.length} programs, ${allTags.length} tags, ${classesData.length} classes, ${eventsData.length} events, ${couponsData.length} coupons, ${membershipPlansData.length} membership plans, ${membersData.length} members, ${catalogCategoriesData.length} catalog categories, ${catalogItemsData.length} catalog items, ${waiverTemplatesData.length} waiver templates, ${signedWaiverCount} signed waivers, ${mergeFieldsData.length} merge fields`);
+  // 13. Seed Payment Methods
+  console.info('  💳 Seeding payment methods...');
+  const paymentMethodsData: Array<{ memberIndex: number; type: string; last4: string; isDefault: boolean }> = [
+    { memberIndex: 0, type: 'card', last4: '4242', isDefault: true }, // John Doe
+    { memberIndex: 1, type: 'card', last4: '5678', isDefault: true }, // Sarah Johnson
+    { memberIndex: 2, type: 'card', last4: '1111', isDefault: true }, // Mike Rodriguez (trial)
+    { memberIndex: 3, type: 'card', last4: '3456', isDefault: true }, // Emma Wilson
+    { memberIndex: 4, type: 'card', last4: '7890', isDefault: true }, // David Brown (cancelled)
+    { memberIndex: 5, type: 'card', last4: '2222', isDefault: true }, // Lisa Martinez (past_due)
+    { memberIndex: 6, type: 'card', last4: '9999', isDefault: true }, // Alex Thompson
+    { memberIndex: 7, type: 'card', last4: '8888', isDefault: true }, // Isabella Chen
+  ];
+  for (const pm of paymentMethodsData) {
+    const memberId = memberIds[pm.memberIndex];
+    if (memberId) {
+      await db.insert(paymentMethodSchema).values({
+        id: randomUUID(),
+        memberId,
+        type: pm.type,
+        last4: pm.last4,
+        isDefault: pm.isDefault,
+      }).onConflictDoNothing();
+    }
+  }
+
+  // 14. Update member_membership dates for realistic data
+  console.info('  📅 Updating membership dates...');
+  const memberJoinDates: Record<number, Date> = {
+    0: new Date('2024-01-10'), // John Doe - joined Jan 2024
+    1: new Date('2024-03-05'), // Sarah Johnson - joined Mar 2024
+    2: new Date('2025-12-01'), // Mike Rodriguez - trial, recent
+    3: new Date('2024-06-15'), // Emma Wilson - joined Jun 2024
+    4: new Date('2024-02-20'), // David Brown - joined Feb 2024, cancelled Aug 2025
+    5: new Date('2024-04-01'), // Lisa Martinez - joined Apr 2024, past_due
+    6: new Date('2024-08-10'), // Alex Thompson - joined Aug 2024
+    7: new Date('2024-05-20'), // Isabella Chen - joined May 2024
+  };
+
+  for (let i = 0; i < membersData.length; i++) {
+    const member = membersData[i]!;
+    const memberId = memberIds[i]!;
+    const joinDate = memberJoinDates[i]!;
+
+    if (member.status === 'active' || member.status === 'trial') {
+      const nextPayment = new Date();
+      nextPayment.setDate(15);
+      if (nextPayment <= new Date()) {
+        nextPayment.setMonth(nextPayment.getMonth() + 1);
+      }
+
+      await db.update(memberMembershipSchema)
+        .set({
+          startDate: joinDate,
+          firstPaymentDate: joinDate,
+          nextPaymentDate: member.status === 'trial' ? null : nextPayment,
+        })
+        .where(eq(memberMembershipSchema.memberId, memberId));
+    }
+
+    // Update member createdAt to match join date
+    await db.update(memberSchema)
+      .set({ createdAt: joinDate })
+      .where(eq(memberSchema.id, memberId));
+  }
+
+  // 15. Seed Transactions
+  console.info('  💰 Seeding transactions...');
+  let transactionCount = 0;
+
+  // Helper to create a transaction
+  async function createTransaction(values: {
+    organizationId: string;
+    memberId: string;
+    memberMembershipId?: string;
+    transactionType: string;
+    amount: number;
+    status: string;
+    paymentMethod: string;
+    description: string;
+    createdAt: Date;
+    processedAt?: Date;
+  }) {
+    await db.insert(transactionSchema).values({
+      id: randomUUID(),
+      organizationId: values.organizationId,
+      memberId: values.memberId,
+      memberMembershipId: values.memberMembershipId ?? null,
+      transactionType: values.transactionType,
+      amount: values.amount,
+      currency: 'USD',
+      status: values.status,
+      paymentMethod: values.paymentMethod,
+      description: values.description,
+      createdAt: values.createdAt,
+      processedAt: values.processedAt ?? null,
+    }).onConflictDoNothing();
+    transactionCount++;
+  }
+
+  // Get member_membership IDs for linking
+  const memberMembershipIds: Record<string, string> = {};
+  for (const memberId of memberIds) {
+    const mm = await db.select({ id: memberMembershipSchema.id })
+      .from(memberMembershipSchema)
+      .where(eq(memberMembershipSchema.memberId, memberId));
+    if (mm[0]) {
+      memberMembershipIds[memberId] = mm[0].id;
+    }
+  }
+
+  // Member data for transaction generation
+  type MemberTxConfig = {
+    index: number;
+    planSlug: string;
+    price: number;
+    signupFee: number;
+    startMonth: Date;
+    endMonth: Date | null; // null = ongoing
+    paymentMethod: string;
+    last4: string;
+    failedMonths?: Date[]; // months where payment declined
+  };
+
+  const now = new Date();
+  const memberTxConfigs: MemberTxConfig[] = [
+    { index: 0, planSlug: '12-month-gold', price: 149, signupFee: 99, startMonth: new Date('2024-01-15'), endMonth: null, paymentMethod: 'card', last4: '4242' },
+    { index: 1, planSlug: '12-month-gold', price: 149, signupFee: 99, startMonth: new Date('2024-03-15'), endMonth: null, paymentMethod: 'card', last4: '5678' },
+    { index: 2, planSlug: '7-day-trial', price: 0, signupFee: 0, startMonth: new Date('2025-12-01'), endMonth: new Date('2025-12-08'), paymentMethod: 'card', last4: '1111' },
+    { index: 3, planSlug: '12-month-gold', price: 149, signupFee: 99, startMonth: new Date('2024-06-15'), endMonth: null, paymentMethod: 'card', last4: '3456' },
+    { index: 4, planSlug: 'month-to-month-gold', price: 179, signupFee: 99, startMonth: new Date('2024-02-15'), endMonth: new Date('2025-08-15'), paymentMethod: 'card', last4: '7890' },
+    { index: 5, planSlug: '12-month-gold', price: 149, signupFee: 99, startMonth: new Date('2024-04-15'), endMonth: null, paymentMethod: 'card', last4: '2222', failedMonths: [new Date('2025-12-15'), new Date('2026-01-15')] },
+    { index: 6, planSlug: '12-month-gold', price: 149, signupFee: 99, startMonth: new Date('2024-08-15'), endMonth: null, paymentMethod: 'card', last4: '9999' },
+    { index: 7, planSlug: '12-month-gold', price: 149, signupFee: 99, startMonth: new Date('2024-05-15'), endMonth: null, paymentMethod: 'bank_transfer', last4: '' },
+  ];
+
+  // Generate membership payment transactions
+  for (const config of memberTxConfigs) {
+    const memberId = memberIds[config.index]!;
+    const mmId = memberMembershipIds[memberId];
+
+    // Signup fee
+    if (config.signupFee > 0) {
+      const joinDate = memberJoinDates[config.index]!;
+      await createTransaction({
+        organizationId,
+        memberId,
+        memberMembershipId: mmId,
+        transactionType: 'signup_fee',
+        amount: config.signupFee,
+        status: 'paid',
+        paymentMethod: config.paymentMethod,
+        description: config.last4 ? `Signup fee - Card ending ${config.last4}` : 'Signup fee - Bank transfer',
+        createdAt: joinDate,
+        processedAt: joinDate,
+      });
+    }
+
+    // Skip monthly payments for trial members
+    if (config.price === 0) {
+      continue;
+    }
+
+    // Monthly membership payments
+    const startMonth = new Date(config.startMonth);
+    const endDate = config.endMonth || now;
+    const totalMonths = (endDate.getFullYear() - startMonth.getFullYear()) * 12 + (endDate.getMonth() - startMonth.getMonth()) + 1;
+
+    for (let mi = 0; mi < totalMonths; mi++) {
+      const paymentDate = new Date(startMonth);
+      paymentDate.setMonth(paymentDate.getMonth() + mi);
+
+      // Determine status
+      let status = 'paid';
+      let processedAt: Date | undefined = new Date(paymentDate);
+      processedAt.setDate(processedAt.getDate() + 1);
+
+      // Check if this is a failed month
+      if (config.failedMonths) {
+        const isFailed = config.failedMonths.some(fm =>
+          fm.getFullYear() === paymentDate.getFullYear() && fm.getMonth() === paymentDate.getMonth(),
+        );
+        if (isFailed) {
+          status = 'declined';
+          processedAt = undefined;
+        }
+      }
+
+      const desc = config.last4
+        ? `Monthly membership - Card ending ${config.last4}`
+        : 'Monthly membership - Bank transfer';
+
+      await createTransaction({
+        organizationId,
+        memberId,
+        memberMembershipId: mmId,
+        transactionType: 'membership_payment',
+        amount: config.price,
+        status,
+        paymentMethod: config.paymentMethod,
+        description: desc,
+        createdAt: new Date(paymentDate),
+        processedAt: status === 'paid' ? processedAt : undefined,
+      });
+    }
+  }
+
+  // Event registration transactions
+  const eventTxData = [
+    { memberIndex: 0, amount: 149.99, date: new Date('2025-12-20'), method: 'card', desc: 'BJJ Fundamentals Seminar - Card ending 4242', status: 'paid' },
+    { memberIndex: 1, amount: 149.99, date: new Date('2025-12-22'), method: 'card', desc: 'BJJ Fundamentals Seminar - Card ending 5678', status: 'paid' },
+    { memberIndex: 3, amount: 199.99, date: new Date('2026-01-05'), method: 'card', desc: 'BJJ Fundamentals Seminar - Card ending 3456', status: 'paid' },
+    { memberIndex: 6, amount: 149.99, date: new Date('2026-01-03'), method: 'card', desc: 'BJJ Fundamentals Seminar - Card ending 9999', status: 'paid' },
+    { memberIndex: 0, amount: 60, date: new Date('2026-01-25'), method: 'card', desc: 'Master Rodriguez Workshop - Card ending 4242', status: 'paid' },
+    { memberIndex: 1, amount: 60, date: new Date('2026-01-28'), method: 'card', desc: 'Master Rodriguez Workshop - Card ending 5678', status: 'paid' },
+    { memberIndex: 3, amount: 60, date: new Date('2026-01-20'), method: 'cash', desc: 'Master Rodriguez Workshop - Cash', status: 'paid' },
+    { memberIndex: 6, amount: 60, date: new Date('2026-01-22'), method: 'card', desc: 'Master Rodriguez Workshop - Card ending 9999', status: 'pending' },
+    { memberIndex: 7, amount: 75, date: new Date('2026-02-01'), method: 'bank_transfer', desc: 'Master Rodriguez Workshop - Bank transfer', status: 'processing' },
+    { memberIndex: 4, amount: 149.99, date: new Date('2025-06-10'), method: 'card', desc: 'BJJ Fundamentals Seminar - Card ending 7890', status: 'refunded' },
+  ];
+
+  for (const tx of eventTxData) {
+    const memberId = memberIds[tx.memberIndex]!;
+    await createTransaction({
+      organizationId,
+      memberId,
+      transactionType: 'event_registration',
+      amount: tx.amount,
+      status: tx.status,
+      paymentMethod: tx.method,
+      description: tx.desc,
+      createdAt: tx.date,
+      processedAt: tx.status === 'paid' ? new Date(tx.date.getTime() + 86400000) : undefined,
+    });
+  }
+
+  // Refund transactions
+  const refundTxData = [
+    { memberIndex: 4, amount: -179, date: new Date('2025-09-01'), method: 'card', desc: 'Membership refund - Card ending 7890' },
+    { memberIndex: 0, amount: -75, date: new Date('2025-07-05'), method: 'card', desc: 'Event refund - Card ending 4242' },
+    { memberIndex: 3, amount: -149, date: new Date('2025-10-20'), method: 'card', desc: 'Membership overpayment refund - Card ending 3456' },
+  ];
+
+  for (const tx of refundTxData) {
+    const memberId = memberIds[tx.memberIndex]!;
+    await createTransaction({
+      organizationId,
+      memberId,
+      transactionType: 'refund',
+      amount: tx.amount,
+      status: 'paid',
+      paymentMethod: tx.method,
+      description: tx.desc,
+      createdAt: tx.date,
+      processedAt: new Date(tx.date.getTime() + 86400000),
+    });
+  }
+
+  // Adjustment transactions
+  const adjustmentTxData = [
+    { memberIndex: 5, amount: -25, date: new Date('2025-06-10'), method: 'card', desc: 'Loyalty discount adjustment' },
+    { memberIndex: 0, amount: 15, date: new Date('2025-08-01'), method: 'card', desc: 'Late fee adjustment' },
+    { memberIndex: 7, amount: -10, date: new Date('2025-11-15'), method: 'bank_transfer', desc: 'Promo credit adjustment' },
+  ];
+
+  for (const tx of adjustmentTxData) {
+    const memberId = memberIds[tx.memberIndex]!;
+    await createTransaction({
+      organizationId,
+      memberId,
+      transactionType: 'adjustment',
+      amount: tx.amount,
+      status: 'paid',
+      paymentMethod: tx.method,
+      description: tx.desc,
+      createdAt: tx.date,
+      processedAt: tx.date,
+    });
+  }
+
+  console.info(`  ✅ Seeded ${programsData.length} programs, ${allTags.length} tags, ${classesData.length} classes, ${eventsData.length} events, ${couponsData.length} coupons, ${membershipPlansData.length} membership plans, ${membersData.length} members, ${catalogCategoriesData.length} catalog categories, ${catalogItemsData.length} catalog items, ${waiverTemplatesData.length} waiver templates, ${signedWaiverCount} signed waivers, ${mergeFieldsData.length} merge fields, ${paymentMethodsData.length} payment methods, ${transactionCount} transactions`);
 }
 
 async function main() {

@@ -11,7 +11,7 @@ vi.mock('next-intl', () => ({
 describe('MemberFilterBar', () => {
   const defaultProps = {
     onFiltersChangeAction: vi.fn(),
-    availableStatuses: ['active', 'hold', 'trial', 'cancelled', 'past due'],
+    availableStatuses: ['active', 'hold', 'trial', 'cancelled', 'past_due'],
     availableMembershipTypes: ['free-trial', 'monthly', 'annual'],
   };
 
@@ -195,7 +195,7 @@ describe('MemberFilterBar', () => {
       render(
         <MemberFilterBar
           {...defaultProps}
-          availableStatuses={['active', 'hold', 'trial', 'cancelled', 'past due']}
+          availableStatuses={['active', 'hold', 'trial', 'cancelled', 'past_due']}
         />,
       );
 

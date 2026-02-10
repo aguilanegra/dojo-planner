@@ -867,7 +867,6 @@
     "report_income_per_student_description": "Average income per student over the last 30 days",
     "chart_title": "Historical Data",
     "insights_title": "Insights",
-    "no_data": "No data available",
     "time_period_monthly": "Monthly",
     "time_period_yearly": "Yearly",
     "compare_with_last_year": "Compare with last year"
