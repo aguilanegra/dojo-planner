@@ -372,6 +372,148 @@ describe('WaiverPdfService', () => {
 
       expect(mockSetTextColor).toHaveBeenCalledWith(128);
     });
+
+    // =========================================================================
+    // MEMBERSHIP DETAILS section
+    // =========================================================================
+
+    it('should include MEMBERSHIP DETAILS section when membershipPlanName is provided', async () => {
+      const { generateWaiverPdf } = await import('./WaiverPdfService');
+      generateWaiverPdf({
+        ...mockInput,
+        membershipPlanName: '12 Month Commitment (Gold)',
+        membershipPlanPrice: 150,
+        membershipPlanFrequency: 'Monthly',
+        membershipPlanContractLength: '12 Months',
+        membershipPlanSignupFee: 35,
+        membershipPlanIsTrial: false,
+      });
+
+      expect(mockSplitTextToSize).toHaveBeenCalledWith('MEMBERSHIP DETAILS', expect.any(Number));
+      expect(mockSplitTextToSize).toHaveBeenCalledWith('Plan: 12 Month Commitment (Gold)', expect.any(Number));
+    });
+
+    it('should NOT include MEMBERSHIP DETAILS section when membershipPlanName is not provided', async () => {
+      const { generateWaiverPdf } = await import('./WaiverPdfService');
+      generateWaiverPdf(mockInput);
+
+      const membershipCalls = mockSplitTextToSize.mock.calls.filter(
+        (call: string[]) => typeof call[0] === 'string' && call[0] === 'MEMBERSHIP DETAILS',
+      );
+
+      expect(membershipCalls).toHaveLength(0);
+    });
+
+    it('should show price as Free when membershipPlanPrice is 0', async () => {
+      const { generateWaiverPdf } = await import('./WaiverPdfService');
+      generateWaiverPdf({
+        ...mockInput,
+        membershipPlanName: 'Free Trial',
+        membershipPlanPrice: 0,
+      });
+
+      expect(mockSplitTextToSize).toHaveBeenCalledWith('Price: Free', expect.any(Number));
+    });
+
+    it('should format non-zero membership plan price', async () => {
+      const { generateWaiverPdf } = await import('./WaiverPdfService');
+      generateWaiverPdf({
+        ...mockInput,
+        membershipPlanName: '12 Month Commitment (Gold)',
+        membershipPlanPrice: 150,
+      });
+
+      expect(mockSplitTextToSize).toHaveBeenCalledWith('Price: $150.00', expect.any(Number));
+    });
+
+    it('should include payment schedule when frequency is not None', async () => {
+      const { generateWaiverPdf } = await import('./WaiverPdfService');
+      generateWaiverPdf({
+        ...mockInput,
+        membershipPlanName: '12 Month Commitment (Gold)',
+        membershipPlanFrequency: 'Monthly',
+      });
+
+      expect(mockSplitTextToSize).toHaveBeenCalledWith('Payment Schedule: Monthly', expect.any(Number));
+    });
+
+    it('should not include payment schedule when frequency is None', async () => {
+      const { generateWaiverPdf } = await import('./WaiverPdfService');
+      generateWaiverPdf({
+        ...mockInput,
+        membershipPlanName: 'Free Trial',
+        membershipPlanFrequency: 'None',
+      });
+
+      const scheduleCalls = mockSplitTextToSize.mock.calls.filter(
+        (call: string[]) => typeof call[0] === 'string' && call[0].includes('Payment Schedule'),
+      );
+
+      expect(scheduleCalls).toHaveLength(0);
+    });
+
+    it('should include contract length', async () => {
+      const { generateWaiverPdf } = await import('./WaiverPdfService');
+      generateWaiverPdf({
+        ...mockInput,
+        membershipPlanName: '12 Month Commitment (Gold)',
+        membershipPlanContractLength: '12 Months',
+      });
+
+      expect(mockSplitTextToSize).toHaveBeenCalledWith('Contract Length: 12 Months', expect.any(Number));
+    });
+
+    it('should include signup fee when greater than 0', async () => {
+      const { generateWaiverPdf } = await import('./WaiverPdfService');
+      generateWaiverPdf({
+        ...mockInput,
+        membershipPlanName: '12 Month Commitment (Gold)',
+        membershipPlanSignupFee: 35,
+      });
+
+      expect(mockSplitTextToSize).toHaveBeenCalledWith('Signup Fee: $35.00', expect.any(Number));
+    });
+
+    it('should not include signup fee when 0', async () => {
+      const { generateWaiverPdf } = await import('./WaiverPdfService');
+      generateWaiverPdf({
+        ...mockInput,
+        membershipPlanName: '12 Month Commitment (Gold)',
+        membershipPlanSignupFee: 0,
+      });
+
+      const feeCalls = mockSplitTextToSize.mock.calls.filter(
+        (call: string[]) => typeof call[0] === 'string' && call[0].includes('Signup Fee'),
+      );
+
+      expect(feeCalls).toHaveLength(0);
+    });
+
+    it('should show trial type badge when membershipPlanIsTrial is true', async () => {
+      const { generateWaiverPdf } = await import('./WaiverPdfService');
+      generateWaiverPdf({
+        ...mockInput,
+        membershipPlanName: 'Free Trial',
+        membershipPlanIsTrial: true,
+      });
+
+      expect(mockSplitTextToSize).toHaveBeenCalledWith('Type: Free Trial', expect.any(Number));
+    });
+
+    it('should not show trial type badge when membershipPlanIsTrial is false', async () => {
+      const { generateWaiverPdf } = await import('./WaiverPdfService');
+      generateWaiverPdf({
+        ...mockInput,
+        membershipPlanName: '12 Month Commitment (Gold)',
+        membershipPlanIsTrial: false,
+      });
+
+      const trialCalls = mockSplitTextToSize.mock.calls.filter(
+        (call: string[]) => typeof call[0] === 'string' && call[0] === 'Type: Free Trial',
+      );
+
+      expect(trialCalls).toHaveLength(0);
+    });
   });
 
   // ===========================================================================

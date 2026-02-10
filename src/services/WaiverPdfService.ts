@@ -31,6 +31,18 @@ export type WaiverPdfInput = {
   signedAt: Date;
   /** IP address at signing (optional) */
   ipAddress?: string | null;
+  /** Membership plan name at time of signing */
+  membershipPlanName?: string | null;
+  /** Membership plan price */
+  membershipPlanPrice?: number | null;
+  /** Membership plan payment frequency */
+  membershipPlanFrequency?: string | null;
+  /** Membership plan contract length */
+  membershipPlanContractLength?: string | null;
+  /** Membership plan signup fee */
+  membershipPlanSignupFee?: number | null;
+  /** Whether the membership plan is a trial */
+  membershipPlanIsTrial?: boolean | null;
 };
 
 /**
@@ -108,6 +120,42 @@ export function generateWaiverPdf(input: WaiverPdfInput): Blob {
   addText(`Email: ${input.memberEmail}`, 10);
 
   yPosition += 5;
+
+  // ========================================
+  // MEMBERSHIP DETAILS (conditional)
+  // ========================================
+
+  if (input.membershipPlanName) {
+    addText('MEMBERSHIP DETAILS', 12, true);
+    yPosition += 2;
+
+    addText(`Plan: ${input.membershipPlanName}`, 10);
+
+    if (input.membershipPlanIsTrial) {
+      addText('Type: Free Trial', 10);
+    }
+
+    if (input.membershipPlanPrice !== null && input.membershipPlanPrice !== undefined) {
+      const priceStr = input.membershipPlanPrice === 0
+        ? 'Free'
+        : `$${input.membershipPlanPrice.toFixed(2)}`;
+      addText(`Price: ${priceStr}`, 10);
+    }
+
+    if (input.membershipPlanFrequency && input.membershipPlanFrequency !== 'None') {
+      addText(`Payment Schedule: ${input.membershipPlanFrequency}`, 10);
+    }
+
+    if (input.membershipPlanContractLength) {
+      addText(`Contract Length: ${input.membershipPlanContractLength}`, 10);
+    }
+
+    if (input.membershipPlanSignupFee !== null && input.membershipPlanSignupFee !== undefined && input.membershipPlanSignupFee > 0) {
+      addText(`Signup Fee: $${input.membershipPlanSignupFee.toFixed(2)}`, 10);
+    }
+
+    yPosition += 5;
+  }
 
   // ========================================
   // WAIVER CONTENT

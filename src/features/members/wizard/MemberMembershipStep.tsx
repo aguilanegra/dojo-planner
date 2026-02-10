@@ -159,6 +159,8 @@ export const MemberMembershipStep = ({
       membershipPlanFrequency: selectedPlan?.frequency,
       membershipPlanName: selectedPlan?.name,
       membershipPlanIsTrial: selectedPlan?.isTrial ?? undefined,
+      membershipPlanContractLength: selectedPlan?.contractLength,
+      membershipPlanSignupFee: selectedPlan?.signupFee,
     });
     setError(null);
   };

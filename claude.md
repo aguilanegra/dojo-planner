@@ -184,10 +184,11 @@ The Add Member flow is a multi-step modal wizard (`AddMemberModal.tsx`) using th
 7. **Success** — Confirmation
 
 **Key Files:**
-- `src/features/members/wizard/AddMemberModal.tsx` — Wizard orchestrator, handles member + signed waiver creation
+- `src/features/members/wizard/AddMemberModal.tsx` — Wizard orchestrator, handles member + signed waiver creation (includes membership plan snapshot for waiver PDF)
 - `src/features/members/wizard/MemberWaiverStep.tsx` — Fetches waivers for membership, resolves merge field placeholders, captures signature
 - `src/features/waivers/signing/SignatureCanvas.tsx` — Reusable signature capture (react-signature-canvas, supports mouse + touch)
 - `src/hooks/useAddMemberWizard.ts` — Wizard state management hook (step navigation, data, loading, error)
+- `src/services/WaiverPdfService.ts` — Client-side PDF generation with membership details section (plan name, price, frequency, contract length, signup fee)
 
 ### Member Detail Page
 
@@ -456,7 +457,7 @@ await deleteUserWithOrganization();
 - `catalog_item_category` - Item-category associations (M:N)
 - `catalog_item_image` - Product images
 - `waiver_template` - Waiver templates with placeholders, guardian settings, and immutable versioning (`parentId` for archive rows)
-- `signed_waiver` - Signed waiver records with signature data and rendered content
+- `signed_waiver` - Signed waiver records with signature data, rendered content, and membership plan snapshot (name, price, frequency, contract length, signup fee, trial status)
 - `membership_waiver` - Junction table linking memberships to required waivers
 - `waiver_merge_field` - Configurable placeholder fields for waiver templates
 

@@ -64,6 +64,13 @@
       "when": 1738627200000,
       "tag": "0008_waiver-tables",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1739232000000,
+      "tag": "0009_signed-waiver-membership-details",
+      "breakpoints": true
     }
   ]
 }

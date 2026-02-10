@@ -47,6 +47,8 @@ export type AddMemberWizardData = {
   membershipPlanFrequency?: string;
   membershipPlanName?: string;
   membershipPlanIsTrial?: boolean;
+  membershipPlanContractLength?: string;
+  membershipPlanSignupFee?: number;
   // Legacy fields (kept for backwards compatibility)
   subscriptionPlan?: SubscriptionPlan | null;
   subscriptionId?: string;
