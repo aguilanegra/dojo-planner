@@ -161,7 +161,7 @@ export function MembersTable({
   };
 
   const stats = useMemo(() => ({
-    totalMembers: members.filter(m => m.status === 'active').length,
+    totalMembers: members.length,
     totalCancelled: members.filter(m => m.status === 'cancelled').length,
     totalOnHold: members.filter(m => m.status === 'hold').length,
     paidMembers: members.filter(m => m.membershipType === 'monthly' || m.membershipType === 'annual').length,
@@ -212,7 +212,7 @@ export function MembersTable({
       case 'hold':
         return 'secondary';
       case 'cancelled':
-      case 'past due':
+      case 'past_due':
         return 'destructive';
       default:
         return 'secondary';
@@ -221,7 +221,7 @@ export function MembersTable({
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'past due':
+      case 'past_due':
         return 'Past Due';
       default:
         return status.charAt(0).toUpperCase() + status.slice(1);

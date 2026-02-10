@@ -10,6 +10,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useReportCurrentValues, useReportDetail } from '@/hooks/useReportsCache';
 
 type TimePeriod = 'monthly' | 'yearly';
 type ChartType = 'bar' | 'line' | 'area';
@@ -40,6 +42,19 @@ type ReportDefinition = {
   id: ReportType;
   currentValue: string | number;
 };
+
+const CURRENCY_REPORT_IDS: ReportType[] = [
+  'amount-due',
+  'past-due',
+  'payments-last-30-days',
+  'payments-pending',
+  'failed-payments',
+  'income-per-student',
+];
+
+function formatCurrency(value: number): string {
+  return `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
 
 // Helper function to get translated title - uses explicit keys for i18n detection
 function useReportTitle(reportId: ReportType): string {
@@ -86,270 +101,6 @@ function useReportDescription(reportId: ReportType): string {
       return t('report_income_per_student_description');
   }
 }
-
-// Type for monthly data with optional previous year comparison
-type MonthlyDataPoint = {
-  month: string;
-  value: number;
-  previousYear?: number;
-};
-
-type YearlyDataPoint = {
-  year: string;
-  value: number;
-};
-
-// Mock historical data for each report type (test-data, not real)
-// Monthly data includes both current year and previous year values for comparison
-const mockReportData: Record<ReportType, { monthly: MonthlyDataPoint[]; yearly: YearlyDataPoint[] }> = {
-  'accounts-autopay-suspended': {
-    monthly: [
-      { month: 'Jan', value: 3, previousYear: 4 },
-      { month: 'Feb', value: 2, previousYear: 3 },
-      { month: 'Mar', value: 4, previousYear: 2 },
-      { month: 'Apr', value: 2, previousYear: 3 },
-      { month: 'May', value: 1, previousYear: 2 },
-      { month: 'Jun', value: 3, previousYear: 4 },
-      { month: 'Jul', value: 2, previousYear: 3 },
-      { month: 'Aug', value: 1, previousYear: 2 },
-      { month: 'Sep', value: 2, previousYear: 1 },
-      { month: 'Oct', value: 3, previousYear: 2 },
-      { month: 'Nov', value: 2, previousYear: 3 },
-      { month: 'Dec', value: 2, previousYear: 2 },
-    ],
-    yearly: [
-      { year: '2020', value: 15 },
-      { year: '2021', value: 22 },
-      { year: '2022', value: 18 },
-      { year: '2023', value: 12 },
-      { year: '2024', value: 25 },
-    ],
-  },
-  'expiring-credit-cards': {
-    monthly: [
-      { month: 'Jan', value: 8, previousYear: 6 },
-      { month: 'Feb', value: 6, previousYear: 5 },
-      { month: 'Mar', value: 10, previousYear: 8 },
-      { month: 'Apr', value: 5, previousYear: 4 },
-      { month: 'May', value: 7, previousYear: 6 },
-      { month: 'Jun', value: 9, previousYear: 7 },
-      { month: 'Jul', value: 4, previousYear: 5 },
-      { month: 'Aug', value: 6, previousYear: 5 },
-      { month: 'Sep', value: 8, previousYear: 7 },
-      { month: 'Oct', value: 5, previousYear: 6 },
-      { month: 'Nov', value: 7, previousYear: 5 },
-      { month: 'Dec', value: 5, previousYear: 4 },
-    ],
-    yearly: [
-      { year: '2020', value: 45 },
-      { year: '2021', value: 62 },
-      { year: '2022', value: 58 },
-      { year: '2023', value: 72 },
-      { year: '2024', value: 80 },
-    ],
-  },
-  'amount-due': {
-    monthly: [
-      { month: 'Jan', value: 12500, previousYear: 11200 },
-      { month: 'Feb', value: 13200, previousYear: 12100 },
-      { month: 'Mar', value: 14100, previousYear: 12800 },
-      { month: 'Apr', value: 14394, previousYear: 13100 },
-      { month: 'May', value: 13800, previousYear: 12600 },
-      { month: 'Jun', value: 15200, previousYear: 13900 },
-      { month: 'Jul', value: 14800, previousYear: 13500 },
-      { month: 'Aug', value: 15500, previousYear: 14200 },
-      { month: 'Sep', value: 16200, previousYear: 14800 },
-      { month: 'Oct', value: 15800, previousYear: 14500 },
-      { month: 'Nov', value: 14900, previousYear: 13700 },
-      { month: 'Dec', value: 13500, previousYear: 12400 },
-    ],
-    yearly: [
-      { year: '2020', value: 145000 },
-      { year: '2021', value: 162000 },
-      { year: '2022', value: 178000 },
-      { year: '2023', value: 185000 },
-      { year: '2024', value: 173892 },
-    ],
-  },
-  'past-due': {
-    monthly: [
-      { month: 'Jan', value: 380, previousYear: 420 },
-      { month: 'Feb', value: 420, previousYear: 450 },
-      { month: 'Mar', value: 350, previousYear: 380 },
-      { month: 'Apr', value: 451, previousYear: 490 },
-      { month: 'May', value: 520, previousYear: 550 },
-      { month: 'Jun', value: 480, previousYear: 510 },
-      { month: 'Jul', value: 390, previousYear: 420 },
-      { month: 'Aug', value: 410, previousYear: 440 },
-      { month: 'Sep', value: 445, previousYear: 470 },
-      { month: 'Oct', value: 380, previousYear: 410 },
-      { month: 'Nov', value: 420, previousYear: 450 },
-      { month: 'Dec', value: 350, previousYear: 380 },
-    ],
-    yearly: [
-      { year: '2020', value: 4200 },
-      { year: '2021', value: 4800 },
-      { year: '2022', value: 5100 },
-      { year: '2023', value: 4600 },
-      { year: '2024', value: 4996 },
-    ],
-  },
-  'payments-last-30-days': {
-    monthly: [
-      { month: 'Jan', value: 11800, previousYear: 10500 },
-      { month: 'Feb', value: 12400, previousYear: 11200 },
-      { month: 'Mar', value: 13150, previousYear: 11900 },
-      { month: 'Apr', value: 13150, previousYear: 12100 },
-      { month: 'May', value: 12900, previousYear: 11800 },
-      { month: 'Jun', value: 14200, previousYear: 12900 },
-      { month: 'Jul', value: 13800, previousYear: 12500 },
-      { month: 'Aug', value: 14500, previousYear: 13200 },
-      { month: 'Sep', value: 15100, previousYear: 13800 },
-      { month: 'Oct', value: 14700, previousYear: 13400 },
-      { month: 'Nov', value: 13900, previousYear: 12700 },
-      { month: 'Dec', value: 12600, previousYear: 11500 },
-    ],
-    yearly: [
-      { year: '2020', value: 135000 },
-      { year: '2021', value: 152000 },
-      { year: '2022', value: 168000 },
-      { year: '2023', value: 175000 },
-      { year: '2024', value: 162300 },
-    ],
-  },
-  'payments-pending': {
-    monthly: [
-      { month: 'Jan', value: 250, previousYear: 280 },
-      { month: 'Feb', value: 180, previousYear: 220 },
-      { month: 'Mar', value: 320, previousYear: 350 },
-      { month: 'Apr', value: 0, previousYear: 50 },
-      { month: 'May', value: 150, previousYear: 180 },
-      { month: 'Jun', value: 280, previousYear: 300 },
-      { month: 'Jul', value: 120, previousYear: 150 },
-      { month: 'Aug', value: 200, previousYear: 230 },
-      { month: 'Sep', value: 350, previousYear: 380 },
-      { month: 'Oct', value: 180, previousYear: 210 },
-      { month: 'Nov', value: 220, previousYear: 250 },
-      { month: 'Dec', value: 100, previousYear: 130 },
-    ],
-    yearly: [
-      { year: '2020', value: 2800 },
-      { year: '2021', value: 3200 },
-      { year: '2022', value: 2950 },
-      { year: '2023', value: 2600 },
-      { year: '2024', value: 2350 },
-    ],
-  },
-  'failed-payments': {
-    monthly: [
-      { month: 'Jan', value: 1200, previousYear: 1400 },
-      { month: 'Feb', value: 980, previousYear: 1150 },
-      { month: 'Mar', value: 1500, previousYear: 1700 },
-      { month: 'Apr', value: 1835, previousYear: 2100 },
-      { month: 'May', value: 1100, previousYear: 1300 },
-      { month: 'Jun', value: 1400, previousYear: 1600 },
-      { month: 'Jul', value: 900, previousYear: 1100 },
-      { month: 'Aug', value: 1250, previousYear: 1450 },
-      { month: 'Sep', value: 1600, previousYear: 1800 },
-      { month: 'Oct', value: 1350, previousYear: 1550 },
-      { month: 'Nov', value: 1150, previousYear: 1350 },
-      { month: 'Dec', value: 800, previousYear: 1000 },
-    ],
-    yearly: [
-      { year: '2020', value: 12500 },
-      { year: '2021', value: 14200 },
-      { year: '2022', value: 15800 },
-      { year: '2023', value: 13600 },
-      { year: '2024', value: 15065 },
-    ],
-  },
-  'income-per-student': {
-    monthly: [
-      { month: 'Jan', value: 105, previousYear: 98 },
-      { month: 'Feb', value: 112, previousYear: 104 },
-      { month: 'Mar', value: 118, previousYear: 110 },
-      { month: 'Apr', value: 118, previousYear: 109 },
-      { month: 'May', value: 115, previousYear: 107 },
-      { month: 'Jun', value: 125, previousYear: 116 },
-      { month: 'Jul', value: 122, previousYear: 113 },
-      { month: 'Aug', value: 128, previousYear: 119 },
-      { month: 'Sep', value: 132, previousYear: 122 },
-      { month: 'Oct', value: 129, previousYear: 120 },
-      { month: 'Nov', value: 123, previousYear: 114 },
-      { month: 'Dec', value: 114, previousYear: 106 },
-    ],
-    yearly: [
-      { year: '2020', value: 1080 },
-      { year: '2021', value: 1220 },
-      { year: '2022', value: 1350 },
-      { year: '2023', value: 1420 },
-      { year: '2024', value: 1441 },
-    ],
-  },
-};
-
-// Mock insights for each report type (test-data, not real)
-const mockInsights: Record<ReportType, string[]> = {
-  'accounts-autopay-suspended': [
-    'Current suspended accounts represent 1.8% of total active memberships',
-    'Most suspensions occur due to expired payment methods',
-    'Average time to resolve suspension is 5 business days',
-    'Sending reminder emails 7 days before expiration reduces suspensions by 35%',
-  ],
-  'expiring-credit-cards': [
-    '5 cards are expiring in the next 60 days',
-    'Proactive outreach to members with expiring cards has 78% update rate',
-    'Members with updated payment methods have 12% higher retention',
-    'Consider implementing card updater service to reduce manual updates',
-  ],
-  'amount-due': [
-    '$14,394.20 expected in the next 30 days',
-    'This represents a 3.2% increase from previous month',
-    '92% of expected payments historically collected on time',
-    'Early payment reminders increase on-time collection by 15%',
-  ],
-  'past-due': [
-    'Total past due amount is $450.62 across 4 members',
-    'Average days past due is 18 days',
-    'Personalized payment plans recover 65% of past due amounts',
-    'Members past due more than 60 days have 40% cancellation rate',
-  ],
-  'payments-last-30-days': [
-    '$13,150.44 collected in the last 30 days',
-    'This is 98.2% of expected collections',
-    'Card payments account for 82% of total collections',
-    'Average transaction value is $145.67',
-  ],
-  'payments-pending': [
-    'No payments are currently pending processing',
-    'Average pending duration is 1.2 business days',
-    'ACH transfers typically clear within 3-5 business days',
-    'Consider faster payment processing for improved cash flow',
-  ],
-  'failed-payments': [
-    '$1,834.67 in failed payments over the last 30 days',
-    'Insufficient funds accounts for 62% of failures',
-    'Automatic retry within 3 days recovers 45% of failed payments',
-    'Members with 2+ failures have 3x higher churn risk',
-  ],
-  'income-per-student': [
-    'Average income per student is $118.47 over 30 days',
-    'This is 2.5% higher than the same period last year',
-    'Top tier members generate 3.2x average income',
-    'Private lessons add an average of $35 per participating student',
-  ],
-};
-
-const reportDefinitions: ReportDefinition[] = [
-  { id: 'accounts-autopay-suspended', currentValue: 2 },
-  { id: 'expiring-credit-cards', currentValue: 5 },
-  { id: 'amount-due', currentValue: '$14,394.20' },
-  { id: 'past-due', currentValue: '$450.62' },
-  { id: 'payments-last-30-days', currentValue: '$13,150.44' },
-  { id: 'payments-pending', currentValue: '$0.00' },
-  { id: 'failed-payments', currentValue: '$1,834.67' },
-  { id: 'income-per-student', currentValue: '$118.47' },
-];
 
 function ReportCard({ report, onClick }: { report: ReportDefinition; onClick: () => void }) {
   const title = useReportTitle(report.id);
@@ -548,34 +299,44 @@ function ReportDetail({ reportId, onBack }: { reportId: ReportType; onBack: () =
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('monthly');
   const [showComparison, setShowComparison] = useState(false);
 
-  const report = useMemo(
-    () => reportDefinitions.find(r => r.id === reportId),
-    [reportId],
-  );
+  const { chartData: rawChartData, insights, loading } = useReportDetail(reportId);
+
+  const { data: currentValues } = useReportCurrentValues();
+
+  const currentValue = useMemo(() => {
+    if (!currentValues) {
+      return null;
+    }
+    const keyMap: Record<ReportType, keyof typeof currentValues> = {
+      'accounts-autopay-suspended': 'autopaysSuspended',
+      'expiring-credit-cards': 'expiringCreditCards',
+      'amount-due': 'amountDue',
+      'past-due': 'pastDue',
+      'payments-last-30-days': 'paymentsLast30Days',
+      'payments-pending': 'paymentsPending',
+      'failed-payments': 'failedPayments',
+      'income-per-student': 'incomePerStudent',
+    };
+    const raw = currentValues[keyMap[reportId]];
+    return CURRENCY_REPORT_IDS.includes(reportId) ? formatCurrency(raw) : raw;
+  }, [currentValues, reportId]);
 
   const chartData = useMemo(() => {
-    const data = mockReportData[reportId];
-    if (!data) {
+    if (!rawChartData) {
       return [];
     }
-    return timePeriod === 'monthly' ? data.monthly : data.yearly;
-  }, [reportId, timePeriod]);
+    return timePeriod === 'monthly' ? rawChartData.monthly : rawChartData.yearly;
+  }, [rawChartData, timePeriod]);
 
   // Check if previous year data is available (only in monthly view)
   const hasPreviousYearData = useMemo(() => {
-    if (timePeriod !== 'monthly') {
+    if (timePeriod !== 'monthly' || !rawChartData) {
       return false;
     }
-    const data = mockReportData[reportId];
-    if (!data) {
-      return false;
-    }
-    return data.monthly.some(d => d.previousYear !== undefined);
-  }, [reportId, timePeriod]);
+    return rawChartData.monthly.some(d => d.previousYear !== undefined);
+  }, [rawChartData, timePeriod]);
 
   const xKey = timePeriod === 'monthly' ? 'month' : 'year';
-
-  const insights = mockInsights[reportId] || [];
 
   const formatValue = useCallback((value: number) => {
     // Format currency values appropriately
@@ -591,14 +352,15 @@ function ReportDetail({ reportId, onBack }: { reportId: ReportType; onBack: () =
     return value.toString();
   }, [reportId]);
 
-  if (!report) {
+  if (loading) {
     return (
       <div className="space-y-6">
-        <Button variant="ghost" onClick={onBack}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          {t('back_to_reports')}
-        </Button>
-        <div>{t('no_data')}</div>
+        <Skeleton className="h-9 w-32" />
+        <Skeleton className="h-10 w-64" />
+        <div className="grid gap-6 lg:grid-cols-3">
+          <Skeleton className="h-96 lg:col-span-2" />
+          <Skeleton className="h-64" />
+        </div>
       </div>
     );
   }
@@ -653,10 +415,12 @@ function ReportDetail({ reportId, onBack }: { reportId: ReportType; onBack: () =
           <ResponsiveContainer width="100%" height={300}>
             {renderChart(reportId, chartData, xKey, formatValue, showComparison)}
           </ResponsiveContainer>
-          <div className="mt-4 text-center">
-            <span className="text-3xl font-bold text-primary">{report.currentValue}</span>
-            <span className="ml-2 text-sm text-muted-foreground">Current Value</span>
-          </div>
+          {currentValue !== null && (
+            <div className="mt-4 text-center">
+              <span className="text-3xl font-bold text-primary">{currentValue}</span>
+              <span className="ml-2 text-sm text-muted-foreground">Current Value</span>
+            </div>
+          )}
         </Card>
 
         {/* Insights Section */}
@@ -683,6 +447,24 @@ export function ReportsPage() {
     () => (searchParams.get('report') as ReportType) || null,
   );
 
+  const { data: currentValues, loading } = useReportCurrentValues();
+
+  const reportDefinitions: ReportDefinition[] = useMemo(() => {
+    if (!currentValues) {
+      return [];
+    }
+    return [
+      { id: 'accounts-autopay-suspended', currentValue: currentValues.autopaysSuspended },
+      { id: 'expiring-credit-cards', currentValue: currentValues.expiringCreditCards },
+      { id: 'amount-due', currentValue: formatCurrency(currentValues.amountDue) },
+      { id: 'past-due', currentValue: formatCurrency(currentValues.pastDue) },
+      { id: 'payments-last-30-days', currentValue: formatCurrency(currentValues.paymentsLast30Days) },
+      { id: 'payments-pending', currentValue: formatCurrency(currentValues.paymentsPending) },
+      { id: 'failed-payments', currentValue: formatCurrency(currentValues.failedPayments) },
+      { id: 'income-per-student', currentValue: formatCurrency(currentValues.incomePerStudent) },
+    ];
+  }, [currentValues]);
+
   const handleReportClick = useCallback((reportId: ReportType) => {
     setSelectedReport(reportId);
     // Update URL without navigation
@@ -701,6 +483,25 @@ export function ReportsPage() {
 
   if (selectedReport) {
     return <ReportDetail reportId={selectedReport} onBack={handleBack} />;
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-48" />
+        <Skeleton className="h-5 w-72" />
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <Skeleton className="h-40 w-full" />
+          <Skeleton className="h-40 w-full" />
+          <Skeleton className="h-40 w-full" />
+          <Skeleton className="h-40 w-full" />
+          <Skeleton className="h-40 w-full" />
+          <Skeleton className="h-40 w-full" />
+          <Skeleton className="h-40 w-full" />
+          <Skeleton className="h-40 w-full" />
+        </div>
+      </div>
+    );
   }
 
   return (

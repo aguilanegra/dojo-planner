@@ -18,10 +18,13 @@ import {
 } from './Catalog';
 import { tags as classTags, list as listClasses } from './Classes';
 import { listActive as listActiveCoupons, list as listCoupons } from './Coupons';
+import { earningsChart, financialStats, memberAverageChart, membershipStats } from './Dashboard';
 import { list as listEvents } from './Events';
 import { addMembership, changeMembership, create as createMember, listAllMembershipPlans, listMembershipPlans, remove as removeMember, restore as restoreMember, updateLastAccessed, update as updateMember, updateContactInfo as updateMemberContactInfo } from './Member';
 import { list as listMembers } from './Members';
+import { chartData as reportChartData, currentValues as reportCurrentValues, insights as reportInsights } from './Reports';
 import { listAll as listAllTags, listClassTags, listMembershipTags } from './Tags';
+import { list as listTransactions } from './Transactions';
 import {
   addWaiverToMembership,
   createMergeFieldHandler,
@@ -72,6 +75,20 @@ export const router = {
     listAll: listAllTags,
     listClassTags,
     listMembershipTags,
+  },
+  transactions: {
+    list: listTransactions,
+  },
+  dashboard: {
+    membershipStats,
+    financialStats,
+    memberAverageChart,
+    earningsChart,
+  },
+  reports: {
+    currentValues: reportCurrentValues,
+    chartData: reportChartData,
+    insights: reportInsights,
   },
   coupons: {
     list: listCoupons,

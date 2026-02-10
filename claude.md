@@ -49,6 +49,9 @@ src/
 │   ├── Events.ts          # Events list
 │   ├── Tags.ts            # Tags (class, membership, all)
 │   ├── Coupons.ts         # Coupons list & active
+│   ├── Transactions.ts    # Transaction listing with filters
+│   ├── Dashboard.ts       # Membership stats, financial stats, chart data
+│   ├── Reports.ts         # Report values, chart data, dynamic insights
 │   └── Waivers.ts         # Waiver templates, signing, versioning, membership associations, merge fields
 │
 ├── services/              # Business logic layer
@@ -61,6 +64,9 @@ src/
 │   ├── MembersService.ts  # Member operations
 │   ├── OrganizationService.ts # Org & Stripe customer storage
 │   ├── TagsService.ts     # Tag queries with usage counts
+│   ├── TransactionsService.ts # Transaction listing with member joins
+│   ├── DashboardService.ts # Membership stats, financial stats, member average & earnings chart data
+│   ├── ReportsService.ts  # Report current values, chart data, dynamically computed insights
 │   ├── WaiversService.ts  # Waiver template CRUD, versioning, signed waivers, merge fields, placeholder resolution
 │   └── WaiverPdfService.ts # On-demand PDF generation for signed waivers
 │
@@ -437,9 +443,10 @@ await deleteUserWithOrganization();
 - `event_billing` - Event pricing tiers
 - `tag` - Polymorphic tags for classes/memberships/events
 - `coupon` - Discount codes
+- `transaction` - Financial transactions (membership payments, signup fees, event registrations, refunds, adjustments)
 - `attendance` - Check-in records
 - `audit_event` - SOC2 compliance audit logging
-- `payment_method` - Saved payment methods
+- `payment_method` - Saved payment methods (card, bank_transfer, cash, check)
 - `address` - Member addresses
 - `note` - Member notes
 - `family_member` - Family relationships
@@ -486,7 +493,7 @@ npm run db:studio    # Open Drizzle Studio
 
 ### Database Seed Script
 
-The seed script (`src/scripts/seed.ts`) populates the database with sample data for development and testing. It seeds programs, classes, events, coupons, membership plans, tags, and sample members.
+The seed script (`src/scripts/seed.ts`) populates the database with sample data for development and testing. It seeds programs, classes, events, coupons, membership plans, tags, sample members, payment methods, and transactions.
 
 **Usage:**
 
@@ -532,7 +539,9 @@ DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5432/postgres" npx tsx sr
 - 2 events with sessions and billing tiers
 - 12 coupons (various types and statuses)
 - 6 membership plans
-- 8 sample members with memberships
+- 8 sample members with memberships (with realistic startDate, firstPaymentDate, nextPaymentDate)
+- ~7 payment methods (one per active/trial/past_due member)
+- ~200 transactions spanning Jan 2024 – present (membership payments, signup fees, event registrations, refunds, adjustments)
 - Catalog items with variants, categories, and images
 - 3 waiver templates (Standard Adult, Kids Program, Free Trial) with membership associations
 - 2 waiver merge fields (academy, academy_owners)
