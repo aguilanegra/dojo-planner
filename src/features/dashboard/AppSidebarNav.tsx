@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';
 import { Switch } from '@/components/ui/switch';
+import { isNavItemActive } from './isNavItemActive';
 
 export const AppSidebarNav = (props: {
   label?: string;
@@ -27,27 +28,7 @@ export const AppSidebarNav = (props: {
   const pathname = usePathname();
   const locale = useLocale();
 
-  const isActive = (url: string) => {
-    const pathWithoutLocale = pathname.startsWith(`/${locale}`) ? pathname.slice(`/${locale}`.length) : pathname;
-
-    // Exact match
-    if (pathWithoutLocale === url) {
-      return true;
-    }
-
-    // Sub-route matching: only match if there's a deeper path level
-    // This prevents /dashboard from matching /dashboard/members
-    const subRoutePrefix = `${url}/`;
-    if (pathWithoutLocale.startsWith(subRoutePrefix)) {
-      // Extract what comes after the url/
-      const remaining = pathWithoutLocale.slice(subRoutePrefix.length);
-      // Only consider it a sub-route if it has additional path segments (contains another /)
-      // e.g., "members/123/edit" matches /dashboard/members, but "members" doesn't match /dashboard
-      return remaining.includes('/');
-    }
-
-    return false;
-  };
+  const isActive = (url: string) => isNavItemActive(pathname, locale, url);
 
   if (props.hidden) {
     return null;

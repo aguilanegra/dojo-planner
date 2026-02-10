@@ -141,7 +141,7 @@ export function ChangeMembershipModal({
       const fetchPlans = async () => {
         setIsFetchingPlans(true);
         try {
-          const result = await client.member.listMembershipPlans({});
+          const result = await client.member.listMembershipPlans();
           // Filter to only show active plans and use mocks as fallback
           const activePlans = result.plans.filter(plan => plan.isActive);
           if (activePlans.length > 0) {
