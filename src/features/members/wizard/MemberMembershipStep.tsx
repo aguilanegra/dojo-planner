@@ -131,7 +131,7 @@ export const MemberMembershipStep = ({
     const fetchPlans = async () => {
       setIsFetchingPlans(true);
       try {
-        const result = await client.member.listMembershipPlans({});
+        const result = await client.member.listMembershipPlans();
         // Filter to only show active plans
         const activePlans = result.plans.filter(plan => plan.isActive);
         if (activePlans.length > 0) {
