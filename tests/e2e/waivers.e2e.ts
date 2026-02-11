@@ -32,10 +32,7 @@ test.describe('Waivers Management', () => {
     const waiverContent = 'I, the undersigned, acknowledge the inherent risks associated with martial arts training and agree to release and hold harmless the academy from any claims.';
     await page.getByPlaceholder('Enter the full waiver text...').fill(waiverContent);
 
-    // Dialog may be tall — button outside viewport. Use evaluate to call native .click()
-    // which works in both Chromium and Firefox (dispatchEvent doesn't trigger React in Firefox,
-    // and Playwright's click/force:true fails when element is outside viewport)
-    await page.getByRole('button', { name: /create waiver/i }).evaluate((el: HTMLElement) => el.click());
+    await page.getByRole('button', { name: /create waiver/i }).click();
     await page.waitForLoadState('domcontentloaded');
 
     await expect(page.getByText('Standard Liability Waiver')).toBeVisible({ timeout: 10000 });
@@ -145,8 +142,7 @@ test.describe('Waivers Management', () => {
     const content = 'This is a temporary waiver content that will be deleted after creation. It needs to be at least one hundred characters long to pass validation requirements.';
     await page.getByPlaceholder('Enter the full waiver text...').fill(content);
 
-    // Dialog may be tall — button outside viewport. Use evaluate to call native .click()
-    await page.getByRole('button', { name: /create waiver/i }).evaluate((el: HTMLElement) => el.click());
+    await page.getByRole('button', { name: /create waiver/i }).click();
     await page.waitForLoadState('domcontentloaded');
 
     // Navigate to detail page via the Edit button on the waiver card
