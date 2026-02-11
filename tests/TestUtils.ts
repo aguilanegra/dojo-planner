@@ -81,7 +81,12 @@ export const signIn = async (page: Page) => {
       page,
       emailAddress: process.env.E2E_CLERK_USER_USERNAME!,
     });
-    await page.goto('/dashboard');
+    try {
+      await page.goto('/dashboard');
+    } catch {
+      // Retry once on NS_BINDING_ABORTED (Firefox frame detach during navigation)
+      await page.goto('/dashboard');
+    }
   }
 
   await page.waitForLoadState('domcontentloaded');
