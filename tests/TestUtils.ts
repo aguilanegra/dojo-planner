@@ -1,46 +1,56 @@
 import type { Page } from '@playwright/test';
 import assert from 'node:assert';
-import { clerkClient } from '@clerk/nextjs/server';
-import { clerk, setupClerkTestingToken } from '@clerk/testing/playwright';
+import { createClerkClient } from '@clerk/backend';
+import { clerk } from '@clerk/testing/playwright';
 import { faker } from '@faker-js/faker';
 import { expect } from '@playwright/test';
 
-export const createUserWithOrganization = async (page: Page) => {
-  await setupClerkTestingToken({ page });
+import { readCredentials } from './e2e-credentials';
 
-  await page.goto('/sign-up');
+export const loadSharedCredentials = () => {
+  const creds = readCredentials();
+  process.env.E2E_CLERK_USER_USERNAME = creds.username;
+  process.env.E2E_CLERK_USER_PASSWORD = creds.password;
+};
 
-  const email = faker.internet.email();
-  // Any email with the +clerk_test subaddress is a test email address
-  process.env.E2E_CLERK_USER_USERNAME = `${email.split('@')[0]}+clerk_test@${email.split('@')[1]}`;
+export const createUserWithOrganization = async () => {
+  const slug = faker.string.alphanumeric(10).toLowerCase();
+  process.env.E2E_CLERK_USER_USERNAME = `e2e_${slug}+clerk_test@example.com`;
   process.env.E2E_CLERK_USER_PASSWORD = 'password+clerk_test';
 
-  // Wait for the email to be "sent" to avoid the error: "You need to send a verification code before attempting to verify."
-  const prepareVerification = page.waitForResponse(res => res.url().includes('prepare_verification') && res.status() === 200);
+  const authClient = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY! });
 
-  await page.getByLabel('Email address').fill(process.env.E2E_CLERK_USER_USERNAME);
-  await page.getByLabel('Password', { exact: true }).fill(process.env.E2E_CLERK_USER_PASSWORD);
-  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  // Clean up any orphaned user from a previous failed run
+  const { data: existing } = await authClient.users.getUserList({
+    emailAddress: [process.env.E2E_CLERK_USER_USERNAME],
+  });
+  for (const user of existing) {
+    const { data: orgs } = await authClient.users.getOrganizationMembershipList({ userId: user.id });
+    for (const org of orgs) {
+      await authClient.organizations.deleteOrganization(org.organization.id);
+    }
+    await authClient.users.deleteUser(user.id);
+  }
 
-  await expect(page.getByText('Verify your email')).toBeVisible();
+  // Create user via Backend API (faster and immune to UI changes)
+  const user = await authClient.users.createUser({
+    emailAddress: [process.env.E2E_CLERK_USER_USERNAME],
+    password: process.env.E2E_CLERK_USER_PASSWORD,
+    username: `e2e_${slug}`,
+    skipPasswordChecks: true,
+  });
 
-  await prepareVerification;
-
-  // The verification code for test emails is `424242`
-  await page.getByLabel('Enter verification code').fill('424242');
-
-  await expect(page.getByRole('heading', { name: 'Create Organization' })).toBeVisible();
-
-  await page.getByLabel('Name').fill(faker.company.name());
-  await page.getByRole('button', { name: 'Create Organization' }).click();
-
-  await expect(page.getByText('Main navigation')).toBeVisible();
+  // Create organization and add user as admin
+  await authClient.organizations.createOrganization({
+    name: faker.company.name(),
+    createdBy: user.id,
+  });
 };
 
 export const deleteUserWithOrganization = async () => {
   assert(process.env.E2E_CLERK_USER_USERNAME, 'E2E_CLERK_USER_USERNAME is not set');
 
-  const authClient = await clerkClient();
+  const authClient = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY! });
   const { data } = await authClient.users.getUserList({
     emailAddress: [process.env.E2E_CLERK_USER_USERNAME],
   });
@@ -59,32 +69,47 @@ export const deleteUserWithOrganization = async () => {
 };
 
 export const signIn = async (page: Page) => {
-  assert(process.env.E2E_CLERK_USER_USERNAME, 'E2E_CLERK_USER_USERNAME is not set');
-  assert(process.env.E2E_CLERK_USER_PASSWORD, 'E2E_CLERK_USER_PASSWORD is not set');
-
-  await page.goto('/sign-up');
-  await clerk.signIn({
-    page,
-    signInParams: {
-      strategy: 'password',
-      identifier: process.env.E2E_CLERK_USER_USERNAME,
-      password: process.env.E2E_CLERK_USER_PASSWORD,
-    },
-  });
+  // Try navigating to dashboard first — if storageState has a valid
+  // session (from global setup), this will work immediately.
   await page.goto('/dashboard');
+
+  // If we ended up on /sign-in, the session is stale or this test
+  // created its own user (e.g. auth.e2e.ts). Sign in programmatically
+  // using Clerk's email-based approach (signInTokens + ticket strategy).
+  if (page.url().includes('/sign-in')) {
+    await clerk.signIn({
+      page,
+      emailAddress: process.env.E2E_CLERK_USER_USERNAME!,
+    });
+    await page.goto('/dashboard');
+  }
+
+  await page.waitForLoadState('domcontentloaded');
 };
 
-export const createOrganization = async (page: Page) => {
-  await page.getByLabel('Open organization switcher').click();
-  await page.getByRole('menuitem', { name: 'Create organization' }).click();
+export const navigateTo = async (page: Page, path: string) => {
+  try {
+    await page.goto(path);
+  } catch {
+    // Retry once on net::ERR_ABORTED (transient navigation abort)
+    await page.goto(path);
+  }
+  await page.waitForLoadState('domcontentloaded');
+};
 
-  const companyName = faker.company.name();
-  await page.getByLabel('Name').fill(companyName);
-  await page.getByRole('button', { name: 'Create organization' }).click();
+export const expectToast = async (page: Page, text: string | RegExp) => {
+  await expect(page.getByText(text)).toBeVisible({ timeout: 10000 });
+};
 
-  await expect(page.getByText('Choose an organization')).toBeVisible();
+export const createProgramViaUI = async (page: Page, name: string, description: string) => {
+  await page.goto('/dashboard/programs');
+  await page.waitForLoadState('domcontentloaded');
+  await page.getByRole('button', { name: /add new program/i }).click();
 
-  await page.getByText(companyName).click();
+  await expect(page.getByRole('heading', { name: /add program/i })).toBeVisible();
 
-  await expect(page.getByLabel('Open organization switcher').getByText(companyName)).toBeVisible();
+  await page.getByLabel(/program name/i).fill(name);
+  await page.getByLabel(/description/i).fill(description);
+  await page.getByRole('button', { name: /add program/i }).click();
+  await page.waitForLoadState('domcontentloaded');
 };

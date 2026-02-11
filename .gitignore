@@ -61,3 +61,4 @@ build-archive.log
 /playwright-report/
 /playwright/.cache/
 .playwright/auth.json
+.playwright/e2e-credentials.json

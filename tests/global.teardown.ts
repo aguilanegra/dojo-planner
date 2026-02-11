@@ -1,6 +1,16 @@
 import { test as teardown } from '@playwright/test';
 
+import { cleanupCredentials, readCredentials } from './e2e-credentials';
+import { deleteUserWithOrganization } from './TestUtils';
+
 teardown('cleanup', async () => {
-  // Global teardown after all tests
-  // Individual tests handle their own data cleanup through fixtures
+  try {
+    const creds = readCredentials();
+    process.env.E2E_CLERK_USER_USERNAME = creds.username;
+    await deleteUserWithOrganization();
+  } catch (error) {
+    console.warn('Global teardown failed:', error);
+  } finally {
+    cleanupCredentials();
+  }
 });
