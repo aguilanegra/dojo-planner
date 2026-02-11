@@ -168,6 +168,12 @@ export const AddMemberModal = ({ isOpen, onCloseAction, availableCoupons = [] }:
           ...(wizard.data.dateOfBirth && { memberDateOfBirth: wizard.data.dateOfBirth }),
           ...(memberAgeAtSigning !== undefined && { memberAgeAtSigning }),
           renderedContent: wizard.data.waiverRenderedContent,
+          ...(wizard.data.membershipPlanName && { membershipPlanName: wizard.data.membershipPlanName }),
+          ...(wizard.data.membershipPlanPrice !== undefined && { membershipPlanPrice: wizard.data.membershipPlanPrice }),
+          ...(wizard.data.membershipPlanFrequency && { membershipPlanFrequency: wizard.data.membershipPlanFrequency }),
+          ...(wizard.data.membershipPlanContractLength && { membershipPlanContractLength: wizard.data.membershipPlanContractLength }),
+          ...(wizard.data.membershipPlanSignupFee !== undefined && { membershipPlanSignupFee: wizard.data.membershipPlanSignupFee }),
+          ...(wizard.data.membershipPlanIsTrial !== undefined && { membershipPlanIsTrial: wizard.data.membershipPlanIsTrial }),
         });
 
         console.info('[Add Member Wizard] Signed waiver created for member:', result.id);

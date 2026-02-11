@@ -43,6 +43,12 @@ export type SignedWaiver = {
   waiverTemplateVersion: number;
   memberId: string;
   memberMembershipId: string | null;
+  membershipPlanName: string | null;
+  membershipPlanPrice: number | null;
+  membershipPlanFrequency: string | null;
+  membershipPlanContractLength: string | null;
+  membershipPlanSignupFee: number | null;
+  membershipPlanIsTrial: boolean | null;
   signatureDataUrl: string;
   signedByName: string;
   signedByEmail: string | null;
@@ -99,6 +105,12 @@ type CreateSignedWaiverInput = {
   waiverTemplateId: string;
   memberId: string;
   memberMembershipId?: string;
+  membershipPlanName?: string;
+  membershipPlanPrice?: number;
+  membershipPlanFrequency?: string;
+  membershipPlanContractLength?: string;
+  membershipPlanSignupFee?: number;
+  membershipPlanIsTrial?: boolean;
   signatureDataUrl: string;
   signedByName: string;
   signedByEmail?: string;
@@ -537,6 +549,12 @@ export async function getMemberSignedWaivers(memberId: string): Promise<SignedWa
     waiverTemplateVersion: w.waiverTemplateVersion,
     memberId: w.memberId,
     memberMembershipId: w.memberMembershipId,
+    membershipPlanName: w.membershipPlanName,
+    membershipPlanPrice: w.membershipPlanPrice,
+    membershipPlanFrequency: w.membershipPlanFrequency,
+    membershipPlanContractLength: w.membershipPlanContractLength,
+    membershipPlanSignupFee: w.membershipPlanSignupFee,
+    membershipPlanIsTrial: w.membershipPlanIsTrial,
     signatureDataUrl: w.signatureDataUrl,
     signedByName: w.signedByName,
     signedByEmail: w.signedByEmail,
@@ -576,6 +594,12 @@ export async function getSignedWaiverById(waiverId: string, organizationId: stri
     waiverTemplateVersion: w.waiverTemplateVersion,
     memberId: w.memberId,
     memberMembershipId: w.memberMembershipId,
+    membershipPlanName: w.membershipPlanName,
+    membershipPlanPrice: w.membershipPlanPrice,
+    membershipPlanFrequency: w.membershipPlanFrequency,
+    membershipPlanContractLength: w.membershipPlanContractLength,
+    membershipPlanSignupFee: w.membershipPlanSignupFee,
+    membershipPlanIsTrial: w.membershipPlanIsTrial,
     signatureDataUrl: w.signatureDataUrl,
     signedByName: w.signedByName,
     signedByEmail: w.signedByEmail,
@@ -623,6 +647,12 @@ export async function createSignedWaiver(
       waiverTemplateVersion: templateVersion,
       memberId: input.memberId,
       memberMembershipId: input.memberMembershipId,
+      membershipPlanName: input.membershipPlanName,
+      membershipPlanPrice: input.membershipPlanPrice,
+      membershipPlanFrequency: input.membershipPlanFrequency,
+      membershipPlanContractLength: input.membershipPlanContractLength,
+      membershipPlanSignupFee: input.membershipPlanSignupFee,
+      membershipPlanIsTrial: input.membershipPlanIsTrial,
       signatureDataUrl: input.signatureDataUrl,
       signedByName: input.signedByName,
       signedByEmail: input.signedByEmail,
@@ -650,6 +680,12 @@ export async function createSignedWaiver(
     waiverTemplateVersion: w.waiverTemplateVersion,
     memberId: w.memberId,
     memberMembershipId: w.memberMembershipId,
+    membershipPlanName: w.membershipPlanName,
+    membershipPlanPrice: w.membershipPlanPrice,
+    membershipPlanFrequency: w.membershipPlanFrequency,
+    membershipPlanContractLength: w.membershipPlanContractLength,
+    membershipPlanSignupFee: w.membershipPlanSignupFee,
+    membershipPlanIsTrial: w.membershipPlanIsTrial,
     signatureDataUrl: w.signatureDataUrl,
     signedByName: w.signedByName,
     signedByEmail: w.signedByEmail,

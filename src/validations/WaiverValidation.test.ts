@@ -659,6 +659,110 @@ describe('WaiverValidation', () => {
 
       expect(result.success).toBe(true);
     });
+
+    it('should accept optional membershipPlanName', () => {
+      const result = CreateSignedWaiverValidation.safeParse({
+        ...validSignedWaiver,
+        membershipPlanName: '12 Month Commitment (Gold)',
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it('should reject membershipPlanName exceeding 200 characters', () => {
+      const result = CreateSignedWaiverValidation.safeParse({
+        ...validSignedWaiver,
+        membershipPlanName: 'a'.repeat(201),
+      });
+
+      expect(result.success).toBe(false);
+    });
+
+    it('should accept optional membershipPlanPrice', () => {
+      const result = CreateSignedWaiverValidation.safeParse({
+        ...validSignedWaiver,
+        membershipPlanPrice: 150,
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it('should reject negative membershipPlanPrice', () => {
+      const result = CreateSignedWaiverValidation.safeParse({
+        ...validSignedWaiver,
+        membershipPlanPrice: -10,
+      });
+
+      expect(result.success).toBe(false);
+    });
+
+    it('should accept membershipPlanPrice of 0', () => {
+      const result = CreateSignedWaiverValidation.safeParse({
+        ...validSignedWaiver,
+        membershipPlanPrice: 0,
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it('should accept optional membershipPlanFrequency', () => {
+      const result = CreateSignedWaiverValidation.safeParse({
+        ...validSignedWaiver,
+        membershipPlanFrequency: 'Monthly',
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it('should accept optional membershipPlanContractLength', () => {
+      const result = CreateSignedWaiverValidation.safeParse({
+        ...validSignedWaiver,
+        membershipPlanContractLength: '12 Months',
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it('should accept optional membershipPlanSignupFee', () => {
+      const result = CreateSignedWaiverValidation.safeParse({
+        ...validSignedWaiver,
+        membershipPlanSignupFee: 35,
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it('should reject negative membershipPlanSignupFee', () => {
+      const result = CreateSignedWaiverValidation.safeParse({
+        ...validSignedWaiver,
+        membershipPlanSignupFee: -5,
+      });
+
+      expect(result.success).toBe(false);
+    });
+
+    it('should accept optional membershipPlanIsTrial', () => {
+      const result = CreateSignedWaiverValidation.safeParse({
+        ...validSignedWaiver,
+        membershipPlanIsTrial: true,
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it('should accept all membership plan fields together', () => {
+      const result = CreateSignedWaiverValidation.safeParse({
+        ...validSignedWaiver,
+        membershipPlanName: '12 Month Commitment (Gold)',
+        membershipPlanPrice: 150,
+        membershipPlanFrequency: 'Monthly',
+        membershipPlanContractLength: '12 Months',
+        membershipPlanSignupFee: 35,
+        membershipPlanIsTrial: false,
+      });
+
+      expect(result.success).toBe(true);
+    });
   });
 
   describe('GetSignedWaiverValidation', () => {

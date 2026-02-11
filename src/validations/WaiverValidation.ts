@@ -56,6 +56,12 @@ export const CreateSignedWaiverValidation = z.object({
   renderedContent: z.string().min(1, 'Rendered waiver content is required'),
   ipAddress: z.string().optional(),
   userAgent: z.string().optional(),
+  membershipPlanName: z.string().max(200).optional(),
+  membershipPlanPrice: z.number().min(0).optional(),
+  membershipPlanFrequency: z.string().max(50).optional(),
+  membershipPlanContractLength: z.string().max(50).optional(),
+  membershipPlanSignupFee: z.number().min(0).optional(),
+  membershipPlanIsTrial: z.boolean().optional(),
 });
 
 export const GetSignedWaiverValidation = z.object({

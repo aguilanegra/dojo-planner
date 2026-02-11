@@ -690,6 +690,12 @@ export default function EditMemberPage() {
         signedByRelationship: waiver.signedByRelationship,
         signedAt,
         ipAddress: waiver.ipAddress,
+        membershipPlanName: waiver.membershipPlanName,
+        membershipPlanPrice: waiver.membershipPlanPrice,
+        membershipPlanFrequency: waiver.membershipPlanFrequency,
+        membershipPlanContractLength: waiver.membershipPlanContractLength,
+        membershipPlanSignupFee: waiver.membershipPlanSignupFee,
+        membershipPlanIsTrial: waiver.membershipPlanIsTrial,
       },
       generatePdfFilename({
         memberFirstName: waiver.memberFirstName,

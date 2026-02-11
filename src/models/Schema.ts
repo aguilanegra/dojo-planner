@@ -270,6 +270,14 @@ export const signedWaiverSchema = pgTable(
     memberId: text('member_id').references(() => memberSchema.id).notNull(),
     memberMembershipId: text('member_membership_id').references(() => memberMembershipSchema.id), // Optional link to specific membership
 
+    // Membership plan details at time of signing (snapshot for legal compliance)
+    membershipPlanName: text('membership_plan_name'), // e.g., '12 Month Commitment (Gold)'
+    membershipPlanPrice: real('membership_plan_price'), // e.g., 150.00
+    membershipPlanFrequency: text('membership_plan_frequency'), // e.g., 'Monthly', 'Annual', 'None'
+    membershipPlanContractLength: text('membership_plan_contract_length'), // e.g., '12 Months', 'Month-to-Month'
+    membershipPlanSignupFee: real('membership_plan_signup_fee'), // e.g., 35.00
+    membershipPlanIsTrial: boolean('membership_plan_is_trial'), // e.g., false
+
     // Signature data
     signatureDataUrl: text('signature_data_url').notNull(), // Base64 signature image from canvas
     signedByName: text('signed_by_name').notNull(), // Name of the person who signed

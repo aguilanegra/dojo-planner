@@ -345,6 +345,8 @@ describe('MemberMembershipStep', () => {
         membershipPlanFrequency: 'Monthly',
         membershipPlanName: '12 Month Commitment (Gold)',
         membershipPlanIsTrial: false,
+        membershipPlanContractLength: '12 Months',
+        membershipPlanSignupFee: 35,
       });
     });
 
