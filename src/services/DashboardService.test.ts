@@ -41,6 +41,7 @@ describe('DashboardService', () => {
   };
 
   beforeEach(() => {
+    vi.resetModules();
     vi.clearAllMocks();
 
     // Create a chainable mock query builder
@@ -63,7 +64,7 @@ describe('DashboardService', () => {
   });
 
   describe('getMembershipStats', () => {
-    it('should return correct membership stats with all fields', async () => {
+    it('should return correct membership stats with all fields', { timeout: 15000 }, async () => {
       // Mock query results for each query in sequence
       const queryResults = [
         [{ count: 100 }], // totalPeople

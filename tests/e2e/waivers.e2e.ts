@@ -24,8 +24,9 @@ test.describe('Waivers Management', () => {
 
     await expect(page.getByRole('dialog')).toBeVisible();
 
-    // Labels don't have htmlFor — use placeholders to target inputs
-    await page.getByPlaceholder('e.g. Liability Waiver').fill('Standard Liability Waiver');
+    // Use unique names to avoid slug conflicts when Chromium and Firefox run in parallel
+    const waiverName = `Liability Waiver ${faker.string.alphanumeric(6)}`;
+    await page.getByPlaceholder('e.g. Liability Waiver').fill(waiverName);
     await page.getByPlaceholder('Internal notes about this waiver...').fill('Standard waiver for all members');
 
     // Fill content with at least 100 characters
@@ -35,7 +36,7 @@ test.describe('Waivers Management', () => {
     await page.getByRole('button', { name: /create waiver/i }).click();
     await page.waitForLoadState('domcontentloaded');
 
-    await expect(page.getByText('Standard Liability Waiver')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(waiverName)).toBeVisible({ timeout: 10000 });
   });
 
   test('should navigate to waiver detail page', async ({ page }) => {
@@ -133,11 +134,12 @@ test.describe('Waivers Management', () => {
   });
 
   test('should navigate to waiver detail and see delete button', async ({ page }) => {
-    // Create a waiver to test with
+    // Create a waiver with a unique name to avoid slug conflicts in parallel CI
+    const deleteWaiverName = `Delete Waiver ${faker.string.alphanumeric(6)}`;
     await navigateTo(page, '/dashboard/waivers');
     await page.getByRole('button', { name: /add waiver/i }).click();
 
-    await page.getByPlaceholder('e.g. Liability Waiver').fill('Waiver To Delete');
+    await page.getByPlaceholder('e.g. Liability Waiver').fill(deleteWaiverName);
     await page.getByPlaceholder('Internal notes about this waiver...').fill('Will be deleted');
     const content = 'This is a temporary waiver content that will be deleted after creation. It needs to be at least one hundred characters long to pass validation requirements.';
     await page.getByPlaceholder('Enter the full waiver text...').fill(content);
@@ -146,9 +148,9 @@ test.describe('Waivers Management', () => {
     await page.waitForLoadState('domcontentloaded');
 
     // Navigate to detail page via the Edit button on the waiver card
-    await expect(page.getByText('Waiver To Delete')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(deleteWaiverName)).toBeVisible({ timeout: 10000 });
 
-    const waiverCard = page.locator('[class*="card"]').filter({ has: page.getByRole('heading', { name: 'Waiver To Delete' }) });
+    const waiverCard = page.locator('[class*="card"]').filter({ has: page.getByRole('heading', { name: deleteWaiverName }) });
     await waiverCard.getByLabel(/edit waiver/i).click();
     await page.waitForLoadState('domcontentloaded');
 
