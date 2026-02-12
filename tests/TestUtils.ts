@@ -107,8 +107,7 @@ export const expectToast = async (page: Page, text: string | RegExp) => {
 };
 
 export const createProgramViaUI = async (page: Page, name: string, description: string) => {
-  await page.goto('/dashboard/programs');
-  await page.waitForLoadState('domcontentloaded');
+  await navigateTo(page, '/dashboard/programs');
   await page.getByRole('button', { name: /add new program/i }).click();
 
   await expect(page.getByRole('heading', { name: /add program/i })).toBeVisible();
