@@ -278,6 +278,12 @@ export const signedWaiverSchema = pgTable(
     membershipPlanSignupFee: real('membership_plan_signup_fee'), // e.g., 35.00
     membershipPlanIsTrial: boolean('membership_plan_is_trial'), // e.g., false
 
+    // Coupon/discount details at time of signing (snapshot for legal compliance)
+    couponCode: text('coupon_code'), // e.g., 'SAVE15'
+    couponType: text('coupon_type'), // 'Percentage' | 'Fixed Amount' | 'Free Trial'
+    couponAmount: text('coupon_amount'), // Display string: '15%', '$50', '7 Days'
+    couponDiscountedPrice: real('coupon_discounted_price'), // Final price after discount
+
     // Signature data
     signatureDataUrl: text('signature_data_url').notNull(), // Base64 signature image from canvas
     signedByName: text('signed_by_name').notNull(), // Name of the person who signed

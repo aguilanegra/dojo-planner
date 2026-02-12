@@ -62,6 +62,10 @@ export const CreateSignedWaiverValidation = z.object({
   membershipPlanContractLength: z.string().max(50).optional(),
   membershipPlanSignupFee: z.number().min(0).optional(),
   membershipPlanIsTrial: z.boolean().optional(),
+  couponCode: z.string().max(50).optional(),
+  couponType: z.enum(['Percentage', 'Fixed Amount', 'Free Trial']).optional(),
+  couponAmount: z.string().max(100).optional(),
+  couponDiscountedPrice: z.number().min(0).optional(),
 });
 
 export const GetSignedWaiverValidation = z.object({

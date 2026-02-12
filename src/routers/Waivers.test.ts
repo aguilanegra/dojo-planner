@@ -110,6 +110,10 @@ const mockSignedWaiver = {
   membershipPlanContractLength: null,
   membershipPlanSignupFee: null,
   membershipPlanIsTrial: null,
+  couponCode: null,
+  couponType: null,
+  couponAmount: null,
+  couponDiscountedPrice: null,
   signatureDataUrl: 'data:image/png;base64,abc123',
   signedByName: 'John Doe',
   signedByEmail: 'john@example.com',
@@ -865,6 +869,49 @@ describe('Waivers Router', () => {
         AUDIT_ENTITY_TYPE.SIGNED_WAIVER,
         { status: 'failure', error: 'DB failure' },
       );
+    });
+
+    it('should pass coupon data to the service when provided', async () => {
+      const { guardRole } = await import('./AuthGuards');
+      const { createSignedWaiver } = await import('@/services/WaiversService');
+      const { audit } = await import('@/services/AuditService');
+
+      const inputWithCoupon = {
+        ...signedWaiverInput,
+        membershipPlanName: 'Premium Plan',
+        membershipPlanPrice: 99,
+        membershipPlanFrequency: 'monthly',
+        couponCode: 'SUMMER20',
+        couponType: 'Percentage' as const,
+        couponAmount: '20%',
+        couponDiscountedPrice: 79.2,
+      };
+
+      const mockSignedWaiverWithCoupon = {
+        ...mockSignedWaiver,
+        membershipPlanName: 'Premium Plan',
+        membershipPlanPrice: 99,
+        membershipPlanFrequency: 'monthly',
+        couponCode: 'SUMMER20',
+        couponType: 'Percentage',
+        couponAmount: '20%',
+        couponDiscountedPrice: 79.2,
+      };
+
+      vi.mocked(guardRole).mockResolvedValue(mockFrontDeskContext);
+      vi.mocked(createSignedWaiver).mockResolvedValue(mockSignedWaiverWithCoupon);
+
+      const { createSignedWaiverRecord } = await import('./Waivers');
+      const result = await callHandler(createSignedWaiverRecord, inputWithCoupon);
+
+      expect(createSignedWaiver).toHaveBeenCalledWith(inputWithCoupon, 'test-org-456');
+      expect(audit).toHaveBeenCalledWith(
+        mockFrontDeskContext,
+        AUDIT_ACTION.WAIVER_SIGNED,
+        AUDIT_ENTITY_TYPE.SIGNED_WAIVER,
+        { entityId: mockSignedWaiverWithCoupon.id, status: 'success' },
+      );
+      expect(result).toEqual({ waiver: mockSignedWaiverWithCoupon });
     });
   });
 

@@ -15,10 +15,10 @@ function computeCanvasSize(container: HTMLElement | null, width: number, height:
     return { width, height };
   }
   const containerWidth = container.offsetWidth;
-  const newWidth = Math.min(containerWidth - 2, width); // -2 for border
+  const availableWidth = containerWidth - 2; // account for border
   const aspectRatio = height / width;
-  const newHeight = Math.round(newWidth * aspectRatio);
-  return { width: newWidth, height: newHeight };
+  const newHeight = Math.min(Math.round(availableWidth * aspectRatio), height);
+  return { width: availableWidth, height: newHeight };
 }
 
 function canvasSizeReducer(_state: CanvasSize, action: CanvasSize): CanvasSize {
@@ -116,7 +116,7 @@ export function SignatureCanvas({
           canvasProps={{
             width: canvasSize.width,
             height: canvasSize.height,
-            className: 'touch-none',
+            className: 'touch-none block',
           }}
           onEnd={handleEnd}
           penColor="black"
