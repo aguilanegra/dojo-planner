@@ -57,7 +57,7 @@ jobs:
               echo "❌ Tests failed or no tests found" >> $GITHUB_STEP_SUMMARY
               echo "" >> $GITHUB_STEP_SUMMARY
               echo "**Possible causes:**" >> $GITHUB_STEP_SUMMARY
-              echo "- No test files matching the pattern: \`**/tests/e2e/**/*.e2e.ts\`" >> $GITHUB_STEP_SUMMARY
+              echo "- No test files matching the pattern: \`**/tests/e2e/**/*.check.spec.ts\`" >> $GITHUB_STEP_SUMMARY
               echo "- Test execution failed before generating report" >> $GITHUB_STEP_SUMMARY
               echo "" >> $GITHUB_STEP_SUMMARY
               echo "Check the logs above for details." >> $GITHUB_STEP_SUMMARY

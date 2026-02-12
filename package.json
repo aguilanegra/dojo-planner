@@ -35,6 +35,7 @@
     "stripe:setup-price": "dotenv -c -- tsx ./scripts/createStripePrice.ts"
   },
   "dependencies": {
+    "@clerk/backend": "^2.30.1",
     "@clerk/localizations": "^3.32.1",
     "@clerk/nextjs": "^6.36.5",
     "@clerk/themes": "^2.4.51",

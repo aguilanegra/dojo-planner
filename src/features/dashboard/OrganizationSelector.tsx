@@ -81,7 +81,7 @@ export const OrganizationSelector = () => {
 
   return (
     <Select value={organization.id} onValueChange={handleOrganizationChange} disabled={isChanging}>
-      <SelectTrigger className="w-64 md:w-60">
+      <SelectTrigger className="w-64 md:w-60" aria-label="Open organization switcher">
         <SelectValue asChild>
           <div className="flex items-center gap-2">
             {organization.imageUrl && (

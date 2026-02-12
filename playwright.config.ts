@@ -15,11 +15,15 @@ export default defineConfig<ChromaticConfig>({
   // Look for files with the .spec.js or .e2e.js extension
   testMatch: '*.@(spec|e2e).?(c|m)[jt]s?(x)',
   // Timeout per test, test running locally are slower due to database connections with PGLite
-  timeout: process.env.CI ? 30 * 1000 : 60 * 1000,
+  timeout: process.env.CI ? 45 * 1000 : 60 * 1000,
   // Fail the build on CI if you accidentally left test.only in the source code.
   forbidOnly: !!process.env.CI,
+  // Retry failed tests once in CI to handle flaky network calls (Clerk API, etc.)
+  retries: process.env.CI ? 1 : 0,
+  // Limit parallel workers to avoid Clerk API rate limits (each file creates a user)
+  workers: process.env.CI ? 2 : undefined,
   // Reporter to use. See https://playwright.dev/docs/test-reporters
-  reporter: process.env.CI ? [['github']] : 'list',
+  reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'list',
 
   expect: {
     // Set timeout for async expect matchers
