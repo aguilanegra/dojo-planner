@@ -43,6 +43,14 @@ export type WaiverPdfInput = {
   membershipPlanSignupFee?: number | null;
   /** Whether the membership plan is a trial */
   membershipPlanIsTrial?: boolean | null;
+  /** Coupon code applied at signing */
+  couponCode?: string | null;
+  /** Coupon discount type */
+  couponType?: string | null;
+  /** Coupon discount amount (display string, e.g., '15%', '$50') */
+  couponAmount?: string | null;
+  /** Final discounted price after coupon */
+  couponDiscountedPrice?: number | null;
 };
 
 /**
@@ -136,10 +144,64 @@ export function generateWaiverPdf(input: WaiverPdfInput): Blob {
     }
 
     if (input.membershipPlanPrice !== null && input.membershipPlanPrice !== undefined) {
-      const priceStr = input.membershipPlanPrice === 0
-        ? 'Free'
-        : `$${input.membershipPlanPrice.toFixed(2)}`;
-      addText(`Price: ${priceStr}`, 10);
+      const hasCoupon = input.couponCode
+        && input.couponDiscountedPrice !== null
+        && input.couponDiscountedPrice !== undefined
+        && input.membershipPlanPrice > 0;
+
+      if (hasCoupon) {
+        // Show original price with strikethrough and discounted price
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        const labelText = 'Price: ';
+        const labelWidth = doc.getTextWidth(labelText);
+
+        // Check page break
+        if (yPosition > pageHeight - margin - 10) {
+          doc.addPage();
+          yPosition = margin;
+        }
+
+        // Draw label
+        doc.text(labelText, margin, yPosition);
+
+        // Draw original price in gray with strikethrough
+        const originalPriceStr = `$${input.membershipPlanPrice.toFixed(2)}`;
+        doc.setTextColor(150);
+        doc.text(originalPriceStr, margin + labelWidth, yPosition);
+        const priceWidth = doc.getTextWidth(originalPriceStr);
+
+        // Draw strikethrough line
+        const lineY = yPosition - 1.2;
+        doc.setDrawColor(150);
+        doc.setLineWidth(0.3);
+        doc.line(margin + labelWidth, lineY, margin + labelWidth + priceWidth, lineY);
+
+        // Draw discounted price in black
+        doc.setTextColor(0);
+        const discountedPrice = input.couponDiscountedPrice!;
+        const discountedPriceStr = discountedPrice === 0
+          ? 'Free'
+          : `$${discountedPrice.toFixed(2)}`;
+        doc.text(`  ${discountedPriceStr}`, margin + labelWidth + priceWidth, yPosition);
+
+        yPosition += 10 * 0.4 + 2;
+
+        // Reset draw state
+        doc.setDrawColor(200);
+        doc.setLineWidth(0.2);
+
+        // Show discount info
+        const discountLabel = input.couponType === 'Free Trial'
+          ? `Discount: ${input.couponCode} (${input.couponAmount})`
+          : `Discount: ${input.couponCode} (${input.couponAmount} off)`;
+        addText(discountLabel, 10);
+      } else {
+        const priceStr = input.membershipPlanPrice === 0
+          ? 'Free'
+          : `$${input.membershipPlanPrice.toFixed(2)}`;
+        addText(`Price: ${priceStr}`, 10);
+      }
     }
 
     if (input.membershipPlanFrequency && input.membershipPlanFrequency !== 'None') {

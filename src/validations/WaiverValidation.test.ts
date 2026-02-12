@@ -763,6 +763,131 @@ describe('WaiverValidation', () => {
 
       expect(result.success).toBe(true);
     });
+
+    // Coupon fields
+
+    it('should accept optional couponCode', () => {
+      const result = CreateSignedWaiverValidation.safeParse({
+        ...validSignedWaiver,
+        couponCode: 'SAVE15',
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it('should reject couponCode exceeding 50 characters', () => {
+      const result = CreateSignedWaiverValidation.safeParse({
+        ...validSignedWaiver,
+        couponCode: 'a'.repeat(51),
+      });
+
+      expect(result.success).toBe(false);
+    });
+
+    it('should accept couponCode at exactly 50 characters', () => {
+      const result = CreateSignedWaiverValidation.safeParse({
+        ...validSignedWaiver,
+        couponCode: 'a'.repeat(50),
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it('should accept valid couponType values', () => {
+      const types = ['Percentage', 'Fixed Amount', 'Free Trial'] as const;
+      for (const type of types) {
+        const result = CreateSignedWaiverValidation.safeParse({
+          ...validSignedWaiver,
+          couponType: type,
+        });
+
+        expect(result.success).toBe(true);
+      }
+    });
+
+    it('should reject invalid couponType', () => {
+      const result = CreateSignedWaiverValidation.safeParse({
+        ...validSignedWaiver,
+        couponType: 'InvalidType',
+      });
+
+      expect(result.success).toBe(false);
+    });
+
+    it('should accept optional couponAmount', () => {
+      const result = CreateSignedWaiverValidation.safeParse({
+        ...validSignedWaiver,
+        couponAmount: '15%',
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it('should reject couponAmount exceeding 100 characters', () => {
+      const result = CreateSignedWaiverValidation.safeParse({
+        ...validSignedWaiver,
+        couponAmount: 'a'.repeat(101),
+      });
+
+      expect(result.success).toBe(false);
+    });
+
+    it('should accept optional couponDiscountedPrice', () => {
+      const result = CreateSignedWaiverValidation.safeParse({
+        ...validSignedWaiver,
+        couponDiscountedPrice: 127.5,
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it('should reject negative couponDiscountedPrice', () => {
+      const result = CreateSignedWaiverValidation.safeParse({
+        ...validSignedWaiver,
+        couponDiscountedPrice: -10,
+      });
+
+      expect(result.success).toBe(false);
+    });
+
+    it('should accept couponDiscountedPrice of 0', () => {
+      const result = CreateSignedWaiverValidation.safeParse({
+        ...validSignedWaiver,
+        couponDiscountedPrice: 0,
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it('should accept all coupon fields together', () => {
+      const result = CreateSignedWaiverValidation.safeParse({
+        ...validSignedWaiver,
+        couponCode: 'SAVE15',
+        couponType: 'Percentage' as const,
+        couponAmount: '15%',
+        couponDiscountedPrice: 127.5,
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it('should accept all membership plan and coupon fields together', () => {
+      const result = CreateSignedWaiverValidation.safeParse({
+        ...validSignedWaiver,
+        membershipPlanName: '12 Month Commitment (Gold)',
+        membershipPlanPrice: 150,
+        membershipPlanFrequency: 'Monthly',
+        membershipPlanContractLength: '12 Months',
+        membershipPlanSignupFee: 35,
+        membershipPlanIsTrial: false,
+        couponCode: 'SAVE15',
+        couponType: 'Percentage' as const,
+        couponAmount: '15%',
+        couponDiscountedPrice: 127.5,
+      });
+
+      expect(result.success).toBe(true);
+    });
   });
 
   describe('GetSignedWaiverValidation', () => {

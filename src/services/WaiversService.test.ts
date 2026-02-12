@@ -1253,6 +1253,16 @@ describe('WaiversService', () => {
       userAgent: 'Mozilla/5.0',
       signedAt: new Date('2024-06-01'),
       createdAt: new Date('2024-06-01'),
+      membershipPlanName: null,
+      membershipPlanPrice: null,
+      membershipPlanFrequency: null,
+      membershipPlanContractLength: null,
+      membershipPlanSignupFee: null,
+      membershipPlanIsTrial: null,
+      couponCode: null,
+      couponType: null,
+      couponAmount: null,
+      couponDiscountedPrice: null,
     };
 
     it('should return signed waivers with template name for a member', async () => {
@@ -1482,6 +1492,16 @@ describe('WaiversService', () => {
       userAgent: 'Mozilla/5.0',
       signedAt: new Date('2024-06-01'),
       createdAt: new Date('2024-06-01'),
+      membershipPlanName: null,
+      membershipPlanPrice: null,
+      membershipPlanFrequency: null,
+      membershipPlanContractLength: null,
+      membershipPlanSignupFee: null,
+      membershipPlanIsTrial: null,
+      couponCode: null,
+      couponType: null,
+      couponAmount: null,
+      couponDiscountedPrice: null,
     };
 
     it('should return signed waiver when found', async () => {
@@ -1562,6 +1582,16 @@ describe('WaiversService', () => {
       userAgent: 'TestAgent/1.0',
       signedAt: new Date('2024-07-01'),
       createdAt: new Date('2024-07-01'),
+      membershipPlanName: null,
+      membershipPlanPrice: null,
+      membershipPlanFrequency: null,
+      membershipPlanContractLength: null,
+      membershipPlanSignupFee: null,
+      membershipPlanIsTrial: null,
+      couponCode: null,
+      couponType: null,
+      couponAmount: null,
+      couponDiscountedPrice: null,
     };
 
     it('should create a signed waiver with template version lookup', async () => {
@@ -1708,6 +1738,72 @@ describe('WaiversService', () => {
       expect(result.id).toBe('custom-signed-id');
       expect(mockValues).toHaveBeenCalledWith(
         expect.objectContaining({ id: 'custom-signed-id' }),
+      );
+    });
+
+    it('should pass through coupon fields when provided', async () => {
+      const { db } = await import('@/libs/DB');
+
+      const waiverWithCoupon = {
+        ...mockCreatedSignedWaiver,
+        id: 'signed-coupon',
+        couponCode: 'SAVE15',
+        couponType: 'Percentage',
+        couponAmount: '15%',
+        couponDiscountedPrice: 127.5,
+      };
+
+      vi.mocked(db.select).mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([{ ...mockTemplate, version: 2 }]),
+        }),
+      } as any);
+
+      const mockValues = vi.fn().mockReturnValue({
+        returning: vi.fn().mockResolvedValue([waiverWithCoupon]),
+      });
+      vi.mocked(db.insert).mockReturnValue({
+        values: mockValues,
+      } as any);
+
+      const { createSignedWaiver } = await import('./WaiversService');
+      const result = await createSignedWaiver(
+        {
+          waiverTemplateId: 'template-1',
+          memberId: 'member-1',
+          memberMembershipId: 'membership-1',
+          signatureDataUrl: 'data:image/png;base64,signature',
+          signedByName: 'Jane Doe',
+          signedByEmail: 'jane@example.com',
+          signedByRelationship: 'parent',
+          memberFirstName: 'Billy',
+          memberLastName: 'Doe',
+          memberEmail: 'billy@example.com',
+          memberDateOfBirth: new Date('2010-05-15'),
+          memberAgeAtSigning: 14,
+          renderedContent: 'Full rendered waiver for Billy Doe.',
+          ipAddress: '10.0.0.1',
+          userAgent: 'TestAgent/1.0',
+          couponCode: 'SAVE15',
+          couponType: 'Percentage',
+          couponAmount: '15%',
+          couponDiscountedPrice: 127.5,
+        },
+        'test-org-123',
+      );
+
+      expect(result.id).toBe('signed-coupon');
+      expect(result.couponCode).toBe('SAVE15');
+      expect(result.couponType).toBe('Percentage');
+      expect(result.couponAmount).toBe('15%');
+      expect(result.couponDiscountedPrice).toBe(127.5);
+      expect(mockValues).toHaveBeenCalledWith(
+        expect.objectContaining({
+          couponCode: 'SAVE15',
+          couponType: 'Percentage',
+          couponAmount: '15%',
+          couponDiscountedPrice: 127.5,
+        }),
       );
     });
   });

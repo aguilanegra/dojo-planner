@@ -1,6 +1,7 @@
 'use client';
 
 import type { Coupon } from '@/features/marketing';
+import type { AppliedCoupon } from '@/hooks/useAddMemberWizard';
 import { useOrganization, useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -13,6 +14,26 @@ import { MemberPhotoStep } from './MemberPhotoStep';
 import { MemberSuccessStep } from './MemberSuccessStep';
 import { MemberTypeStep } from './MemberTypeStep';
 import { MemberWaiverStep } from './MemberWaiverStep';
+
+function computeDiscountedPrice(price: number | undefined, coupon: AppliedCoupon): number | undefined {
+  if (price === undefined || price <= 0) {
+    return price;
+  }
+  switch (coupon.type) {
+    case 'Percentage': {
+      const percentageMatch = coupon.amount.match(/(\d+(?:\.\d+)?)/);
+      const pct = percentageMatch?.[1] ? Number.parseFloat(percentageMatch[1]) : Number.NaN;
+      return Number.isNaN(pct) ? price : Math.max(0, price - (price * pct / 100));
+    }
+    case 'Fixed Amount': {
+      const fixedMatch = coupon.amount.match(/(\d+(?:\.\d+)?)/);
+      const fixed = fixedMatch?.[1] ? Number.parseFloat(fixedMatch[1]) : Number.NaN;
+      return Number.isNaN(fixed) ? price : Math.max(0, price - fixed);
+    }
+    case 'Free Trial':
+      return 0;
+  }
+}
 
 type AddMemberModalProps = {
   isOpen: boolean;
@@ -174,6 +195,15 @@ export const AddMemberModal = ({ isOpen, onCloseAction, availableCoupons = [] }:
           ...(wizard.data.membershipPlanContractLength && { membershipPlanContractLength: wizard.data.membershipPlanContractLength }),
           ...(wizard.data.membershipPlanSignupFee !== undefined && { membershipPlanSignupFee: wizard.data.membershipPlanSignupFee }),
           ...(wizard.data.membershipPlanIsTrial !== undefined && { membershipPlanIsTrial: wizard.data.membershipPlanIsTrial }),
+          ...(wizard.data.appliedCoupon && {
+            couponCode: wizard.data.appliedCoupon.code,
+            couponType: wizard.data.appliedCoupon.type,
+            couponAmount: wizard.data.appliedCoupon.amount,
+            couponDiscountedPrice: computeDiscountedPrice(
+              wizard.data.membershipPlanPrice,
+              wizard.data.appliedCoupon,
+            ),
+          }),
         });
 
         console.info('[Add Member Wizard] Signed waiver created for member:', result.id);

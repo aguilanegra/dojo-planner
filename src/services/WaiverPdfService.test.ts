@@ -11,6 +11,8 @@ const mockLine = vi.fn();
 const mockRect = vi.fn();
 const mockAddImage = vi.fn();
 const mockAddPage = vi.fn();
+const mockSetLineWidth = vi.fn();
+const mockGetTextWidth = vi.fn(() => 20);
 const mockSplitTextToSize = vi.fn((text: string) => [text]);
 const mockOutput = vi.fn(() => new Blob(['mock-pdf-data'], { type: 'application/pdf' }));
 
@@ -33,6 +35,8 @@ vi.mock('jspdf', () => {
     rect = mockRect;
     addImage = mockAddImage;
     addPage = mockAddPage;
+    setLineWidth = mockSetLineWidth;
+    getTextWidth = mockGetTextWidth;
     splitTextToSize = mockSplitTextToSize;
     output = mockOutput;
   }
@@ -513,6 +517,115 @@ describe('WaiverPdfService', () => {
       );
 
       expect(trialCalls).toHaveLength(0);
+    });
+
+    // =========================================================================
+    // COUPON DISCOUNT display
+    // =========================================================================
+
+    it('should render coupon discount with strikethrough price', async () => {
+      const { generateWaiverPdf } = await import('./WaiverPdfService');
+      generateWaiverPdf({
+        ...mockInput,
+        membershipPlanName: '12 Month Commitment (Gold)',
+        membershipPlanPrice: 150,
+        membershipPlanFrequency: 'Monthly',
+        couponCode: 'SAVE15',
+        couponType: 'Percentage',
+        couponAmount: '15%',
+        couponDiscountedPrice: 127.5,
+      });
+
+      // Original price drawn in gray (150)
+      expect(mockSetTextColor).toHaveBeenCalledWith(150);
+      // Original price text
+      expect(mockText).toHaveBeenCalledWith(
+        '$150.00',
+        expect.any(Number),
+        expect.any(Number),
+      );
+      // Strikethrough line is drawn
+      expect(mockLine).toHaveBeenCalled();
+      // Discounted price drawn in black (0)
+      expect(mockSetTextColor).toHaveBeenCalledWith(0);
+      // Discounted price text (with leading spaces)
+      expect(mockText).toHaveBeenCalledWith(
+        '  $127.50',
+        expect.any(Number),
+        expect.any(Number),
+      );
+      // Discount info line rendered via addText -> splitTextToSize
+      expect(mockSplitTextToSize).toHaveBeenCalledWith(
+        'Discount: SAVE15 (15% off)',
+        expect.any(Number),
+      );
+    });
+
+    it('should render free trial coupon correctly', async () => {
+      const { generateWaiverPdf } = await import('./WaiverPdfService');
+      generateWaiverPdf({
+        ...mockInput,
+        membershipPlanName: 'Monthly Plan',
+        membershipPlanPrice: 99,
+        couponCode: 'FREETRIAL',
+        couponType: 'Free Trial',
+        couponAmount: '7 Days',
+        couponDiscountedPrice: 0,
+      });
+
+      // Discounted price of 0 shows as "Free" (not "$0.00")
+      expect(mockText).toHaveBeenCalledWith(
+        '  Free',
+        expect.any(Number),
+        expect.any(Number),
+      );
+      // Free Trial type does NOT have "off" suffix
+      expect(mockSplitTextToSize).toHaveBeenCalledWith(
+        'Discount: FREETRIAL (7 Days)',
+        expect.any(Number),
+      );
+    });
+
+    it('should not render coupon info when no coupon data', async () => {
+      const { generateWaiverPdf } = await import('./WaiverPdfService');
+      generateWaiverPdf({
+        ...mockInput,
+        membershipPlanName: '12 Month Commitment (Gold)',
+        membershipPlanPrice: 150,
+      });
+
+      // Should NOT use gray text color (150) for strikethrough rendering
+      expect(mockSetTextColor).not.toHaveBeenCalledWith(150);
+      // Normal price is rendered via addText -> splitTextToSize
+      expect(mockSplitTextToSize).toHaveBeenCalledWith(
+        'Price: $150.00',
+        expect.any(Number),
+      );
+    });
+
+    it('should reset text color after strikethrough rendering', async () => {
+      const { generateWaiverPdf } = await import('./WaiverPdfService');
+      generateWaiverPdf({
+        ...mockInput,
+        membershipPlanName: '12 Month Commitment (Gold)',
+        membershipPlanPrice: 150,
+        couponCode: 'SAVE15',
+        couponType: 'Percentage',
+        couponAmount: '15%',
+        couponDiscountedPrice: 127.5,
+      });
+
+      // Find the indices of the gray (150) and black (0) calls
+      const setTextColorCalls = mockSetTextColor.mock.calls.map(
+        (call: number[]) => call[0],
+      );
+      const grayIndex = setTextColorCalls.indexOf(150);
+      const blackAfterGray = setTextColorCalls.indexOf(0, grayIndex + 1);
+
+      // Gray must have been called
+      expect(grayIndex).toBeGreaterThanOrEqual(0);
+      // Black must be called after gray to reset
+      expect(blackAfterGray).toBeGreaterThan(grayIndex);
     });
   });
 

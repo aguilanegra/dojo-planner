@@ -696,6 +696,10 @@ export default function EditMemberPage() {
         membershipPlanContractLength: waiver.membershipPlanContractLength,
         membershipPlanSignupFee: waiver.membershipPlanSignupFee,
         membershipPlanIsTrial: waiver.membershipPlanIsTrial,
+        couponCode: waiver.couponCode,
+        couponType: waiver.couponType,
+        couponAmount: waiver.couponAmount,
+        couponDiscountedPrice: waiver.couponDiscountedPrice,
       },
       generatePdfFilename({
         memberFirstName: waiver.memberFirstName,

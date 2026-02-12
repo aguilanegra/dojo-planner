@@ -49,6 +49,10 @@ export type SignedWaiver = {
   membershipPlanContractLength: string | null;
   membershipPlanSignupFee: number | null;
   membershipPlanIsTrial: boolean | null;
+  couponCode: string | null;
+  couponType: string | null;
+  couponAmount: string | null;
+  couponDiscountedPrice: number | null;
   signatureDataUrl: string;
   signedByName: string;
   signedByEmail: string | null;
@@ -111,6 +115,10 @@ type CreateSignedWaiverInput = {
   membershipPlanContractLength?: string;
   membershipPlanSignupFee?: number;
   membershipPlanIsTrial?: boolean;
+  couponCode?: string;
+  couponType?: string;
+  couponAmount?: string;
+  couponDiscountedPrice?: number;
   signatureDataUrl: string;
   signedByName: string;
   signedByEmail?: string;
@@ -555,6 +563,10 @@ export async function getMemberSignedWaivers(memberId: string): Promise<SignedWa
     membershipPlanContractLength: w.membershipPlanContractLength,
     membershipPlanSignupFee: w.membershipPlanSignupFee,
     membershipPlanIsTrial: w.membershipPlanIsTrial,
+    couponCode: w.couponCode,
+    couponType: w.couponType,
+    couponAmount: w.couponAmount,
+    couponDiscountedPrice: w.couponDiscountedPrice,
     signatureDataUrl: w.signatureDataUrl,
     signedByName: w.signedByName,
     signedByEmail: w.signedByEmail,
@@ -600,6 +612,10 @@ export async function getSignedWaiverById(waiverId: string, organizationId: stri
     membershipPlanContractLength: w.membershipPlanContractLength,
     membershipPlanSignupFee: w.membershipPlanSignupFee,
     membershipPlanIsTrial: w.membershipPlanIsTrial,
+    couponCode: w.couponCode,
+    couponType: w.couponType,
+    couponAmount: w.couponAmount,
+    couponDiscountedPrice: w.couponDiscountedPrice,
     signatureDataUrl: w.signatureDataUrl,
     signedByName: w.signedByName,
     signedByEmail: w.signedByEmail,
@@ -653,6 +669,10 @@ export async function createSignedWaiver(
       membershipPlanContractLength: input.membershipPlanContractLength,
       membershipPlanSignupFee: input.membershipPlanSignupFee,
       membershipPlanIsTrial: input.membershipPlanIsTrial,
+      couponCode: input.couponCode,
+      couponType: input.couponType,
+      couponAmount: input.couponAmount,
+      couponDiscountedPrice: input.couponDiscountedPrice,
       signatureDataUrl: input.signatureDataUrl,
       signedByName: input.signedByName,
       signedByEmail: input.signedByEmail,
@@ -686,6 +706,10 @@ export async function createSignedWaiver(
     membershipPlanContractLength: w.membershipPlanContractLength,
     membershipPlanSignupFee: w.membershipPlanSignupFee,
     membershipPlanIsTrial: w.membershipPlanIsTrial,
+    couponCode: w.couponCode,
+    couponType: w.couponType,
+    couponAmount: w.couponAmount,
+    couponDiscountedPrice: w.couponDiscountedPrice,
     signatureDataUrl: w.signatureDataUrl,
     signedByName: w.signedByName,
     signedByEmail: w.signedByEmail,
