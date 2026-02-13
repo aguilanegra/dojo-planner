@@ -13,6 +13,37 @@ export const loadSharedCredentials = () => {
   process.env.E2E_CLERK_USER_PASSWORD = creds.password;
 };
 
+export const cleanupOrphanedE2EUsers = async () => {
+  const authClient = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY! });
+
+  // Search for all users with e2e test email pattern
+  const { data: users } = await authClient.users.getUserList({
+    query: 'e2e_',
+    limit: 100,
+  });
+
+  // Filter to only e2e test users (match the exact pattern)
+  const e2eUsers = users.filter(user =>
+    user.emailAddresses.some(email =>
+      /^e2e_[a-z0-9]+\+clerk_test@example\.com$/.test(email.emailAddress),
+    ),
+  );
+
+  for (const user of e2eUsers) {
+    try {
+      const { data: orgs } = await authClient.users.getOrganizationMembershipList({
+        userId: user.id,
+      });
+      for (const org of orgs) {
+        await authClient.organizations.deleteOrganization(org.organization.id);
+      }
+      await authClient.users.deleteUser(user.id);
+    } catch (error) {
+      console.warn(`Failed to cleanup orphaned user ${user.id}:`, error);
+    }
+  }
+};
+
 export const createUserWithOrganization = async () => {
   const slug = faker.string.alphanumeric(10).toLowerCase();
   process.env.E2E_CLERK_USER_USERNAME = `e2e_${slug}+clerk_test@example.com`;
@@ -20,7 +51,7 @@ export const createUserWithOrganization = async () => {
 
   const authClient = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY! });
 
-  // Clean up any orphaned user from a previous failed run
+  // Clean up any orphaned user from a previous failed run (narrow: only this email)
   const { data: existing } = await authClient.users.getUserList({
     emailAddress: [process.env.E2E_CLERK_USER_USERNAME],
   });

@@ -2,12 +2,20 @@ import { clerk, clerkSetup } from '@clerk/testing/playwright';
 import { expect, test as setup } from '@playwright/test';
 
 import { writeCredentials } from './e2e-credentials';
-import { createUserWithOrganization } from './TestUtils';
+import { cleanupOrphanedE2EUsers, createUserWithOrganization } from './TestUtils';
 
 setup.describe.configure({ mode: 'serial' });
 
 setup('authenticate with Clerk', async ({ page }) => {
   await clerkSetup();
+
+  // Clean up ALL orphaned e2e users from previous failed/interrupted runs
+  // before creating the shared test user. This must run here (not in
+  // createUserWithOrganization) because auth.e2e.ts also calls
+  // createUserWithOrganization in parallel — a broad cleanup there would
+  // delete the shared user that other tests depend on.
+  await cleanupOrphanedE2EUsers();
+
   await createUserWithOrganization();
 
   writeCredentials({
