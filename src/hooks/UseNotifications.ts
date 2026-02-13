@@ -1,15 +1,14 @@
 import type { Notification } from '@/types/Notification';
 import { useCallback, useState } from 'react';
-import { mockNotifications } from '@/types/Notification';
 
 /**
  * React Hook to manage notifications state.
  * Provides functionality to track, read, and manage notifications.
  * @hook
  */
-export const useNotifications = (initialNotifications?: Notification[]) => {
+export const useNotifications = (initialNotifications: Notification[] = []) => {
   const [notifications, setNotifications] = useState<Notification[]>(
-    initialNotifications ?? mockNotifications,
+    initialNotifications,
   );
 
   const unreadCount = notifications.filter(n => !n.read).length;

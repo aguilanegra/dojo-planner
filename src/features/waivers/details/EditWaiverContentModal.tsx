@@ -10,44 +10,53 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
 const MAX_CONTENT_LENGTH = 50000;
 const MIN_CONTENT_LENGTH = 100;
+const MAX_NAME_LENGTH = 100;
 
 type EditWaiverContentModalProps = {
   isOpen: boolean;
   onClose: () => void;
+  name: string;
   content: string;
-  onSave: (data: { content: string }) => Promise<void>;
+  onSave: (data: { name: string; content: string }) => Promise<void>;
 };
 
 export function EditWaiverContentModal({
   isOpen,
   onClose,
+  name: initialName,
   content: initialContent,
   onSave,
 }: EditWaiverContentModalProps) {
   const t = useTranslations('WaiverDetailPage.EditContentModal');
 
+  const [name, setName] = useState(initialName);
   const [content, setContent] = useState(initialContent);
+  const [nameTouched, setNameTouched] = useState(false);
   const [touched, setTouched] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const isNameInvalid = nameTouched && name.trim().length === 0;
   const isContentInvalid = touched && content.trim().length < MIN_CONTENT_LENGTH;
-  const isFormValid = content.trim().length >= MIN_CONTENT_LENGTH;
+  const isFormValid = name.trim().length > 0 && content.trim().length >= MIN_CONTENT_LENGTH;
 
   const handleSubmit = async () => {
     setIsLoading(true);
     try {
-      await onSave({ content });
+      await onSave({ name: name.trim(), content });
     } finally {
       setIsLoading(false);
     }
   };
 
   const resetState = () => {
+    setName(initialName);
     setContent(initialContent);
+    setNameTouched(false);
     setTouched(false);
   };
 
@@ -72,6 +81,20 @@ export function EditWaiverContentModal({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-foreground">{t('name_label')}</label>
+            <Input
+              value={name}
+              onChange={e => setName(e.target.value.slice(0, MAX_NAME_LENGTH))}
+              onBlur={() => setNameTouched(true)}
+              placeholder={t('name_placeholder')}
+              error={isNameInvalid}
+            />
+            {isNameInvalid && (
+              <p className="text-xs text-destructive">{t('name_error')}</p>
+            )}
+          </div>
+
           <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/50 p-3">
             <Info className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">{t('version_warning')}</p>

@@ -1085,6 +1085,9 @@
     },
     "EditContentModal": {
       "title": "Edit Waiver Content",
+      "name_label": "Waiver Name",
+      "name_placeholder": "Enter waiver name...",
+      "name_error": "Waiver name is required",
       "version_warning": "Saving changes will create a new version. The current content will be preserved in version history.",
       "content_label": "Waiver Content",
       "content_placeholder": "Enter the full waiver text...",
