@@ -123,7 +123,7 @@ export default function WaiverDetailPage() {
     setIsEditBasicsOpen(false);
   }, [waiverId, fetchWaiver]);
 
-  const handleSaveContent = useCallback(async (data: { content: string }) => {
+  const handleSaveContent = useCallback(async (data: { name: string; content: string }) => {
     await client.waivers.updateTemplate({ id: waiverId, ...data });
     await fetchWaiver();
     setIsEditContentOpen(false);
@@ -357,6 +357,7 @@ export default function WaiverDetailPage() {
       <EditWaiverContentModal
         isOpen={isEditContentOpen}
         onClose={() => setIsEditContentOpen(false)}
+        name={waiver.name}
         content={waiver.content}
         onSave={handleSaveContent}
       />

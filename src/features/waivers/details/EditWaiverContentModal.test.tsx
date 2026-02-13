@@ -6,6 +6,9 @@ import { EditWaiverContentModal } from './EditWaiverContentModal';
 // Mock next-intl with proper translations
 const translationKeys: Record<string, string> = {
   title: 'Edit Waiver Content',
+  name_label: 'Waiver Name',
+  name_placeholder: 'Enter waiver name...',
+  name_error: 'Waiver name is required',
   version_warning: 'Editing content will create a new version. Existing signatures remain linked to their original version.',
   content_label: 'Content',
   content_placeholder: 'Enter waiver content...',
@@ -31,9 +34,12 @@ describe('EditWaiverContentModal', () => {
 
   const validContent = 'A'.repeat(150);
 
+  const defaultName = 'Standard Adult Waiver';
+
   const defaultProps = {
     isOpen: true,
     onClose: mockOnClose,
+    name: defaultName,
     content: validContent,
     onSave: mockOnSave,
   };
@@ -107,7 +113,40 @@ describe('EditWaiverContentModal', () => {
     expect(error).toBeTruthy();
   });
 
-  it('should call onSave with content data when save is clicked', async () => {
+  it('should show name input with initial value', () => {
+    render(<EditWaiverContentModal {...defaultProps} />);
+
+    const nameInput = document.querySelector('input');
+
+    expect(nameInput).toBeTruthy();
+    expect(nameInput?.value).toBe(defaultName);
+  });
+
+  it('should disable save button when name is empty', async () => {
+    render(<EditWaiverContentModal {...defaultProps} />);
+
+    const nameInput = document.querySelector('input')!;
+    await userEvent.clear(nameInput);
+
+    const buttons = Array.from(document.querySelectorAll('button'));
+    const saveButton = buttons.find(btn => btn.textContent?.includes('Save Changes'));
+
+    expect(saveButton?.disabled).toBe(true);
+  });
+
+  it('should show name validation error after blur when name is empty', async () => {
+    render(<EditWaiverContentModal {...defaultProps} />);
+
+    const nameInput = document.querySelector('input')!;
+    await userEvent.clear(nameInput);
+    await userEvent.tab();
+
+    const error = page.getByText('Waiver name is required');
+
+    expect(error).toBeTruthy();
+  });
+
+  it('should call onSave with name and content data when save is clicked', async () => {
     render(<EditWaiverContentModal {...defaultProps} />);
 
     const saveButton = page.getByRole('button', { name: 'Save Changes' });
@@ -115,7 +154,7 @@ describe('EditWaiverContentModal', () => {
 
     await new Promise(resolve => setTimeout(resolve, 600));
 
-    expect(mockOnSave).toHaveBeenCalledWith({ content: validContent });
+    expect(mockOnSave).toHaveBeenCalledWith({ name: defaultName, content: validContent });
   });
 
   it('should call onClose when cancel is clicked', async () => {

@@ -1089,6 +1089,9 @@
     },
     "EditContentModal": {
       "title": "Modifier le contenu de la décharge",
+      "name_label": "Nom de la décharge",
+      "name_placeholder": "Entrez le nom de la décharge...",
+      "name_error": "Le nom de la décharge est requis",
       "version_warning": "Enregistrer les modifications créera une nouvelle version. Le contenu actuel sera conservé dans l'historique des versions.",
       "content_label": "Contenu de la décharge",
       "content_placeholder": "Entrez le texte complet de la décharge...",
